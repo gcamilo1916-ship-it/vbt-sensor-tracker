@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────
-//  VBT Tracker – Web Bluetooth + Dashboard Logic
+//  VBT Pro – Native Prototype Logic
 // ─────────────────────────────────────────────
 
 const SERVICE_UUID            = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
@@ -9,11 +9,13 @@ const DEVICE_NAME             = 'VBT_Tracker';
 
 // ── DOM refs ──
 const btnConnect   = document.getElementById('btn-connect');
+const btnText      = btnConnect.querySelector('.btn-text');
 const liftSelect   = document.getElementById('lift-select');
 const liveVelocity = document.getElementById('live-velocity');
 const liveRpe      = document.getElementById('live-rpe');
 const statusBadge  = document.getElementById('status-badge');
-const historyTbody = document.querySelector('#history-table tbody');
+const historyList  = document.getElementById('history-list');
+const orb          = document.getElementById('orb');
 
 // ── State ──
 let bleDevice          = null;
@@ -35,7 +37,7 @@ btnConnect.addEventListener('click', async () => {
 
 async function connect() {
   try {
-    btnConnect.textContent = 'Scanning…';
+    btnText.textContent = 'SCANNING…';
     btnConnect.disabled = true;
 
     bleDevice = await navigator.bluetooth.requestDevice({
@@ -53,10 +55,9 @@ async function connect() {
 
     await dataCharacteristic.startNotifications();
     dataCharacteristic.addEventListener('characteristicvaluechanged', handleIncomingData);
-    console.log('Successfully subscribed to notifications!');
+    console.log('[VBT] Successfully subscribed to notifications!');
 
     setConnectedUI(true);
-    console.log('[VBT] Connected to', bleDevice.name);
   } catch (err) {
     console.error('[VBT] Connection failed:', err);
     setConnectedUI(false);
@@ -74,7 +75,6 @@ function disconnect() {
   }
   bleDevice = null;
   setConnectedUI(false);
-  console.log('[VBT] Disconnected');
 }
 
 function onDisconnected() {
@@ -85,29 +85,23 @@ function onDisconnected() {
 }
 
 // ═══════════════════════════════════════════
-//  Command Transmission
+//  Command Transmission & UI Theme
 // ═══════════════════════════════════════════
 
 liftSelect.addEventListener('change', async (event) => {
-  if (!cmdCharacteristic) {
-    console.warn('[VBT] Not connected. Cannot send command.');
-    return;
-  }
+  const liftName = event.target.value;
+  
+  // 1. Immediately update UI theme colors
+  document.body.className = `theme-${liftName.toLowerCase()}`;
+  
+  // 2. Send over BLE
+  if (!cmdCharacteristic) return;
 
   let cmdStr = '';
-  switch (event.target.value) {
-    case 'Squat':
-      cmdStr = 'CMD:SL:SQ\n';
-      break;
-    case 'Bench':
-      cmdStr = 'CMD:SL:BP\n';
-      break;
-    case 'Deadlift':
-      cmdStr = 'CMD:SL:DL\n';
-      break;
-    default:
-      console.warn('[VBT] Unknown lift selected');
-      return;
+  switch (liftName) {
+    case 'Squat':    cmdStr = 'CMD:SL:SQ\n'; break;
+    case 'Bench':    cmdStr = 'CMD:SL:BP\n'; break;
+    case 'Deadlift': cmdStr = 'CMD:SL:DL\n'; break;
   }
 
   try {
@@ -121,7 +115,7 @@ liftSelect.addEventListener('change', async (event) => {
 });
 
 // ═══════════════════════════════════════════
-//  BLE Notification Handler
+//  BLE Notification Handler & Parsing
 // ═══════════════════════════════════════════
 
 function handleIncomingData(event) {
@@ -129,19 +123,14 @@ function handleIncomingData(event) {
     const incomingText = new TextDecoder().decode(event.target.value);
     console.log('Received payload:', incomingText);
 
-    // Expected format: "Deadlift | 0.24 m/s | RPE: 9.0"
     const parts = incomingText.split('|').map(s => s.trim());
-    if (parts.length !== 3) {
-      throw new Error('Payload missing required parts');
-    }
+    if (parts.length !== 3) throw new Error('Payload missing required parts');
 
-    const lift = parts[0];                             // "Deadlift"
-    const velocityMatch = parts[1].match(/([\d.]+)/);  // "0.24 m/s"
-    const rpeMatch = parts[2].match(/([\d.]+)/);       // "RPE: 9.0"
+    const lift = parts[0];
+    const velocityMatch = parts[1].match(/([\d.]+)/);
+    const rpeMatch = parts[2].match(/([\d.]+)/);
 
-    if (!velocityMatch || !rpeMatch) {
-      throw new Error('Could not extract numeric values');
-    }
+    if (!velocityMatch || !rpeMatch) throw new Error('Could not extract numeric values');
 
     const parsedData = {
       lift: lift,
@@ -158,59 +147,76 @@ function handleIncomingData(event) {
 }
 
 // ═══════════════════════════════════════════
-//  DOM Updates
+//  DOM Updates & Physics Animations
 // ═══════════════════════════════════════════
 
 function updateLiveDisplay({ lift, velocity, rpe }) {
-  // Velocity
+  // 1. Update text
   liveVelocity.textContent = velocity.toFixed(2);
-
-  // RPE with colour zone
   liveRpe.textContent = rpe.toFixed(1);
-  liveRpe.classList.remove('rpe-easy', 'rpe-mod', 'rpe-hard');
-  if (rpe >= 9)       liveRpe.classList.add('rpe-hard');
-  else if (rpe >= 7)  liveRpe.classList.add('rpe-mod');
-  else                liveRpe.classList.add('rpe-easy');
 
-  // Flash animation on the metric cards
-  document.querySelectorAll('.metric-card').forEach(card => {
-    card.classList.remove('flash');
-    // Force reflow so re-adding the class restarts the transition
-    void card.offsetWidth;
-    card.classList.add('flash');
-    setTimeout(() => card.classList.remove('flash'), 600);
-  });
-
-  // Sync the lift dropdown to whatever the tracker reports
-  for (const opt of liftSelect.options) {
-    if (opt.value.toLowerCase() === lift.toLowerCase()) {
-      liftSelect.value = opt.value;
-      break;
+  // 2. Sync theme & dropdown safely
+  document.body.className = `theme-${lift.toLowerCase()}`;
+  if (liftSelect.value !== lift) {
+    for (const opt of liftSelect.options) {
+      if (opt.value.toLowerCase() === lift.toLowerCase()) {
+        liftSelect.value = opt.value;
+        break;
+      }
     }
   }
+
+  // 3. Physics-based Animation Engine
+  // Assume ~0.5m Range of Motion. Time = Distance / Velocity.
+  // Multiply by 2 for the full down+up replay trace.
+  let duration = (0.5 / velocity) * 2;
+  
+  // Clamp boundaries: A 1.0+ m/s lift is snappy (~1s visual). A 0.15 m/s grind is slow (~6s visual).
+  duration = Math.max(0.6, Math.min(duration, 6.0));
+  
+  // Inject the calculated time into CSS
+  document.documentElement.style.setProperty('--rep-duration', `${duration}s`);
+
+  // Force reflow and restart the trace animation
+  orb.classList.add('active');
+  orb.style.animation = 'none';
+  void orb.offsetWidth; 
+  
+  // The keyframe name perfectly matches our CSS (@keyframes deadlift-rep, etc.)
+  const animationName = `${lift.toLowerCase()}-rep`;
+  orb.style.animation = `${animationName} var(--rep-duration) cubic-bezier(0.25, 1, 0.5, 1) forwards`;
 }
 
 function appendHistoryRow({ lift, velocity, rpe }) {
   repCounter++;
 
-  const now = new Date();
-  const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  // Clear empty state on first rep
+  const emptyState = historyList.querySelector('.empty-state');
+  if (emptyState) emptyState.remove();
 
-  const tr = document.createElement('tr');
-  tr.classList.add('new-row');
-  tr.innerHTML = `
-    <td>${repCounter}</td>
-    <td>${time}</td>
-    <td>${escapeHtml(lift)}</td>
-    <td>${velocity.toFixed(2)}</td>
-    <td class="${rpeClass(rpe)}">${rpe.toFixed(1)}</td>
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const row = document.createElement('div');
+  row.className = 'history-item';
+  row.innerHTML = `
+    <div class="hist-main">
+      <div class="hist-lift">${escapeHtml(lift)}</div>
+      <div class="hist-time">REP ${repCounter} • ${time}</div>
+    </div>
+    <div class="hist-stats">
+      <div class="hist-stat-block">
+        <div class="hist-val">${velocity.toFixed(2)}</div>
+        <div class="hist-lbl">m/s</div>
+      </div>
+      <div class="hist-stat-block">
+        <div class="hist-val">${rpe.toFixed(1)}</div>
+        <div class="hist-lbl">RPE</div>
+      </div>
+    </div>
   `;
 
-  // Prepend so newest rep is always at the top
-  historyTbody.prepend(tr);
-
-  // Remove animation class after it plays
-  setTimeout(() => tr.classList.remove('new-row'), 500);
+  // Prepend to list
+  historyList.prepend(row);
 }
 
 // ═══════════════════════════════════════════
@@ -220,24 +226,16 @@ function appendHistoryRow({ lift, velocity, rpe }) {
 function setConnectedUI(connected) {
   btnConnect.disabled = false;
   if (connected) {
-    btnConnect.textContent = 'Disconnect';
+    btnText.textContent = 'DISCONNECT';
     btnConnect.classList.add('connected');
     statusBadge.textContent = 'Connected';
-    statusBadge.classList.remove('disconnected');
-    statusBadge.classList.add('connected');
+    statusBadge.className = 'badge connected';
   } else {
-    btnConnect.textContent = 'Connect Tracker';
+    btnText.textContent = 'CONNECT SENSOR';
     btnConnect.classList.remove('connected');
     statusBadge.textContent = 'Disconnected';
-    statusBadge.classList.remove('connected');
-    statusBadge.classList.add('disconnected');
+    statusBadge.className = 'badge disconnected';
   }
-}
-
-function rpeClass(rpe) {
-  if (rpe >= 9) return 'rpe-hard';
-  if (rpe >= 7) return 'rpe-mod';
-  return 'rpe-easy';
 }
 
 function escapeHtml(str) {

@@ -2,65 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VBT Barbell Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VBT Pro Prototype</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <header>
-    <h1>⚡ VBT Tracker</h1>
-    <div id="status-badge" class="badge disconnected" aria-live="polite">Disconnected</div>
-  </header>
+<body class="theme-deadlift">
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header>
+      <div class="branding">VBT <span>PRO_</span></div>
+      <div id="status-badge" class="badge disconnected">Disconnected</div>
+    </header>
 
-  <main>
-    <!-- ── Controls ── -->
-    <section class="controls">
-      <button id="btn-connect" type="button">Connect Tracker</button>
-      <div class="select-wrapper">
-        <label for="lift-select">Lift</label>
+    <!-- Controls -->
+    <section class="controls-section">
+      <button id="btn-connect" class="btn-primary">
+        <span class="btn-text">Connect Sensor</span>
+        <div class="btn-glow"></div>
+      </button>
+      
+      <div class="lift-selector">
         <select id="lift-select">
-          <option value="Deadlift">Deadlift</option>
-          <option value="Squat">Squat</option>
-          <option value="Bench">Bench</option>
+          <option value="Deadlift">DEADLIFT</option>
+          <option value="Squat">SQUAT</option>
+          <option value="Bench">BENCH</option>
         </select>
-        <span id="sync-status"></span>
+        <div class="selector-highlight"></div>
       </div>
     </section>
 
-    <!-- ── Live Display ── -->
-    <section class="live-display">
-      <div class="metric-card">
-        <span class="metric-label">Mean Velocity</span>
-        <span id="live-velocity" class="metric-value" aria-live="polite">—</span>
-        <span class="metric-unit">m/s</span>
+    <!-- Visualizer & Live Data -->
+    <section class="visualizer-section">
+      <div class="metric-panel left">
+        <div class="metric-label">VELOCITY</div>
+        <div class="metric-value"><span id="live-velocity">0.00</span></div>
+        <div class="metric-unit">m/s</div>
       </div>
-      <div class="metric-card">
-        <span class="metric-label">EST RPE</span>
-        <span id="live-rpe" class="metric-value" aria-live="polite">—</span>
+      
+      <div class="bar-path-container">
+        <div class="track"></div>
+        <div id="orb" class="orb"></div>
+      </div>
+
+      <div class="metric-panel right">
+        <div class="metric-label">EST RPE</div>
+        <div class="metric-value"><span id="live-rpe">0.0</span></div>
+        <div class="metric-unit">/ 10</div>
       </div>
     </section>
 
-    <!-- ── Session History ── -->
-    <section class="history">
-      <h2>Session History</h2>
-      <div class="table-scroll">
-        <table id="history-table">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Time</th>
-              <th scope="col">Lift</th>
-              <th scope="col">Velocity (m/s)</th>
-              <th scope="col">RPE</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+    <!-- Session History -->
+    <section class="history-section">
+      <div class="history-header">Session History</div>
+      <div class="history-list" id="history-list">
+        <!-- JS inserts rows here -->
+        <div class="empty-state">No reps recorded yet.</div>
       </div>
     </section>
-  </main>
 
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
-
