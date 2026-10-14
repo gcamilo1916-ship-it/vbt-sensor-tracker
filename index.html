@@ -2,67 +2,310 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>VBT Pro Prototype</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#08080C" />
+  <title>VBT Pro — Glass OS</title>
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Glass OS Stylesheet -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="theme-deadlift">
+  <!-- Dynamic Ambient Glow Backdrop -->
+  <div class="ambient-glow-mesh" aria-hidden="true"></div>
+
   <div class="app-container">
     
-    <!-- Header -->
-    <header>
-      <div class="branding">VBT <span>PRO_</span></div>
-      <div id="status-badge" class="badge disconnected">Disconnected</div>
+    <!-- Top Glass Header -->
+    <header class="glass-header">
+      <div class="header-top-row">
+        <div class="branding">
+          <span class="brand-title">VBT</span>
+          <span class="brand-badge">GLASS_OS</span>
+        </div>
+        <div class="header-actions">
+          <div id="status-badge" class="glass-pill status-disconnected">
+            <span class="status-dot"></span>
+            <span class="status-label">Disconnected</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workout Session Controller Ribbon -->
+      <div class="workout-session-bar glass-card">
+        <div class="session-info">
+          <div class="session-label-group">
+            <span class="pulse-indicator" id="session-pulse"></span>
+            <span class="session-status" id="session-status-text">NO ACTIVE WORKOUT</span>
+          </div>
+          <div class="session-timer font-mono" id="session-timer-display">00:00:00</div>
+        </div>
+        <button id="btn-workout-master" class="btn-glass-primary">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-label" id="btn-workout-text">START WORKOUT</span>
+        </button>
+      </div>
     </header>
 
-    <!-- Controls -->
-    <section class="controls-section">
-      <button id="btn-connect" class="btn-primary">
-        <span class="btn-text">Connect Sensor</span>
-        <div class="btn-glow"></div>
+    <!-- Tab Viewport Container -->
+    <main class="tab-contents">
+      
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- TAB 1: LIVE TRACKER                            -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <section id="tab-live" class="tab-section active-section">
+        
+        <!-- Hardware & Lift Control Center -->
+        <section class="glass-card controls-panel">
+          <button id="btn-connect" class="btn-glass-connect">
+            <span class="btn-ripple"></span>
+            <span class="btn-connect-icon">📡</span>
+            <span class="btn-text">CONNECT SENSOR</span>
+          </button>
+          
+          <div class="controls-row">
+            <!-- Glass OS Custom Dropdown -->
+            <div class="custom-select-wrapper" id="lift-select-wrapper">
+              <div class="custom-select-trigger glass-pill" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                <span class="select-label-wrap">
+                  <span class="select-prefix">LIFT:</span>
+                  <span id="selected-lift-text" class="select-value">DEADLIFT</span>
+                </span>
+                <span class="select-chevron">▾</span>
+              </div>
+              <div class="custom-select-options glass-dropdown" role="listbox">
+                <div class="custom-option selected" data-value="Deadlift" data-cmd="CMD:SL:DL" role="option">
+                  <span class="option-dot dl-dot"></span>
+                  <span class="option-name">DEADLIFT</span>
+                </div>
+                <div class="custom-option" data-value="Squat" data-cmd="CMD:SL:SQ" role="option">
+                  <span class="option-dot sq-dot"></span>
+                  <span class="option-name">SQUAT</span>
+                </div>
+                <div class="custom-option" data-value="Bench" data-cmd="CMD:SL:BP" role="option">
+                  <span class="option-dot bp-dot"></span>
+                  <span class="option-name">BENCH PRESS</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Set Trigger Button -->
+            <button id="btn-set-toggle" class="btn-glass-set">
+              <span class="set-icon">⭕</span>
+              <span id="btn-set-text">START SET</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- VisionOS Bar Path Visualizer & Telemetry Arena -->
+        <section class="glass-card telemetry-arena">
+          <div class="metric-card metric-left">
+            <span class="metric-tag">MEAN VELOCITY</span>
+            <div class="metric-display">
+              <span id="live-velocity" class="metric-number font-mono">0.00</span>
+              <span class="metric-unit">m/s</span>
+            </div>
+            <div class="metric-subtext" id="live-vel-sub">Waiting for concentric drive...</div>
+          </div>
+          
+          <!-- Physics-Simulated Bar Path Track -->
+          <div class="bar-path-stage" aria-label="Bar Path Trajectory Visualizer">
+            <div class="path-guide-ticks">
+              <span class="tick tick-top"></span>
+              <span class="tick tick-mid"></span>
+              <span class="tick tick-bot"></span>
+            </div>
+            <div class="path-track-glow"></div>
+            <div class="path-track-line"></div>
+            <div id="orb" class="barbell-orb">
+              <div class="orb-core"></div>
+              <div class="orb-corona"></div>
+            </div>
+            <div id="apex-glow" class="apex-bloom"></div>
+          </div>
+
+          <div class="metric-card metric-right">
+            <span class="metric-tag">ESTIMATED RPE</span>
+            <div class="metric-display">
+              <span id="live-rpe" class="metric-number font-mono">0.0</span>
+              <span class="metric-unit">/10</span>
+            </div>
+            <div class="metric-subtext" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
+          </div>
+        </section>
+
+        <!-- Quick Summary Mini-HUD -->
+        <section class="live-mini-hud">
+          <div class="mini-hud-item glass-card">
+            <span class="mini-label">ACTIVE SET</span>
+            <span class="mini-val font-mono" id="hud-active-set">Set 0</span>
+          </div>
+          <div class="mini-hud-item glass-card">
+            <span class="mini-label">SET REPS</span>
+            <span class="mini-val font-mono" id="hud-set-reps">0</span>
+          </div>
+          <div class="mini-hud-item glass-card">
+            <span class="mini-label">VEL LOSS</span>
+            <span class="mini-val font-mono" id="hud-vel-loss">0.0%</span>
+          </div>
+        </section>
+
+      </section>
+
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- TAB 2: SET TRACKING                            -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <section id="tab-set" class="tab-section">
+        
+        <div class="glass-card set-hero-panel">
+          <div class="set-meta-header">
+            <div class="set-title-group">
+              <span class="set-badge-pill" id="set-badge-label">SET 1</span>
+              <span class="set-lift-title" id="set-lift-name">DEADLIFT</span>
+            </div>
+            <div class="set-count-pill" id="set-rep-counter">0 REPS RECORDED</div>
+          </div>
+
+          <!-- Glass Progress Ring -->
+          <div class="set-ring-container">
+            <svg class="progress-ring-svg" viewBox="0 0 220 220">
+              <defs>
+                <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="var(--current-accent)" stop-opacity="1" />
+                  <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.8" />
+                </linearGradient>
+                <filter id="glassGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="8" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              <circle class="ring-track" cx="110" cy="110" r="90" />
+              <circle class="ring-fill" id="set-ring-progress" cx="110" cy="110" r="90" />
+            </svg>
+            <div class="ring-center-content">
+              <div class="ring-value font-mono" id="set-avg-vel">-</div>
+              <div class="ring-metric-label">AVG VELOCITY (M/S)</div>
+            </div>
+          </div>
+
+          <!-- Set Statistics Grid -->
+          <div class="set-metrics-grid">
+            <div class="stat-card glass-card">
+              <span class="stat-label">PEAK VELOCITY</span>
+              <span class="stat-value font-mono" id="set-max-vel">-</span>
+              <span class="stat-unit">m/s</span>
+            </div>
+            <div class="stat-card glass-card">
+              <span class="stat-label">VELOCITY LOSS</span>
+              <span class="stat-value font-mono" id="set-vel-loss">-</span>
+              <span class="stat-unit">%</span>
+            </div>
+            <div class="stat-card glass-card">
+              <span class="stat-label">AVERAGE RPE</span>
+              <span class="stat-value font-mono" id="set-avg-rpe">-</span>
+              <span class="stat-unit">/10</span>
+            </div>
+            <div class="stat-card glass-card">
+              <span class="stat-label">MIN VELOCITY</span>
+              <span class="stat-value font-mono" id="set-min-vel">-</span>
+              <span class="stat-unit">m/s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-time Rep Stream for Active Set -->
+        <section class="active-set-reps-section">
+          <div class="section-title-row">
+            <span class="section-heading">CURRENT SET REPS</span>
+            <span class="section-subtext" id="active-set-rep-counter">0 reps</span>
+          </div>
+          <div class="reps-table-container glass-card" id="active-set-reps-list">
+            <div class="empty-state">No reps recorded in this set yet. Lift the barbell to record.</div>
+          </div>
+        </section>
+
+      </section>
+
+      <!-- ═══════════════════════════════════════════════ -->
+      <!-- TAB 3: HISTORY & EXPORT                        -->
+      <!-- ═══════════════════════════════════════════════ -->
+      <section id="tab-history" class="tab-section">
+        
+        <!-- Lifetime Analytics Bar -->
+        <div class="glass-card history-summary-card">
+          <div class="summary-metric">
+            <span class="sum-val font-mono" id="sum-workouts">0</span>
+            <span class="sum-lbl">WORKOUTS</span>
+          </div>
+          <div class="summary-metric">
+            <span class="sum-val font-mono" id="sum-sets">0</span>
+            <span class="sum-lbl">SETS</span>
+          </div>
+          <div class="summary-metric">
+            <span class="sum-val font-mono" id="sum-reps">0</span>
+            <span class="sum-lbl">REPS</span>
+          </div>
+          <div class="summary-metric">
+            <span class="sum-val font-mono" id="sum-best-vel">0.00</span>
+            <span class="sum-lbl">PEAK M/S</span>
+          </div>
+        </div>
+
+        <!-- Data Export & Actions Row -->
+        <div class="history-actions-row">
+          <button id="btn-export-csv" class="btn-action-glass">
+            <span class="action-icon">📊</span>
+            <span>EXPORT CSV</span>
+          </button>
+          <button id="btn-export-json" class="btn-action-glass">
+            <span class="action-icon">💾</span>
+            <span>EXPORT JSON</span>
+          </button>
+          <button id="btn-clear-history" class="btn-action-glass btn-danger">
+            <span class="action-icon">🗑️</span>
+            <span>CLEAR</span>
+          </button>
+        </div>
+
+        <!-- Collapsible Workout Session Accordion List -->
+        <div class="history-sessions-container" id="history-sessions-list">
+          <div class="empty-state">No workout sessions recorded yet. Start a workout to build history!</div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Floating Glass OS Bottom Navigation Bar -->
+    <nav class="bottom-glass-nav" aria-label="Main Navigation">
+      <button class="nav-tab active" data-target="live" aria-label="Live Tracker Tab">
+        <span class="nav-icon">⏺</span>
+        <span class="nav-label">LIVE</span>
       </button>
-      
-      <div class="lift-selector">
-        <select id="lift-select">
-          <option value="Deadlift">DEADLIFT</option>
-          <option value="Squat">SQUAT</option>
-          <option value="Bench">BENCH</option>
-        </select>
-        <div class="selector-highlight"></div>
-      </div>
-    </section>
-
-    <!-- Visualizer & Live Data -->
-    <section class="visualizer-section">
-      <div class="metric-panel left">
-        <div class="metric-label">VELOCITY</div>
-        <div class="metric-value"><span id="live-velocity">0.00</span></div>
-        <div class="metric-unit">m/s</div>
-      </div>
-      
-      <div class="bar-path-container">
-        <div class="track"></div>
-        <div id="orb" class="orb"></div>
-      </div>
-
-      <div class="metric-panel right">
-        <div class="metric-label">EST RPE</div>
-        <div class="metric-value"><span id="live-rpe">0.0</span></div>
-        <div class="metric-unit">/ 10</div>
-      </div>
-    </section>
-
-    <!-- Session History -->
-    <section class="history-section">
-      <div class="history-header">Session History</div>
-      <div class="history-list" id="history-list">
-        <!-- JS inserts rows here -->
-        <div class="empty-state">No reps recorded yet.</div>
-      </div>
-    </section>
+      <button class="nav-tab" data-target="set" aria-label="Set Analytics Tab">
+        <span class="nav-icon">⭕</span>
+        <span class="nav-label">SET</span>
+      </button>
+      <button class="nav-tab" data-target="history" aria-label="Workout History Tab">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">HISTORY</span>
+      </button>
+    </nav>
 
   </div>
+
+  <!-- Error & Notification Glass Banner -->
+  <div id="sync-banner" class="glass-banner hidden" role="alert">
+    <span id="sync-banner-text">Sync Error</span>
+  </div>
+
+  <!-- JavaScript Module -->
   <script src="app.js"></script>
 </body>
 </html>
