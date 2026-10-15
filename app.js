@@ -27,18 +27,36 @@ const syncBannerText    = document.getElementById('sync-banner-text');
 
 // Hardware Controls & Lift Selector
 const btnConnect        = document.getElementById('btn-connect');
-const btnConnectText    = btnConnect.querySelector('.btn-text');
+const btnConnectText    = btnConnect ? btnConnect.querySelector('.btn-text') : null;
 const liftSelectWrapper = document.getElementById('lift-select-wrapper');
-const selectTrigger     = liftSelectWrapper.querySelector('.custom-select-trigger');
+const selectTrigger     = liftSelectWrapper ? liftSelectWrapper.querySelector('.custom-select-trigger') : null;
 const selectedLiftText  = document.getElementById('selected-lift-text');
-const customOptions     = liftSelectWrapper.querySelectorAll('.custom-option');
+const customOptions     = liftSelectWrapper ? liftSelectWrapper.querySelectorAll('.custom-option') : [];
 const btnSetToggle      = document.getElementById('btn-set-toggle');
 const btnSetText        = document.getElementById('btn-set-text');
 
+// In-App Bluetooth Search Sheet Controls
+const bleSearchSheet       = document.getElementById('bluetooth-search-tab');
+const bleSearchBackdrop    = document.getElementById('ble-search-backdrop');
+const btnCloseBleSearch    = document.getElementById('btn-close-ble-search');
+const bleSearchStatusText  = document.getElementById('ble-search-status-text');
+const bleDeviceCard        = document.getElementById('ble-device-card');
+
+// Target RPE Configuration Controls
+const targetRpeModule      = document.getElementById('target-rpe-module');
+const btnTargetRpeDec      = document.getElementById('btn-target-rpe-dec');
+const btnTargetRpeInc      = document.getElementById('btn-target-rpe-inc');
+const targetRpeDisplay     = document.getElementById('target-rpe-display');
+const targetChips          = document.querySelectorAll('.target-chip');
+const rpeTargetPin         = document.getElementById('rpe-target-pin');
+let currentTargetRpe       = 8.0;
+
 // Live Tracker Arena
 const liveVelocity      = document.getElementById('live-velocity');
+const livePeakVel       = document.getElementById('live-peak-vel');
 const liveRpe           = document.getElementById('live-rpe');
 const liveVelSub        = document.getElementById('live-vel-sub');
+const livePeakSub       = document.getElementById('live-peak-sub');
 const liveRpeSub        = document.getElementById('live-rpe-sub');
 const orb               = document.getElementById('orb');
 const apexGlow          = document.getElementById('apex-glow');
@@ -129,6 +147,195 @@ const LIFT_BASELINES = {
   squat:    { mvt: 0.22, rpe8: 0.42, cmd: 'CMD:SL:SQ' },
   bench:    { mvt: 0.16, rpe8: 0.32, cmd: 'CMD:SL:BP' }
 };
+
+// ═════════════════════════════════════════════════════════════════════════════
+// SYNTHETIC SOUND & HAPTIC ENGINE (iOS Bluefy & Web Audio Unlocking)
+// ═════════════════════════════════════════════════════════════════════════════
+
+const SoundFX = (() => {
+  let audioCtx = null;
+  let unlocked = false;
+
+  function getAudioContext() {
+    if (!audioCtx) {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) {
+        audioCtx = new AudioCtxClass();
+      }
+    }
+    return audioCtx;
+  }
+
+  function unlock() {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        unlocked = true;
+      }).catch(() => {});
+    } else {
+      unlocked = true;
+    }
+  }
+
+  // Auto-unlock on first touch / click gesture (vital for iOS Safari / Bluefy)
+  ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(evt => {
+    window.addEventListener(evt, unlock, { passive: true });
+  });
+
+  function playToneActual(ctx, freq, type, duration, gainVal, delay) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const t = ctx.currentTime + delay;
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+
+    gain.gain.setValueAtTime(gainVal, t);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + duration);
+  }
+
+  function playTone(freq, type, duration, gainVal = 0.15, delay = 0) {
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          playToneActual(ctx, freq, type, duration, gainVal, delay);
+        }).catch(() => {});
+        return;
+      }
+      playToneActual(ctx, freq, type, duration, gainVal, delay);
+    } catch (e) {
+      // Audio fallback silent
+    }
+  }
+
+  return {
+    unlock,
+    getAudioContext,
+
+    // Rep completed chime: Dual crystal tone modulated by bar velocity
+    playRepChime(velocity = 0.5, rpe = 8.0) {
+      const baseFreq = 587.33; // D5
+      const highFreq = Math.min(1250, baseFreq * (1 + (velocity || 0.4) * 0.45));
+      playTone(baseFreq, 'sine', 0.12, 0.22, 0);
+      playTone(highFreq, 'triangle', 0.20, 0.28, 0.05);
+    },
+
+    // Target RPE reached warning alert (resonant ascending triad)
+    playTargetReached() {
+      playTone(740.0, 'triangle', 0.14, 0.32, 0);
+      playTone(987.77, 'sine', 0.22, 0.35, 0.09);
+      playTone(1174.66, 'sine', 0.35, 0.30, 0.20);
+    },
+
+    // Long press PR hold feedback
+    playLongPressHold(ratio = 0.5) {
+      playTone(200 + ratio * 240, 'sine', 0.05, 0.09, 0);
+    },
+
+    // Golden PR fanfare (C Major triumph chord)
+    playPrFanfare() {
+      playTone(523.25, 'triangle', 0.22, 0.25, 0);
+      playTone(659.25, 'triangle', 0.28, 0.25, 0.07);
+      playTone(783.99, 'triangle', 0.35, 0.30, 0.14);
+      playTone(1046.50, 'sine', 0.55, 0.35, 0.22);
+    },
+
+    // Master workout & Set controls
+    playSetStart() {
+      playTone(440.0, 'sine', 0.10, 0.18, 0);
+      playTone(659.25, 'triangle', 0.22, 0.22, 0.07);
+    },
+
+    playSetEnd() {
+      playTone(550.0, 'sine', 0.12, 0.20, 0);
+      playTone(369.99, 'triangle', 0.26, 0.22, 0.09);
+    },
+
+    // Navigation & UI tab switch tick
+    playNavTick() {
+      playTone(1350.0, 'sine', 0.02, 0.09, 0);
+    },
+
+    // Stepper & Chip setting tick
+    playStepperTick() {
+      playTone(1100.0, 'sine', 0.03, 0.12, 0);
+    },
+
+    // Sub-bass acoustic haptic thump fallback for iOS Safari/Bluefy
+    playSubBassThump() {
+      playTone(45, 'sine', 0.07, 0.35, 0);
+    },
+
+    // Bluetooth lifecycle sound cues
+    playBleSearchPing() {
+      playTone(880.0, 'sine', 0.08, 0.12, 0);
+    },
+
+    playBleConnected() {
+      playTone(523.25, 'sine', 0.10, 0.20, 0);
+      playTone(659.25, 'sine', 0.12, 0.20, 0.07);
+      playTone(783.99, 'sine', 0.16, 0.25, 0.14);
+      playTone(1046.50, 'triangle', 0.32, 0.32, 0.22);
+    },
+
+    playBleDisconnected() {
+      playTone(659.25, 'sine', 0.12, 0.20, 0);
+      playTone(440.0, 'sine', 0.22, 0.18, 0.09);
+    }
+  };
+})();
+
+const HapticsFX = (() => {
+  return {
+    vibrate(pattern) {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(pattern);
+          return;
+        } catch (e) {}
+      }
+      // iOS Safari fallback: Sub-bass acoustic haptic thump reusing SoundFX singleton
+      try {
+        SoundFX.playSubBassThump();
+      } catch (e) {}
+    }
+  };
+})();
+
+// Touch responsiveness & active tactile feedback for iOS Bluefy
+document.addEventListener('touchstart', () => {}, { passive: true });
+
+function initTouchActiveStates() {
+  const touchSelectors = '.btn-glass-primary, .btn-glass-set, .btn-glass-connect, .btn-action-glass, .custom-select-trigger, .custom-option, .target-stepper-btn, .target-chip, .nav-tab, .dots-gender-btn, .dots-source-btn, #status-badge, .ble-close-btn, .ble-device-card';
+  
+  const addActive = (e) => {
+    const el = e.target.closest(touchSelectors);
+    if (el) el.classList.add('touch-active');
+  };
+
+  const removeActive = () => {
+    document.querySelectorAll('.touch-active').forEach(el => el.classList.remove('touch-active'));
+  };
+
+  // Support both Touch Events and Pointer Events for iOS Safari / Bluefy
+  document.addEventListener('touchstart', addActive, { passive: true });
+  document.addEventListener('touchend', removeActive, { passive: true });
+  document.addEventListener('touchcancel', removeActive, { passive: true });
+  document.addEventListener('touchmove', removeActive, { passive: true });
+
+  document.addEventListener('pointerdown', addActive, { passive: true });
+  document.addEventListener('pointerup', removeActive, { passive: true });
+  document.addEventListener('pointercancel', removeActive, { passive: true });
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 1. DATA STORAGE & INITIALIZATION
@@ -279,6 +486,7 @@ function startNewSet(lift = currentLift) {
     setId: `set_${Date.now()}`,
     setNumber: setNumber,
     lift: lift,
+    targetRpe: currentTargetRpe,
     startTime: Date.now(),
     endTime: null,
     avgVelocity: 0.0,
@@ -297,6 +505,9 @@ function startNewSet(lift = currentLift) {
   btnSetToggle.classList.add('set-active');
   btnSetToggle.classList.add('recording');
 
+  if (livePeakVel) livePeakVel.textContent = '0.00';
+  if (livePeakSub) livePeakSub.textContent = `Set ${setNumber} Initialized`;
+
   updateLiveMiniHud();
   updateSetUI(activeSet);
   persistStorage();
@@ -311,6 +522,10 @@ function endActiveSet() {
 
   activeSet.endTime = Date.now();
   recalculateSetMetrics(activeSet);
+
+  if (livePeakSub) {
+    livePeakSub.textContent = `Set ${activeSet.setNumber} Concluded (Peak: ${activeSet.maxVelocity.toFixed(2)} m/s)`;
+  }
 
   activeSet = null;
 
@@ -330,8 +545,12 @@ function endActiveSet() {
  */
 btnSetToggle.addEventListener('click', () => {
   if (activeSet) {
+    SoundFX.playSetEnd();
+    HapticsFX.vibrate([40]);
     endActiveSet();
   } else {
+    SoundFX.playSetStart();
+    HapticsFX.vibrate([40]);
     startNewSet(currentLift);
   }
 });
@@ -364,6 +583,18 @@ function recordRepetition({ lift, velocity, rpe }) {
   recalculateSetMetrics(activeSet);
 
   persistStorage();
+
+  // Play rep chime and trigger light haptic pulse
+  SoundFX.playRepChime(velocity, rpe);
+  HapticsFX.vibrate([35]);
+
+  // Check if rep meets or exceeds target RPE for this set
+  const effectiveTarget = (activeSet && typeof activeSet.targetRpe === 'number') ? activeSet.targetRpe : currentTargetRpe;
+  if (typeof rpe === 'number' && rpe >= effectiveTarget) {
+    SoundFX.playTargetReached();
+    HapticsFX.vibrate([60, 40, 80]);
+    triggerTargetReachedAlert();
+  }
 
   // Reactively update RPE Hero Banner on repetition recording
   updateRpeHeroBanner(rpe);
@@ -418,6 +649,149 @@ function recalculateSetMetrics(set) {
 // 3. WEBBLE HARDWARE ENGINE (iOS Bluefy Compliant)
 // ═════════════════════════════════════════════════════════════════════════════
 
+// Bluetooth Search Sheet Open / Close Helpers
+function openBleSearchSheet() {
+  if (bleSearchSheet) {
+    bleSearchSheet.classList.add('open');
+    bleSearchSheet.setAttribute('aria-hidden', 'false');
+    SoundFX.playBleSearchPing();
+    if (bleDevice && bleDevice.gatt.connected) {
+      if (bleSearchStatusText) bleSearchStatusText.textContent = 'Connected to VBT_Tracker • 100Hz IMU Active';
+    } else {
+      if (bleSearchStatusText) bleSearchStatusText.textContent = 'Ready to connect to ESP32-C6 sensor';
+    }
+  }
+}
+
+function closeBleSearchSheet() {
+  if (bleSearchSheet) {
+    bleSearchSheet.classList.remove('open');
+    bleSearchSheet.setAttribute('aria-hidden', 'true');
+  }
+}
+
+if (statusBadge) {
+  statusBadge.addEventListener('click', () => {
+    openBleSearchSheet();
+  });
+  statusBadge.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openBleSearchSheet();
+    }
+  });
+}
+
+if (btnCloseBleSearch) {
+  btnCloseBleSearch.addEventListener('click', closeBleSearchSheet);
+}
+if (bleSearchBackdrop) {
+  bleSearchBackdrop.addEventListener('click', closeBleSearchSheet);
+}
+
+// Escape key to dismiss Bluetooth search sheet
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && bleSearchSheet && bleSearchSheet.classList.contains('open')) {
+    closeBleSearchSheet();
+  }
+});
+
+if (bleDeviceCard) {
+  bleDeviceCard.addEventListener('click', async () => {
+    if (!bleDevice || !bleDevice.gatt.connected) {
+      await connectBLE();
+    }
+  });
+}
+
+// Target RPE Configuration Handlers
+function setTargetRpe(val, triggerFeedback = false) {
+  const num = parseFloat(val);
+  if (isNaN(num)) return;
+  currentTargetRpe = Math.max(6.0, Math.min(10.0, parseFloat(num.toFixed(1))));
+
+  if (triggerFeedback) {
+    SoundFX.playStepperTick();
+    HapticsFX.vibrate([15]);
+  }
+
+  if (targetRpeDisplay) {
+    targetRpeDisplay.textContent = currentTargetRpe.toFixed(1);
+    targetRpeDisplay.style.transform = 'scale(1.2)';
+    setTimeout(() => {
+      if (targetRpeDisplay) targetRpeDisplay.style.transform = 'scale(1)';
+    }, 150);
+  }
+
+  // Update quick chips
+  targetChips.forEach(chip => {
+    const chipRpe = parseFloat(chip.getAttribute('data-rpe'));
+    if (Math.abs(chipRpe - currentTargetRpe) < 0.1) {
+      chip.classList.add('active');
+    } else {
+      chip.classList.remove('active');
+    }
+  });
+
+  // Slide target pin on live effort gauge
+  if (rpeTargetPin) {
+    const targetPercent = Math.max(0, Math.min(100, (currentTargetRpe / 10) * 100));
+    rpeTargetPin.style.left = `${targetPercent}%`;
+    rpeTargetPin.classList.add('pin-moving');
+    setTimeout(() => {
+      if (rpeTargetPin) rpeTargetPin.classList.remove('pin-moving');
+    }, 350);
+    const targetText = rpeTargetPin.querySelector('.target-text');
+    if (targetText) {
+      targetText.textContent = `TARGET ${currentTargetRpe.toFixed(1)}`;
+    }
+  }
+
+  // Sync with active set if ongoing
+  if (activeSet) {
+    activeSet.targetRpe = currentTargetRpe;
+    persistStorage();
+  }
+}
+
+function triggerTargetReachedAlert() {
+  if (targetRpeModule) {
+    targetRpeModule.classList.remove('target-reached-active');
+    void targetRpeModule.offsetWidth;
+    targetRpeModule.classList.add('target-reached-active');
+    setTimeout(() => {
+      if (targetRpeModule) targetRpeModule.classList.remove('target-reached-active');
+    }, 3500);
+  }
+
+  if (rpeHeroCard) {
+    rpeHeroCard.classList.remove('target-reached-pulse');
+    void rpeHeroCard.offsetWidth;
+    rpeHeroCard.classList.add('target-reached-pulse');
+    setTimeout(() => {
+      if (rpeHeroCard) rpeHeroCard.classList.remove('target-reached-pulse');
+    }, 3500);
+  }
+}
+
+if (btnTargetRpeDec) {
+  btnTargetRpeDec.addEventListener('click', () => {
+    setTargetRpe(currentTargetRpe - 0.5, true);
+  });
+}
+if (btnTargetRpeInc) {
+  btnTargetRpeInc.addEventListener('click', () => {
+    setTargetRpe(currentTargetRpe + 0.5, true);
+  });
+}
+
+targetChips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    const r = chip.getAttribute('data-rpe');
+    if (r) setTargetRpe(parseFloat(r), true);
+  });
+});
+
 btnConnect.addEventListener('click', async () => {
   if (bleDevice && bleDevice.gatt.connected) {
     disconnectBLE();
@@ -430,6 +804,8 @@ async function connectBLE() {
   try {
     btnConnectText.textContent = 'SCANNING…';
     btnConnect.disabled = true;
+    if (bleSearchStatusText) bleSearchStatusText.textContent = 'Searching for ESP32-C6 VBT_Tracker…';
+    SoundFX.playBleSearchPing();
 
     // Standard Web Bluetooth API Request (explicit user gesture for iOS Bluefy)
     bleDevice = await navigator.bluetooth.requestDevice({
@@ -460,6 +836,12 @@ async function connectBLE() {
 
     console.log('[VBT] Subscribed to ESP32-C6 telemetry notifications.');
     setConnectedUI(true);
+    SoundFX.playBleConnected();
+    HapticsFX.vibrate([40, 20, 50]);
+    if (bleSearchStatusText) bleSearchStatusText.textContent = 'Connected to VBT_Tracker • 100Hz IMU Active';
+    setTimeout(() => {
+      closeBleSearchSheet();
+    }, 1200);
 
     // Sync current active lift profile with the ESP32
     await sendLiftCommand(currentLift);
@@ -467,6 +849,7 @@ async function connectBLE() {
   } catch (err) {
     console.error('[VBT] Bluetooth connection error:', err);
     setConnectedUI(false);
+    if (bleSearchStatusText) bleSearchStatusText.textContent = `Connection error: ${err.message || 'Check ESP32 sensor'}`;
     showBanner(`Connection error: ${err.message || 'Check ESP32 sensor'}`);
   }
 }
@@ -485,6 +868,8 @@ function disconnectBLE() {
   }
   bleDevice = null;
   setConnectedUI(false);
+  SoundFX.playBleDisconnected();
+  if (bleSearchStatusText) bleSearchStatusText.textContent = 'Ready to connect to ESP32-C6 sensor';
 }
 
 function onBLEDisconnected() {
@@ -492,6 +877,8 @@ function onBLEDisconnected() {
   dataCharacteristic = null;
   cmdCharacteristic = null;
   setConnectedUI(false);
+  SoundFX.playBleDisconnected();
+  if (bleSearchStatusText) bleSearchStatusText.textContent = 'Barbell sensor disconnected.';
   showBanner('Barbell sensor disconnected.');
 }
 
@@ -654,9 +1041,18 @@ function updateRpeHeroBanner(rpe) {
  * Updates Live Telemetry display and fires bar path physics animation
  */
 function updateLiveDisplay({ lift, velocity, rpe }) {
-  liveVelocity.textContent = velocity.toFixed(2);
-  liveRpe.textContent      = rpe.toFixed(1);
-  liveVelSub.textContent   = `Rep Completed: ${velocity >= 0.5 ? '⚡ Explosive' : '🔥 Grinding'}`;
+  if (liveVelocity) liveVelocity.textContent = velocity.toFixed(2);
+  if (liveRpe) liveRpe.textContent           = rpe.toFixed(1);
+  if (liveVelSub) liveVelSub.textContent     = `Rep Completed: ${velocity >= 0.5 ? '⚡ Explosive' : '🔥 Grinding'}`;
+
+  // Update Peak Velocity Hero Metric (Mean and Peak as Main Focus)
+  const currentPeak = activeSet && activeSet.maxVelocity > 0 ? activeSet.maxVelocity : velocity;
+  if (livePeakVel) {
+    livePeakVel.textContent = currentPeak.toFixed(2);
+  }
+  if (livePeakSub) {
+    livePeakSub.textContent = activeSet ? `Set ${activeSet.setNumber} Peak: ${currentPeak.toFixed(2)} m/s` : `Bar Ascent Peak: ${currentPeak.toFixed(2)} m/s`;
+  }
 
   // Reactively update RPE Hero Banner on live display
   updateRpeHeroBanner(rpe);
@@ -809,18 +1205,16 @@ function updateSetUI(set) {
       startY = e.clientY;
       isHolding = true;
       latestEl.classList.add('press-holding');
+      SoundFX.playLongPressHold(0.2);
 
       pressTimer = setTimeout(() => {
         isHolding = false;
         latestEl.classList.remove('press-holding');
         pressTimer = null;
 
-        // Haptic feedback
-        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-          try {
-            navigator.vibrate([40, 30, 60]);
-          } catch (e) {}
-        }
+        // Haptic feedback & celebration fanfare
+        HapticsFX.vibrate([40, 30, 60]);
+        SoundFX.playPrFanfare();
 
         // Toggle rep.isPR boolean state
         rep.isPR = !rep.isPR;
@@ -1372,6 +1766,9 @@ btnClearHistory.addEventListener('click', () => {
 
 navTabs.forEach(tab => {
   tab.addEventListener('click', () => {
+    SoundFX.playNavTick();
+    HapticsFX.vibrate([15]);
+
     const target = tab.getAttribute('data-target');
     if (!target || !tabSections[target]) return;
     if (target === currentTabTarget && tabSections[target].classList.contains('active-section')) return;
@@ -1448,4 +1845,6 @@ function escapeHtml(str) {
 document.addEventListener('DOMContentLoaded', () => {
   initStorage();
   applyLiftTheme('Deadlift');
+  setTargetRpe(8.0);
+  initTouchActiveStates();
 });

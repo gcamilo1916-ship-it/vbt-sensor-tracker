@@ -33,9 +33,12 @@
           <span class="brand-title">Eros</span>
         </div>
         <div class="header-actions">
-          <div id="status-badge" class="glass-pill status-disconnected">
+          <div id="status-badge" class="glass-pill status-disconnected" role="button" tabindex="0" aria-label="Bluetooth Sensor Connection">
             <span class="status-dot"></span>
             <span class="status-label">Disconnected</span>
+            <svg class="status-ble-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
+            </svg>
           </div>
         </div>
       </div>
@@ -64,12 +67,8 @@
       <section id="tab-live" class="tab-section active-section">
         
         <!-- Hardware & Lift Control Center -->
+        <!-- Exercise & Set Controls -->
         <div class="glass-card controls-panel">
-          <button id="btn-connect" class="btn-glass-connect">
-            <span class="btn-ripple"></span>
-            <span class="btn-text">CONNECT SENSOR</span>
-          </button>
-          
           <div class="controls-row">
             <!-- Glass OS Custom Dropdown -->
             <div class="custom-select-wrapper" id="lift-select-wrapper">
@@ -101,70 +100,95 @@
               <span id="btn-set-text">START SET</span>
             </button>
           </div>
-        </div>
 
-        <!-- High-Contrast visionOS RPE Hero Banner -->
-        <div class="glass-card rpe-hero-banner tier-warmup" id="rpe-hero-card">
-          <div class="rpe-hero-header">
-            <span class="rpe-hero-tag">REAL-TIME EFFORT TIER</span>
-            <span class="rpe-tier-badge" id="rpe-tier-badge">WARMUP TIER</span>
-          </div>
-          <div class="rpe-hero-main">
-            <div class="rpe-score-group">
-              <span id="live-rpe" class="rpe-hero-number font-mono tabular-nums">0.0</span>
-              <span class="rpe-hero-denom">/10</span>
-            </div>
-            <div class="rpe-hero-meta">
-              <div class="rpe-rir-pill font-mono" id="live-rir-pill">RIR: 10.0</div>
-              <div class="rpe-subtext font-mono" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
-            </div>
-          </div>
-          <!-- Dynamic Effort Gauge & Target Pin -->
-          <div class="rpe-gauge-container">
-            <div class="rpe-gauge-track" aria-label="RPE Effort Gauge">
-              <div class="rpe-gauge-fill" id="rpe-gauge-fill" style="width: 0%;"></div>
-              <div class="rpe-target-pin" title="Optimal Strength Target RPE 8.0" style="left: 80%;">
-                <span class="target-tick"></span>
-                <span class="target-text">TARGET 8.0</span>
+          <!-- Target RPE Configuration Capsule for Current Set -->
+          <div class="target-rpe-module" id="target-rpe-module">
+            <div class="target-rpe-row">
+              <div class="target-rpe-label-wrap">
+                <span class="target-rpe-badge">TARGET RPE</span>
+                <span class="target-rpe-help">SET CEILING ALERT</span>
+              </div>
+              <div class="target-rpe-stepper-wrap">
+                <button type="button" class="target-stepper-btn" id="btn-target-rpe-dec" aria-label="Decrease Target RPE">−</button>
+                <span class="target-rpe-val font-mono tabular-nums" id="target-rpe-display">8.0</span>
+                <button type="button" class="target-stepper-btn" id="btn-target-rpe-inc" aria-label="Increase Target RPE">+</button>
               </div>
             </div>
+            <div class="target-rpe-chips" role="radiogroup" aria-label="Quick Target RPE Presets">
+              <button type="button" class="target-chip" data-rpe="7.0">@7.0</button>
+              <button type="button" class="target-chip" data-rpe="7.5">@7.5</button>
+              <button type="button" class="target-chip active" data-rpe="8.0">@8.0</button>
+              <button type="button" class="target-chip" data-rpe="8.5">@8.5</button>
+              <button type="button" class="target-chip" data-rpe="9.0">@9.0</button>
+              <button type="button" class="target-chip" data-rpe="9.5">@9.5</button>
+            </div>
           </div>
         </div>
 
-        <!-- VisionOS Bar Path Visualizer & Telemetry Arena -->
-        <div class="glass-card telemetry-arena">
-          <div class="metric-card metric-left">
-            <span class="metric-tag">MEAN VELOCITY</span>
-            <div class="metric-display">
-              <span id="live-velocity" class="metric-number font-mono">0.00</span>
-              <span class="metric-unit">m/s</span>
+        <!-- Main Velocity Focus Hero Pill with Integrated RPE Tracker -->
+        <div class="glass-card telemetry-arena rpe-hero-banner tier-warmup hero-velocity-focus" id="rpe-hero-card">
+          <!-- Primary Velocity Hero Arena (Mean Velocity & Peak Velocity as MAIN FOCUS) -->
+          <div class="velocity-focus-arena">
+            <div class="metric-card metric-left">
+              <span class="metric-tag">MEAN VELOCITY</span>
+              <div class="metric-display">
+                <span id="live-velocity" class="metric-number font-mono tabular-nums">0.00</span>
+                <span class="metric-unit">m/s</span>
+              </div>
+              <div class="metric-subtext" id="live-vel-sub">Waiting for concentric drive...</div>
             </div>
-            <div class="metric-subtext" id="live-vel-sub">Waiting for concentric drive...</div>
-          </div>
-          
-          <!-- Physics-Simulated Bar Path Track -->
-          <div class="bar-path-stage" aria-label="Bar Path Trajectory Visualizer">
-            <div class="path-guide-ticks">
-              <span class="tick tick-top"></span>
-              <span class="tick tick-mid"></span>
-              <span class="tick tick-bot"></span>
+            
+            <!-- Physics-Simulated Bar Path Track -->
+            <div class="bar-path-stage" aria-label="Bar Path Trajectory Visualizer">
+              <div class="path-guide-ticks">
+                <span class="tick tick-top"></span>
+                <span class="tick tick-mid"></span>
+                <span class="tick tick-bot"></span>
+              </div>
+              <div class="path-track-glow"></div>
+              <div class="path-track-line"></div>
+              <div id="orb" class="barbell-orb">
+                <div class="orb-core"></div>
+                <div class="orb-corona"></div>
+              </div>
+              <div id="apex-glow" class="apex-bloom"></div>
             </div>
-            <div class="path-track-glow"></div>
-            <div class="path-track-line"></div>
-            <div id="orb" class="barbell-orb">
-              <div class="orb-core"></div>
-              <div class="orb-corona"></div>
+
+            <div class="metric-card metric-right">
+              <span class="metric-tag">PEAK VELOCITY</span>
+              <div class="metric-display">
+                <span id="live-peak-vel" class="metric-number font-mono tabular-nums">0.00</span>
+                <span class="metric-unit">m/s</span>
+              </div>
+              <div class="metric-subtext" id="live-peak-sub">Bar Ascent Peak</div>
             </div>
-            <div id="apex-glow" class="apex-bloom"></div>
           </div>
 
-          <div class="metric-card metric-right">
-            <span class="metric-tag">PEAK VELOCITY</span>
-            <div class="metric-display">
-              <span id="live-peak-vel" class="metric-number font-mono tabular-nums">0.00</span>
-              <span class="metric-unit">m/s</span>
+          <!-- Integrated RPE Tracker Inside Main Focus Pill -->
+          <div class="integrated-rpe-tracker">
+            <div class="rpe-tracker-row">
+              <div class="rpe-score-group">
+                <span class="rpe-tracker-label">RPE</span>
+                <span id="live-rpe" class="rpe-hero-number font-mono tabular-nums">0.0</span>
+                <span class="rpe-hero-denom">/10</span>
+              </div>
+              <div class="rpe-badge-group">
+                <span class="rpe-rir-pill font-mono" id="live-rir-pill">RIR: 10.0</span>
+                <span class="rpe-tier-badge" id="rpe-tier-badge">WARMUP TIER</span>
+              </div>
             </div>
-            <div class="metric-subtext" id="live-peak-sub">Bar Ascent Peak</div>
+            
+            <!-- Dynamic Effort Gauge & Target Pin -->
+            <div class="rpe-gauge-container">
+              <div class="rpe-gauge-track" aria-label="RPE Effort Gauge">
+                <div class="rpe-gauge-fill" id="rpe-gauge-fill" style="width: 0%;"></div>
+                <div class="rpe-target-pin" id="rpe-target-pin" title="Optimal Strength Target RPE 8.0" style="left: 80%;">
+                  <span class="target-tick"></span>
+                  <span class="target-text">TARGET 8.0</span>
+                </div>
+              </div>
+            </div>
+            <div class="rpe-baseline-sub font-mono" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
           </div>
         </div>
 
@@ -478,6 +502,73 @@
       </button>
     </nav>
 
+  </div>
+
+  <!-- Animated In-App Bluetooth Search Tab / Drawer -->
+  <div id="bluetooth-search-tab" class="bluetooth-search-sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ble-search-title">
+    <div class="ble-search-backdrop" id="ble-search-backdrop"></div>
+    <div class="ble-search-content glass-card">
+      <div class="ble-search-handle" aria-hidden="true"></div>
+      <div class="ble-search-header">
+        <div class="ble-title-group">
+          <span class="ble-badge font-mono">WEBBLE 100HZ</span>
+          <span id="ble-search-title" class="ble-search-title">BLUETOOTH SENSOR SEARCH</span>
+        </div>
+        <button type="button" id="btn-close-ble-search" class="ble-close-btn" aria-label="Close Bluetooth Search">
+          <span class="close-label">CLOSE</span>
+        </button>
+      </div>
+      
+      <!-- Animated Radar Scanning Visualizer -->
+      <div class="ble-radar-stage" aria-label="Bluetooth Radar Scanner">
+        <div class="radar-ripple radar-ripple-1"></div>
+        <div class="radar-ripple radar-ripple-2"></div>
+        <div class="radar-ripple radar-ripple-3"></div>
+        <div class="radar-core">
+          <svg class="ble-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
+          </svg>
+        </div>
+      </div>
+      
+      <div class="ble-search-status-box">
+        <div class="ble-status-ping" id="ble-ping-dot"></div>
+        <span id="ble-search-status-text" class="ble-status-text font-mono">Ready to connect to ESP32-C6 sensor</span>
+      </div>
+      
+      <!-- Discovered Device Card -->
+      <div class="ble-device-card glass-card" id="ble-device-card">
+        <div class="ble-device-left">
+          <div class="ble-device-icon">
+            <span class="ble-beacon-glow"></span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <div class="ble-device-info">
+            <span class="ble-device-name">VBT_Tracker</span>
+            <span class="ble-device-sub font-mono" id="ble-device-meta">ESP32-C6 • 100Hz Madgwick IMU</span>
+          </div>
+        </div>
+        <div class="ble-device-signal font-mono">
+          <div class="signal-bars">
+            <span class="bar bar-1 active"></span>
+            <span class="bar bar-2 active"></span>
+            <span class="bar bar-3 active"></span>
+            <span class="bar bar-4 active"></span>
+          </div>
+          <span class="rssi-text font-mono">-52 dBm</span>
+        </div>
+      </div>
+      
+      <!-- Connect Sensor Action Button -->
+      <div class="ble-action-container">
+        <button id="btn-connect" class="btn-glass-connect">
+          <span class="btn-ripple"></span>
+          <span class="btn-text">CONNECT SENSOR</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Error & Notification Glass Banner -->

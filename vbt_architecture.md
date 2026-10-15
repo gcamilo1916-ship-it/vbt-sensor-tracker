@@ -32,26 +32,48 @@ Sent when a user selects a different lift profile from the frontend UI.
   - Bench Press: `CMD:SL:BP`
   - Deadlift: `CMD:SL:DL`
 
-## 3. Physics Engine & Finite State Machine (FSM)
+## 3. Physics Engine, Madgwick AHRS & Finite State Machine (FSM)
 
-### FSM States (`RepState` enum)
-The bar tracking follows a strict Finite State Machine to track a repetition:
-1. **`IDLE`**: Barbell is at rest or stabilizing. Context-aware ZUPT (Zero Velocity Update) is active to prevent sensor drift.
-   - Transitions to `ECCENTRIC` if velocity drops below `-0.10 m/s`.
-   - Transitions to `CONCENTRIC` if velocity exceeds `0.10 m/s` (bypassing eccentric, depending on the movement).
+### 3.1 100Hz Madgwick AHRS & 3D Gravity Removal
+- **Sensor Fusion:** 6-axis Madgwick AHRS running deterministically at 100Hz (`dt = 0.01s`).
+- **Orientation Tracking:** Quaternion $\mathbf{q} = (q_0, q_1, q_2, q_3)$ continuously tracks sensor attitude in 3D space with dynamic acceleration rejection ($|\mathbf{a}| - g < 2.5 m/s^2$).
+- **Gravity Projection:** Derives the gravity reaction unit vector $\hat{\mathbf{g}}$ in body frame, isolates linear acceleration $\mathbf{a}_{lin} = \mathbf{a}_{meas} - G_{base}\hat{\mathbf{g}}$, and projects along the true Earth vertical axis: $a_{vert} = \mathbf{a}_{lin} \cdot \hat{\mathbf{g}}$.
+- **Vibration & Tilt Immunity:** Eliminates false upward velocity caused by non-linear Euclidean magnitude rectification; lateral shudder and bar tilt do not leak into vertical velocity.
+
+### 3.2 Dual-Signal Moving Variance ZUPT Detector
+- **Windowed Variance:** Circular buffer evaluating moving variance over a 200ms window (20 samples at 100Hz) for both linear acceleration ($\sigma_a^2$) and gyroscope rates ($\sigma_\omega^2$).
+- **Thermal Drift Tracking:** When verified stationary ($\sigma_a^2 < 0.040$, $\sigma_\omega^2 < 0.005$, $\omega_{rate} < 0.20$, $\Delta g < 0.35$):
+  - Zero-rate gyroscope bias vector $\mathbf{b}_\omega$ adapts continuously: $\mathbf{b}_\omega \leftarrow 0.998\mathbf{b}_\omega + 0.002\bar{\mathbf{\omega}}$.
+  - Gravity baseline $G_{base}$ adapts continuously: $G_{base} \leftarrow 0.998 G_{base} + 0.002 \|\bar{\mathbf{a}}\|$.
+  - Velocity and filtered acceleration are zeroed (ZUPT).
+  - Breaks the circular dependency: rest detection is invariant to baseline and thermal bias shifts.
+
+### 3.3 FSM States (`RepState` enum)
+The bar tracking follows an unbreakable Finite State Machine with timeouts:
+1. **`IDLE`**: Barbell is at rest or stabilizing. ZUPT locks velocity when motionless; continuous damping ($v \times 0.96$) prevents jitter accumulation.
+   - Transitions to `ECCENTRIC` if velocity drops below `-0.12 m/s`.
+   - Transitions to `CONCENTRIC` if velocity exceeds `+0.12 m/s` (e.g. direct concentric pull for Deadlift).
 2. **`ECCENTRIC`**: The downward phase of the lift.
-   - Transitions to `CONCENTRIC` when velocity reverses and exceeds `0.05 m/s`.
-3. **`CONCENTRIC`**: The upward, power phase of the lift. Displacement is integrated over time.
-   - Transitions to `IDLE` when velocity drops below `0.01 m/s` (end of lift).
-   - If displacement > 0.12m and duration > 0.3s, a valid repetition is logged and transmitted via BLE.
+   - Paused lift handling: If bar becomes stationary at the bottom (e.g. paused squat or paused bench), ZUPT zeros velocity to prevent negative integration drift.
+   - Transitions to `CONCENTRIC` when upward drive produces velocity $> 0.10 m/s$.
+   - Safety Guard: Aborts cleanly back to `IDLE` if eccentric duration exceeds 5.0 seconds, or if motionless on safety pins for $\ge 2.5$ seconds (allowing up to 2.0s paused bench/squat variations).
+3. **`CONCENTRIC`**: The upward, power phase of the lift. Displacement and peak velocity are accumulated.
+   - Completes repetition if:
+     1. Bar is stationary at lockout with displacement $\ge 0.12m$, OR
+     2. Velocity decelerates to $\le 0.04 m/s$ after peaking $\ge 0.15 m/s$ with displacement $\ge 0.12m$, OR
+     3. State duration exceeds 5.0 seconds (timeout guard).
+   - If displacement $\ge 0.12m$, duration $\ge 0.25s$, and peak velocity $\ge 0.15m/s$, a valid repetition is logged and notified via BLE.
+   - Resets physics state and enters a 250ms refractory window before returning to `IDLE`.
 
 ### Global State Variables
 - **`currentLift` / `pendingLift`**: Pointers to the active biomechanical `LiftProfile`. Queued changes apply only during the `IDLE` state.
-- **`velocity` (float)**: Integrated from filtered dynamic acceleration.
+- **`velocity` (float)**: Integrated from true Earth vertical linear acceleration.
 - **`rep_displacement` (float)**: Accumulated distance during the concentric phase.
-- **`gravity_baseline` (float)**: Calibrated 1G baseline to isolate dynamic acceleration. Slowly adapts during the `IDLE` phase.
-- **`filtered_accel` (float)**: Exponentially smoothed acceleration (using `ALPHA = 0.15`).
-- **`rep_start_time` (unsigned long)**: Timestamp capturing the start of the concentric phase to calculate mean velocity.
+- **`peak_concentric_velocity` (float)**: Maximum velocity recorded during the concentric drive.
+- **`gravity_baseline` (float)**: Ambient 1G baseline continuously adapted during stationary periods.
+- **`gyro_bias_x/y/z` (float)**: 3-axis gyro zero-rate offsets continuously adapted during stationary periods.
+- **`filtered_accel` (float)**: Low-pass filtered vertical acceleration (`ALPHA = 0.40`).
+- **`state_start_time` (unsigned long)**: Timestamp capturing the entry into current FSM state for duration tracking and timeout protection.
 
 ### Lift Profiles
 Each movement has predefined biomechanical baselines for RPE estimation:
