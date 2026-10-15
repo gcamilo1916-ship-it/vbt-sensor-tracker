@@ -67,10 +67,18 @@ class TestChallengerDotsAndPR(unittest.TestCase):
             cls.proc.terminate()
             raise unittest.SkipTest("Failed to connect to Headless Chrome debugging port")
 
-        # Locate target page
-        with urllib.request.urlopen(f"http://127.0.0.1:{DEBUG_PORT}/json/list", timeout=2) as resp:
-            pages = json.loads(resp.read().decode('utf-8'))
-        eros_pages = [p for p in pages if "index.html" in p.get("url", "")]
+        # Locate target page with retry loop to absorb transient Chrome startup disconnects
+        eros_pages = []
+        for _ in range(30):
+            try:
+                with urllib.request.urlopen(f"http://127.0.0.1:{DEBUG_PORT}/json/list", timeout=2) as resp:
+                    pages = json.loads(resp.read().decode('utf-8'))
+                    eros_pages = [p for p in pages if "index.html" in p.get("url", "")]
+                    if eros_pages:
+                        break
+            except Exception:
+                time.sleep(0.1)
+
         if not eros_pages:
             cls.proc.terminate()
             raise unittest.SkipTest("index.html target not found in Chrome")
@@ -116,8 +124,8 @@ class TestChallengerDotsAndPR(unittest.TestCase):
             pass
         if hasattr(cls, 'proc') and cls.proc:
             try:
-                cls.proc.terminate()
-                cls.proc.wait(timeout=2)
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(cls.proc.pid)],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception:
                 try:
                     cls.proc.kill()

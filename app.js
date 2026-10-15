@@ -349,7 +349,7 @@ function initStorage() {
       console.log(`[VBT] Loaded ${workouts.length} workout sessions from localStorage.`);
     }
   } catch (err) {
-    console.error('[VBT] Failed to read localStorage:', err);
+    console.warn('[VBT] Failed to read localStorage:', err);
     workouts = [];
   }
   loadPrProfile();

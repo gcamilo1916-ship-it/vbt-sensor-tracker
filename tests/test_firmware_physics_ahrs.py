@@ -262,5 +262,74 @@ class TestFirmwarePhysicsAHRS(unittest.TestCase):
         self.assertAlmostEqual(tracker.velocity, 0.0, delta=0.01)
         self.assertEqual(len(tracker.reps), 0)
 
+    def test_extreme_sticking_point_grind_above_displacement_threshold(self):
+        """Verify grinding through a sticking point after reaching 0.15m displacement (v dips to 0.015 m/s for 150ms) does not prematurely terminate the repetition."""
+        tracker = RobustVBTTracker(initial_baseline=9.81, initial_gyro_bias=[0.0, 0.0, 0.0])
+        tracker.filter.init_from_gravity(0, 0, 9.81)
+
+        dt = 0.01
+        samples = [(0.0, 0.0)] * 50
+        samples += make_bell_profile(1.0, 0.45, is_downward=True)
+        samples += [(0.0, 0.0)] * 30
+
+        # Phase 1: Powerful concentric drive reaching 0.15m displacement
+        for _ in range(50):
+            samples.append((0.75, 0.02))
+
+        # Phase 2: Deceleration into sticking point
+        for _ in range(35):
+            samples.append((-1.05, 0.05))
+
+        # Phase 3: Severe grind at sticking point: velocity stays at ~0.015 m/s for 150ms (15 samples)
+        for _ in range(15):
+            samples.append((0.00, 0.03))
+
+        # Phase 4: Break through sticking point: accelerate back up
+        for _ in range(40):
+            samples.append((0.71, 0.02))
+
+        # Phase 5: Lockout deceleration to complete rest
+        for _ in range(40):
+            samples.append((-0.75, 0.01))
+
+        samples += [(0.0, 0.0)] * 50
+
+        for i, (a_vert, g_rot) in enumerate(samples):
+            t = i * dt
+            tracker.step(t, 0.0, 0.0, 9.81 + a_vert, g_rot, 0.0, 0.0, dt)
+
+        self.assertEqual(len(tracker.reps), 1, "Extreme sticking point grind must be tracked as exactly 1 full repetition")
+        rep = tracker.reps[0]
+        self.assertTrue(rep["disp"] >= 0.25, f"Displacement {rep['disp']} must reflect full concentric stroke (>= 0.25m), not truncated at sticking point")
+
+    def test_failed_concentric_rep_aborts_cleanly(self):
+        """Verify failing a concentric lift halfway (8cm displacement) and dropping to pins aborts cleanly to IDLE."""
+        tracker = RobustVBTTracker(initial_baseline=9.81, initial_gyro_bias=[0.0, 0.0, 0.0])
+        tracker.filter.init_from_gravity(0, 0, 9.81)
+
+        dt = 0.01
+        samples = [(0.0, 0.0)] * 50
+        samples += make_bell_profile(1.0, 0.45, is_downward=True)
+        samples += [(0.0, 0.0)] * 30
+
+        # Push off chest: reaches 8cm (0.08m)
+        for _ in range(25):
+            samples.append((0.60, 0.02))
+
+        # Fail and drop bar back down:
+        for _ in range(35):
+            samples.append((-1.00, 0.02))
+
+        # Bar resting motionless on pins for 2.0s
+        samples += [(0.0, 0.0)] * 200
+
+        for i, (a_vert, g_rot) in enumerate(samples):
+            t = i * dt
+            tracker.step(t, 0.0, 0.0, 9.81 + a_vert, g_rot, 0.0, 0.0, dt)
+
+        self.assertEqual(len(tracker.reps), 0, "Failed rep must not be recorded")
+        self.assertEqual(tracker.currentState, "IDLE", "Tracker must abort cleanly to IDLE after motionless on pins")
+        self.assertAlmostEqual(tracker.velocity, 0.0, delta=0.01)
+
 if __name__ == '__main__':
     unittest.main()

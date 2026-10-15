@@ -73,9 +73,17 @@ class CDPClient:
         if not ready:
             raise RuntimeError("Failed to connect to Chrome debugging port")
 
-        with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/json/list", timeout=2) as resp:
-            pages = json.loads(resp.read().decode('utf-8'))
-        eros_pages = [p for p in pages if "index.html" in p.get("url", "")]
+        eros_pages = []
+        for _ in range(30):
+            try:
+                with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/json/list", timeout=2) as resp:
+                    pages = json.loads(resp.read().decode('utf-8'))
+                    eros_pages = [p for p in pages if "index.html" in p.get("url", "")]
+                    if eros_pages:
+                        break
+            except Exception:
+                time.sleep(0.1)
+
         if not eros_pages:
             raise RuntimeError("index.html target not found in Chrome pages")
 
@@ -115,8 +123,8 @@ class CDPClient:
                 pass
         if self.proc:
             try:
-                self.proc.terminate()
-                self.proc.wait(timeout=2)
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(self.proc.pid)],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception:
                 try:
                     self.proc.kill()

@@ -305,6 +305,8 @@ class RobustVBTTracker:
                 self.rep_displacement = 0.0
                 self.peak_velocity = self.velocity
                 self.low_velocity_concentric_count = 0
+                self.stationary_count = 0
+                self.is_stationary = False
 
         elif self.currentState == "ECCENTRIC":
             # Inflection point -> concentric
@@ -314,18 +316,21 @@ class RobustVBTTracker:
                 self.rep_displacement = 0.0
                 self.peak_velocity = self.velocity
                 self.low_velocity_concentric_count = 0
+                self.stationary_count = 0
+                self.is_stationary = False
             elif state_duration > 8.0 or self.motionless_in_eccentric_ms > 3500:
                 self.currentState = "IDLE"
                 self.velocity = 0.0
                 self.filtered_accel = 0.0
 
         elif self.currentState == "CONCENTRIC":
-            is_lockout_stationary = (self.is_stationary and self.rep_displacement >= 0.12)
-            is_vel_stopped = ((self.velocity <= 0.00 or self.low_velocity_concentric_count >= 6) and
-                              self.peak_velocity >= 0.15 and self.rep_displacement >= 0.12)
+            is_lockout_stationary = (self.is_stationary and self.rep_displacement >= 0.12 and state_duration >= 0.25)
+            is_vel_stopped = ((self.velocity <= 0.00 or self.low_velocity_concentric_count >= 25) and
+                              self.peak_velocity >= 0.15 and self.rep_displacement >= 0.12 and state_duration >= 0.25)
             is_timed_out = (state_duration > 6.0)
+            is_abort_motionless = (self.is_stationary and self.rep_displacement < 0.12 and state_duration > 1.5)
 
-            if is_lockout_stationary or is_vel_stopped or is_timed_out:
+            if is_lockout_stationary or is_vel_stopped or is_timed_out or is_abort_motionless:
                 rep_dur = state_duration
                 if self.rep_displacement >= 0.12 and rep_dur >= 0.25 and self.peak_velocity >= 0.15:
                     mcv = self.rep_displacement / rep_dur
