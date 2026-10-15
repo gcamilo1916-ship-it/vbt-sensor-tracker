@@ -64,7 +64,7 @@
       <section id="tab-live" class="tab-section active-section">
         
         <!-- Hardware & Lift Control Center -->
-        <section class="glass-card controls-panel">
+        <div class="glass-card controls-panel">
           <button id="btn-connect" class="btn-glass-connect">
             <span class="btn-ripple"></span>
             <span class="btn-text">CONNECT SENSOR</span>
@@ -101,10 +101,38 @@
               <span id="btn-set-text">START SET</span>
             </button>
           </div>
-        </section>
+        </div>
+
+        <!-- High-Contrast visionOS RPE Hero Banner -->
+        <div class="glass-card rpe-hero-banner tier-warmup" id="rpe-hero-card">
+          <div class="rpe-hero-header">
+            <span class="rpe-hero-tag">REAL-TIME EFFORT TIER</span>
+            <span class="rpe-tier-badge" id="rpe-tier-badge">WARMUP TIER</span>
+          </div>
+          <div class="rpe-hero-main">
+            <div class="rpe-score-group">
+              <span id="live-rpe" class="rpe-hero-number font-mono tabular-nums">0.0</span>
+              <span class="rpe-hero-denom">/10</span>
+            </div>
+            <div class="rpe-hero-meta">
+              <div class="rpe-rir-pill font-mono" id="live-rir-pill">RIR: 10.0</div>
+              <div class="rpe-subtext font-mono" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
+            </div>
+          </div>
+          <!-- Dynamic Effort Gauge & Target Pin -->
+          <div class="rpe-gauge-container">
+            <div class="rpe-gauge-track" aria-label="RPE Effort Gauge">
+              <div class="rpe-gauge-fill" id="rpe-gauge-fill" style="width: 0%;"></div>
+              <div class="rpe-target-pin" title="Optimal Strength Target RPE 8.0" style="left: 80%;">
+                <span class="target-tick"></span>
+                <span class="target-text">TARGET 8.0</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- VisionOS Bar Path Visualizer & Telemetry Arena -->
-        <section class="glass-card telemetry-arena">
+        <div class="glass-card telemetry-arena">
           <div class="metric-card metric-left">
             <span class="metric-tag">MEAN VELOCITY</span>
             <div class="metric-display">
@@ -131,17 +159,17 @@
           </div>
 
           <div class="metric-card metric-right">
-            <span class="metric-tag">ESTIMATED RPE</span>
+            <span class="metric-tag">PEAK VELOCITY</span>
             <div class="metric-display">
-              <span id="live-rpe" class="metric-number font-mono">0.0</span>
-              <span class="metric-unit">/10</span>
+              <span id="live-peak-vel" class="metric-number font-mono tabular-nums">0.00</span>
+              <span class="metric-unit">m/s</span>
             </div>
-            <div class="metric-subtext" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
+            <div class="metric-subtext" id="live-peak-sub">Bar Ascent Peak</div>
           </div>
-        </section>
+        </div>
 
         <!-- Quick Summary Mini-HUD -->
-        <section class="live-mini-hud">
+        <div class="live-mini-hud">
           <div class="mini-hud-item glass-card">
             <span class="mini-label">ACTIVE SET</span>
             <span class="mini-val font-mono" id="hud-active-set">Set 0</span>
@@ -154,7 +182,7 @@
             <span class="mini-label">VEL LOSS</span>
             <span class="mini-val font-mono" id="hud-vel-loss">0.0%</span>
           </div>
-        </section>
+        </div>
 
       </section>
 
@@ -257,6 +285,149 @@
           </div>
         </div>
 
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- PR & COMPETITION TRACKER DASHBOARD (R4)        -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <section id="pr-competition-tracker" class="pr-tracker-block">
+          
+          <!-- Current PRs Card -->
+          <div class="glass-card pr-card" id="current-prs-card">
+            <div class="pr-card-header">
+              <span class="pr-card-title">CURRENT 1RM & PEAK VELOCITY</span>
+              <span class="pr-card-badge font-mono">GYM PR</span>
+            </div>
+            <div class="pr-lifts-grid">
+              <div class="pr-lift-item">
+                <span class="pr-lift-name">SQUAT</span>
+                <div class="pr-input-wrap">
+                  <input type="number" id="pr-squat-weight" class="pr-num-input font-mono" value="140.0" step="0.5" min="0" max="600" aria-label="Squat 1RM weight in kg">
+                  <span class="pr-unit">kg</span>
+                </div>
+                <div class="pr-sensor-telemetry">
+                  <span class="telemetry-lbl">PEAK SENSOR</span>
+                  <span id="pr-squat-vel" class="telemetry-val font-mono">0.00 m/s</span>
+                </div>
+              </div>
+
+              <div class="pr-lift-item">
+                <span class="pr-lift-name">BENCH</span>
+                <div class="pr-input-wrap">
+                  <input type="number" id="pr-bench-weight" class="pr-num-input font-mono" value="100.0" step="0.5" min="0" max="500" aria-label="Bench Press 1RM weight in kg">
+                  <span class="pr-unit">kg</span>
+                </div>
+                <div class="pr-sensor-telemetry">
+                  <span class="telemetry-lbl">PEAK SENSOR</span>
+                  <span id="pr-bench-vel" class="telemetry-val font-mono">0.00 m/s</span>
+                </div>
+              </div>
+
+              <div class="pr-lift-item">
+                <span class="pr-lift-name">DEADLIFT</span>
+                <div class="pr-input-wrap">
+                  <input type="number" id="pr-deadlift-weight" class="pr-num-input font-mono" value="180.0" step="0.5" min="0" max="600" aria-label="Deadlift 1RM weight in kg">
+                  <span class="pr-unit">kg</span>
+                </div>
+                <div class="pr-sensor-telemetry">
+                  <span class="telemetry-lbl">PEAK SENSOR</span>
+                  <span id="pr-deadlift-vel" class="telemetry-val font-mono">0.00 m/s</span>
+                </div>
+              </div>
+            </div>
+            <div class="pr-card-footer">
+              <span class="footer-label">GYM TOTAL</span>
+              <span id="pr-current-total" class="footer-val font-mono">420.0 kg</span>
+            </div>
+          </div>
+
+          <!-- Competition PR Box ("COMP PR") -->
+          <div class="glass-card pr-card" id="comp-pr-box">
+            <div class="pr-card-header">
+              <span class="pr-card-title">ALL-TIME COMPETITION RECORDS</span>
+              <span class="pr-card-badge comp-badge font-mono">COMP PR</span>
+            </div>
+            <div class="pr-lifts-grid">
+              <div class="pr-lift-item">
+                <span class="pr-lift-name">COMP SQUAT</span>
+                <div class="pr-input-wrap">
+                  <input type="number" id="comp-squat-weight" class="pr-num-input font-mono" value="150.0" step="0.5" min="0" max="600" aria-label="Competition Squat in kg">
+                  <span class="pr-unit">kg</span>
+                </div>
+              </div>
+
+              <div class="pr-lift-item">
+                <span class="pr-lift-name">COMP BENCH</span>
+                <div class="pr-input-wrap">
+                  <input type="number" id="comp-bench-weight" class="pr-num-input font-mono" value="105.0" step="0.5" min="0" max="500" aria-label="Competition Bench in kg">
+                  <span class="pr-unit">kg</span>
+                </div>
+              </div>
+
+              <div class="pr-lift-item">
+                <span class="pr-lift-name">COMP DEADLIFT</span>
+                <div class="pr-input-wrap">
+                  <input type="number" id="comp-deadlift-weight" class="pr-num-input font-mono" value="190.0" step="0.5" min="0" max="600" aria-label="Competition Deadlift in kg">
+                  <span class="pr-unit">kg</span>
+                </div>
+              </div>
+            </div>
+            <div class="pr-card-footer">
+              <span class="footer-label">COMP TOTAL</span>
+              <span id="comp-pr-total" class="footer-val font-mono">445.0 kg</span>
+            </div>
+          </div>
+
+          <!-- Live DOTS Calculator Module -->
+          <div class="glass-card dots-calculator-card" id="dots-calculator-module">
+            <div class="dots-header">
+              <div class="dots-title-group">
+                <span class="dots-title">LIVE DOTS CALCULATOR</span>
+                <span class="dots-subtitle">OFFICIAL IPF RELATIVE STRENGTH ENGINE</span>
+              </div>
+              <!-- Gender Selector Segmented Capsule -->
+              <div class="dots-gender-pill" role="radiogroup" aria-label="Athlete Gender">
+                <button type="button" class="dots-gender-btn active" id="dots-gender-male" data-gender="male" role="radio" aria-checked="true">MALE</button>
+                <button type="button" class="dots-gender-btn" id="dots-gender-female" data-gender="female" role="radio" aria-checked="false">FEMALE</button>
+              </div>
+            </div>
+
+            <div class="dots-inputs-row">
+              <div class="dots-bw-group">
+                <label for="dots-bodyweight-input" class="dots-label">BODYWEIGHT</label>
+                <div class="dots-input-wrap">
+                  <input type="number" id="dots-bodyweight-input" class="dots-input font-mono" value="80.0" step="0.1" min="30" max="300" aria-label="Athlete bodyweight in kg">
+                  <span class="dots-unit">kg</span>
+                </div>
+              </div>
+
+              <div class="dots-source-group">
+                <label class="dots-label">CALCULATE FROM</label>
+                <div class="dots-source-pill">
+                  <button type="button" class="dots-source-btn active" id="dots-src-current" data-source="current">GYM PRs</button>
+                  <button type="button" class="dots-source-btn" id="dots-src-comp" data-source="comp">COMP PRs</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="dots-results-banner">
+              <div class="dots-score-box">
+                <span class="dots-score-label">DOTS SCORE</span>
+                <span id="dots-score-display" class="dots-score-value font-mono">289.61</span>
+              </div>
+              <div class="dots-meta-box">
+                <div class="dots-meta-item">
+                  <span class="meta-label">TOTAL LOAD</span>
+                  <span id="dots-total-display" class="meta-val font-mono">420.0 kg</span>
+                </div>
+                <div class="dots-meta-item">
+                  <span class="meta-label">TIER</span>
+                  <span id="dots-tier-badge" class="dots-tier-pill">CLASS II</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
         <!-- Data Export & Actions Row -->
         <div class="history-actions-row">
           <button id="btn-export-csv" class="btn-action-glass">
@@ -280,7 +451,8 @@
     </main>
 
     <!-- Floating Glass OS Bottom Navigation Bar -->
-    <nav class="bottom-glass-nav" aria-label="Main Navigation">
+    <nav class="bottom-glass-nav" data-active="live" aria-label="Main Navigation">
+      <div class="nav-indicator-pill" id="nav-indicator-pill" aria-hidden="true"></div>
       <button class="nav-tab active" data-target="live" aria-label="Live Tracker Tab">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="8"></circle>

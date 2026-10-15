@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-10-15T09:55:40Z",
+  "timestamp": "2026-10-15T16:59:03Z",
   "tier_filter": "all",
   "milestone_filter": "all",
-  "total": 187,
-  "passed": 187,
+  "total": 253,
+  "passed": 253,
   "failed": 0,
   "errors": 0,
   "skipped": 0,
-  "duration": 1.8692,
+  "duration": 2.1933,
   "tier_summary": {
     "Tier 1": {
       "total": 80,
@@ -43,6 +43,13 @@
       "failed": 0,
       "skipped": 0,
       "status": "PASS"
+    },
+    "Overhaul": {
+      "total": 66,
+      "passed": 66,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS"
     }
   },
   "test_records": [
@@ -50,14 +57,14 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_01_obsidian_background_token",
       "name": "test_f01_01_obsidian_background_token",
       "status": "PASS",
-      "duration": 0.0003,
+      "duration": 0.0004,
       "doc": "F1: Verify obsidian base color #050507 token is configured in :root."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_02_glass_card_background_token",
       "name": "test_f01_02_glass_card_background_token",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "F1: Verify ultra-translucent glass background token rgba(255, 255, 255, 0.04)."
     },
     {
@@ -71,14 +78,14 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_04_glass_card_backdrop_filter",
       "name": "test_f01_04_glass_card_backdrop_filter",
       "status": "PASS",
-      "duration": 0.0053,
+      "duration": 0.0084,
       "doc": "F1: Verify .glass-card specifies backdrop-filter: blur(30px) saturate(180%)."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_05_glass_card_webkit_backdrop_filter",
       "name": "test_f01_05_glass_card_webkit_backdrop_filter",
       "status": "PASS",
-      "duration": 0.0055,
+      "duration": 0.0085,
       "doc": "F1: Verify .glass-card specifies -webkit-backdrop-filter for iOS Safari/Bluefy."
     },
     {
@@ -92,7 +99,7 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f02_02_specular_gradient_top_stop",
       "name": "test_f02_02_specular_gradient_top_stop",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "F2: Verify top specular highlight stop rgba(255, 255, 255, 0.45) 0%."
     },
     {
@@ -113,14 +120,14 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f02_05_glass_card_specular_highlight",
       "name": "test_f02_05_glass_card_specular_highlight",
       "status": "PASS",
-      "duration": 0.0055,
+      "duration": 0.0084,
       "doc": "F2: Verify specular edge highlight applied via border-box or box-shadow."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_01_css_balanced_braces",
       "name": "test_f03_01_css_balanced_braces",
       "status": "PASS",
-      "duration": 0.0026,
+      "duration": 0.0038,
       "doc": "F3: Verify style.css has perfectly balanced braces with zero unclosed blocks."
     },
     {
@@ -134,21 +141,21 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_03_custom_option_pointer_events",
       "name": "test_f03_03_custom_option_pointer_events",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0086,
       "doc": "F3: Verify .custom-option * contains pointer-events: none."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_04_custom_option_font_weight_styling",
       "name": "test_f03_04_custom_option_font_weight_styling",
       "status": "PASS",
-      "duration": 0.0059,
+      "duration": 0.0087,
       "doc": "F3: Verify .custom-option defines font-weight: 800."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_05_custom_option_transition_property",
       "name": "test_f03_05_custom_option_transition_property",
       "status": "PASS",
-      "duration": 0.0057,
+      "duration": 0.0086,
       "doc": "F3: Verify .custom-option defines transition for smooth interaction."
     },
     {
@@ -176,21 +183,21 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f04_04_brand_title_typography_tracking",
       "name": "test_f04_04_brand_title_typography_tracking",
       "status": "PASS",
-      "duration": 0.0059,
+      "duration": 0.0087,
       "doc": "F4: Verify .brand-title has refined tracking (-1px or -0.025em to -0.03em)."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f04_05_brand_title_bold_hierarchy",
       "name": "test_f04_05_brand_title_bold_hierarchy",
       "status": "PASS",
-      "duration": 0.0057,
+      "duration": 0.0085,
       "doc": "F4: Verify .brand-title uses Apple visionOS bold weight hierarchy (700-900)."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f05_01_btn_workout_master_zero_emoji",
       "name": "test_f05_01_btn_workout_master_zero_emoji",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "F5: Verify #btn-workout-master contains zero emojis or decorative badges."
     },
     {
@@ -225,105 +232,105 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_01_btn_glass_primary_pill_radius",
       "name": "test_f06_01_btn_glass_primary_pill_radius",
       "status": "PASS",
-      "duration": 0.0057,
+      "duration": 0.0082,
       "doc": "F6: Verify .btn-glass-primary specifies border-radius: 999px."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_02_btn_glass_connect_pill_radius",
       "name": "test_f06_02_btn_glass_connect_pill_radius",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0083,
       "doc": "F6: Verify .btn-glass-connect specifies border-radius: 999px."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_03_btn_glass_set_pill_radius",
       "name": "test_f06_03_btn_glass_set_pill_radius",
       "status": "PASS",
-      "duration": 0.0057,
+      "duration": 0.0084,
       "doc": "F6: Verify .btn-glass-set specifies border-radius: 999px."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_04_btn_action_glass_pill_radius",
       "name": "test_f06_04_btn_action_glass_pill_radius",
       "status": "PASS",
-      "duration": 0.0057,
+      "duration": 0.0083,
       "doc": "F6: Verify .btn-action-glass specifies border-radius: 999px."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_05_glass_pill_general_class",
       "name": "test_f06_05_glass_pill_general_class",
       "status": "PASS",
-      "duration": 0.0059,
+      "duration": 0.0086,
       "doc": "F6: Verify .glass-pill class specifies border-radius: 999px."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_01_font_mono_tabular_nums",
       "name": "test_f07_01_font_mono_tabular_nums",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0086,
       "doc": "F7: Verify .font-mono class enforces font-variant-numeric: tabular-nums."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_02_font_mono_tracking",
       "name": "test_f07_02_font_mono_tracking",
       "status": "PASS",
-      "duration": 0.0057,
+      "duration": 0.0086,
       "doc": "F7: Verify .font-mono class enforces letter-spacing: -0.03em."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_03_session_timer_tracking",
       "name": "test_f07_03_session_timer_tracking",
       "status": "PASS",
-      "duration": 0.0074,
+      "duration": 0.0086,
       "doc": "F7: Verify .session-timer enforces tabular-nums and -0.03em tracking."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_04_metric_number_tracking",
       "name": "test_f07_04_metric_number_tracking",
       "status": "PASS",
-      "duration": 0.0059,
+      "duration": 0.0087,
       "doc": "F7: Verify .metric-number enforces -0.03em tracking."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_05_ring_value_tracking",
       "name": "test_f07_05_ring_value_tracking",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0086,
       "doc": "F7: Verify .ring-value enforces -0.03em tracking."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_01_controls_panel_overflow_visible",
       "name": "test_f08_01_controls_panel_overflow_visible",
       "status": "PASS",
-      "duration": 0.0071,
+      "duration": 0.0085,
       "doc": "F8: Verify .controls-panel specifies overflow: visible !important."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_02_controls_panel_relative_position",
       "name": "test_f08_02_controls_panel_relative_position",
       "status": "PASS",
-      "duration": 0.0055,
+      "duration": 0.0083,
       "doc": "F8: Verify .controls-panel has position: relative and z-index: 50."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_03_controls_row_overflow_visible",
       "name": "test_f08_03_controls_row_overflow_visible",
       "status": "PASS",
-      "duration": 0.006,
+      "duration": 0.0086,
       "doc": "F8: Verify .controls-row has overflow: visible."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_04_custom_select_wrapper_open_zindex",
       "name": "test_f08_04_custom_select_wrapper_open_zindex",
       "status": "PASS",
-      "duration": 0.0059,
+      "duration": 0.0086,
       "doc": "F8: Verify .custom-select-wrapper.open specifies z-index: 1000."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_05_custom_select_options_zindex",
       "name": "test_f08_05_custom_select_options_zindex",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0089,
       "doc": "F8: Verify .custom-select-options specifies z-index: 1001."
     },
     {
@@ -372,14 +379,14 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f10_02_ambient_mesh_styling_in_css",
       "name": "test_f10_02_ambient_mesh_styling_in_css",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0085,
       "doc": "F10: Verify .ambient-glow-mesh defined with pointer-events: none and blur."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f10_03_deadlift_neon_accent_color",
       "name": "test_f10_03_deadlift_neon_accent_color",
       "status": "PASS",
-      "duration": 0.0002,
+      "duration": 0.0001,
       "doc": "F10: Verify Cyberpunk Magenta Deadlift accent token --accent-dl: #FF0055."
     },
     {
@@ -505,7 +512,7 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f14_01_all_38_dom_ids_exist",
       "name": "test_f14_01_all_38_dom_ids_exist",
       "status": "PASS",
-      "duration": 0.0043,
+      "duration": 0.0049,
       "doc": "F14: Verify all 38 DOM IDs bound by app.js exist in index.html."
     },
     {
@@ -540,14 +547,14 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f15_01_suite_file_structure",
       "name": "test_f15_01_suite_file_structure",
       "status": "PASS",
-      "duration": 0.0002,
+      "duration": 0.0003,
       "doc": "F15: Verify test files exist in tests directory."
     },
     {
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f15_02_test_runner_entrypoint",
       "name": "test_f15_02_test_runner_entrypoint",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0,
       "doc": "F15: Verify test runner entrypoint exists."
     },
     {
@@ -568,7 +575,7 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f15_05_html_parser_functional",
       "name": "test_f15_05_html_parser_functional",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "F15: Verify HTML tag extractor finds button elements."
     },
     {
@@ -603,42 +610,42 @@
       "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f16_05_headless_chrome_smoke_status",
       "name": "test_f16_05_headless_chrome_smoke_status",
       "status": "PASS",
-      "duration": 0.3569,
+      "duration": 0.4021,
       "doc": "F16: Verify Headless Chrome connects and renders title 'Eros'."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_01_empty_panel_styling",
       "name": "test_b01_01_empty_panel_styling",
       "status": "PASS",
-      "duration": 0.006,
+      "duration": 0.0088,
       "doc": "B1.1: Verify .glass-card styling applies correctly even with minimal/empty children."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_02_nested_card_translucency",
       "name": "test_b01_02_nested_card_translucency",
       "status": "PASS",
-      "duration": 0.0111,
+      "duration": 0.0173,
       "doc": "B1.2: Verify sub-panels like .rep-item-card, .session-history-card preserve glass translucency."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_03_extreme_saturation_handling",
       "name": "test_b01_03_extreme_saturation_handling",
       "status": "PASS",
-      "duration": 0.0059,
+      "duration": 0.0088,
       "doc": "B1.3: Verify backdrop-filter saturation is bounded at 180% without excessive blowouts."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_04_missing_webkit_prefix_detection",
       "name": "test_b01_04_missing_webkit_prefix_detection",
       "status": "PASS",
-      "duration": 0.0055,
+      "duration": 0.0086,
       "doc": "B1.4: Verify every backdrop-filter on .glass-card has a matching -webkit-backdrop-filter."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_05_ultra_low_alpha_border",
       "name": "test_b01_05_ultra_low_alpha_border",
       "status": "PASS",
-      "duration": 0.0002,
+      "duration": 0.0003,
       "doc": "B1.5: Verify base glass border alpha channel does not exceed 0.20 for subtlety."
     },
     {
@@ -652,7 +659,7 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b02_02_inverted_gradient_rejection",
       "name": "test_b02_02_inverted_gradient_rejection",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "B2.2: Verify specular refraction gradient starts at 180deg (top-down), not 0deg (bottom-up)."
     },
     {
@@ -694,7 +701,7 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b03_03_media_queries_balanced",
       "name": "test_b03_03_media_queries_balanced",
       "status": "PASS",
-      "duration": 0.0027,
+      "duration": 0.0042,
       "doc": "B3.3: Verify all @keyframes and at-rules in style.css are cleanly closed and balanced."
     },
     {
@@ -736,14 +743,14 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b04_04_brand_title_gradient_clip_properties",
       "name": "test_b04_04_brand_title_gradient_clip_properties",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0088,
       "doc": "B4.4: Verify .brand-title utilizes Apple specular text fill clipping."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b04_05_header_container_layout_flex",
       "name": "test_b04_05_header_container_layout_flex",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0091,
       "doc": "B4.5: Verify .header-top-row uses flexbox layout for responsive alignment."
     },
     {
@@ -771,7 +778,7 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b05_04_dynamic_js_emoji_injection_audit",
       "name": "test_b05_04_dynamic_js_emoji_injection_audit",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "B5.4: Verify JavaScript button text mutations never inject button emojis."
     },
     {
@@ -785,35 +792,35 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_01_pill_radius_unit_strictly_pixels",
       "name": "test_b06_01_pill_radius_unit_strictly_pixels",
       "status": "PASS",
-      "duration": 0.0229,
+      "duration": 0.0352,
       "doc": "B6.1: Verify pill buttons use 999px (capsule) rather than percentages."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_02_button_overflow_hidden_for_pill",
       "name": "test_b06_02_button_overflow_hidden_for_pill",
       "status": "PASS",
-      "duration": 0.0057,
+      "duration": 0.0087,
       "doc": "B6.2: Verify pill buttons have overflow: hidden or contain borders properly."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_03_button_hover_active_radius_invariance",
       "name": "test_b06_03_button_hover_active_radius_invariance",
       "status": "PASS",
-      "duration": 0.0119,
+      "duration": 0.0182,
       "doc": "B6.3: Verify :hover and :active states do not reset border-radius."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_04_pill_button_padding_balance",
       "name": "test_b06_04_pill_button_padding_balance",
       "status": "PASS",
-      "duration": 0.0064,
+      "duration": 0.0088,
       "doc": "B6.4: Verify pill buttons provide horizontal padding >= 12px for thumb targets."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_05_pill_button_transition_smoothness",
       "name": "test_b06_05_pill_button_transition_smoothness",
       "status": "PASS",
-      "duration": 0.0176,
+      "duration": 0.0265,
       "doc": "B6.5: Verify buttons define smooth transition for visionOS elevation feedback."
     },
     {
@@ -855,35 +862,35 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_01_dropdown_parent_no_overflow_hidden",
       "name": "test_b08_01_dropdown_parent_no_overflow_hidden",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0127,
       "doc": "B8.1: Verify .controls-panel explicitly overrides .glass-card overflow: hidden."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_02_dropdown_stacking_above_telemetry_arena",
       "name": "test_b08_02_dropdown_stacking_above_telemetry_arena",
       "status": "PASS",
-      "duration": 0.0063,
+      "duration": 0.0153,
       "doc": "B8.2: Verify .custom-select-wrapper.open z-index (1000) exceeds telemetry arena."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_03_dropdown_zindex_exceeds_bottom_nav",
       "name": "test_b08_03_dropdown_zindex_exceeds_bottom_nav",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0097,
       "doc": "B8.3: Verify dropdown options z-index (1001) is higher than open wrapper (1000)."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_04_dropdown_options_absolute_positioning",
       "name": "test_b08_04_dropdown_options_absolute_positioning",
       "status": "PASS",
-      "duration": 0.0059,
+      "duration": 0.0086,
       "doc": "B8.4: Verify .custom-select-options uses position: absolute."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_05_dropdown_width_matching_wrapper",
       "name": "test_b08_05_dropdown_width_matching_wrapper",
       "status": "PASS",
-      "duration": 0.006,
+      "duration": 0.0086,
       "doc": "B8.5: Verify .custom-select-options spans left: 0 and right: 0."
     },
     {
@@ -925,21 +932,21 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b10_01_rapid_theme_cycling_consistency",
       "name": "test_b10_01_rapid_theme_cycling_consistency",
       "status": "PASS",
-      "duration": 0.0185,
+      "duration": 0.027,
       "doc": "B10.1: Verify all 3 body theme classes define matching --current-accent and --accent-rgb."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b10_02_accent_rgb_format_validity",
       "name": "test_b10_02_accent_rgb_format_validity",
       "status": "PASS",
-      "duration": 0.0003,
+      "duration": 0.0004,
       "doc": "B10.2: Verify accent RGB tokens format as comma-separated integers (e.g. 255, 0, 85)."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b10_03_ambient_mesh_fixed_viewport_inset",
       "name": "test_b10_03_ambient_mesh_fixed_viewport_inset",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0087,
       "doc": "B10.3: Verify ambient mesh has fixed positioning to cover viewport without scrolling."
     },
     {
@@ -988,7 +995,7 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b11_05_keyframes_transform_validity",
       "name": "test_b11_05_keyframes_transform_validity",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "B11.5: Verify keyframes contain transform or top properties for motion."
     },
     {
@@ -1009,7 +1016,7 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b12_03_malformed_ble_payload_corrupted_numbers",
       "name": "test_b12_03_malformed_ble_payload_corrupted_numbers",
       "status": "PASS",
-      "duration": 0.0,
+      "duration": 0.0001,
       "doc": "B12.3: Verify BLE parser ignores payload with non-numeric velocity/rpe."
     },
     {
@@ -1121,7 +1128,7 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b15_04_html_dom_id_handles_special_chars",
       "name": "test_b15_04_html_dom_id_handles_special_chars",
       "status": "PASS",
-      "duration": 0.0002,
+      "duration": 0.0003,
       "doc": "B15.4: Verify find_dom_id returns False for non-existent ID."
     },
     {
@@ -1142,14 +1149,14 @@
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b16_02_desktop_viewport_scaling",
       "name": "test_b16_02_desktop_viewport_scaling",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "B16.2: Verify html, body specifies min-height: 100vh for full viewport coverage."
     },
     {
       "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b16_03_css_font_family_fallbacks",
       "name": "test_b16_03_css_font_family_fallbacks",
       "status": "PASS",
-      "duration": 0.0001,
+      "duration": 0.0002,
       "doc": "B16.3: Verify --font-sans concludes with generic sans-serif fallback."
     },
     {
@@ -1170,7 +1177,7 @@
       "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p01_lift_theme_switch_updates_orb_and_surfaces",
       "name": "test_p01_lift_theme_switch_updates_orb_and_surfaces",
       "status": "PASS",
-      "duration": 0.0064,
+      "duration": 0.009,
       "doc": "P01: Lift theme selection (F9/F10) couples with orb animation (F11) and glass surfaces (F1)."
     },
     {
@@ -1205,21 +1212,21 @@
       "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p06_dropdown_layering_above_telemetry_with_ambient_mesh",
       "name": "test_p06_dropdown_layering_above_telemetry_with_ambient_mesh",
       "status": "PASS",
-      "duration": 0.0115,
+      "duration": 0.0176,
       "doc": "P06: Dropdown options (F8) layer at z-index 1001 above telemetry arena without mesh obstruction (F10)."
     },
     {
       "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p07_tab_navigation_to_set_view_renders_rep_stream",
       "name": "test_p07_tab_navigation_to_set_view_renders_rep_stream",
       "status": "PASS",
-      "duration": 0.0004,
+      "duration": 0.0003,
       "doc": "P07: Navigating to Set tab (F14) displays active reps container (F13) with pill tabs (F6)."
     },
     {
       "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p08_tab_navigation_to_history_renders_lifetime_aggregates",
       "name": "test_p08_tab_navigation_to_history_renders_lifetime_aggregates",
       "status": "PASS",
-      "duration": 0.0007,
+      "duration": 0.0008,
       "doc": "P08: Navigating to History tab (F14) displays lifetime summary statistics (F13)."
     },
     {
@@ -1254,14 +1261,14 @@
       "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p13_css_syntax_clean_and_glass_surfaces_intact",
       "name": "test_p13_css_syntax_clean_and_glass_surfaces_intact",
       "status": "PASS",
-      "duration": 0.0058,
+      "duration": 0.0091,
       "doc": "P13: CSS syntax integrity (F3) ensures .glass-card specular refraction renders without corruption (F1/F2)."
     },
     {
       "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p14_brand_styling_harmonizes_with_metrics_and_theme",
       "name": "test_p14_brand_styling_harmonizes_with_metrics_and_theme",
       "status": "PASS",
-      "duration": 0.0002,
+      "duration": 0.0004,
       "doc": "P14: Brand title (F4) and numerical metrics (F7) render in unified typography over obsidian (F1)."
     },
     {
@@ -1345,15 +1352,477 @@
       "id": "tests.test_browser_headless.TestHeadlessChromeBrowser.test_chrome_02_headless_instance_launches",
       "name": "test_chrome_02_headless_instance_launches",
       "status": "PASS",
-      "duration": 0.3554,
+      "duration": 0.3676,
       "doc": "Verify headless Chrome launches and opens remote debugging port."
     },
     {
       "id": "tests.test_browser_headless.TestHeadlessChromeBrowser.test_chrome_03_index_html_renders_cleanly",
       "name": "test_chrome_03_index_html_renders_cleanly",
       "status": "PASS",
-      "duration": 0.7652,
+      "duration": 0.7852,
       "doc": "Verify index.html page title resolves to 'Eros' without errors."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_01_set_toggle_does_not_redirect_to_tab_set",
+      "name": "test_r1_01_set_toggle_does_not_redirect_to_tab_set",
+      "status": "PASS",
+      "duration": 0.0003,
+      "doc": "R1: Verify btnSetToggle click handler in app.js does NOT redirect to tab-set."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_02_rpe_hero_card_exists_in_live_tab",
+      "name": "test_r1_02_rpe_hero_card_exists_in_live_tab",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "R1: Verify #rpe-hero-card exists prominently inside #tab-live in index.html."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_03_rpe_hero_banner_child_elements",
+      "name": "test_r1_03_rpe_hero_banner_child_elements",
+      "status": "PASS",
+      "duration": 0.0004,
+      "doc": "R1: Verify RPE Hero Banner contains required telemetry and gauge elements."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_04_rpe_tabular_typography_and_contrast",
+      "name": "test_r1_04_rpe_tabular_typography_and_contrast",
+      "status": "PASS",
+      "duration": 0.0093,
+      "doc": "R1: Verify #live-rpe has tabular figures and high-contrast styling in style.css."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_05_rpe_4_effort_tiers_css_styling",
+      "name": "test_r1_05_rpe_4_effort_tiers_css_styling",
+      "status": "PASS",
+      "duration": 0.0007,
+      "doc": "R1: Verify style.css implements the 4 color-coded effort tiers."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_06_rpe_gauge_fill_transition_and_pin",
+      "name": "test_r1_06_rpe_gauge_fill_transition_and_pin",
+      "status": "PASS",
+      "duration": 0.0194,
+      "doc": "R1: Verify #rpe-gauge-fill has smooth width transition and gauge styling."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_b01_rpe_tier_boundary_thresholds",
+      "name": "test_r1_b01_rpe_tier_boundary_thresholds",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R1 Boundary: Test effort tier classification across exact boundary values."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_b02_rir_dynamic_calculation_boundaries",
+      "name": "test_r1_b02_rir_dynamic_calculation_boundaries",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R1 Boundary: Test Reps-In-Reserve mathematical derivation (RIR = 10 - RPE)."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_b03_set_toggle_idempotent_session_integrity",
+      "name": "test_r1_b03_set_toggle_idempotent_session_integrity",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R1 Boundary: Verify startNewSet and endActiveSet state transitions remain intact."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR1LiveRpeHero.test_r1_b04_rpe_hero_card_visionos_glass_styling",
+      "name": "test_r1_b04_rpe_hero_card_visionos_glass_styling",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "R1 Boundary: Verify #rpe-hero-card uses visionOS glass surface tokens."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR2FloatingNavAndTransitions.test_r2_01_bottom_glass_nav_floating_capsule",
+      "name": "test_r2_01_bottom_glass_nav_floating_capsule",
+      "status": "PASS",
+      "duration": 0.0093,
+      "doc": "R2: Verify .bottom-glass-nav is a floating pill capsule with border-radius: 999px."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR2FloatingNavAndTransitions.test_r2_02_nav_indicator_pill_element_exists",
+      "name": "test_r2_02_nav_indicator_pill_element_exists",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R2: Verify .nav-indicator-pill element exists in navigation bar markup."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR2FloatingNavAndTransitions.test_r2_03_nav_indicator_spring_animation",
+      "name": "test_r2_03_nav_indicator_spring_animation",
+      "status": "PASS",
+      "duration": 0.0107,
+      "doc": "R2: Verify .nav-indicator-pill implements visionOS spring curve cubic-bezier transition."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR2FloatingNavAndTransitions.test_r2_04_fluid_gpu_view_transitions_classes",
+      "name": "test_r2_04_fluid_gpu_view_transitions_classes",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R2: Verify CSS and app.js implement fluid cross-fades via leaving-section staging."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR2FloatingNavAndTransitions.test_r2_05_micro_interaction_spring_physics",
+      "name": "test_r2_05_micro_interaction_spring_physics",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R2: Verify micro-interaction spring physics curves are configured."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR2FloatingNavAndTransitions.test_r2_b01_nav_tabs_all_have_pill_radius",
+      "name": "test_r2_b01_nav_tabs_all_have_pill_radius",
+      "status": "PASS",
+      "duration": 0.0094,
+      "doc": "R2 Boundary: Verify all .nav-tab elements have pill radius 999px."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR2FloatingNavAndTransitions.test_r2_b02_nav_data_active_sync",
+      "name": "test_r2_b02_nav_data_active_sync",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "R2 Boundary: Verify bottom-glass-nav tracks data-active attribute in app.js."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR2FloatingNavAndTransitions.test_r2_b03_leaving_section_timeout_cleanup",
+      "name": "test_r2_b03_leaving_section_timeout_cleanup",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R2 Boundary: Verify leaving-section class is removed cleanly after transition."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_01_long_press_duration_500ms",
+      "name": "test_r3_01_long_press_duration_500ms",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3: Verify 500ms press-and-hold duration is configured in app.js."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_02_radial_progress_glow_fx",
+      "name": "test_r3_02_radial_progress_glow_fx",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3: Verify radial progress ring / halo markup and styling exists."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_03_haptic_vibration_trigger",
+      "name": "test_r3_03_haptic_vibration_trigger",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3: Verify haptic vibration pulse (navigator.vibrate) is triggered on 500ms completion."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_04_gold_glowing_pr_badge_styling",
+      "name": "test_r3_04_gold_glowing_pr_badge_styling",
+      "status": "PASS",
+      "duration": 0.0005,
+      "doc": "R3: Verify gold glowing PR badge styling (.rep-pr-badge.gold-glow) exists in style.css."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_05_is_pr_flag_in_rep_model",
+      "name": "test_r3_05_is_pr_flag_in_rep_model",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3: Verify isPR boolean flag is integrated into repetition data model and persistence."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b01_displacement_guard_cancels_over_10px",
+      "name": "test_r3_b01_displacement_guard_cancels_over_10px",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Verify movement exceeding 10px cancels the long-press gesture."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b02_early_release_cancels_timer",
+      "name": "test_r3_b02_early_release_cancels_timer",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Verify pointerup/touchend clears press timer without PR tag."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b03_pr_toggle_reversibility",
+      "name": "test_r3_b03_pr_toggle_reversibility",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Verify toggling isPR is reversible (true -> false -> true)."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b04_contextmenu_prevented_during_long_press",
+      "name": "test_r3_b04_contextmenu_prevented_during_long_press",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Verify contextmenu event is suppressed to prevent mobile browser interruptions."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b05_euclidean_distance_oracle",
+      "name": "test_r3_b05_euclidean_distance_oracle",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Validate Euclidean distance calculations against mathematical oracle."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_01_long_press_duration_500ms",
+      "name": "test_r3_01_long_press_duration_500ms",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3: Verify 500ms press-and-hold duration is configured in app.js."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_02_radial_progress_glow_fx",
+      "name": "test_r3_02_radial_progress_glow_fx",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3: Verify radial progress ring / halo markup and styling exists."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_03_haptic_vibration_trigger",
+      "name": "test_r3_03_haptic_vibration_trigger",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3: Verify haptic vibration pulse (navigator.vibrate) is triggered on 500ms completion."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_04_gold_glowing_pr_badge_styling",
+      "name": "test_r3_04_gold_glowing_pr_badge_styling",
+      "status": "PASS",
+      "duration": 0.0004,
+      "doc": "R3: Verify gold glowing PR badge styling (.rep-pr-badge.gold-glow) exists in style.css."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_05_is_pr_flag_in_rep_model",
+      "name": "test_r3_05_is_pr_flag_in_rep_model",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3: Verify isPR boolean flag is integrated into repetition data model and persistence."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b01_displacement_guard_cancels_over_10px",
+      "name": "test_r3_b01_displacement_guard_cancels_over_10px",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Verify movement exceeding 10px cancels the long-press gesture."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b02_early_release_cancels_timer",
+      "name": "test_r3_b02_early_release_cancels_timer",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Verify pointerup/touchend clears press timer without PR tag."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b03_pr_toggle_reversibility",
+      "name": "test_r3_b03_pr_toggle_reversibility",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Verify toggling isPR is reversible (true -> false -> true)."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b04_contextmenu_prevented_during_long_press",
+      "name": "test_r3_b04_contextmenu_prevented_during_long_press",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Verify contextmenu event is suppressed to prevent mobile browser interruptions."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR3LongPressRepPR.test_r3_b05_euclidean_distance_oracle",
+      "name": "test_r3_b05_euclidean_distance_oracle",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R3 Boundary: Validate Euclidean distance calculations against mathematical oracle."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_01_pr_competition_tracker_container_in_history",
+      "name": "test_r4_01_pr_competition_tracker_container_in_history",
+      "status": "PASS",
+      "duration": 0.0004,
+      "doc": "R4: Verify #pr-competition-tracker container exists inside #tab-history."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_02_current_prs_card_and_1rm_inputs",
+      "name": "test_r4_02_current_prs_card_and_1rm_inputs",
+      "status": "PASS",
+      "duration": 0.0009,
+      "doc": "R4: Verify Current PRs Card (#current-prs-card) and 1RM inputs exist."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_03_sensor_peak_velocities_displays",
+      "name": "test_r4_03_sensor_peak_velocities_displays",
+      "status": "PASS",
+      "duration": 0.0005,
+      "doc": "R4: Verify dynamic sensor peak velocity displays exist in Current PRs card."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_04_comp_pr_box_and_records",
+      "name": "test_r4_04_comp_pr_box_and_records",
+      "status": "PASS",
+      "duration": 0.0009,
+      "doc": "R4: Verify Competition PR Box (#comp-pr-box) and inputs exist."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_05_dots_calculator_module_and_controls",
+      "name": "test_r4_05_dots_calculator_module_and_controls",
+      "status": "PASS",
+      "duration": 0.0018,
+      "doc": "R4: Verify Live DOTS Calculator module and interactive controls exist."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_06_official_ipf_dots_polynomial_male_vector",
+      "name": "test_r4_06_official_ipf_dots_polynomial_male_vector",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R4: Verify official IPF DOTS 4th-order polynomial for Male: 80kg BW, 600kg Total = 413.73."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_07_official_ipf_dots_polynomial_female_vector",
+      "name": "test_r4_07_official_ipf_dots_polynomial_female_vector",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R4: Verify official IPF DOTS 4th-order polynomial for Female: 60kg BW, 350kg Total = 388.00."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_08_official_ipf_dots_polynomial_elite_vector",
+      "name": "test_r4_08_official_ipf_dots_polynomial_elite_vector",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R4: Verify official IPF DOTS 4th-order polynomial for Male: 100kg BW, 750kg Total = 461.64."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_09_persistence_schema_vbt_pr_data_v1",
+      "name": "test_r4_09_persistence_schema_vbt_pr_data_v1",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R4: Verify athlete PR profile and DOTS preferences persist under vbt_pr_data_v1."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_b01_dots_zero_and_negative_input_guards",
+      "name": "test_r4_b01_dots_zero_and_negative_input_guards",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R4 Boundary: Verify DOTS calculator guards against zero, negative, and invalid numbers."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_b02_dots_extreme_bodyweight_stability",
+      "name": "test_r4_b02_dots_extreme_bodyweight_stability",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R4 Boundary: Verify DOTS formula evaluates safely across extreme bodyweights."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_b03_sensor_peak_velocity_extraction_algorithm",
+      "name": "test_r4_b03_sensor_peak_velocity_extraction_algorithm",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R4 Boundary: Verify sensor peak velocity extraction across multiple lifts and sessions."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR4HistoryPRAndDots.test_r4_b04_corrupted_pr_storage_recovery",
+      "name": "test_r4_b04_corrupted_pr_storage_recovery",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R4 Boundary: Verify storage loading in app.js gracefully recovers from malformed JSON."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_01_service_uuid_match",
+      "name": "test_r5_01_service_uuid_match",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Web Bluetooth GATT Service UUID must remain 4fafc201-1fb5-459e-8fcc-c5c9c331914b."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_02_data_characteristic_uuid_match",
+      "name": "test_r5_02_data_characteristic_uuid_match",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Web Bluetooth Data Characteristic UUID must remain beb5483e-36e1-4688-b7f5-ea07361b26a8."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_03_cmd_characteristic_uuid_match",
+      "name": "test_r5_03_cmd_characteristic_uuid_match",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Web Bluetooth Command Characteristic UUID must remain 5a7d3c90-951d-444a-8f5b-11c500732890."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_04_ble_device_filter_intact",
+      "name": "test_r5_04_ble_device_filter_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Bluetooth device name filter must remain 'VBT_Tracker'."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_05_esp32_command_strings_intact",
+      "name": "test_r5_05_esp32_command_strings_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Hardware command strings CMD:SL:DL, CMD:SL:SQ, CMD:SL:BP must be intact."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_06_telemetry_payload_parsing_intact",
+      "name": "test_r5_06_telemetry_payload_parsing_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Pipe-delimited telemetry payload parser must correctly extract lift, vel, rpe."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_07_primary_storage_key_intact",
+      "name": "test_r5_07_primary_storage_key_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Primary workout storage key must remain 'vbt_workouts_v1'."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_08_set_analytics_formulas_intact",
+      "name": "test_r5_08_set_analytics_formulas_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Mathematical formulas for Avg, Max, Min Velocity, Velocity Loss %, Avg RPE intact."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_09_csv_export_headers_intact",
+      "name": "test_r5_09_csv_export_headers_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: CSV export headers must retain 10 standard columns."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulR5Stability.test_r5_10_json_export_structure_intact",
+      "name": "test_r5_10_json_export_structure_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "R5 Invariant: Export JSON routine must stringify workout array with 2 spaces indent."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulTier4Scenarios.test_s01_high_cadence_squat_set_no_redirect",
+      "name": "test_s01_high_cadence_squat_set_no_redirect",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "Scenario 1: High-Cadence Squat Set without Tab Interruption."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulTier4Scenarios.test_s02_heavy_bench_long_press_pr_lifecycle",
+      "name": "test_s02_heavy_bench_long_press_pr_lifecycle",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "Scenario 2: Heavy Bench Press with Long-Press PR Tagging."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulTier4Scenarios.test_s03_competition_prep_live_dots_evaluation",
+      "name": "test_s03_competition_prep_live_dots_evaluation",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "Scenario 3: Competition Preparation & Live DOTS Tracking."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulTier4Scenarios.test_s04_rapid_multi_tab_navigation_transitions",
+      "name": "test_s04_rapid_multi_tab_navigation_transitions",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "Scenario 4: Rapid Multi-Tab Navigation with Glass Pill Transitions."
+    },
+    {
+      "id": "tests.test_overhaul_e2e.TestOverhaulTier4Scenarios.test_s05_full_powerlifting_meet_lifetime_history_simulation",
+      "name": "test_s05_full_powerlifting_meet_lifetime_history_simulation",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "Scenario 5: Full Powerlifting Meet (SBD) Lifetime History Simulation."
     }
   ]
 }

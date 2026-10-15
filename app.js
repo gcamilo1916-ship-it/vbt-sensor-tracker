@@ -12,6 +12,7 @@ const CHARACTERISTIC_UUID     = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'; // Data:
 const CMD_CHARACTERISTIC_UUID = '5a7d3c90-951d-444a-8f5b-11c500732890'; // Commands: Write
 const DEVICE_NAME             = 'VBT_Tracker';
 const STORAGE_KEY             = 'vbt_workouts_v1';
+const PR_STORAGE_KEY          = 'vbt_pr_data_v1';
 
 // ── DOM References ──
 // Header & Master Workout Controls
@@ -42,6 +43,12 @@ const liveRpeSub        = document.getElementById('live-rpe-sub');
 const orb               = document.getElementById('orb');
 const apexGlow          = document.getElementById('apex-glow');
 
+// Live RPE Hero Banner
+const rpeHeroCard       = document.getElementById('rpe-hero-card');
+const liveRirPill       = document.getElementById('live-rir-pill');
+const rpeTierBadge      = document.getElementById('rpe-tier-badge');
+const rpeGaugeFill      = document.getElementById('rpe-gauge-fill');
+
 // Live Mini-HUD
 const hudActiveSet      = document.getElementById('hud-active-set');
 const hudSetReps        = document.getElementById('hud-set-reps');
@@ -70,6 +77,29 @@ const btnExportCsv      = document.getElementById('btn-export-csv');
 const btnExportJson     = document.getElementById('btn-export-json');
 const btnClearHistory   = document.getElementById('btn-clear-history');
 
+// PR Dashboard & DOTS Calculator Controls (Milestone 4: R4)
+const prSquatWeight    = document.getElementById('pr-squat-weight');
+const prBenchWeight    = document.getElementById('pr-bench-weight');
+const prDeadliftWeight = document.getElementById('pr-deadlift-weight');
+const prSquatVel       = document.getElementById('pr-squat-vel');
+const prBenchVel       = document.getElementById('pr-bench-vel');
+const prDeadliftVel    = document.getElementById('pr-deadlift-vel');
+const prCurrentTotal   = document.getElementById('pr-current-total');
+
+const compSquatWeight  = document.getElementById('comp-squat-weight');
+const compBenchWeight  = document.getElementById('comp-bench-weight');
+const compDeadliftWeight = document.getElementById('comp-deadlift-weight');
+const compPrTotal      = document.getElementById('comp-pr-total');
+
+const dotsBwInput      = document.getElementById('dots-bodyweight-input');
+const dotsGenderMale   = document.getElementById('dots-gender-male');
+const dotsGenderFemale = document.getElementById('dots-gender-female');
+const dotsSrcCurrent   = document.getElementById('dots-src-current');
+const dotsSrcComp      = document.getElementById('dots-src-comp');
+const dotsScoreDisplay = document.getElementById('dots-score-display');
+const dotsTotalDisplay = document.getElementById('dots-total-display');
+const dotsTierBadge    = document.getElementById('dots-tier-badge');
+
 // Navigation Tabs
 const navTabs           = document.querySelectorAll('.nav-tab');
 const tabSections       = {
@@ -77,6 +107,8 @@ const tabSections       = {
   set: document.getElementById('tab-set'),
   history: document.getElementById('tab-history')
 };
+const bottomGlassNav    = document.querySelector('.bottom-glass-nav');
+let currentTabTarget    = 'live';
 
 // ── Application State ──
 let bleDevice          = null;
@@ -113,8 +145,11 @@ function initStorage() {
     console.error('[VBT] Failed to read localStorage:', err);
     workouts = [];
   }
+  loadPrProfile();
   updateHistoryStats();
   renderHistoryView();
+  initPrDashboardListeners();
+  updatePrDashboardUI(true);
 }
 
 function persistStorage() {
@@ -260,6 +295,7 @@ function startNewSet(lift = currentLift) {
   // Update Controls UI
   btnSetText.textContent = 'END SET';
   btnSetToggle.classList.add('set-active');
+  btnSetToggle.classList.add('recording');
 
   updateLiveMiniHud();
   updateSetUI(activeSet);
@@ -281,6 +317,7 @@ function endActiveSet() {
   // Update Controls UI
   btnSetText.textContent = 'START SET';
   btnSetToggle.classList.remove('set-active');
+  btnSetToggle.classList.remove('recording');
 
   updateLiveMiniHud();
   persistStorage();
@@ -296,9 +333,6 @@ btnSetToggle.addEventListener('click', () => {
     endActiveSet();
   } else {
     startNewSet(currentLift);
-    // Smoothly focus the Set tab to highlight telemetry
-    const setNavTab = document.querySelector('.nav-tab[data-target="set"]');
-    if (setNavTab) setNavTab.click();
   }
 });
 
@@ -322,13 +356,17 @@ function recordRepetition({ lift, velocity, rpe }) {
     lift: lift,
     velocity: velocity,
     rpe: rpe,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    isPR: false
   };
 
   activeSet.reps.push(repObj);
   recalculateSetMetrics(activeSet);
 
   persistStorage();
+
+  // Reactively update RPE Hero Banner on repetition recording
+  updateRpeHeroBanner(rpe);
 
   // Asynchronous UI Dispatch (Non-blocking Observability)
   requestAnimationFrame(() => {
@@ -566,12 +604,62 @@ function applyLiftTheme(liftName) {
 }
 
 /**
+ * Reactively updates Live Page RPE Hero Banner components & effort tier
+ */
+function updateRpeHeroBanner(rpe) {
+  const card = rpeHeroCard || document.getElementById('rpe-hero-card');
+  const rpeEl = liveRpe || document.getElementById('live-rpe');
+  const rirEl = liveRirPill || document.getElementById('live-rir-pill');
+  const badge = rpeTierBadge || document.getElementById('rpe-tier-badge');
+  const fill = rpeGaugeFill || document.getElementById('rpe-gauge-fill');
+
+  const numRpe = (typeof rpe === 'number' && !isNaN(rpe)) ? rpe : (parseFloat(rpe) || 0.0);
+
+  if (rpeEl) {
+    rpeEl.textContent = numRpe.toFixed(1);
+  }
+
+  // RIR = Math.max(0, 10 - rpe).toFixed(1)
+  const rir = Math.max(0, 10 - numRpe).toFixed(1);
+  if (rirEl) {
+    rirEl.textContent = `RIR: ${rir}`;
+  }
+
+  // Effort gauge percentage: 0-100% width
+  const gaugePercent = Math.max(0, Math.min(100, (numRpe / 10) * 100));
+  if (fill) {
+    fill.style.width = `${gaugePercent}%`;
+  }
+
+  // Toggle tier classes on #rpe-hero-card
+  if (card) {
+    card.classList.remove('tier-warmup', 'tier-target', 'tier-heavy', 'tier-max');
+    if (numRpe < 7.5) {
+      card.classList.add('tier-warmup');
+      if (badge) badge.textContent = 'WARMUP TIER';
+    } else if (numRpe <= 8.4) {
+      card.classList.add('tier-target');
+      if (badge) badge.textContent = 'TARGET ZONE';
+    } else if (numRpe <= 9.4) {
+      card.classList.add('tier-heavy');
+      if (badge) badge.textContent = 'HEAVY EFFORT';
+    } else {
+      card.classList.add('tier-max');
+      if (badge) badge.textContent = 'MAXIMAL / FAILURE';
+    }
+  }
+}
+
+/**
  * Updates Live Telemetry display and fires bar path physics animation
  */
 function updateLiveDisplay({ lift, velocity, rpe }) {
   liveVelocity.textContent = velocity.toFixed(2);
   liveRpe.textContent      = rpe.toFixed(1);
   liveVelSub.textContent   = `Rep Completed: ${velocity >= 0.5 ? '⚡ Explosive' : '🔥 Grinding'}`;
+
+  // Reactively update RPE Hero Banner on live display
+  updateRpeHeroBanner(rpe);
 
   // If incoming rep has different lift, sync UI
   if (currentLift.toLowerCase() !== lift.toLowerCase()) {
@@ -667,13 +755,23 @@ function updateSetUI(set) {
 
   // Render Reps Table
   let html = '';
-  set.reps.slice().reverse().forEach(rep => {
+  const reversedReps = set.reps.slice().reverse();
+  reversedReps.forEach((rep, idx) => {
+    const isLatest = (idx === 0);
     const timeStr = new Date(rep.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const isPR = Boolean(rep.isPR);
+    const prBadgeHtml = isPR ? '<span class="rep-pr-badge gold-glow">PR</span>' : '';
+    const progressRingHtml = isLatest
+      ? `<div class="rep-press-progress-ring" aria-hidden="true"><svg class="radial-progress-svg" viewBox="0 0 44 44"><circle class="radial-track" cx="22" cy="22" r="18" /><circle class="radial-indicator" cx="22" cy="22" r="18" /></svg></div>`
+      : '';
+
     html += `
-      <div class="rep-row-item">
+      <div class="rep-row-item ${isPR ? 'is-pr' : ''}" data-rep-number="${rep.repNumber}" ${isLatest ? 'data-is-latest="true"' : ''}>
+        ${progressRingHtml}
         <div class="rep-row-left">
           <span class="rep-num-badge">#${rep.repNumber}</span>
           <span class="rep-row-time">${timeStr}</span>
+          ${prBadgeHtml}
         </div>
         <div class="rep-row-right">
           <span class="rep-vel-pill">${rep.velocity.toFixed(2)} m/s</span>
@@ -683,11 +781,387 @@ function updateSetUI(set) {
     `;
   });
   activeSetRepsList.innerHTML = html;
+
+  // Attach 500ms long-press listeners on the latest repetition element
+  const latestEl = activeSetRepsList.querySelector('.rep-row-item');
+  if (latestEl && set.reps.length > 0) {
+    const rep = set.reps[set.reps.length - 1];
+    let pressTimer = null;
+    let startX = 0;
+    let startY = 0;
+    let isHolding = false;
+    const LONG_PRESS_MS = 500;
+
+    const abortHold = () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      if (isHolding) {
+        isHolding = false;
+        latestEl.classList.remove('press-holding');
+      }
+    };
+
+    latestEl.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      startX = e.clientX;
+      startY = e.clientY;
+      isHolding = true;
+      latestEl.classList.add('press-holding');
+
+      pressTimer = setTimeout(() => {
+        isHolding = false;
+        latestEl.classList.remove('press-holding');
+        pressTimer = null;
+
+        // Haptic feedback
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          try {
+            navigator.vibrate([40, 30, 60]);
+          } catch (e) {}
+        }
+
+        // Toggle rep.isPR boolean state
+        rep.isPR = !rep.isPR;
+        persistStorage();
+
+        // Update UI
+        updateSetUI(set);
+        renderHistoryView();
+      }, LONG_PRESS_MS);
+    });
+
+    latestEl.addEventListener('pointermove', (e) => {
+      if (!isHolding) return;
+      const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+      if (dist > 10) {
+        abortHold();
+      }
+    });
+
+    latestEl.addEventListener('pointerup', abortHold);
+    latestEl.addEventListener('pointercancel', abortHold);
+    latestEl.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 5. HISTORY TAB, COLLAPSIBLE CARDS & EXPORT
+// 5. HISTORY TAB, PR DASHBOARD & OFFICIAL DOTS CALCULATOR (R4)
 // ═════════════════════════════════════════════════════════════════════════════
+
+const defaultPrProfile = {
+  version: 1,
+  bodyweight: 80.0,
+  gender: 'male',
+  currentPRs: {
+    squat: 140.0,
+    bench: 100.0,
+    deadlift: 180.0
+  },
+  compPRs: {
+    squat: 150.0,
+    bench: 105.0,
+    deadlift: 190.0
+  },
+  activeDotsSource: 'current'
+};
+
+let prProfile = JSON.parse(JSON.stringify(defaultPrProfile));
+
+/**
+ * Loads athlete PR profile and DOTS preferences from localStorage under vbt_pr_data_v1
+ */
+function loadPrProfile() {
+  try {
+    const raw = localStorage.getItem(PR_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        prProfile = {
+          version: parsed.version || 1,
+          bodyweight: typeof parsed.bodyweight === 'number' && parsed.bodyweight > 0 ? parsed.bodyweight : defaultPrProfile.bodyweight,
+          gender: parsed.gender === 'female' ? 'female' : 'male',
+          currentPRs: {
+            squat: parsed.currentPRs && typeof parsed.currentPRs.squat === 'number' ? parsed.currentPRs.squat : defaultPrProfile.currentPRs.squat,
+            bench: parsed.currentPRs && typeof parsed.currentPRs.bench === 'number' ? parsed.currentPRs.bench : defaultPrProfile.currentPRs.bench,
+            deadlift: parsed.currentPRs && typeof parsed.currentPRs.deadlift === 'number' ? parsed.currentPRs.deadlift : defaultPrProfile.currentPRs.deadlift
+          },
+          compPRs: {
+            squat: parsed.compPRs && typeof parsed.compPRs.squat === 'number' ? parsed.compPRs.squat : defaultPrProfile.compPRs.squat,
+            bench: parsed.compPRs && typeof parsed.compPRs.bench === 'number' ? parsed.compPRs.bench : defaultPrProfile.compPRs.bench,
+            deadlift: parsed.compPRs && typeof parsed.compPRs.deadlift === 'number' ? parsed.compPRs.deadlift : defaultPrProfile.compPRs.deadlift
+          },
+          activeDotsSource: parsed.activeDotsSource === 'comp' ? 'comp' : 'current'
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[VBT] Failed to parse PR storage; restoring default athlete profile:', err);
+    prProfile = JSON.parse(JSON.stringify(defaultPrProfile));
+  }
+}
+
+/**
+ * Persists athlete PR loads, bodyweight, gender, and source preference to vbt_pr_data_v1
+ */
+function persistPrProfile() {
+  try {
+    localStorage.setItem(PR_STORAGE_KEY, JSON.stringify(prProfile));
+  } catch (err) {
+    console.error('[VBT] Failed to persist athlete PR profile to localStorage:', err);
+  }
+}
+
+/**
+ * Official IPF DOTS 4th-order polynomial coefficients (2019 standard)
+ */
+const DOTS_COEFFICIENTS = {
+  male: {
+    a: -0.0000010930,
+    b: 0.0007391293,
+    c: -0.1918759221,
+    d: 24.0900756,
+    e: -307.75076
+  },
+  female: {
+    a: -0.0000010706,
+    b: 0.0005158568,
+    c: -0.1126655495,
+    d: 13.6175032,
+    e: -57.96288
+  }
+};
+
+/**
+ * Calculates official powerlifting DOTS score using 4th-degree polynomial.
+ * Formula: DOTS = Total * (500 / (a*BW^4 + b*BW^3 + c*BW^2 + d*BW + e))
+ * @param {number} totalKg - Total 1RM load in kilograms
+ * @param {number} bodyweightKg - Athlete bodyweight in kilograms
+ * @param {'male'|'female'} gender - Athlete sex
+ * @returns {number} Rounded DOTS score to 2 decimal places
+ */
+function calculateDotsScore(totalKg, bodyweightKg, gender = 'male') {
+  const total = Number(totalKg);
+  const bw = Number(bodyweightKg);
+
+  if (isNaN(total) || isNaN(bw) || total <= 0 || bw <= 0) {
+    return 0.0;
+  }
+
+  const gKey = String(gender).toLowerCase() === 'female' ? 'female' : 'male';
+  const { a, b, c, d, e } = DOTS_COEFFICIENTS[gKey];
+
+  const bw2 = bw * bw;
+  const bw3 = bw2 * bw;
+  const bw4 = bw3 * bw;
+
+  const denominator = (a * bw4) + (b * bw3) + (c * bw2) + (d * bw) + e;
+  if (denominator <= 0) {
+    return 0.0;
+  }
+
+  const score = total * (500.0 / denominator);
+  return parseFloat(score.toFixed(2));
+}
+
+/**
+ * Maps DOTS score to competitive strength tier classification
+ * @param {number} score - DOTS score
+ * @returns {string} Tier label
+ */
+function getDotsClassification(score) {
+  if (score >= 460) return 'ELITE';
+  if (score >= 415) return 'MASTER';
+  if (score >= 350) return 'CLASS I';
+  if (score >= 280) return 'CLASS II';
+  if (score >= 220) return 'CLASS III';
+  return 'NOVICE';
+}
+
+/**
+ * Traverses workouts hierarchy to extract the lifetime maximum velocity per lift
+ * @param {Array} workoutList - Workout sessions array (defaults to workouts)
+ * @returns {{ squat: number, bench: number, deadlift: number }}
+ */
+function extractSensorPeakVelocities(workoutList = workouts) {
+  const peaks = {
+    squat: 0.0,
+    bench: 0.0,
+    deadlift: 0.0
+  };
+
+  if (!Array.isArray(workoutList)) return peaks;
+
+  workoutList.forEach(w => {
+    (w.sets || []).forEach(s => {
+      (s.reps || []).forEach(r => {
+        if (!r || !r.lift || typeof r.velocity !== 'number') return;
+        const liftKey = String(r.lift).toLowerCase();
+        if (liftKey.includes('squat')) {
+          if (r.velocity > peaks.squat) peaks.squat = r.velocity;
+        } else if (liftKey.includes('bench')) {
+          if (r.velocity > peaks.bench) peaks.bench = r.velocity;
+        } else if (liftKey.includes('deadlift')) {
+          if (r.velocity > peaks.deadlift) peaks.deadlift = r.velocity;
+        }
+      });
+    });
+  });
+
+  return {
+    squat: parseFloat(peaks.squat.toFixed(2)),
+    bench: parseFloat(peaks.bench.toFixed(2)),
+    deadlift: parseFloat(peaks.deadlift.toFixed(2))
+  };
+}
+
+/**
+ * Updates UI values for the PR Dashboard, Competition PR Box, and Live DOTS Calculator
+ * @param {boolean} updateInputs - Whether to write values back to the input elements
+ */
+function updatePrDashboardUI(updateInputs = true) {
+  if (!prSquatWeight) return;
+
+  if (updateInputs) {
+    prSquatWeight.value    = prProfile.currentPRs.squat;
+    prBenchWeight.value    = prProfile.currentPRs.bench;
+    prDeadliftWeight.value = prProfile.currentPRs.deadlift;
+
+    compSquatWeight.value    = prProfile.compPRs.squat;
+    compBenchWeight.value    = prProfile.compPRs.bench;
+    compDeadliftWeight.value = prProfile.compPRs.deadlift;
+
+    if (dotsBwInput) dotsBwInput.value = prProfile.bodyweight;
+
+    if (dotsGenderMale && dotsGenderFemale) {
+      if (prProfile.gender === 'female') {
+        dotsGenderMale.classList.remove('active');
+        dotsGenderMale.setAttribute('aria-checked', 'false');
+        dotsGenderFemale.classList.add('active');
+        dotsGenderFemale.setAttribute('aria-checked', 'true');
+      } else {
+        dotsGenderFemale.classList.remove('active');
+        dotsGenderFemale.setAttribute('aria-checked', 'false');
+        dotsGenderMale.classList.add('active');
+        dotsGenderMale.setAttribute('aria-checked', 'true');
+      }
+    }
+
+    if (dotsSrcCurrent && dotsSrcComp) {
+      if (prProfile.activeDotsSource === 'comp') {
+        dotsSrcCurrent.classList.remove('active');
+        dotsSrcComp.classList.add('active');
+      } else {
+        dotsSrcComp.classList.remove('active');
+        dotsSrcCurrent.classList.add('active');
+      }
+    }
+  }
+
+  // Calculate totals
+  const currentTotal = (prProfile.currentPRs.squat || 0) + (prProfile.currentPRs.bench || 0) + (prProfile.currentPRs.deadlift || 0);
+  const compTotal = (prProfile.compPRs.squat || 0) + (prProfile.compPRs.bench || 0) + (prProfile.compPRs.deadlift || 0);
+
+  if (prCurrentTotal) prCurrentTotal.textContent = `${currentTotal.toFixed(1)} kg`;
+  if (compPrTotal) compPrTotal.textContent = `${compTotal.toFixed(1)} kg`;
+
+  // Update sensor peak velocities from workout history
+  const peaks = extractSensorPeakVelocities();
+  if (prSquatVel) prSquatVel.textContent = `${peaks.squat.toFixed(2)} m/s`;
+  if (prBenchVel) prBenchVel.textContent = `${peaks.bench.toFixed(2)} m/s`;
+  if (prDeadliftVel) prDeadliftVel.textContent = `${peaks.deadlift.toFixed(2)} m/s`;
+
+  // Evaluate DOTS score from selected source total
+  const evaluatedTotal = prProfile.activeDotsSource === 'comp' ? compTotal : currentTotal;
+  if (dotsTotalDisplay) dotsTotalDisplay.textContent = `${evaluatedTotal.toFixed(1)} kg`;
+
+  const dotsScore = calculateDotsScore(evaluatedTotal, prProfile.bodyweight, prProfile.gender);
+  if (dotsScoreDisplay) dotsScoreDisplay.textContent = dotsScore.toFixed(2);
+  if (dotsTierBadge) dotsTierBadge.textContent = getDotsClassification(dotsScore);
+}
+
+/**
+ * Initializes event listeners for PR inputs, gender switches, and DOTS controls
+ */
+function initPrDashboardListeners() {
+  if (!prSquatWeight || initPrDashboardListeners._initialized) return;
+  initPrDashboardListeners._initialized = true;
+
+  const onCurrentPrInput = () => {
+    prProfile.currentPRs.squat = parseFloat(prSquatWeight.value) || 0;
+    prProfile.currentPRs.bench = parseFloat(prBenchWeight.value) || 0;
+    prProfile.currentPRs.deadlift = parseFloat(prDeadliftWeight.value) || 0;
+    persistPrProfile();
+    updatePrDashboardUI(false);
+  };
+
+  prSquatWeight.addEventListener('input', onCurrentPrInput);
+  prBenchWeight.addEventListener('input', onCurrentPrInput);
+  prDeadliftWeight.addEventListener('input', onCurrentPrInput);
+
+  const onCompPrInput = () => {
+    prProfile.compPRs.squat = parseFloat(compSquatWeight.value) || 0;
+    prProfile.compPRs.bench = parseFloat(compBenchWeight.value) || 0;
+    prProfile.compPRs.deadlift = parseFloat(compDeadliftWeight.value) || 0;
+    persistPrProfile();
+    updatePrDashboardUI(false);
+  };
+
+  compSquatWeight.addEventListener('input', onCompPrInput);
+  compBenchWeight.addEventListener('input', onCompPrInput);
+  compDeadliftWeight.addEventListener('input', onCompPrInput);
+
+  if (dotsBwInput) {
+    dotsBwInput.addEventListener('input', () => {
+      prProfile.bodyweight = parseFloat(dotsBwInput.value) || 0;
+      persistPrProfile();
+      updatePrDashboardUI(false);
+    });
+  }
+
+  if (dotsGenderMale && dotsGenderFemale) {
+    dotsGenderMale.addEventListener('click', () => {
+      prProfile.gender = 'male';
+      dotsGenderFemale.classList.remove('active');
+      dotsGenderFemale.setAttribute('aria-checked', 'false');
+      dotsGenderMale.classList.add('active');
+      dotsGenderMale.setAttribute('aria-checked', 'true');
+      persistPrProfile();
+      updatePrDashboardUI(false);
+    });
+
+    dotsGenderFemale.addEventListener('click', () => {
+      prProfile.gender = 'female';
+      dotsGenderMale.classList.remove('active');
+      dotsGenderMale.setAttribute('aria-checked', 'false');
+      dotsGenderFemale.classList.add('active');
+      dotsGenderFemale.setAttribute('aria-checked', 'true');
+      persistPrProfile();
+      updatePrDashboardUI(false);
+    });
+  }
+
+  if (dotsSrcCurrent && dotsSrcComp) {
+    dotsSrcCurrent.addEventListener('click', () => {
+      prProfile.activeDotsSource = 'current';
+      dotsSrcComp.classList.remove('active');
+      dotsSrcCurrent.classList.add('active');
+      persistPrProfile();
+      updatePrDashboardUI(false);
+    });
+
+    dotsSrcComp.addEventListener('click', () => {
+      prProfile.activeDotsSource = 'comp';
+      dotsSrcCurrent.classList.remove('active');
+      dotsSrcComp.classList.add('active');
+      persistPrProfile();
+      updatePrDashboardUI(false);
+    });
+  }
+}
 
 /**
  * Calculates lifetime aggregates across all stored workouts
@@ -716,6 +1190,7 @@ function updateHistoryStats() {
   sumSets.textContent     = totalSets;
   sumReps.textContent     = totalReps;
   sumBestVel.textContent  = peakVel.toFixed(2);
+  updatePrDashboardUI(false);
 }
 
 /**
@@ -724,6 +1199,7 @@ function updateHistoryStats() {
 function renderHistoryView() {
   if (workouts.length === 0) {
     historySessionsList.innerHTML = '<div class="empty-state">No workout sessions recorded yet. Start a workout to build history!</div>';
+    updatePrDashboardUI(false);
     return;
   }
 
@@ -774,6 +1250,7 @@ function renderHistoryView() {
   });
 
   historySessionsList.innerHTML = html;
+  updatePrDashboardUI(false);
 }
 
 function renderSessionSetsAccordion(sets) {
@@ -784,7 +1261,7 @@ function renderSessionSetsAccordion(sets) {
   let out = '';
   sets.forEach(s => {
     const repPills = (s.reps || []).map(r => `
-      <span class="history-rep-pill font-mono">#${r.repNumber}: ${r.velocity.toFixed(2)}m/s</span>
+      <span class="history-rep-pill font-mono">#${r.repNumber}: ${r.velocity.toFixed(2)}m/s${r.isPR ? ' <span class="rep-pr-badge gold-glow">PR</span>' : ''}</span>
     `).join('');
 
     out += `
@@ -895,13 +1372,41 @@ btnClearHistory.addEventListener('click', () => {
 
 navTabs.forEach(tab => {
   tab.addEventListener('click', () => {
+    const target = tab.getAttribute('data-target');
+    if (!target || !tabSections[target]) return;
+    if (target === currentTabTarget && tabSections[target].classList.contains('active-section')) return;
+
+    const prevTarget = currentTabTarget;
+    currentTabTarget = target;
+
+    // Update active class on navTabs
     navTabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
 
-    Object.values(tabSections).forEach(s => s.classList.remove('active-section'));
-    const target = tab.getAttribute('data-target');
-    if (tabSections[target]) {
-      tabSections[target].classList.add('active-section');
+    // Update data-active attribute on .bottom-glass-nav
+    if (bottomGlassNav) {
+      bottomGlassNav.setAttribute('data-active', target);
+    }
+
+    // Synchronously clear active-section and set active-section on target section
+    const prevSection = tabSections[prevTarget];
+    const targetSection = tabSections[target];
+
+    Object.values(tabSections).forEach(s => {
+      if (s) s.classList.remove('active-section');
+    });
+
+    if (targetSection) {
+      targetSection.classList.remove('leaving-section');
+      targetSection.classList.add('active-section');
+    }
+
+    // Add leaving-section to previously active section and remove via setTimeout(..., 220)
+    if (prevSection && prevSection !== targetSection) {
+      prevSection.classList.add('leaving-section');
+      setTimeout(() => {
+        prevSection.classList.remove('leaving-section');
+      }, 220);
     }
   });
 });

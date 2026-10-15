@@ -16,13 +16,13 @@ if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 MILESTONE_FEATURE_MAP = {
-    "M1": ["f01", "f02", "f03", "b01", "b02", "b03", "p13"],
-    "M2": ["f04", "f05", "f06", "f07", "b04", "b05", "b06", "b07", "p05", "p14"],
-    "M3": ["f08", "f09", "b08", "b09", "p02", "p06", "p15"],
-    "M4": ["f10", "f11", "b10", "b11", "p01", "p04", "p09"],
-    "M5": ["f12", "f13", "f14", "b12", "b13", "b14", "p03", "p07", "p08", "p10", "p11", "p12", "p16", "w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08"],
+    "M1": ["f01", "f02", "f03", "b01", "b02", "b03", "p13", "r1"],
+    "M2": ["f04", "f05", "f06", "f07", "b04", "b05", "b06", "b07", "p05", "p14", "r2"],
+    "M3": ["f08", "f09", "b08", "b09", "p02", "p06", "p15", "r3"],
+    "M4": ["f10", "f11", "b10", "b11", "p01", "p04", "p09", "r4"],
+    "M5": ["f12", "f13", "f14", "b12", "b13", "b14", "p03", "p07", "p08", "p10", "p11", "p12", "p16", "w01", "w02", "w03", "w04", "w05", "w06", "w07", "w08", "r5"],
     "M6": ["f16", "b16", "chrome"],
-    "E2E": ["f15", "b15"]
+    "E2E": ["f15", "b15", "overhaul", "s01", "s02", "s03", "s04", "s05"]
 }
 
 def load_test_suites(tier_filter="all", milestone_filter="all"):
@@ -46,6 +46,9 @@ def load_test_suites(tier_filter="all", milestone_filter="all"):
     if tier_filter in ["browser", "all"]:
         from tests import test_browser_headless
         modules_to_load.append(("Browser", test_browser_headless))
+    if tier_filter in ["overhaul", "all"]:
+        from tests import test_overhaul_e2e
+        modules_to_load.append(("Overhaul", test_overhaul_e2e))
 
     milestone_keys = MILESTONE_FEATURE_MAP.get(milestone_filter.upper())
 
@@ -55,10 +58,17 @@ def load_test_suites(tier_filter="all", milestone_filter="all"):
         filtered_tests = []
         for test in _flatten_suite(mod_suite):
             if milestone_keys is not None:
-                # Check if test name matches any milestone key
                 method_name = test._testMethodName.lower()
-                if not any(k in method_name for k in milestone_keys):
-                    continue
+                if method_name.startswith("test_r"):
+                    req_key = method_name.split("_")[1]  # "r1", "r2", etc.
+                    if req_key not in milestone_keys:
+                        continue
+                elif method_name.startswith("test_s0"):
+                    if not any(k in ["e2e", "tier4", "s01", "s02", "s03", "s04", "s05"] for k in milestone_keys):
+                        continue
+                else:
+                    if not any(k in method_name for k in milestone_keys):
+                        continue
             filtered_tests.append(test)
 
         sub_suite = unittest.TestSuite(filtered_tests)
@@ -243,7 +253,7 @@ def run_tests(tier="all", milestone="all", verbosity=1, json_report_path=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Eros VBT E2E Test Suite Runner")
-    parser.add_argument("--tier", choices=["1", "2", "3", "4", "browser", "all"], default="all",
+    parser.add_argument("--tier", choices=["1", "2", "3", "4", "browser", "overhaul", "all"], default="all",
                         help="Filter execution to specific test tier (default: all)")
     parser.add_argument("--milestone", choices=["M1", "M2", "M3", "M4", "M5", "M6", "E2E", "all"], default="all",
                         help="Filter execution to specific milestone (default: all)")

@@ -330,6 +330,114 @@ class VBTMathOracle:
                     ])
         return rows
 
+    DOTS_COEFFICIENTS = {
+        "male": {
+            "a": -0.0000010930,
+            "b": 0.0007391293,
+            "c": -0.1918759221,
+            "d": 24.0900756,
+            "e": -307.75076
+        },
+        "female": {
+            "a": -0.0000010706,
+            "b": 0.0005158568,
+            "c": -0.1126655495,
+            "d": 13.6175032,
+            "e": -57.96288
+        }
+    }
+
+    @staticmethod
+    def calculate_dots_score(total_kg, bodyweight_kg, gender="male"):
+        """
+        Calculates official IPF powerlifting DOTS score using 4th-degree polynomial.
+        DOTS = Total * (500 / (a*BW^4 + b*BW^3 + c*BW^2 + d*BW + e))
+        """
+        try:
+            total = float(total_kg)
+            bw = float(bodyweight_kg)
+        except (ValueError, TypeError):
+            return 0.0
+
+        if total <= 0 or bw <= 0:
+            return 0.0
+
+        g_key = "female" if str(gender).lower() == "female" else "male"
+        coeffs = VBTMathOracle.DOTS_COEFFICIENTS[g_key]
+
+        bw2 = bw * bw
+        bw3 = bw2 * bw
+        bw4 = bw3 * bw
+
+        denom = (coeffs["a"] * bw4) + (coeffs["b"] * bw3) + (coeffs["c"] * bw2) + (coeffs["d"] * bw) + coeffs["e"]
+        if denom <= 0:
+            return 0.0
+
+        score = total * (500.0 / denom)
+        return round(score, 2)
+
+    @staticmethod
+    def calculate_rir(rpe):
+        """Calculates Reps-In-Reserve: RIR = max(0, round(10 - rpe, 1))."""
+        try:
+            r = float(rpe)
+            return max(0.0, round(10.0 - r, 1))
+        except (ValueError, TypeError):
+            return 0.0
+
+    @staticmethod
+    def determine_rpe_tier(rpe):
+        """
+        Returns tier name and color token according to PROJECT.md:
+        <7.5: Warmup (#00FF66, tier-warmup)
+        7.5 - 8.4: Target (#00E5FF, tier-target)
+        8.5 - 9.4: Heavy (#FF6600, tier-heavy)
+        >=9.5: Maximal (#FF0055, tier-max)
+        """
+        try:
+            r = float(rpe)
+        except (ValueError, TypeError):
+            return "warmup", "tier-warmup", "#00FF66"
+
+        if r < 7.5:
+            return "warmup", "tier-warmup", "#00FF66"
+        elif r <= 8.4:
+            return "target", "tier-target", "#00E5FF"
+        elif r <= 9.4:
+            return "heavy", "tier-heavy", "#FF6600"
+        else:
+            return "maximal", "tier-max", "#FF0055"
+
+    @staticmethod
+    def extract_sensor_peak_velocities(workouts):
+        """Scans workouts list to extract peak velocity per lift."""
+        peaks = {"squat": 0.0, "bench": 0.0, "deadlift": 0.0}
+        for w in workouts:
+            for s in w.get("sets", []):
+                for r in s.get("reps", []):
+                    lift = str(r.get("lift", "")).lower()
+                    try:
+                        v = float(r.get("velocity", 0.0))
+                    except (ValueError, TypeError):
+                        continue
+                    if "squat" in lift and v > peaks["squat"]:
+                        peaks["squat"] = v
+                    elif "bench" in lift and v > peaks["bench"]:
+                        peaks["bench"] = v
+                    elif "deadlift" in lift and v > peaks["deadlift"]:
+                        peaks["deadlift"] = v
+        return {
+            "squat": round(peaks["squat"], 2),
+            "bench": round(peaks["bench"], 2),
+            "deadlift": round(peaks["deadlift"], 2)
+        }
+
+    @staticmethod
+    def check_euclidean_distance(x1, y1, x2, y2):
+        """Calculates 2D Euclidean displacement distance: sqrt((x2-x1)^2 + (y2-y1)^2)."""
+        return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Headless Chrome Remote Debugging Controller
 # ─────────────────────────────────────────────────────────────────────────────
