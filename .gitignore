@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Agent session telemetry & briefing logs
+.agents/
+
+# Environments & dependencies
+.venv/
+env/
+venv/
+node_modules/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test artifacts & cache
+.pytest_cache/
+.coverage
+htmlcov/
