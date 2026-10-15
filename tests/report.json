@@ -1,0 +1,1359 @@
+{
+  "timestamp": "2026-10-15T09:55:40Z",
+  "tier_filter": "all",
+  "milestone_filter": "all",
+  "total": 187,
+  "passed": 187,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration": 1.8692,
+  "tier_summary": {
+    "Tier 1": {
+      "total": 80,
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "Tier 2": {
+      "total": 80,
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "Tier 3": {
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "Tier 4": {
+      "total": 8,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "Browser": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "status": "PASS"
+    }
+  },
+  "test_records": [
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_01_obsidian_background_token",
+      "name": "test_f01_01_obsidian_background_token",
+      "status": "PASS",
+      "duration": 0.0003,
+      "doc": "F1: Verify obsidian base color #050507 token is configured in :root."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_02_glass_card_background_token",
+      "name": "test_f01_02_glass_card_background_token",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F1: Verify ultra-translucent glass background token rgba(255, 255, 255, 0.04)."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_03_glass_panel_token",
+      "name": "test_f01_03_glass_panel_token",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F1: Verify glass panel token rgba(255, 255, 255, 0.04) in :root."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_04_glass_card_backdrop_filter",
+      "name": "test_f01_04_glass_card_backdrop_filter",
+      "status": "PASS",
+      "duration": 0.0053,
+      "doc": "F1: Verify .glass-card specifies backdrop-filter: blur(30px) saturate(180%)."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f01_05_glass_card_webkit_backdrop_filter",
+      "name": "test_f01_05_glass_card_webkit_backdrop_filter",
+      "status": "PASS",
+      "duration": 0.0055,
+      "doc": "F1: Verify .glass-card specifies -webkit-backdrop-filter for iOS Safari/Bluefy."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f02_01_specular_gradient_angle",
+      "name": "test_f02_01_specular_gradient_angle",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F2: Verify specular border refraction gradient uses 180deg vertical linear gradient."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f02_02_specular_gradient_top_stop",
+      "name": "test_f02_02_specular_gradient_top_stop",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F2: Verify top specular highlight stop rgba(255, 255, 255, 0.45) 0%."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f02_03_specular_gradient_mid_stop",
+      "name": "test_f02_03_specular_gradient_mid_stop",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F2: Verify specular gradient intermediate stop rgba(255, 255, 255, 0.05) 30%."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f02_04_specular_gradient_bottom_stop",
+      "name": "test_f02_04_specular_gradient_bottom_stop",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F2: Verify specular gradient concludes with transparent 100%."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f02_05_glass_card_specular_highlight",
+      "name": "test_f02_05_glass_card_specular_highlight",
+      "status": "PASS",
+      "duration": 0.0055,
+      "doc": "F2: Verify specular edge highlight applied via border-box or box-shadow."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_01_css_balanced_braces",
+      "name": "test_f03_01_css_balanced_braces",
+      "status": "PASS",
+      "duration": 0.0026,
+      "doc": "F3: Verify style.css has perfectly balanced braces with zero unclosed blocks."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_02_custom_option_no_orphaned_closing_brace",
+      "name": "test_f03_02_custom_option_no_orphaned_closing_brace",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F3: Verify .custom-option does not have an orphaned dangling closing brace."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_03_custom_option_pointer_events",
+      "name": "test_f03_03_custom_option_pointer_events",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "F3: Verify .custom-option * contains pointer-events: none."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_04_custom_option_font_weight_styling",
+      "name": "test_f03_04_custom_option_font_weight_styling",
+      "status": "PASS",
+      "duration": 0.0059,
+      "doc": "F3: Verify .custom-option defines font-weight: 800."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f03_05_custom_option_transition_property",
+      "name": "test_f03_05_custom_option_transition_property",
+      "status": "PASS",
+      "duration": 0.0057,
+      "doc": "F3: Verify .custom-option defines transition for smooth interaction."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f04_01_brand_title_content",
+      "name": "test_f04_01_brand_title_content",
+      "status": "PASS",
+      "duration": 0.0004,
+      "doc": "F4: Verify .brand-title element contains exact title 'Eros'."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f04_02_header_no_glass_os_text",
+      "name": "test_f04_02_header_no_glass_os_text",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F4: Verify 'GLASS_OS' branding text is completely absent from header DOM."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f04_03_brand_badge_absent_from_dom",
+      "name": "test_f04_03_brand_badge_absent_from_dom",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F4: Verify obsolete .brand-badge element is removed from index.html."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f04_04_brand_title_typography_tracking",
+      "name": "test_f04_04_brand_title_typography_tracking",
+      "status": "PASS",
+      "duration": 0.0059,
+      "doc": "F4: Verify .brand-title has refined tracking (-1px or -0.025em to -0.03em)."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f04_05_brand_title_bold_hierarchy",
+      "name": "test_f04_05_brand_title_bold_hierarchy",
+      "status": "PASS",
+      "duration": 0.0057,
+      "doc": "F4: Verify .brand-title uses Apple visionOS bold weight hierarchy (700-900)."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f05_01_btn_workout_master_zero_emoji",
+      "name": "test_f05_01_btn_workout_master_zero_emoji",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F5: Verify #btn-workout-master contains zero emojis or decorative badges."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f05_02_btn_connect_zero_emoji",
+      "name": "test_f05_02_btn_connect_zero_emoji",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F5: Verify #btn-connect contains zero emojis."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f05_03_btn_set_toggle_zero_emoji",
+      "name": "test_f05_03_btn_set_toggle_zero_emoji",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F5: Verify #btn-set-toggle contains zero emojis (purging \u2b55)."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f05_04_history_action_buttons_zero_emoji",
+      "name": "test_f05_04_history_action_buttons_zero_emoji",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "F5: Verify #btn-export-csv, #btn-export-json, #btn-clear-history contain zero emojis."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f05_05_nav_tab_buttons_zero_emoji",
+      "name": "test_f05_05_nav_tab_buttons_zero_emoji",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F5: Verify floating navigation tabs contain zero colored emoji pictographs."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_01_btn_glass_primary_pill_radius",
+      "name": "test_f06_01_btn_glass_primary_pill_radius",
+      "status": "PASS",
+      "duration": 0.0057,
+      "doc": "F6: Verify .btn-glass-primary specifies border-radius: 999px."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_02_btn_glass_connect_pill_radius",
+      "name": "test_f06_02_btn_glass_connect_pill_radius",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "F6: Verify .btn-glass-connect specifies border-radius: 999px."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_03_btn_glass_set_pill_radius",
+      "name": "test_f06_03_btn_glass_set_pill_radius",
+      "status": "PASS",
+      "duration": 0.0057,
+      "doc": "F6: Verify .btn-glass-set specifies border-radius: 999px."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_04_btn_action_glass_pill_radius",
+      "name": "test_f06_04_btn_action_glass_pill_radius",
+      "status": "PASS",
+      "duration": 0.0057,
+      "doc": "F6: Verify .btn-action-glass specifies border-radius: 999px."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f06_05_glass_pill_general_class",
+      "name": "test_f06_05_glass_pill_general_class",
+      "status": "PASS",
+      "duration": 0.0059,
+      "doc": "F6: Verify .glass-pill class specifies border-radius: 999px."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_01_font_mono_tabular_nums",
+      "name": "test_f07_01_font_mono_tabular_nums",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "F7: Verify .font-mono class enforces font-variant-numeric: tabular-nums."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_02_font_mono_tracking",
+      "name": "test_f07_02_font_mono_tracking",
+      "status": "PASS",
+      "duration": 0.0057,
+      "doc": "F7: Verify .font-mono class enforces letter-spacing: -0.03em."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_03_session_timer_tracking",
+      "name": "test_f07_03_session_timer_tracking",
+      "status": "PASS",
+      "duration": 0.0074,
+      "doc": "F7: Verify .session-timer enforces tabular-nums and -0.03em tracking."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_04_metric_number_tracking",
+      "name": "test_f07_04_metric_number_tracking",
+      "status": "PASS",
+      "duration": 0.0059,
+      "doc": "F7: Verify .metric-number enforces -0.03em tracking."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f07_05_ring_value_tracking",
+      "name": "test_f07_05_ring_value_tracking",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "F7: Verify .ring-value enforces -0.03em tracking."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_01_controls_panel_overflow_visible",
+      "name": "test_f08_01_controls_panel_overflow_visible",
+      "status": "PASS",
+      "duration": 0.0071,
+      "doc": "F8: Verify .controls-panel specifies overflow: visible !important."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_02_controls_panel_relative_position",
+      "name": "test_f08_02_controls_panel_relative_position",
+      "status": "PASS",
+      "duration": 0.0055,
+      "doc": "F8: Verify .controls-panel has position: relative and z-index: 50."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_03_controls_row_overflow_visible",
+      "name": "test_f08_03_controls_row_overflow_visible",
+      "status": "PASS",
+      "duration": 0.006,
+      "doc": "F8: Verify .controls-row has overflow: visible."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_04_custom_select_wrapper_open_zindex",
+      "name": "test_f08_04_custom_select_wrapper_open_zindex",
+      "status": "PASS",
+      "duration": 0.0059,
+      "doc": "F8: Verify .custom-select-wrapper.open specifies z-index: 1000."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f08_05_custom_select_options_zindex",
+      "name": "test_f08_05_custom_select_options_zindex",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "F8: Verify .custom-select-options specifies z-index: 1001."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f09_01_custom_select_trigger_combobox_role",
+      "name": "test_f09_01_custom_select_trigger_combobox_role",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F9: Verify .custom-select-trigger defines role='combobox' and tabindex='0'."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f09_02_custom_select_options_listbox_role",
+      "name": "test_f09_02_custom_select_options_listbox_role",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F9: Verify .custom-select-options defines role='listbox'."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f09_03_custom_options_data_values",
+      "name": "test_f09_03_custom_options_data_values",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F9: Verify options contain data-value for Deadlift, Squat, Bench."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f09_04_toggle_dropdown_function_exists",
+      "name": "test_f09_04_toggle_dropdown_function_exists",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F9: Verify toggleDropdown function is bound to trigger click in app.js."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f09_05_dropdown_close_on_outside_click",
+      "name": "test_f09_05_dropdown_close_on_outside_click",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F9: Verify outside click handler closes dropdown in app.js."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f10_01_ambient_mesh_dom_element",
+      "name": "test_f10_01_ambient_mesh_dom_element",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F10: Verify .ambient-glow-mesh element exists in index.html body."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f10_02_ambient_mesh_styling_in_css",
+      "name": "test_f10_02_ambient_mesh_styling_in_css",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "F10: Verify .ambient-glow-mesh defined with pointer-events: none and blur."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f10_03_deadlift_neon_accent_color",
+      "name": "test_f10_03_deadlift_neon_accent_color",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "F10: Verify Cyberpunk Magenta Deadlift accent token --accent-dl: #FF0055."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f10_04_squat_neon_accent_color",
+      "name": "test_f10_04_squat_neon_accent_color",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F10: Verify Electric Emerald Squat accent token --accent-sq: #00FF66."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f10_05_bench_neon_accent_color",
+      "name": "test_f10_05_bench_neon_accent_color",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F10: Verify Laser Cyan Bench accent token --accent-bp: #00E5FF."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f11_01_keyframes_deadlift_rep",
+      "name": "test_f11_01_keyframes_deadlift_rep",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F11: Verify @keyframes deadlift-rep is defined in style.css."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f11_02_keyframes_squat_rep",
+      "name": "test_f11_02_keyframes_squat_rep",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F11: Verify @keyframes squat-rep is defined in style.css."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f11_03_keyframes_bench_rep",
+      "name": "test_f11_03_keyframes_bench_rep",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F11: Verify @keyframes bench-rep is defined in style.css."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f11_04_rep_duration_css_variable",
+      "name": "test_f11_04_rep_duration_css_variable",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F11: Verify --rep-duration CSS property is declared in :root."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f11_05_apex_glow_bloom_active",
+      "name": "test_f11_05_apex_glow_bloom_active",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F11: Verify #apex-glow element exists and .bloom-active selector exists."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f12_01_service_uuid_match",
+      "name": "test_f12_01_service_uuid_match",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F12: Verify GATT Service UUID 4fafc201-1fb5-459e-8fcc-c5c9c331914b strictly preserved."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f12_02_characteristic_data_uuid_match",
+      "name": "test_f12_02_characteristic_data_uuid_match",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F12: Verify Data Characteristic UUID beb5483e-36e1-4688-b7f5-ea07361b26a8 preserved."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f12_03_characteristic_cmd_uuid_match",
+      "name": "test_f12_03_characteristic_cmd_uuid_match",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F12: Verify Command Characteristic UUID 5a7d3c90-951d-444a-8f5b-11c500732890 preserved."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f12_04_device_name_match",
+      "name": "test_f12_04_device_name_match",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F12: Verify BLE Device Name filter VBT_Tracker preserved."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f12_05_lift_baselines_and_commands",
+      "name": "test_f12_05_lift_baselines_and_commands",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F12: Verify lift baseline commands CMD:SL:DL, CMD:SL:SQ, CMD:SL:BP preserved."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f13_01_localstorage_key_match",
+      "name": "test_f13_01_localstorage_key_match",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F13: Verify localStorage key vbt_workouts_v1 preserved."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f13_02_recalculate_set_metrics_function_exists",
+      "name": "test_f13_02_recalculate_set_metrics_function_exists",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F13: Verify recalculateSetMetrics function exists in app.js."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f13_03_recalculate_set_metrics_math_accuracy",
+      "name": "test_f13_03_recalculate_set_metrics_math_accuracy",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F13: Verify mathematical analytics formulas match reference oracle."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f13_04_csv_export_routine_headers",
+      "name": "test_f13_04_csv_export_routine_headers",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F13: Verify CSV export routine formats expected headers."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f13_05_json_export_routine",
+      "name": "test_f13_05_json_export_routine",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F13: Verify JSON export routine uses JSON.stringify(workouts, null, 2)."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f14_01_all_38_dom_ids_exist",
+      "name": "test_f14_01_all_38_dom_ids_exist",
+      "status": "PASS",
+      "duration": 0.0043,
+      "doc": "F14: Verify all 38 DOM IDs bound by app.js exist in index.html."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f14_02_btn_connect_has_btn_text",
+      "name": "test_f14_02_btn_connect_has_btn_text",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F14: Verify #btn-connect has child .btn-text span."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f14_03_status_badge_has_status_label",
+      "name": "test_f14_03_status_badge_has_status_label",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F14: Verify #status-badge has child .status-label span."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f14_04_svg_progress_circle_radius_90",
+      "name": "test_f14_04_svg_progress_circle_radius_90",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F14: Verify SVG circle #set-ring-progress has radius r='90'."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f14_05_nav_tabs_and_sections_contract",
+      "name": "test_f14_05_nav_tabs_and_sections_contract",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F14: Verify nav-tab elements have data-target matching tab section IDs."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f15_01_suite_file_structure",
+      "name": "test_f15_01_suite_file_structure",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "F15: Verify test files exist in tests directory."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f15_02_test_runner_entrypoint",
+      "name": "test_f15_02_test_runner_entrypoint",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F15: Verify test runner entrypoint exists."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f15_03_math_oracle_functional",
+      "name": "test_f15_03_math_oracle_functional",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F15: Verify VBTMathOracle calculates valid results."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f15_04_css_parser_functional",
+      "name": "test_f15_04_css_parser_functional",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F15: Verify CSS token extractor correctly returns :root variables."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f15_05_html_parser_functional",
+      "name": "test_f15_05_html_parser_functional",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "F15: Verify HTML tag extractor finds button elements."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f16_01_index_html_doctype",
+      "name": "test_f16_01_index_html_doctype",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F16: Verify index.html has valid HTML5 <!DOCTYPE html> declaration."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f16_02_meta_viewport_tag",
+      "name": "test_f16_02_meta_viewport_tag",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F16: Verify responsive mobile viewport meta tag configured."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f16_03_svg_dasharray_calculation",
+      "name": "test_f16_03_svg_dasharray_calculation",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F16: Verify SVG circumference 2*pi*90 equals 565.48 in app.js and CSS."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f16_04_window_toggle_session_card_contract",
+      "name": "test_f16_04_window_toggle_session_card_contract",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "F16: Verify window.toggleSessionCard function is exported for DOM inline handlers."
+    },
+    {
+      "id": "tests.test_tier1_features.TestTier1FeatureCoverage.test_f16_05_headless_chrome_smoke_status",
+      "name": "test_f16_05_headless_chrome_smoke_status",
+      "status": "PASS",
+      "duration": 0.3569,
+      "doc": "F16: Verify Headless Chrome connects and renders title 'Eros'."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_01_empty_panel_styling",
+      "name": "test_b01_01_empty_panel_styling",
+      "status": "PASS",
+      "duration": 0.006,
+      "doc": "B1.1: Verify .glass-card styling applies correctly even with minimal/empty children."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_02_nested_card_translucency",
+      "name": "test_b01_02_nested_card_translucency",
+      "status": "PASS",
+      "duration": 0.0111,
+      "doc": "B1.2: Verify sub-panels like .rep-item-card, .session-history-card preserve glass translucency."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_03_extreme_saturation_handling",
+      "name": "test_b01_03_extreme_saturation_handling",
+      "status": "PASS",
+      "duration": 0.0059,
+      "doc": "B1.3: Verify backdrop-filter saturation is bounded at 180% without excessive blowouts."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_04_missing_webkit_prefix_detection",
+      "name": "test_b01_04_missing_webkit_prefix_detection",
+      "status": "PASS",
+      "duration": 0.0055,
+      "doc": "B1.4: Verify every backdrop-filter on .glass-card has a matching -webkit-backdrop-filter."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b01_05_ultra_low_alpha_border",
+      "name": "test_b01_05_ultra_low_alpha_border",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "B1.5: Verify base glass border alpha channel does not exceed 0.20 for subtlety."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b02_01_card_box_sizing_border_box",
+      "name": "test_b02_01_card_box_sizing_border_box",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B2.1: Verify * selector or .glass-card incorporates box-sizing: border-box."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b02_02_inverted_gradient_rejection",
+      "name": "test_b02_02_inverted_gradient_rejection",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B2.2: Verify specular refraction gradient starts at 180deg (top-down), not 0deg (bottom-up)."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b02_03_zero_height_card_border_clipping",
+      "name": "test_b02_03_zero_height_card_border_clipping",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B2.3: Verify border-box gradient clipping is declared on dual-box background."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b02_04_specular_gradient_syntax_format",
+      "name": "test_b02_04_specular_gradient_syntax_format",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B2.4: Verify specular gradient syntax uses valid linear-gradient arguments."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b02_05_specular_box_shadow_spread",
+      "name": "test_b02_05_specular_box_shadow_spread",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B2.5: Verify specular top inset highlight in --specular-top has non-negative alpha."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b03_01_comment_nested_braces",
+      "name": "test_b03_01_comment_nested_braces",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B3.1: Verify brace balance checker correctly ignores braces inside CSS comments."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b03_02_quoted_string_braces",
+      "name": "test_b03_02_quoted_string_braces",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B3.2: Verify brace balance checker correctly ignores braces inside CSS strings."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b03_03_media_queries_balanced",
+      "name": "test_b03_03_media_queries_balanced",
+      "status": "PASS",
+      "duration": 0.0027,
+      "doc": "B3.3: Verify all @keyframes and at-rules in style.css are cleanly closed and balanced."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b03_04_pseudoclass_syntax_validity",
+      "name": "test_b03_04_pseudoclass_syntax_validity",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B3.4: Verify pseudoclasses :hover, :active, :focus in style.css are syntactically valid."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b03_05_custom_option_no_dangling_blocks",
+      "name": "test_b03_05_custom_option_no_dangling_blocks",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B3.5: Verify .custom-option block does not contain dangling unclosed sub-blocks."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b04_01_brand_title_whitespace_handling",
+      "name": "test_b04_01_brand_title_whitespace_handling",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B4.1: Verify .brand-title inner text does not have unwanted extra text or linebreaks."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b04_02_brand_title_case_preservation",
+      "name": "test_b04_02_brand_title_case_preservation",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B4.2: Verify brand title casing is title-cased 'Eros', not uppercase 'EROS' or 'eros'."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b04_03_legacy_glass_os_badge_cleanup",
+      "name": "test_b04_03_legacy_glass_os_badge_cleanup",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B4.3: Verify no occurrence of GLASS_OS appears as an HTML element."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b04_04_brand_title_gradient_clip_properties",
+      "name": "test_b04_04_brand_title_gradient_clip_properties",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "B4.4: Verify .brand-title utilizes Apple specular text fill clipping."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b04_05_header_container_layout_flex",
+      "name": "test_b04_05_header_container_layout_flex",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "B4.5: Verify .header-top-row uses flexbox layout for responsive alignment."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b05_01_emoji_dingbats_unicode_scan",
+      "name": "test_b05_01_emoji_dingbats_unicode_scan",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B5.1: Verify no dingbats or geometric shapes used as icons in action buttons."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b05_02_html_numeric_entity_emoji_scan",
+      "name": "test_b05_02_html_numeric_entity_emoji_scan",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B5.2: Verify no HTML entities (&#...;) represent emojis in buttons."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b05_03_span_icon_cleanup_in_buttons",
+      "name": "test_b05_03_span_icon_cleanup_in_buttons",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B5.3: Verify button spans do not hold isolated emojis."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b05_04_dynamic_js_emoji_injection_audit",
+      "name": "test_b05_04_dynamic_js_emoji_injection_audit",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B5.4: Verify JavaScript button text mutations never inject button emojis."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b05_05_button_inner_text_trimming",
+      "name": "test_b05_05_button_inner_text_trimming",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B5.5: Verify buttons have non-empty readable text labels."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_01_pill_radius_unit_strictly_pixels",
+      "name": "test_b06_01_pill_radius_unit_strictly_pixels",
+      "status": "PASS",
+      "duration": 0.0229,
+      "doc": "B6.1: Verify pill buttons use 999px (capsule) rather than percentages."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_02_button_overflow_hidden_for_pill",
+      "name": "test_b06_02_button_overflow_hidden_for_pill",
+      "status": "PASS",
+      "duration": 0.0057,
+      "doc": "B6.2: Verify pill buttons have overflow: hidden or contain borders properly."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_03_button_hover_active_radius_invariance",
+      "name": "test_b06_03_button_hover_active_radius_invariance",
+      "status": "PASS",
+      "duration": 0.0119,
+      "doc": "B6.3: Verify :hover and :active states do not reset border-radius."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_04_pill_button_padding_balance",
+      "name": "test_b06_04_pill_button_padding_balance",
+      "status": "PASS",
+      "duration": 0.0064,
+      "doc": "B6.4: Verify pill buttons provide horizontal padding >= 12px for thumb targets."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b06_05_pill_button_transition_smoothness",
+      "name": "test_b06_05_pill_button_transition_smoothness",
+      "status": "PASS",
+      "duration": 0.0176,
+      "doc": "B6.5: Verify buttons define smooth transition for visionOS elevation feedback."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b07_01_zero_velocity_tabular_formatting",
+      "name": "test_b07_01_zero_velocity_tabular_formatting",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "B7.1: Verify initial zero velocity display is formatted as 0.00."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b07_02_extreme_high_velocity_formatting",
+      "name": "test_b07_02_extreme_high_velocity_formatting",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B7.2: Verify math oracle accurately rounds high velocity values (e.g. 2.456 -> 2.46)."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b07_03_negative_velocity_clamping",
+      "name": "test_b07_03_negative_velocity_clamping",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B7.3: Verify velocity loss percentage cannot be negative when velocity drops."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b07_04_rpe_scale_bounds",
+      "name": "test_b07_04_rpe_scale_bounds",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B7.4: Verify RPE scale average is rounded to 1 decimal place."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b07_05_fixed_precision_decimal_formatting",
+      "name": "test_b07_05_fixed_precision_decimal_formatting",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B7.5: Verify velocity strings in app.js format with toFixed(2)."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_01_dropdown_parent_no_overflow_hidden",
+      "name": "test_b08_01_dropdown_parent_no_overflow_hidden",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "B8.1: Verify .controls-panel explicitly overrides .glass-card overflow: hidden."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_02_dropdown_stacking_above_telemetry_arena",
+      "name": "test_b08_02_dropdown_stacking_above_telemetry_arena",
+      "status": "PASS",
+      "duration": 0.0063,
+      "doc": "B8.2: Verify .custom-select-wrapper.open z-index (1000) exceeds telemetry arena."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_03_dropdown_zindex_exceeds_bottom_nav",
+      "name": "test_b08_03_dropdown_zindex_exceeds_bottom_nav",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "B8.3: Verify dropdown options z-index (1001) is higher than open wrapper (1000)."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_04_dropdown_options_absolute_positioning",
+      "name": "test_b08_04_dropdown_options_absolute_positioning",
+      "status": "PASS",
+      "duration": 0.0059,
+      "doc": "B8.4: Verify .custom-select-options uses position: absolute."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b08_05_dropdown_width_matching_wrapper",
+      "name": "test_b08_05_dropdown_width_matching_wrapper",
+      "status": "PASS",
+      "duration": 0.006,
+      "doc": "B8.5: Verify .custom-select-options spans left: 0 and right: 0."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b09_01_rapid_toggle_state_idempotence",
+      "name": "test_b09_01_rapid_toggle_state_idempotence",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B9.1: Verify classList.toggle('open') operates symmetrically."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b09_02_repeated_option_selection",
+      "name": "test_b09_02_repeated_option_selection",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B9.2: Verify selecting an option updates data-value safely."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b09_03_outside_click_when_already_closed",
+      "name": "test_b09_03_outside_click_when_already_closed",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B9.3: Verify outside click uses classList.remove('open') which is safe when closed."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b09_04_invalid_lift_name_handling",
+      "name": "test_b09_04_invalid_lift_name_handling",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B9.4: Verify baseline lookup falls back to deadlift for unknown lift names."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b09_05_combobox_aria_attributes_structure",
+      "name": "test_b09_05_combobox_aria_attributes_structure",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B9.5: Verify aria-haspopup is set to 'listbox' on combobox trigger."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b10_01_rapid_theme_cycling_consistency",
+      "name": "test_b10_01_rapid_theme_cycling_consistency",
+      "status": "PASS",
+      "duration": 0.0185,
+      "doc": "B10.1: Verify all 3 body theme classes define matching --current-accent and --accent-rgb."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b10_02_accent_rgb_format_validity",
+      "name": "test_b10_02_accent_rgb_format_validity",
+      "status": "PASS",
+      "duration": 0.0003,
+      "doc": "B10.2: Verify accent RGB tokens format as comma-separated integers (e.g. 255, 0, 85)."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b10_03_ambient_mesh_fixed_viewport_inset",
+      "name": "test_b10_03_ambient_mesh_fixed_viewport_inset",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "B10.3: Verify ambient mesh has fixed positioning to cover viewport without scrolling."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b10_04_ambient_drift_animation_timing",
+      "name": "test_b10_04_ambient_drift_animation_timing",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B10.4: Verify ambient mesh uses smooth GPU transition timing."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b10_05_unknown_theme_fallback",
+      "name": "test_b10_05_unknown_theme_fallback",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B10.5: Verify default active accent token points to deadlift in :root."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b11_01_velocity_clamping_low_bound",
+      "name": "test_b11_01_velocity_clamping_low_bound",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B11.1: Verify very low velocity (0.01 m/s) clamps duration to maximum 5.0s."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b11_02_velocity_clamping_high_bound",
+      "name": "test_b11_02_velocity_clamping_high_bound",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B11.2: Verify very high velocity (5.0 m/s) clamps duration to minimum 0.5s."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b11_03_deadlift_apex_bloom_timing_ratio",
+      "name": "test_b11_03_deadlift_apex_bloom_timing_ratio",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B11.3: Verify deadlift apex bloom occurs at 50% midpoint of rep duration."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b11_04_squat_bench_apex_bloom_timing_ratio",
+      "name": "test_b11_04_squat_bench_apex_bloom_timing_ratio",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B11.4: Verify squat/bench apex bloom occurs at 95% lockout of rep duration."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b11_05_keyframes_transform_validity",
+      "name": "test_b11_05_keyframes_transform_validity",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B11.5: Verify keyframes contain transform or top properties for motion."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b12_01_malformed_ble_payload_missing_pipe",
+      "name": "test_b12_01_malformed_ble_payload_missing_pipe",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B12.1: Verify BLE parser ignores string with missing pipe delimiter."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b12_02_malformed_ble_payload_empty_string",
+      "name": "test_b12_02_malformed_ble_payload_empty_string",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B12.2: Verify BLE parser ignores empty payload."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b12_03_malformed_ble_payload_corrupted_numbers",
+      "name": "test_b12_03_malformed_ble_payload_corrupted_numbers",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B12.3: Verify BLE parser ignores payload with non-numeric velocity/rpe."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b12_04_malformed_ble_payload_extra_fields",
+      "name": "test_b12_04_malformed_ble_payload_extra_fields",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B12.4: Verify BLE parser successfully parses payload with extra trailing metadata."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b12_05_ble_characteristic_write_fallback",
+      "name": "test_b12_05_ble_characteristic_write_fallback",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B12.5: Verify command dispatcher supports both writeValueWithoutResponse and writeValue."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b13_01_empty_reps_metrics_default_zeros",
+      "name": "test_b13_01_empty_reps_metrics_default_zeros",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B13.1: Verify recalculateSetMetrics on empty reps returns zeroed metrics."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b13_02_single_rep_metrics_zero_loss",
+      "name": "test_b13_02_single_rep_metrics_zero_loss",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B13.2: Verify single rep set always yields 0.0% velocity loss."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b13_03_monotonic_velocity_drop_accuracy",
+      "name": "test_b13_03_monotonic_velocity_drop_accuracy",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B13.3: Verify 50% velocity drop calculation: Max 1.00 down to Last 0.50 -> 50.0%."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b13_04_increasing_velocity_zero_loss",
+      "name": "test_b13_04_increasing_velocity_zero_loss",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B13.4: Verify velocity loss is 0.0% when lifter accelerates in final rep."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b13_05_corrupted_localstorage_json_recovery",
+      "name": "test_b13_05_corrupted_localstorage_json_recovery",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B13.5: Verify app.js handles invalid localStorage JSON with try/catch."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b14_01_null_element_guard_verification",
+      "name": "test_b14_01_null_element_guard_verification",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B14.1: Verify app.js safely queries DOM elements without unhandled exceptions."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b14_02_btn_connect_inner_btn_text_intact",
+      "name": "test_b14_02_btn_connect_inner_btn_text_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B14.2: Verify #btn-connect preserves inner .btn-text for text updates."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b14_03_status_badge_inner_status_label_intact",
+      "name": "test_b14_03_status_badge_inner_status_label_intact",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B14.3: Verify #status-badge preserves inner .status-label."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b14_04_svg_progress_ring_radius_geometry",
+      "name": "test_b14_04_svg_progress_ring_radius_geometry",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B14.4: Verify SVG progress ring geometry matches circumference calculations."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b14_05_all_tab_sections_present",
+      "name": "test_b14_05_all_tab_sections_present",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "B14.5: Verify all three tab sections (tab-live, tab-set, tab-history) exist."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b15_01_oracle_math_boundary_division_by_zero",
+      "name": "test_b15_01_oracle_math_boundary_division_by_zero",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B15.1: Verify oracle handles zero max velocity without ZeroDivisionError."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b15_02_oracle_duration_boundary_infinity",
+      "name": "test_b15_02_oracle_duration_boundary_infinity",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B15.2: Verify duration formula with 0 velocity does not return infinity."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b15_03_css_token_extractor_handles_missing",
+      "name": "test_b15_03_css_token_extractor_handles_missing",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B15.3: Verify extract_css_token returns None for non-existent token."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b15_04_html_dom_id_handles_special_chars",
+      "name": "test_b15_04_html_dom_id_handles_special_chars",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "B15.4: Verify find_dom_id returns False for non-existent ID."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b15_05_test_suite_independent_state",
+      "name": "test_b15_05_test_suite_independent_state",
+      "status": "PASS",
+      "duration": 0.0003,
+      "doc": "B15.5: Verify tests execute with stateless, re-read independent data."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b16_01_mobile_viewport_375x667_viewport_tag",
+      "name": "test_b16_01_mobile_viewport_375x667_viewport_tag",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B16.1: Verify viewport tag includes initial-scale=1.0 for mobile devices."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b16_02_desktop_viewport_scaling",
+      "name": "test_b16_02_desktop_viewport_scaling",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B16.2: Verify html, body specifies min-height: 100vh for full viewport coverage."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b16_03_css_font_family_fallbacks",
+      "name": "test_b16_03_css_font_family_fallbacks",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "B16.3: Verify --font-sans concludes with generic sans-serif fallback."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b16_04_history_card_accordion_onclick_syntax",
+      "name": "test_b16_04_history_card_accordion_onclick_syntax",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B16.4: Verify dynamic session-card template in app.js binds toggleSessionCard."
+    },
+    {
+      "id": "tests.test_tier2_boundaries.TestTier2BoundariesAndCornerCases.test_b16_05_console_script_load_integrity",
+      "name": "test_b16_05_console_script_load_integrity",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "B16.5: Verify index.html loads style.css in head and app.js at end of body."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p01_lift_theme_switch_updates_orb_and_surfaces",
+      "name": "test_p01_lift_theme_switch_updates_orb_and_surfaces",
+      "status": "PASS",
+      "duration": 0.0064,
+      "doc": "P01: Lift theme selection (F9/F10) couples with orb animation (F11) and glass surfaces (F1)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p02_lift_baseline_switch_commands_ble_and_closes_dropdown",
+      "name": "test_p02_lift_baseline_switch_commands_ble_and_closes_dropdown",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P02: Selecting Bench (F9) dispatches CMD:SL:BP (F12) and closes dropdown overlay (F8)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p03_ble_rep_ingestion_updates_tabular_velocity_and_ring",
+      "name": "test_p03_ble_rep_ingestion_updates_tabular_velocity_and_ring",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P03: BLE payload parsing (F12) recalculates metrics (F13) and updates SVG ring (F14)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p04_velocity_loss_updates_mini_hud_and_apex_bloom",
+      "name": "test_p04_velocity_loss_updates_mini_hud_and_apex_bloom",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P04: Progressive velocity drop (F13) synchronizes with Mini-HUD (F14) and apex timing (F11)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p05_workout_master_button_toggles_session_and_timer",
+      "name": "test_p05_workout_master_button_toggles_session_and_timer",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "P05: Master workout toggle (F14) updates button state (F6) and activates session timer (F7)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p06_dropdown_layering_above_telemetry_with_ambient_mesh",
+      "name": "test_p06_dropdown_layering_above_telemetry_with_ambient_mesh",
+      "status": "PASS",
+      "duration": 0.0115,
+      "doc": "P06: Dropdown options (F8) layer at z-index 1001 above telemetry arena without mesh obstruction (F10)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p07_tab_navigation_to_set_view_renders_rep_stream",
+      "name": "test_p07_tab_navigation_to_set_view_renders_rep_stream",
+      "status": "PASS",
+      "duration": 0.0004,
+      "doc": "P07: Navigating to Set tab (F14) displays active reps container (F13) with pill tabs (F6)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p08_tab_navigation_to_history_renders_lifetime_aggregates",
+      "name": "test_p08_tab_navigation_to_history_renders_lifetime_aggregates",
+      "status": "PASS",
+      "duration": 0.0007,
+      "doc": "P08: Navigating to History tab (F14) displays lifetime summary statistics (F13)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p09_rapid_reps_and_velocity_threshold_feedback",
+      "name": "test_p09_rapid_reps_and_velocity_threshold_feedback",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P09: Fast reps (>= 0.50 m/s) trigger explosive feedback (F14) and fast duration (F11)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p10_ble_disconnect_updates_status_badge_and_button_text",
+      "name": "test_p10_ble_disconnect_updates_status_badge_and_button_text",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P10: Hardware disconnect (F12) sets status-badge to disconnected (F14) and updates text."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p11_csv_export_matches_recorded_session_data",
+      "name": "test_p11_csv_export_matches_recorded_session_data",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P11: CSV export routine (F13) serializes workout session rows matching specification."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p12_json_export_structure_conforms_to_nested_schema",
+      "name": "test_p12_json_export_structure_conforms_to_nested_schema",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P12: JSON export routine (F13) produces Workout -> Sets -> Reps 3-tier hierarchy."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p13_css_syntax_clean_and_glass_surfaces_intact",
+      "name": "test_p13_css_syntax_clean_and_glass_surfaces_intact",
+      "status": "PASS",
+      "duration": 0.0058,
+      "doc": "P13: CSS syntax integrity (F3) ensures .glass-card specular refraction renders without corruption (F1/F2)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p14_brand_styling_harmonizes_with_metrics_and_theme",
+      "name": "test_p14_brand_styling_harmonizes_with_metrics_and_theme",
+      "status": "PASS",
+      "duration": 0.0002,
+      "doc": "P14: Brand title (F4) and numerical metrics (F7) render in unified typography over obsidian (F1)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p15_barbell_profile_syncs_with_lift_selection",
+      "name": "test_p15_barbell_profile_syncs_with_lift_selection",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P15: Selected lift in dropdown (F9) updates active set lift name and subtext (F14)."
+    },
+    {
+      "id": "tests.test_tier3_pairwise.TestTier3PairwiseCombinations.test_p16_full_state_machine_and_visual_integrity",
+      "name": "test_p16_full_state_machine_and_visual_integrity",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "P16: End-to-end simulation of session start -> rep ingestion -> set end -> session end."
+    },
+    {
+      "id": "tests.test_tier4_workload.TestTier4RealWorldWorkloads.test_w01_standard_5x5_strength_workout",
+      "name": "test_w01_standard_5x5_strength_workout",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "W01: Standard 5x5 Strength Workout \u2014 5 sets of 5 reps with progressive fatigue."
+    },
+    {
+      "id": "tests.test_tier4_workload.TestTier4RealWorldWorkloads.test_w02_high_cadence_rep_burst",
+      "name": "test_w02_high_cadence_rep_burst",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "W02: High-Cadence Rep Burst \u2014 10 reps in rapid succession with instant math updates."
+    },
+    {
+      "id": "tests.test_tier4_workload.TestTier4RealWorldWorkloads.test_w03_powerlifting_rotation_three_lift_session",
+      "name": "test_w03_powerlifting_rotation_three_lift_session",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "W03: Powerlifting Rotation \u2014 Deadlift, Squat, Bench Press in single session."
+    },
+    {
+      "id": "tests.test_tier4_workload.TestTier4RealWorldWorkloads.test_w04_sensor_disconnect_and_reconnect_continuity",
+      "name": "test_w04_sensor_disconnect_and_reconnect_continuity",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "W04: Sensor Disconnect & Reconnect \u2014 Zero data drop across hardware cycle."
+    },
+    {
+      "id": "tests.test_tier4_workload.TestTier4RealWorldWorkloads.test_w05_multi_session_lifetime_persistence_and_export",
+      "name": "test_w05_multi_session_lifetime_persistence_and_export",
+      "status": "PASS",
+      "duration": 0.0001,
+      "doc": "W05: Multi-Session Lifetime Persistence \u2014 3 sessions exported to CSV and JSON."
+    },
+    {
+      "id": "tests.test_tier4_workload.TestTier4RealWorldWorkloads.test_w06_high_volume_endurance_workload",
+      "name": "test_w06_high_volume_endurance_workload",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "W06: High-Volume Endurance Workload \u2014 100 reps across 20 sets aggregated cleanly."
+    },
+    {
+      "id": "tests.test_tier4_workload.TestTier4RealWorldWorkloads.test_w07_cold_start_recovery_hydration",
+      "name": "test_w07_cold_start_recovery_hydration",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "W07: Cold-Start Recovery \u2014 App loads pre-existing vbt_workouts_v1 from storage."
+    },
+    {
+      "id": "tests.test_tier4_workload.TestTier4RealWorldWorkloads.test_w08_adversarial_ble_stream_resilience",
+      "name": "test_w08_adversarial_ble_stream_resilience",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "W08: Adversarial BLE Stream \u2014 Handles corrupted and malformed frames gracefully."
+    },
+    {
+      "id": "tests.test_browser_headless.TestHeadlessChromeBrowser.test_chrome_01_binary_present",
+      "name": "test_chrome_01_binary_present",
+      "status": "PASS",
+      "duration": 0.0,
+      "doc": "Verify Google Chrome executable is installed at default path."
+    },
+    {
+      "id": "tests.test_browser_headless.TestHeadlessChromeBrowser.test_chrome_02_headless_instance_launches",
+      "name": "test_chrome_02_headless_instance_launches",
+      "status": "PASS",
+      "duration": 0.3554,
+      "doc": "Verify headless Chrome launches and opens remote debugging port."
+    },
+    {
+      "id": "tests.test_browser_headless.TestHeadlessChromeBrowser.test_chrome_03_index_html_renders_cleanly",
+      "name": "test_chrome_03_index_html_renders_cleanly",
+      "status": "PASS",
+      "duration": 0.7652,
+      "doc": "Verify index.html page title resolves to 'Eros' without errors."
+    }
+  ]
+}

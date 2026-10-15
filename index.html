@@ -11,14 +11,18 @@
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- Glass OS Stylesheet -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="theme-deadlift">
   <!-- Dynamic Ambient Glow Backdrop -->
-  <div class="ambient-glow-mesh" aria-hidden="true"></div>
+  <div class="ambient-glow-mesh" aria-hidden="true">
+    <div class="ambient-mesh-blob blob-primary"></div>
+    <div class="ambient-mesh-blob blob-secondary"></div>
+    <div class="ambient-mesh-blob blob-tertiary"></div>
+  </div>
 
   <div class="app-container">
     
@@ -69,24 +73,24 @@
           <div class="controls-row">
             <!-- Glass OS Custom Dropdown -->
             <div class="custom-select-wrapper" id="lift-select-wrapper">
-              <div class="custom-select-trigger glass-pill" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+              <div class="custom-select-trigger glass-pill" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="lift-select-options" aria-label="Select Exercise Lift">
                 <span class="select-label-wrap">
                   <span class="select-prefix">LIFT:</span>
                   <span id="selected-lift-text" class="select-value">DEADLIFT</span>
                 </span>
-                <span class="select-chevron">▾</span>
+                <span class="select-chevron" aria-hidden="true">▾</span>
               </div>
-              <div class="custom-select-options glass-dropdown" role="listbox">
-                <div class="custom-option selected" data-value="Deadlift" data-cmd="CMD:SL:DL" role="option">
-                  <span class="option-dot dl-dot"></span>
+              <div class="custom-select-options glass-dropdown" id="lift-select-options" role="listbox" aria-label="Exercise Lifts">
+                <div class="custom-option selected" data-value="Deadlift" data-cmd="CMD:SL:DL" role="option" aria-selected="true" tabindex="0">
+                  <span class="option-dot dl-dot" aria-hidden="true"></span>
                   <span class="option-name">DEADLIFT</span>
                 </div>
-                <div class="custom-option" data-value="Squat" data-cmd="CMD:SL:SQ" role="option">
-                  <span class="option-dot sq-dot"></span>
+                <div class="custom-option" data-value="Squat" data-cmd="CMD:SL:SQ" role="option" aria-selected="false" tabindex="-1">
+                  <span class="option-dot sq-dot" aria-hidden="true"></span>
                   <span class="option-name">SQUAT</span>
                 </div>
-                <div class="custom-option" data-value="Bench" data-cmd="CMD:SL:BP" role="option">
-                  <span class="option-dot bp-dot"></span>
+                <div class="custom-option" data-value="Bench" data-cmd="CMD:SL:BP" role="option" aria-selected="false" tabindex="-1">
+                  <span class="option-dot bp-dot" aria-hidden="true"></span>
                   <span class="option-name">BENCH PRESS</span>
                 </div>
               </div>
@@ -94,7 +98,6 @@
             
             <!-- Set Trigger Button -->
             <button id="btn-set-toggle" class="btn-glass-set">
-              <span class="set-icon">⭕</span>
               <span id="btn-set-text">START SET</span>
             </button>
           </div>
@@ -257,15 +260,12 @@
         <!-- Data Export & Actions Row -->
         <div class="history-actions-row">
           <button id="btn-export-csv" class="btn-action-glass">
-            <span class="action-icon">📊</span>
             <span>EXPORT CSV</span>
           </button>
           <button id="btn-export-json" class="btn-action-glass">
-            <span class="action-icon">💾</span>
             <span>EXPORT JSON</span>
           </button>
           <button id="btn-clear-history" class="btn-action-glass btn-danger">
-            <span class="action-icon">🗑️</span>
             <span>CLEAR</span>
           </button>
         </div>
@@ -282,15 +282,26 @@
     <!-- Floating Glass OS Bottom Navigation Bar -->
     <nav class="bottom-glass-nav" aria-label="Main Navigation">
       <button class="nav-tab active" data-target="live" aria-label="Live Tracker Tab">
-        <span class="nav-icon">⏺</span>
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="8"></circle>
+          <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+        </svg>
         <span class="nav-label">LIVE</span>
       </button>
       <button class="nav-tab" data-target="set" aria-label="Set Analytics Tab">
-        <span class="nav-icon">⭕</span>
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 7v5l3 3"></path>
+        </svg>
         <span class="nav-label">SET</span>
       </button>
       <button class="nav-tab" data-target="history" aria-label="Workout History Tab">
-        <span class="nav-icon">📋</span>
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
         <span class="nav-label">HISTORY</span>
       </button>
     </nav>
@@ -304,5 +315,90 @@
 
   <!-- JavaScript Module -->
   <script src="app.js"></script>
+
+  <!-- Interactive Dropdown & Accessibility Keyboard Navigation (Milestone 3) -->
+  <script>
+    (function initDropdownA11y() {
+      const wrapper = document.getElementById('lift-select-wrapper');
+      if (!wrapper) return;
+      const trigger = wrapper.querySelector('.custom-select-trigger');
+      const options = Array.from(wrapper.querySelectorAll('.custom-option'));
+      if (!trigger || options.length === 0) return;
+
+      function syncAriaState() {
+        const isOpen = wrapper.classList.contains('open');
+        trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        options.forEach(opt => {
+          const isSelected = opt.classList.contains('selected');
+          opt.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+          opt.setAttribute('tabindex', isSelected ? '0' : '-1');
+        });
+      }
+
+      // Initial synchronization
+      syncAriaState();
+
+      // Maintain ARIA states dynamically on class mutations (selection, open/close)
+      const observer = new MutationObserver(syncAriaState);
+      observer.observe(wrapper, { attributes: true, subtree: true, attributeFilter: ['class'] });
+
+      // Keyboard navigation on trigger
+      trigger.addEventListener('keydown', (e) => {
+        const isOpen = wrapper.classList.contains('open');
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          trigger.click();
+          if (!isOpen) {
+            const selectedOpt = wrapper.querySelector('.custom-option.selected') || options[0];
+            if (selectedOpt) selectedOpt.focus();
+          }
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (!isOpen) {
+            trigger.click();
+          }
+          const selectedOpt = wrapper.querySelector('.custom-option.selected') || options[0];
+          if (selectedOpt) selectedOpt.focus();
+        } else if (e.key === 'Escape' && isOpen) {
+          e.preventDefault();
+          wrapper.classList.remove('open');
+          syncAriaState();
+        }
+      });
+
+      // Keyboard navigation on options
+      options.forEach((opt, idx) => {
+        opt.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            opt.click();
+            trigger.focus();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            wrapper.classList.remove('open');
+            syncAriaState();
+            trigger.focus();
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIdx = (idx + 1) % options.length;
+            options[nextIdx].focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevIdx = (idx - 1 + options.length) % options.length;
+            options[prevIdx].focus();
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            options[0].focus();
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            options[options.length - 1].focus();
+          } else if (e.key === 'Tab') {
+            wrapper.classList.remove('open');
+            syncAriaState();
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
