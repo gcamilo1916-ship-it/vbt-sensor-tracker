@@ -521,23 +521,34 @@ async function sendLiftCommand(liftName) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 /**
- * Dropdown lift selector handler
+ * Dropdown lift selector handler (Optimized for desktop and iOS Bluefy touch)
  */
-selectTrigger.addEventListener('click', (e) => {
-  e.stopPropagation();
+function toggleDropdown(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   liftSelectWrapper.classList.toggle('open');
-});
+}
 
-document.addEventListener('click', () => {
-  liftSelectWrapper.classList.remove('open');
+selectTrigger.addEventListener('click', toggleDropdown);
+
+document.addEventListener('click', (e) => {
+  if (!liftSelectWrapper.contains(e.target)) {
+    liftSelectWrapper.classList.remove('open');
+  }
 });
 
 customOptions.forEach(opt => {
-  opt.addEventListener('click', async (e) => {
+  const handleSelect = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const val = opt.getAttribute('data-value');
     applyLiftTheme(val);
+    liftSelectWrapper.classList.remove('open');
     await sendLiftCommand(val);
-  });
+  };
+  opt.addEventListener('click', handleSelect);
 });
 
 function applyLiftTheme(liftName) {

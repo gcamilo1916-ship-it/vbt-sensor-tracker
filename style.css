@@ -6,25 +6,25 @@
 /* ── Design Tokens & Theming ── */
 :root {
   /* Obsidian Depths & Glass Surfaces */
-  --bg-base: #08080C;
-  --bg-ambient-opacity: 0.14;
-  --bg-glass-panel: rgba(18, 20, 30, 0.65);
-  --bg-glass-card: rgba(26, 29, 44, 0.45);
-  --bg-glass-elevated: rgba(36, 41, 62, 0.60);
-  --bg-glass-subtle: rgba(255, 255, 255, 0.03);
+  --bg-base: #050507;
+  --bg-ambient-opacity: 0.16;
+  --bg-glass-panel: rgba(255, 255, 255, 0.04);
+  --bg-glass-card: rgba(255, 255, 255, 0.04);
+  --bg-glass-elevated: rgba(255, 255, 255, 0.07);
+  --bg-glass-subtle: rgba(255, 255, 255, 0.02);
 
   /* Frosted Glass Borders & Specular Highlights */
   --border-glass: rgba(255, 255, 255, 0.08);
-  --border-glass-bright: rgba(255, 255, 255, 0.18);
+  --border-glass-bright: rgba(255, 255, 255, 0.16);
   --border-glass-accent: rgba(var(--accent-rgb), 0.35);
-  --specular-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
-  --specular-bottom: inset 0 -1px 0 0 rgba(0, 0, 0, 0.40);
-  --glass-shadow: 0 14px 36px 0 rgba(0, 0, 0, 0.55), 0 4px 12px 0 rgba(0, 0, 0, 0.35);
+  --specular-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.20);
+  --specular-bottom: inset 0 -1px 0 0 rgba(0, 0, 0, 0.50);
+  --glass-shadow: 0 18px 44px 0 rgba(0, 0, 0, 0.65), 0 4px 14px 0 rgba(0, 0, 0, 0.40);
 
   /* Typography Colors */
   --text-main: #FFFFFF;
-  --text-secondary: #9BA1B6;
-  --text-muted: #596078;
+  --text-secondary: #A1A8BA;
+  --text-muted: #626A82;
   --text-dark: #000000;
 
   /* Lift Accent Neon Spectrum */
@@ -40,9 +40,9 @@
   --accent-rgb: var(--accent-dl-rgb);
   --rep-duration: 1.2s;
 
-  /* Fonts */
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
+  /* Apple System Typography Stack */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
 }
 
 /* Theme Switching */
@@ -81,6 +81,7 @@ html, body {
 
 .font-mono {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.5px;
 }
 
@@ -121,11 +122,11 @@ html, body {
 /* ── Glassmorphism Core Utilities ── */
 .glass-card {
   background: var(--bg-glass-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
   border: 1px solid var(--border-glass);
   box-shadow: var(--specular-top), var(--specular-bottom), var(--glass-shadow);
-  border-radius: 20px;
+  border-radius: 24px;
   position: relative;
   overflow: hidden;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
@@ -133,8 +134,8 @@ html, body {
 
 .glass-pill {
   background: var(--bg-glass-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--border-glass);
   box-shadow: var(--specular-top);
   border-radius: 999px;
@@ -352,6 +353,9 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: visible !important;
+  position: relative;
+  z-index: 50;
 }
 
 .btn-glass-connect {
@@ -390,6 +394,9 @@ html, body {
   display: flex;
   gap: 10px;
   height: 48px;
+  position: relative;
+  overflow: visible;
+  z-index: 60;
 }
 
 /* Glass OS Dropdown */
@@ -397,6 +404,11 @@ html, body {
   position: relative;
   flex: 1.1;
   user-select: none;
+  z-index: 70;
+}
+
+.custom-select-wrapper.open {
+  z-index: 1000;
 }
 
 .custom-select-trigger {
@@ -443,17 +455,17 @@ html, body {
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  background: rgba(18, 20, 32, 0.95);
+  background: rgba(18, 20, 32, 0.98);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--border-glass-bright);
   border-radius: 16px;
   padding: 6px;
-  box-shadow: var(--specular-top), 0 20px 48px rgba(0, 0, 0, 0.8);
+  box-shadow: var(--specular-top), 0 20px 48px rgba(0, 0, 0, 0.85);
   display: none;
   flex-direction: column;
   gap: 4px;
-  z-index: 200;
+  z-index: 1001;
 }
 
 .custom-select-wrapper.open .custom-select-options {
@@ -473,6 +485,12 @@ html, body {
   align-items: center;
   gap: 10px;
   font-size: 12px;
+  cursor: pointer;
+}
+
+.custom-option * {
+  pointer-events: none;
+}
   font-weight: 800;
   color: var(--text-secondary);
   cursor: pointer;
