@@ -1,0 +1,270 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "timestamp_utc": "2026-10-16T01:16:52.756170+00:00",
+  "metadata": {
+    "optimizer": "Self-Adaptive Differential Evolution (JADE)",
+    "objective_function": "Reward = +100*True - 250*False - 300*Missed - 50*VelErr - 100*ResDrift",
+    "population_size": 8,
+    "generations_evaluated": 3,
+    "training_mini_batch_size": 8,
+    "best_objective_reward": 52806.01,
+    "baseline_objective_reward": 52530.03,
+    "reward_improvement_pct": 0.53,
+    "monte_carlo_520_pass_rate_pct": 100.0
+  },
+  "hyperparameters": {
+    "beta": {
+      "value": 0.0457,
+      "type": "float",
+      "unit": "dimensionless",
+      "default": 0.08,
+      "bounds": [
+        0.01,
+        0.4
+      ],
+      "cpp_target": "MADGWICK_BETA",
+      "cpp_macro": "OPT_MADGWICK_BETA",
+      "cpp_declaration": "const float MADGWICK_BETA = 0.0457f;",
+      "description": "Madgwick AHRS filter orientation convergence gain"
+    },
+    "accel_rejection_thresh": {
+      "value": 2.7623,
+      "type": "float",
+      "unit": "m/s^2",
+      "default": 2.5,
+      "bounds": [
+        1.0,
+        5.0
+      ],
+      "cpp_target": "ACCEL_REJECTION_THRESH",
+      "cpp_macro": "OPT_ACCEL_REJECTION_THRESH",
+      "cpp_declaration": "const float ACCEL_REJECTION_THRESH = 2.7623f;",
+      "description": "Dynamic acceleration rejection gate around gravity baseline"
+    },
+    "var_a_thresh_primary": {
+      "value": 0.0385,
+      "type": "float",
+      "unit": "(m/s^2)^2",
+      "default": 0.04,
+      "bounds": [
+        0.01,
+        0.1
+      ],
+      "cpp_target": "STATIONARY_ACCEL_VAR_THRESH",
+      "cpp_macro": "OPT_STATIONARY_ACCEL_VAR_THRESH",
+      "cpp_declaration": "const float STATIONARY_ACCEL_VAR_THRESH = 0.0385f;",
+      "description": "Tier 1 primary acceleration variance rest detection threshold"
+    },
+    "var_g_thresh_primary": {
+      "value": 0.0045,
+      "type": "float",
+      "unit": "(rad/s)^2",
+      "default": 0.005,
+      "bounds": [
+        0.001,
+        0.02
+      ],
+      "cpp_target": "STATIONARY_GYRO_VAR_THRESH",
+      "cpp_macro": "OPT_STATIONARY_GYRO_VAR_THRESH",
+      "cpp_declaration": "const float STATIONARY_GYRO_VAR_THRESH = 0.0045f;",
+      "description": "Tier 1 primary gyroscope variance rest detection threshold"
+    },
+    "var_a_thresh_recovery": {
+      "value": 0.0097,
+      "type": "float",
+      "unit": "(m/s^2)^2",
+      "default": 0.015,
+      "bounds": [
+        0.005,
+        0.03
+      ],
+      "cpp_target": "RECOVERY_ACCEL_VAR_THRESH",
+      "cpp_macro": "OPT_RECOVERY_ACCEL_VAR_THRESH",
+      "cpp_declaration": "const float RECOVERY_ACCEL_VAR_THRESH = 0.0097f;",
+      "description": "Tier 2 boot/thermal recovery acceleration variance threshold"
+    },
+    "var_g_thresh_recovery": {
+      "value": 0.0018,
+      "type": "float",
+      "unit": "(rad/s)^2",
+      "default": 0.002,
+      "bounds": [
+        0.0005,
+        0.005
+      ],
+      "cpp_target": "RECOVERY_GYRO_VAR_THRESH",
+      "cpp_macro": "OPT_RECOVERY_GYRO_VAR_THRESH",
+      "cpp_declaration": "const float RECOVERY_GYRO_VAR_THRESH = 0.0018f;",
+      "description": "Tier 2 boot/thermal recovery gyroscope variance threshold"
+    },
+    "window_size_N": {
+      "value": 23,
+      "type": "int",
+      "unit": "samples",
+      "default": 20,
+      "bounds": [
+        10,
+        50
+      ],
+      "cpp_target": "VARIANCE_WINDOW_SIZE",
+      "cpp_macro": "OPT_VARIANCE_WINDOW_SIZE",
+      "cpp_declaration": "const int VARIANCE_WINDOW_SIZE = 23;",
+      "description": "Moving variance sample window size (20 samples = 200ms at 100Hz)"
+    },
+    "stationary_hold_count": {
+      "value": 12,
+      "type": "int",
+      "unit": "samples",
+      "default": 10,
+      "bounds": [
+        5,
+        25
+      ],
+      "cpp_target": "STATIONARY_HOLD_COUNT",
+      "cpp_macro": "OPT_STATIONARY_HOLD_COUNT",
+      "cpp_declaration": "const int STATIONARY_HOLD_COUNT = 12;",
+      "description": "Consecutive still samples required to latch motionless rest state"
+    },
+    "alpha_base": {
+      "value": 0.0014,
+      "type": "float",
+      "unit": "sample^-1",
+      "default": 0.002,
+      "bounds": [
+        0.0005,
+        0.01
+      ],
+      "cpp_target": "ALPHA_GRAVITY_BASELINE",
+      "cpp_macro": "OPT_ALPHA_GRAVITY_BASELINE",
+      "cpp_declaration": "const float ALPHA_GRAVITY_BASELINE = 0.0014f;",
+      "description": "Ambient gravity baseline thermal drift exponential learning rate"
+    },
+    "alpha_gyro": {
+      "value": 0.0043,
+      "type": "float",
+      "unit": "sample^-1",
+      "default": 0.002,
+      "bounds": [
+        0.0005,
+        0.01
+      ],
+      "cpp_target": "ALPHA_GYRO_BIAS",
+      "cpp_macro": "OPT_ALPHA_GYRO_BIAS",
+      "cpp_declaration": "const float ALPHA_GYRO_BIAS = 0.0043f;",
+      "description": "Zero-rate gyroscope bias thermal drift exponential learning rate"
+    },
+    "eccentric_vel_trigger": {
+      "value": -0.0949,
+      "type": "float",
+      "unit": "m/s",
+      "default": -0.12,
+      "bounds": [
+        -0.25,
+        -0.05
+      ],
+      "cpp_target": "ECCENTRIC_VEL_TRIGGER",
+      "cpp_macro": "OPT_ECCENTRIC_VEL_TRIGGER",
+      "cpp_declaration": "const float ECCENTRIC_VEL_TRIGGER = -0.0949f;",
+      "description": "Negative velocity threshold triggering IDLE to ECCENTRIC transition"
+    },
+    "concentric_vel_trigger": {
+      "value": 0.0661,
+      "type": "float",
+      "unit": "m/s",
+      "default": 0.1,
+      "bounds": [
+        0.05,
+        0.25
+      ],
+      "cpp_target": "CONCENTRIC_VEL_TRIGGER",
+      "cpp_macro": "OPT_CONCENTRIC_VEL_TRIGGER",
+      "cpp_declaration": "const float CONCENTRIC_VEL_TRIGGER = 0.0661f;",
+      "description": "Positive velocity threshold triggering ECCENTRIC to CONCENTRIC transition"
+    },
+    "concentric_lockout_ms": {
+      "value": 347,
+      "type": "int",
+      "unit": "ms",
+      "default": 250,
+      "bounds": [
+        100,
+        500
+      ],
+      "cpp_target": "REFRACTORY_WINDOW_MS",
+      "cpp_macro": "OPT_REFRACTORY_WINDOW_MS",
+      "cpp_declaration": "const unsigned long REFRACTORY_WINDOW_MS = 347UL;",
+      "description": "Post-rep refractory lockout preventing false concentric re-triggers"
+    },
+    "pause_motionless_max_ms": {
+      "value": 3137,
+      "type": "int",
+      "unit": "ms",
+      "default": 3500,
+      "bounds": [
+        2000,
+        5000
+      ],
+      "cpp_target": "PAUSE_MOTIONLESS_MAX_MS",
+      "cpp_macro": "OPT_PAUSE_MOTIONLESS_MAX_MS",
+      "cpp_declaration": "const unsigned long PAUSE_MOTIONLESS_MAX_MS = 3137UL;",
+      "description": "Max motionless hold duration on pins in ECCENTRIC before aborting"
+    },
+    "stall_persistence_count": {
+      "value": 17,
+      "type": "int",
+      "unit": "samples",
+      "default": 25,
+      "bounds": [
+        10,
+        50
+      ],
+      "cpp_target": "STALL_PERSISTENCE_LIMIT",
+      "cpp_macro": "OPT_STALL_PERSISTENCE_LIMIT",
+      "cpp_declaration": "const int STALL_PERSISTENCE_LIMIT = 17;",
+      "description": "Low-velocity stall persistence count before declaring rep completion"
+    },
+    "concentric_timeout_s": {
+      "value": 5.6601,
+      "type": "float",
+      "unit": "s",
+      "default": 6.0,
+      "bounds": [
+        3.0,
+        10.0
+      ],
+      "cpp_target": "CONCENTRIC_TIMEOUT_MS",
+      "cpp_macro": "OPT_CONCENTRIC_TIMEOUT_MS",
+      "cpp_declaration": "const unsigned long CONCENTRIC_TIMEOUT_MS = 5660UL;",
+      "description": "Max concentric duration timeout guard preventing FSM deadlock"
+    },
+    "eccentric_timeout_s": {
+      "value": 5.6124,
+      "type": "float",
+      "unit": "s",
+      "default": 8.0,
+      "bounds": [
+        4.0,
+        15.0
+      ],
+      "cpp_target": "ECCENTRIC_TIMEOUT_MS",
+      "cpp_macro": "OPT_ECCENTRIC_TIMEOUT_MS",
+      "cpp_declaration": "const unsigned long ECCENTRIC_TIMEOUT_MS = 5612UL;",
+      "description": "Max eccentric duration timeout guard aborting dumped lifts to IDLE"
+    },
+    "runaway_velocity_clamp": {
+      "value": 11.9116,
+      "type": "float",
+      "unit": "m/s",
+      "default": 8.0,
+      "bounds": [
+        4.0,
+        12.0
+      ],
+      "cpp_target": "RUNAWAY_VELOCITY_CLAMP",
+      "cpp_macro": "OPT_RUNAWAY_VELOCITY_CLAMP",
+      "cpp_declaration": "const float RUNAWAY_VELOCITY_CLAMP = 11.9116f;",
+      "description": "Velocity clamp triggering atomic reset and refractory lockout"
+    }
+  }
+}

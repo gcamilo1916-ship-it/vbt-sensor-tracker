@@ -1,0 +1,119 @@
+{
+  "case_id": "REG-EDGE-001",
+  "lift_type": "Squat",
+  "ground_truth": {
+    "reps": 1,
+    "displacement_m": 0.52,
+    "duration_s": 10.0,
+    "peak_velocity_mps": 0.66,
+    "mean_velocity_mps": 0.34
+  },
+  "tolerances": {
+    "rep_count_error": 0,
+    "max_velocity_error_mps": 0.12,
+    "max_residual_drift_mps": 0.015
+  },
+  "fault_injections": [],
+  "metadata": {
+    "case_id": "REG-EDGE-001",
+    "name": "Boot Motion Noise & Dynamic Auto-Recalibration",
+    "lift_type": "SQUAT",
+    "author": "Explorer M4-2",
+    "created_at": "2026-10-16T02:00:00Z",
+    "description": "Barbell is rattled/jostled during initial 2.0s warmup, followed by quiet rack rest and a standard squat rep. Validates dynamic auto-recalibration without reboot.",
+    "tags": [
+      "edge_case",
+      "boot_motion",
+      "warmup",
+      "recalibration",
+      "squat"
+    ],
+    "version": "1.0.0"
+  },
+  "simulation_config": {
+    "duration_s": 10.0,
+    "sample_rate_hz": 100.0,
+    "seed": 42012,
+    "kinematics": {
+      "rep_count": 1,
+      "stroke_m": 0.52,
+      "eccentric_duration_s": 1.1,
+      "concentric_duration_s": 1.0,
+      "pause_duration_s": 0.05,
+      "grind_velocity_mps": 0.0,
+      "grind_duration_s": 0.0,
+      "cadence_hz": 1.0,
+      "is_touch_and_go": false
+    },
+    "chaos_faults": {
+      "domain1_boot": {
+        "boot_motion": true,
+        "boot_motion_duration_s": 2.0,
+        "boot_motion_intensity": 2.5,
+        "i2c_timeout_rate": 0.0,
+        "i2c_burst_len_max": 5,
+        "nan_injection_rate": 0.0,
+        "reg_failure_rate": 0.0
+      },
+      "domain2_thermal": {
+        "thermal_drift": false,
+        "delta_t_max_c": 25.0,
+        "tau_thermal_s": 600.0,
+        "accel_drift_coeff": 0.01,
+        "gyro_drift_coeff": 0.002,
+        "mounting_orientation": "Z_UP",
+        "custom_euler_deg": null
+      },
+      "domain3_biomechanics": {
+        "pause_duration_s": 0.0,
+        "grind_velocity": 0.0,
+        "grind_duration_s": 0.0,
+        "touch_and_go": false,
+        "cycling_reps": 1,
+        "cycling_cadence_hz": 1.0,
+        "floor_drop_impact": false,
+        "rack_collision": false
+      },
+      "domain4_connectivity": {
+        "ble_disconnect_window": null,
+        "packet_drop_rate": 0.0,
+        "buffer_capacity": 16
+      }
+    }
+  },
+  "ground_truth_expectations": {
+    "expected_reps": 1,
+    "true_displacement_range_m": [
+      0.48,
+      0.56
+    ],
+    "true_peak_velocity_range_mps": [
+      0.6,
+      0.72
+    ],
+    "true_mean_velocity_range_mps": [
+      0.3,
+      0.38
+    ],
+    "expected_fsm_states": [
+      "IDLE",
+      "ECCENTRIC",
+      "PAUSE",
+      "CONCENTRIC",
+      "LOCKOUT",
+      "IDLE"
+    ],
+    "min_concentric_duration_s": 0.2,
+    "max_concentric_duration_s": 2.5
+  },
+  "acceptance_tolerances": {
+    "max_false_reps": 0,
+    "max_missed_reps": 0,
+    "max_mean_velocity_error": 0.15,
+    "max_peak_velocity_error_mps": 0.12,
+    "max_displacement_error_m": 0.08,
+    "max_residual_drift": 0.015,
+    "min_objective_reward": 80.0,
+    "forbidden_anomalies": []
+  }
+}

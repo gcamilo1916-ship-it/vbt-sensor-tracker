@@ -31,24 +31,36 @@ def load_test_suites(tier_filter="all", milestone_filter="all"):
     suite = unittest.TestSuite()
 
     modules_to_load = []
-    if tier_filter in ["1", "all"]:
+    if tier_filter in ["1", "all", "full"]:
         from tests import test_tier1_features
         modules_to_load.append(("Tier 1", test_tier1_features))
-    if tier_filter in ["2", "all"]:
+    if tier_filter in ["2", "all", "full"]:
         from tests import test_tier2_boundaries
         modules_to_load.append(("Tier 2", test_tier2_boundaries))
-    if tier_filter in ["3", "all"]:
+    if tier_filter in ["3", "all", "full"]:
         from tests import test_tier3_pairwise
         modules_to_load.append(("Tier 3", test_tier3_pairwise))
-    if tier_filter in ["4", "all"]:
+    if tier_filter in ["4", "all", "full"]:
         from tests import test_tier4_workload
         modules_to_load.append(("Tier 4", test_tier4_workload))
-    if tier_filter in ["browser", "all"]:
+    if tier_filter in ["browser", "all", "full"]:
         from tests import test_browser_headless
         modules_to_load.append(("Browser", test_browser_headless))
-    if tier_filter in ["overhaul", "all"]:
+    if tier_filter in ["overhaul", "all", "full"]:
         from tests import test_overhaul_e2e
         modules_to_load.append(("Overhaul", test_overhaul_e2e))
+    if tier_filter in ["vbt1", "vbt", "vbt_all", "full"]:
+        from tests import test_vbt_firmware_tier1
+        modules_to_load.append(("VBT Tier 1", test_vbt_firmware_tier1))
+    if tier_filter in ["vbt2", "vbt", "vbt_all", "full"]:
+        from tests import test_vbt_firmware_tier2
+        modules_to_load.append(("VBT Tier 2", test_vbt_firmware_tier2))
+    if tier_filter in ["vbt3", "vbt", "vbt_all", "full"]:
+        from tests import test_vbt_firmware_tier3
+        modules_to_load.append(("VBT Tier 3", test_vbt_firmware_tier3))
+    if tier_filter in ["vbt4", "vbt", "vbt_all", "full"]:
+        from tests import test_vbt_firmware_tier4
+        modules_to_load.append(("VBT Tier 4", test_vbt_firmware_tier4))
 
     milestone_keys = MILESTONE_FEATURE_MAP.get(milestone_filter.upper())
 
@@ -253,7 +265,7 @@ def run_tests(tier="all", milestone="all", verbosity=1, json_report_path=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Eros VBT E2E Test Suite Runner")
-    parser.add_argument("--tier", choices=["1", "2", "3", "4", "browser", "overhaul", "all"], default="all",
+    parser.add_argument("--tier", choices=["1", "2", "3", "4", "browser", "overhaul", "all", "vbt", "vbt1", "vbt2", "vbt3", "vbt4", "vbt_all", "full"], default="all",
                         help="Filter execution to specific test tier (default: all)")
     parser.add_argument("--milestone", choices=["M1", "M2", "M3", "M4", "M5", "M6", "E2E", "all"], default="all",
                         help="Filter execution to specific milestone (default: all)")

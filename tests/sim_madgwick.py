@@ -273,16 +273,20 @@ class RobustVBTTracker:
                 self.filtered_accel = ALPHA * a_vert + (1.0 - ALPHA) * self.filtered_accel
                 self.velocity += self.filtered_accel * dt
         else: # CONCENTRIC
-            self.filtered_accel = ALPHA * a_vert + (1.0 - ALPHA) * self.filtered_accel
-            self.velocity += self.filtered_accel * dt
-            if self.velocity > 0.0:
-                self.rep_displacement += self.velocity * dt
-                if self.velocity > self.peak_velocity:
-                    self.peak_velocity = self.velocity
-            if self.velocity <= 0.02:
-                self.low_velocity_concentric_count += 1
+            if self.is_stationary and self.rep_displacement < 0.12 and abs(a_vert) < 0.20 and (t - self.state_start_time) > 0.25:
+                self.velocity = 0.0
+                self.filtered_accel = 0.0
             else:
-                self.low_velocity_concentric_count = 0
+                self.filtered_accel = ALPHA * a_vert + (1.0 - ALPHA) * self.filtered_accel
+                self.velocity += self.filtered_accel * dt
+                if self.velocity > 0.0:
+                    self.rep_displacement += self.velocity * dt
+                    if self.velocity > self.peak_velocity:
+                        self.peak_velocity = self.velocity
+                if self.velocity <= 0.02:
+                    self.low_velocity_concentric_count += 1
+                else:
+                    self.low_velocity_concentric_count = 0
 
         if abs(self.velocity) > 8.0:
             self.velocity = 0.0
@@ -324,21 +328,26 @@ class RobustVBTTracker:
                 self.filtered_accel = 0.0
 
         elif self.currentState == "CONCENTRIC":
-            is_lockout_stationary = (self.is_stationary and self.rep_displacement >= 0.12 and state_duration >= 0.25)
-            is_vel_stopped = ((self.velocity <= 0.00 or self.low_velocity_concentric_count >= 25) and
-                              self.peak_velocity >= 0.15 and self.rep_displacement >= 0.12 and state_duration >= 0.25)
+            is_explosive = (self.peak_velocity >= 0.55)
+            min_dur = 0.16 if is_explosive else 0.25
+            min_disp = 0.10 if is_explosive else 0.12
+
+            is_lockout_stationary = (self.is_stationary and (abs(self.velocity) <= 0.005 or self.rep_displacement >= 0.20) and self.rep_displacement >= min_disp and state_duration >= min_dur)
+            is_vel_stopped = ((self.velocity <= 0.00 or (self.low_velocity_concentric_count >= 25 and (abs(self.velocity) <= 0.005 or self.rep_displacement >= 0.20))) and
+                              self.peak_velocity >= 0.15 and self.rep_displacement >= min_disp and state_duration >= min_dur)
             is_timed_out = (state_duration > 6.0)
-            is_abort_motionless = (self.is_stationary and self.rep_displacement < 0.12 and state_duration > 1.5)
+            is_abort_motionless = (self.is_stationary and self.rep_displacement < min_disp and abs(a_vert) < 0.20 and state_duration > 0.40)
 
             if is_lockout_stationary or is_vel_stopped or is_timed_out or is_abort_motionless:
                 rep_dur = state_duration
-                if self.rep_displacement >= 0.12 and rep_dur >= 0.25 and self.peak_velocity >= 0.15:
+                if self.rep_displacement >= min_disp and rep_dur >= min_dur and self.peak_velocity >= 0.15:
                     mcv = self.rep_displacement / rep_dur
                     self.reps.append({"mcv": mcv, "disp": self.rep_displacement, "dur": rep_dur, "t": t})
                 self.velocity = 0.0
                 self.filtered_accel = 0.0
                 self.rep_displacement = 0.0
-                self.concentric_lockout_until = t + 0.25
+                refractory = 0.14 if is_explosive else 0.25
+                if not is_abort_motionless: self.concentric_lockout_until = t + refractory
                 self.currentState = "IDLE"
 
 
