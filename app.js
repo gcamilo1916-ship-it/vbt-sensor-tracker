@@ -1,15 +1,15 @@
 /**
  * ─────────────────────────────────────────────────────────────────────────────
- * VBT PRO — GLASS OS CORE LOGIC
- * High-Performance WebBLE Engine with Nested Data Hierarchy & LocalStorage
- * Optimized for iOS Bluefy WebBLE Browser
+ * EROS — GLASS OS CORE LOGIC
+ * Bluetooth connection, nested workout data hierarchy & LocalStorage
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-// ── BLE Specifications (matching vbt_architecture.md & ESP32 main.cpp) ──
+// ── Bluetooth Specifications (matching vbt_architecture.md) ──
 const SERVICE_UUID            = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
 const CHARACTERISTIC_UUID     = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'; // Data: Notify, Read
 const CMD_CHARACTERISTIC_UUID = '5a7d3c90-951d-444a-8f5b-11c500732890'; // Commands: Write
+// Internal advertising name used only by the browser device filter (never displayed).
 const DEVICE_NAME             = 'VBT_Tracker';
 const STORAGE_KEY             = 'vbt_workouts_v1';
 const PR_STORAGE_KEY          = 'vbt_pr_data_v1';
@@ -25,7 +25,7 @@ const statusBadge       = document.getElementById('status-badge');
 const syncBanner        = document.getElementById('sync-banner');
 const syncBannerText    = document.getElementById('sync-banner-text');
 
-// Hardware Controls & Lift Selector
+// Connection Controls & Lift Selector
 const btnConnect        = document.getElementById('btn-connect');
 const btnConnectText    = btnConnect ? btnConnect.querySelector('.btn-text') : null;
 const liftSelectWrapper = document.getElementById('lift-select-wrapper');
@@ -35,9 +35,11 @@ const customOptions     = liftSelectWrapper ? liftSelectWrapper.querySelectorAll
 const btnSetToggle      = document.getElementById('btn-set-toggle');
 const btnSetText        = document.getElementById('btn-set-text');
 
-// In-App Bluetooth Search Sheet Controls
+// Eros Connection Sheet Controls
 const bleSearchSheet       = document.getElementById('bluetooth-search-tab');
 const bleSearchBackdrop    = document.getElementById('ble-search-backdrop');
+const bleSearchContent     = document.getElementById('ble-search-content');
+const bleDragZone          = document.getElementById('ble-drag-zone');
 const btnCloseBleSearch    = document.getElementById('btn-close-ble-search');
 const bleSearchStatusText  = document.getElementById('ble-search-status-text');
 const bleDeviceCard        = document.getElementById('ble-device-card');
@@ -84,6 +86,15 @@ const setMinVel         = document.getElementById('set-min-vel');
 const setRingProgress   = document.getElementById('set-ring-progress');
 const activeSetRepsList = document.getElementById('active-set-reps-list');
 const activeSetRepCounter = document.getElementById('active-set-rep-counter');
+
+// Workout Tab (summary + sets table)
+const workoutSummaryStatus = document.getElementById('workout-summary-status');
+const workoutSumSets       = document.getElementById('workout-sum-sets');
+const workoutSumReps       = document.getElementById('workout-sum-reps');
+const workoutSumAvgVel     = document.getElementById('workout-sum-avg-vel');
+const workoutSumPeakVel    = document.getElementById('workout-sum-peak-vel');
+const workoutSetsTable     = document.getElementById('workout-sets-table');
+const workoutSetsCounter   = document.getElementById('workout-sets-counter');
 
 // History Tab & Data Export
 const sumWorkouts       = document.getElementById('sum-workouts');
@@ -148,8 +159,31 @@ const LIFT_BASELINES = {
   bench:    { mvt: 0.16, rpe8: 0.32, cmd: 'CMD:SL:BP' }
 };
 
+// ── Lift naming helpers (sets are always tagged with the lift they were performed under) ──
+const KNOWN_LIFTS = { deadlift: 'Deadlift', squat: 'Squat', bench: 'Bench' };
+
+/** Normalises the casing of the three known lifts; unknown names pass through trimmed. */
+function canonicalLift(name) {
+  const raw = String(name == null ? '' : name).trim();
+  return KNOWN_LIFTS[raw.toLowerCase()] || raw;
+}
+
+/** Case-insensitive lift comparison. */
+function sameLift(a, b) {
+  return String(a == null ? '' : a).trim().toLowerCase() === String(b == null ? '' : b).trim().toLowerCase();
+}
+
+/** Maps any lift name to a styling key: deadlift | squat | bench | other. */
+function liftKeyOf(name) {
+  const k = String(name == null ? '' : name).toLowerCase();
+  if (k.includes('dead')) return 'deadlift';
+  if (k.includes('squat')) return 'squat';
+  if (k.includes('bench')) return 'bench';
+  return 'other';
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
-// SYNTHETIC SOUND & HAPTIC ENGINE (iOS Bluefy & Web Audio Unlocking)
+// SYNTHETIC SOUND & HAPTIC ENGINE (Web Audio Unlocking)
 // ═════════════════════════════════════════════════════════════════════════════
 
 const SoundFX = (() => {
@@ -178,7 +212,7 @@ const SoundFX = (() => {
     }
   }
 
-  // Auto-unlock on first touch / click gesture (vital for iOS Safari / Bluefy)
+  // Auto-unlock on first touch / click gesture (vital for iOS Safari)
   ['touchstart', 'touchend', 'pointerdown', 'click'].forEach(evt => {
     window.addEventListener(evt, unlock, { passive: true });
   });
@@ -270,7 +304,7 @@ const SoundFX = (() => {
       playTone(1100.0, 'sine', 0.03, 0.12, 0);
     },
 
-    // Sub-bass acoustic haptic thump fallback for iOS Safari/Bluefy
+    // Sub-bass acoustic haptic thump fallback for iOS Safari
     playSubBassThump() {
       playTone(45, 'sine', 0.07, 0.35, 0);
     },
@@ -311,7 +345,7 @@ const HapticsFX = (() => {
   };
 })();
 
-// Touch responsiveness & active tactile feedback for iOS Bluefy
+// Touch responsiveness & active tactile feedback
 document.addEventListener('touchstart', () => {}, { passive: true });
 
 function initTouchActiveStates() {
@@ -326,7 +360,7 @@ function initTouchActiveStates() {
     document.querySelectorAll('.touch-active').forEach(el => el.classList.remove('touch-active'));
   };
 
-  // Support both Touch Events and Pointer Events for iOS Safari / Bluefy
+  // Support both Touch Events and Pointer Events
   document.addEventListener('touchstart', addActive, { passive: true });
   document.addEventListener('touchend', removeActive, { passive: true });
   document.addEventListener('touchcancel', removeActive, { passive: true });
@@ -346,10 +380,10 @@ function initStorage() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       workouts = JSON.parse(raw);
-      console.log(`[VBT] Loaded ${workouts.length} workout sessions from localStorage.`);
+      console.log(`[Eros] Loaded ${workouts.length} workout sessions from localStorage.`);
     }
   } catch (err) {
-    console.warn('[VBT] Failed to read localStorage:', err);
+    console.warn('[Eros] Failed to read localStorage:', err);
     workouts = [];
   }
   loadPrProfile();
@@ -357,13 +391,14 @@ function initStorage() {
   renderHistoryView();
   initPrDashboardListeners();
   updatePrDashboardUI(true);
+  updateWorkoutPage();
 }
 
 function persistStorage() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts));
   } catch (err) {
-    console.error('[VBT] Failed to save to localStorage:', err);
+    console.error('[Eros] Failed to save to localStorage:', err);
     showBanner('Storage Full: Unable to persist workout history');
   }
 }
@@ -403,6 +438,7 @@ function startWorkoutSession() {
 
   persistStorage();
   updateHistoryStats();
+  updateWorkoutPage();
   return session;
 }
 
@@ -481,11 +517,12 @@ function startNewSet(lift = currentLift) {
     startWorkoutSession();
   }
 
+  const setLift = canonicalLift(lift || currentLift);
   const setNumber = activeWorkout.sets.length + 1;
   const newSet = {
-    setId: `set_${Date.now()}`,
+    setId: `set_${Date.now()}_${setNumber}`,
     setNumber: setNumber,
-    lift: lift,
+    lift: setLift,
     targetRpe: currentTargetRpe,
     startTime: Date.now(),
     endTime: null,
@@ -510,6 +547,7 @@ function startNewSet(lift = currentLift) {
 
   updateLiveMiniHud();
   updateSetUI(activeSet);
+  updateWorkoutPage();
   persistStorage();
   return newSet;
 }
@@ -519,6 +557,11 @@ function startNewSet(lift = currentLift) {
  */
 function endActiveSet() {
   if (!activeSet) return;
+
+  if (typeof activeRepPressCancel === 'function') {
+    activeRepPressCancel();
+    activeRepPressCancel = null;
+  }
 
   activeSet.endTime = Date.now();
   recalculateSetMetrics(activeSet);
@@ -535,6 +578,7 @@ function endActiveSet() {
   btnSetToggle.classList.remove('recording');
 
   updateLiveMiniHud();
+  updateWorkoutPage();
   persistStorage();
   updateHistoryStats();
   renderHistoryView();
@@ -559,20 +603,33 @@ btnSetToggle.addEventListener('click', () => {
  * Pushes an ingested repetition into the active set hierarchy
  */
 function recordRepetition({ lift, velocity, rpe }) {
+  const repLift = canonicalLift(lift);
+
   // Auto-start workout session if idle
   if (!activeWorkout) {
     startWorkoutSession();
   }
 
-  // Auto-start set if idle (per grill-me decision: never drop bar data)
+  // A rep performed under a different lift never lands in the open set:
+  // that set is saved under its original lift and a fresh set starts for the new lift.
+  if (activeSet && !sameLift(activeSet.lift, repLift)) {
+    endActiveSet();
+  }
+
+  // Synchronously align active lift theme if the incoming rep is for a different lift
+  if (!sameLift(currentLift, repLift)) {
+    applyLiftTheme(repLift);
+  }
+
+  // Auto-start set if idle (never drop bar data)
   if (!activeSet) {
-    startNewSet(lift);
+    startNewSet(repLift);
   }
 
   const repNumber = activeSet.reps.length + 1;
   const repObj = {
     repNumber: repNumber,
-    lift: lift,
+    lift: repLift,
     velocity: velocity,
     rpe: rpe,
     timestamp: Date.now(),
@@ -596,15 +653,15 @@ function recordRepetition({ lift, velocity, rpe }) {
     triggerTargetReachedAlert();
   }
 
-  // Reactively update RPE Hero Banner on repetition recording
+  // Reactively update RPE Hero Banner, Current Set Card, and Workout Sets Table on repetition recording
   updateRpeHeroBanner(rpe);
+  updateSetUI(activeSet);
+  updateLiveMiniHud();
+  updateHistoryStats();
 
   // Asynchronous UI Dispatch (Non-blocking Observability)
   requestAnimationFrame(() => {
-    updateLiveDisplay(repObj);
-    updateSetUI(activeSet);
-    updateLiveMiniHud();
-    updateHistoryStats();
+    updateLiveDisplay(repObj, true);
   });
 }
 
@@ -646,28 +703,194 @@ function recalculateSetMetrics(set) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 3. WEBBLE HARDWARE ENGINE (iOS Bluefy Compliant)
+// 3. BLUETOOTH CONNECTION ENGINE
 // ═════════════════════════════════════════════════════════════════════════════
 
-// Bluetooth Search Sheet Open / Close Helpers
+function resetBleSheetDragTransform() {
+  if (bleSearchSheet) {
+    bleSearchSheet.classList.remove('dragging');
+  }
+  if (bleSearchContent) {
+    bleSearchContent.style.transform = '';
+    bleSearchContent.style.webkitTransform = '';
+  }
+  if (bleSearchBackdrop) {
+    bleSearchBackdrop.style.opacity = '';
+  }
+}
+
+// Connection Sheet Open / Close Helpers
 function openBleSearchSheet() {
   if (bleSearchSheet) {
+    resetBleSheetDragTransform();
     bleSearchSheet.classList.add('open');
     bleSearchSheet.setAttribute('aria-hidden', 'false');
     SoundFX.playBleSearchPing();
-    if (bleDevice && bleDevice.gatt.connected) {
-      if (bleSearchStatusText) bleSearchStatusText.textContent = 'Connected to VBT_Tracker • 100Hz IMU Active';
+    HapticsFX.vibrate([12]);
+    if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
+      if (bleSearchStatusText) bleSearchStatusText.innerHTML = 'Connected to <span class="eros-wordmark">Eros</span>';
     } else {
-      if (bleSearchStatusText) bleSearchStatusText.textContent = 'Ready to connect to ESP32-C6 sensor';
+      if (bleSearchStatusText) bleSearchStatusText.innerHTML = 'Ready to connect to <span class="eros-wordmark">Eros</span>';
     }
   }
 }
 
 function closeBleSearchSheet() {
   if (bleSearchSheet) {
+    const wasOpen = bleSearchSheet.classList.contains('open');
+    resetBleSheetDragTransform();
     bleSearchSheet.classList.remove('open');
     bleSearchSheet.setAttribute('aria-hidden', 'true');
+    if (wasOpen) {
+      HapticsFX.vibrate([10]);
+    }
   }
+}
+
+/**
+ * Enables slide-down / drag-to-dismiss interaction on the Eros connection sheet
+ * (#ble-drag-zone: handle + header).
+ * Follows finger 1:1 downwards; dismisses past 35% height or fast downward flick,
+ * and springs back to open otherwise.
+ */
+function initBleSheetDrag() {
+  const dragZone = bleDragZone || document.getElementById('ble-drag-zone');
+  if (!dragZone || initBleSheetDrag._initialized) return;
+  initBleSheetDrag._initialized = true;
+
+  let isDragging = false;
+  let activeInputType = null;
+  let lastHandledEvent = null;
+  let startY = 0;
+  let lastY = 0;
+  let lastTime = 0;
+  let velocityY = 0;
+  let currentDeltaY = 0;
+
+  const isInteractiveIgnore = (target) => {
+    return Boolean(target && target.closest && target.closest('#btn-close-ble-search'));
+  };
+
+  const beginDrag = (clientY, target, inputType) => {
+    if (!bleSearchSheet || !bleSearchSheet.classList.contains('open')) return false;
+    if (isInteractiveIgnore(target)) return false;
+    if (isDragging && activeInputType && activeInputType !== inputType) return false;
+    isDragging = true;
+    activeInputType = inputType;
+    startY = clientY;
+    lastY = clientY;
+    lastTime = performance.now();
+    velocityY = 0;
+    currentDeltaY = 0;
+    bleSearchSheet.classList.add('dragging');
+    return true;
+  };
+
+  const moveDrag = (clientY) => {
+    if (!isDragging || !bleSearchContent) return;
+    const now = performance.now();
+    const dt = now - lastTime;
+    const dyStep = clientY - lastY;
+    if (dyStep !== 0) {
+      const instVel = dyStep / Math.max(1, dt); // px per ms (positive = downward)
+      velocityY = velocityY === 0 ? instVel : (velocityY * 0.35 + instVel * 0.65);
+      lastTime = now;
+    } else if (dt > 60) {
+      velocityY = 0;
+      lastTime = now;
+    }
+    lastY = clientY;
+
+    currentDeltaY = Math.max(0, clientY - startY);
+    const translateStr = `translate3d(0, ${currentDeltaY}px, 0)`;
+    bleSearchContent.style.transform = translateStr;
+    bleSearchContent.style.webkitTransform = translateStr;
+
+    if (bleSearchBackdrop) {
+      const sheetHeight = bleSearchContent.offsetHeight || 320;
+      const fadeRatio = Math.max(0.2, 1 - (currentDeltaY / (sheetHeight * 1.15)));
+      bleSearchBackdrop.style.opacity = String(fadeRatio.toFixed(3));
+    }
+  };
+
+  const finishDrag = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    activeInputType = null;
+    if (bleSearchSheet) {
+      bleSearchSheet.classList.remove('dragging');
+    }
+
+    const sheetHeight = (bleSearchContent && bleSearchContent.offsetHeight) || 320;
+    const dismissThreshold = sheetHeight * 0.35;
+    const isFastFlickDown = velocityY > 0.65 && currentDeltaY > 24;
+
+    if (currentDeltaY > dismissThreshold || isFastFlickDown) {
+      closeBleSearchSheet();
+    } else {
+      resetBleSheetDragTransform();
+    }
+    currentDeltaY = 0;
+    velocityY = 0;
+  };
+
+  // Pointer Events
+  dragZone.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (beginDrag(e.clientY, e.target, 'pointer')) {
+      if (dragZone.setPointerCapture && e.pointerId !== undefined) {
+        try { dragZone.setPointerCapture(e.pointerId); } catch (_) {}
+      }
+    }
+  });
+
+  const onPointerMove = (e) => {
+    if (!isDragging || activeInputType !== 'pointer' || e === lastHandledEvent) return;
+    lastHandledEvent = e;
+    moveDrag(e.clientY);
+  };
+
+  const onPointerEnd = (e) => {
+    if (!isDragging || activeInputType !== 'pointer' || e === lastHandledEvent) return;
+    lastHandledEvent = e;
+    finishDrag();
+  };
+
+  dragZone.addEventListener('pointermove', onPointerMove);
+  dragZone.addEventListener('pointerup', onPointerEnd);
+  dragZone.addEventListener('pointercancel', onPointerEnd);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerEnd);
+  window.addEventListener('pointercancel', onPointerEnd);
+
+  // Touch Events fallback
+  dragZone.addEventListener('touchstart', (e) => {
+    if (!e.touches || e.touches.length === 0) return;
+    beginDrag(e.touches[0].clientY, e.target, 'touch');
+  }, { passive: true });
+
+  const onTouchMove = (e) => {
+    if (!isDragging || activeInputType !== 'touch' || e === lastHandledEvent || !e.touches || e.touches.length === 0) return;
+    lastHandledEvent = e;
+    moveDrag(e.touches[0].clientY);
+  };
+
+  const onTouchEnd = (e) => {
+    if (!isDragging || activeInputType !== 'touch' || e === lastHandledEvent) return;
+    lastHandledEvent = e;
+    finishDrag();
+  };
+
+  dragZone.addEventListener('touchmove', onTouchMove, { passive: true });
+  dragZone.addEventListener('touchend', onTouchEnd, { passive: true });
+  dragZone.addEventListener('touchcancel', onTouchEnd, { passive: true });
+  window.addEventListener('touchmove', onTouchMove, { passive: true });
+  window.addEventListener('touchend', onTouchEnd, { passive: true });
+  window.addEventListener('touchcancel', onTouchEnd, { passive: true });
+}
+
+if (bleDragZone) {
+  initBleSheetDrag();
 }
 
 if (statusBadge) {
@@ -804,10 +1027,10 @@ async function connectBLE() {
   try {
     btnConnectText.textContent = 'SCANNING…';
     btnConnect.disabled = true;
-    if (bleSearchStatusText) bleSearchStatusText.textContent = 'Searching for ESP32-C6 VBT_Tracker…';
+    if (bleSearchStatusText) bleSearchStatusText.innerHTML = 'Searching for <span class="eros-wordmark">Eros</span>…';
     SoundFX.playBleSearchPing();
 
-    // Standard Web Bluetooth API Request (explicit user gesture for iOS Bluefy)
+    // Standard Web Bluetooth API Request (explicit user gesture)
     bleDevice = await navigator.bluetooth.requestDevice({
       filters: [{ name: DEVICE_NAME }],
       optionalServices: [SERVICE_UUID]
@@ -824,9 +1047,9 @@ async function connectBLE() {
     // Dedicated Command Characteristic for lift profile switching
     try {
       cmdCharacteristic = await service.getCharacteristic(CMD_CHARACTERISTIC_UUID);
-      console.log('[VBT] Command Characteristic bound successfully.');
+      console.log('[Eros] Command Characteristic bound successfully.');
     } catch (cmdErr) {
-      console.warn('[VBT] Command characteristic not discovered, using data characteristic fallback:', cmdErr);
+      console.warn('[Eros] Command characteristic not discovered, using data characteristic fallback:', cmdErr);
       cmdCharacteristic = dataCharacteristic;
     }
 
@@ -834,23 +1057,30 @@ async function connectBLE() {
     await dataCharacteristic.startNotifications();
     dataCharacteristic.addEventListener('characteristicvaluechanged', handleIncomingBLEData);
 
-    console.log('[VBT] Subscribed to ESP32-C6 telemetry notifications.');
+    console.log('[Eros] Subscribed to telemetry notifications.');
     setConnectedUI(true);
     SoundFX.playBleConnected();
     HapticsFX.vibrate([40, 20, 50]);
-    if (bleSearchStatusText) bleSearchStatusText.textContent = 'Connected to VBT_Tracker • 100Hz IMU Active';
+    if (bleSearchStatusText) bleSearchStatusText.innerHTML = 'Connected to <span class="eros-wordmark">Eros</span>';
     setTimeout(() => {
       closeBleSearchSheet();
     }, 1200);
 
-    // Sync current active lift profile with the ESP32
+    // Sync current active lift profile with Eros
     await sendLiftCommand(currentLift);
 
   } catch (err) {
-    console.error('[VBT] Bluetooth connection error:', err);
+    console.error('[Eros] Bluetooth connection error:', err);
     setConnectedUI(false);
-    if (bleSearchStatusText) bleSearchStatusText.textContent = `Connection error: ${err.message || 'Check ESP32 sensor'}`;
-    showBanner(`Connection error: ${err.message || 'Check ESP32 sensor'}`);
+    const errMsg = (err && err.message) ? err.message : 'Check Eros connection';
+    if (bleSearchStatusText) {
+      if (err && err.message) {
+        bleSearchStatusText.textContent = `Connection error: ${err.message}`;
+      } else {
+        bleSearchStatusText.innerHTML = 'Connection error: Check <span class="eros-wordmark">Eros</span> connection';
+      }
+    }
+    showBanner(`Connection error: ${errMsg}`);
   }
 }
 
@@ -869,28 +1099,28 @@ function disconnectBLE() {
   bleDevice = null;
   setConnectedUI(false);
   SoundFX.playBleDisconnected();
-  if (bleSearchStatusText) bleSearchStatusText.textContent = 'Ready to connect to ESP32-C6 sensor';
+  if (bleSearchStatusText) bleSearchStatusText.innerHTML = 'Ready to connect to <span class="eros-wordmark">Eros</span>';
 }
 
 function onBLEDisconnected() {
-  console.warn('[VBT] BLE disconnected.');
+  console.warn('[Eros] BLE disconnected.');
   dataCharacteristic = null;
   cmdCharacteristic = null;
   setConnectedUI(false);
   SoundFX.playBleDisconnected();
-  if (bleSearchStatusText) bleSearchStatusText.textContent = 'Barbell sensor disconnected.';
-  showBanner('Barbell sensor disconnected.');
+  if (bleSearchStatusText) bleSearchStatusText.innerHTML = '<span class="eros-wordmark">Eros</span> disconnected.';
+  showBanner('Eros disconnected.');
 }
 
 /**
- * Safe, robust parser for ESP32 string payload:
+ * Safe, robust parser for incoming telemetry payload:
  * Format: "Lift Name | 0.45 m/s | RPE: 8.5"
  */
 function handleIncomingBLEData(event) {
   try {
     const rawValue = event.target.value;
     const text = new TextDecoder('utf-8').decode(rawValue).trim();
-    console.log('[VBT BLE Payload]:', text);
+    console.log('[Eros BLE Payload]:', text);
 
     if (!text || !text.includes('|')) return;
 
@@ -912,12 +1142,12 @@ function handleIncomingBLEData(event) {
     recordRepetition({ lift, velocity, rpe });
 
   } catch (err) {
-    console.warn('[VBT] Failed to parse BLE frame:', err);
+    console.warn('[Eros] Failed to parse BLE frame:', err);
   }
 }
 
 /**
- * Transmits lift change command to ESP32 FSM
+ * Transmits lift change command to Eros
  */
 async function sendLiftCommand(liftName) {
   if (!cmdCharacteristic) return;
@@ -933,10 +1163,10 @@ async function sendLiftCommand(liftName) {
     } else {
       await cmdCharacteristic.writeValue(encoded);
     }
-    console.log(`[VBT] Dispatched command: ${cmdString}`);
+    console.log(`[Eros] Dispatched command: ${cmdString}`);
     clearBanner();
   } catch (err) {
-    console.error('[VBT] Failed to write command characteristic:', err);
+    console.error('[Eros] Failed to write command characteristic:', err);
     showBanner('Sync failed: could not switch barbell profile');
   }
 }
@@ -946,7 +1176,7 @@ async function sendLiftCommand(liftName) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 /**
- * Dropdown lift selector handler (Optimized for desktop and iOS Bluefy touch)
+ * Dropdown lift selector handler
  */
 function toggleDropdown(e) {
   if (e) {
@@ -976,18 +1206,38 @@ customOptions.forEach(opt => {
   opt.addEventListener('click', handleSelect);
 });
 
+/**
+ * Updates active lift theme and movement denomination.
+ * If a set is currently active under a different lift, automatically ends & saves
+ * that set under its original lift so subsequent sets start under the new lift.
+ */
 function applyLiftTheme(liftName) {
-  currentLift = liftName;
-  selectedLiftText.textContent = liftName.toUpperCase();
-  document.body.className = `theme-${liftName.toLowerCase()}`;
+  const nextLift = canonicalLift(liftName || 'Deadlift');
+
+  if (activeSet && !sameLift(activeSet.lift, nextLift)) {
+    endActiveSet();
+  }
+
+  currentLift = nextLift;
+  if (selectedLiftText) selectedLiftText.textContent = nextLift.toUpperCase();
+  document.body.className = `theme-${nextLift.toLowerCase()}`;
 
   customOptions.forEach(o => o.classList.remove('selected'));
-  const targetOpt = Array.from(customOptions).find(o => o.getAttribute('data-value') === liftName);
+  const targetOpt = Array.from(customOptions).find(o => sameLift(o.getAttribute('data-value'), nextLift));
   if (targetOpt) targetOpt.classList.add('selected');
 
   // Update MVT baseline subtext
-  const baseline = LIFT_BASELINES[liftName.toLowerCase()] || LIFT_BASELINES.deadlift;
-  liveRpeSub.textContent = `MVT Baseline: ${baseline.mvt.toFixed(2)} m/s`;
+  const baseline = LIFT_BASELINES[nextLift.toLowerCase()] || LIFT_BASELINES.deadlift;
+  if (liveRpeSub) {
+    liveRpeSub.textContent = `MVT Baseline: ${baseline.mvt.toFixed(2)} m/s`;
+  }
+
+  // Keep Current Set card denomination synced and clear stale set reps when idle between sets
+  if (!activeSet) {
+    updateSetUI(null);
+  } else {
+    updateWorkoutPage();
+  }
 }
 
 /**
@@ -1023,7 +1273,7 @@ function updateRpeHeroBanner(rpe) {
     card.classList.remove('tier-warmup', 'tier-target', 'tier-heavy', 'tier-max');
     if (numRpe < 7.5) {
       card.classList.add('tier-warmup');
-      if (badge) badge.textContent = 'WARMUP TIER';
+      if (badge) badge.textContent = 'WARMUP';
     } else if (numRpe <= 8.4) {
       card.classList.add('tier-target');
       if (badge) badge.textContent = 'TARGET ZONE';
@@ -1040,10 +1290,10 @@ function updateRpeHeroBanner(rpe) {
 /**
  * Updates Live Telemetry display and fires bar path physics animation
  */
-function updateLiveDisplay({ lift, velocity, rpe }) {
+function updateLiveDisplay({ lift, velocity, rpe }, fromRepStream = false) {
   if (liveVelocity) liveVelocity.textContent = velocity.toFixed(2);
   if (liveRpe) liveRpe.textContent           = rpe.toFixed(1);
-  if (liveVelSub) liveVelSub.textContent     = `Rep Completed: ${velocity >= 0.5 ? '⚡ Explosive' : '🔥 Grinding'}`;
+  if (liveVelSub) liveVelSub.textContent     = `Rep Completed: ${velocity >= 0.5 ? 'Explosive' : 'Grinding'}`;
 
   // Update Peak Velocity Hero Metric (Mean and Peak as Main Focus)
   const currentPeak = activeSet && activeSet.maxVelocity > 0 ? activeSet.maxVelocity : velocity;
@@ -1057,8 +1307,8 @@ function updateLiveDisplay({ lift, velocity, rpe }) {
   // Reactively update RPE Hero Banner on live display
   updateRpeHeroBanner(rpe);
 
-  // If incoming rep has different lift, sync UI
-  if (currentLift.toLowerCase() !== lift.toLowerCase()) {
+  // If incoming rep has different lift (when called directly outside recordRepetition), sync UI
+  if (!fromRepStream && currentLift.toLowerCase() !== lift.toLowerCase()) {
     applyLiftTheme(lift);
   }
 
@@ -1109,12 +1359,121 @@ function updateLiveMiniHud() {
 }
 
 /**
- * Updates the Set Tracking Tab (Ring, Stats Grid, Reps Table)
+ * Renders the Workout Tab summary card and all sets of the workout
+ * tagged with their movement denomination (Deadlift, Squat, Bench).
+ */
+function updateWorkoutPage() {
+  const statusEl = workoutSummaryStatus || document.getElementById('workout-summary-status');
+  const setsEl   = workoutSumSets || document.getElementById('workout-sum-sets');
+  const repsEl   = workoutSumReps || document.getElementById('workout-sum-reps');
+  const avgEl    = workoutSumAvgVel || document.getElementById('workout-sum-avg-vel');
+  const peakEl   = workoutSumPeakVel || document.getElementById('workout-sum-peak-vel');
+  const tableEl  = workoutSetsTable || document.getElementById('workout-sets-table');
+  const countEl  = workoutSetsCounter || document.getElementById('workout-sets-counter');
+
+  const session = activeWorkout;
+  const sets = (session && Array.isArray(session.sets)) ? session.sets : [];
+
+  if (!session) {
+    if (statusEl) statusEl.textContent = 'No active workout';
+    if (setsEl) setsEl.textContent = '0';
+    if (repsEl) repsEl.textContent = '0';
+    if (avgEl) avgEl.textContent = '-';
+    if (peakEl) peakEl.textContent = '-';
+    if (countEl) countEl.textContent = '0 sets';
+    if (tableEl) {
+      tableEl.innerHTML = '<div class="empty-state">No sets recorded in this workout yet.</div>';
+    }
+    return;
+  }
+
+  let totalReps = 0;
+  let sumVel = 0;
+  let maxVel = 0;
+  sets.forEach(s => {
+    const reps = Array.isArray(s.reps) ? s.reps : [];
+    totalReps += reps.length;
+    reps.forEach(r => {
+      if (typeof r.velocity === 'number') {
+        sumVel += r.velocity;
+        if (r.velocity > maxVel) maxVel = r.velocity;
+      }
+    });
+  });
+
+  if (statusEl) {
+    statusEl.textContent = activeSet
+      ? `Set ${activeSet.setNumber} Active • ${canonicalLift(activeSet.lift)}`
+      : `Active Workout • ${sets.length} ${sets.length === 1 ? 'Set' : 'Sets'}`;
+  }
+  if (setsEl) setsEl.textContent = String(sets.length);
+  if (repsEl) repsEl.textContent = String(totalReps);
+  if (avgEl) avgEl.textContent = totalReps > 0 ? (sumVel / totalReps).toFixed(2) : '-';
+  if (peakEl) peakEl.textContent = totalReps > 0 ? maxVel.toFixed(2) : '-';
+  if (countEl) countEl.textContent = `${sets.length} ${sets.length === 1 ? 'set' : 'sets'}`;
+
+  if (!tableEl) return;
+  if (sets.length === 0) {
+    tableEl.innerHTML = '<div class="empty-state">No sets recorded in this workout yet.</div>';
+    return;
+  }
+
+  let rowsHtml = '';
+  sets.forEach(s => {
+    const setLift = canonicalLift(s.lift || currentLift);
+    const liftKey = liftKeyOf(setLift);
+    const repCount = Array.isArray(s.reps) ? s.reps.length : 0;
+    const isCurrent = Boolean(activeSet && activeSet.setId === s.setId);
+    const avgV = repCount > 0 ? s.avgVelocity.toFixed(2) : '-';
+    const maxV = repCount > 0 ? s.maxVelocity.toFixed(2) : '-';
+    const avgR = repCount > 0 ? s.avgRpe.toFixed(1) : '-';
+
+    rowsHtml += `
+      <div class="workout-set-row ${isCurrent ? 'is-active-set' : ''}" data-set-number="${s.setNumber}" data-lift="${liftKey}">
+        <div class="workout-set-row-left">
+          <span class="workout-set-num">SET ${s.setNumber}</span>
+          <span class="lift-tag" data-lift="${liftKey}">${escapeHtml(setLift.toUpperCase())}</span>
+          <span class="workout-set-reps">${repCount} ${repCount === 1 ? 'rep' : 'reps'}</span>
+        </div>
+        <div class="workout-set-row-right">
+          <div class="workout-set-metric">
+            <span class="workout-set-metric-val">${avgV}${repCount > 0 ? ' m/s' : ''}</span>
+            <span class="workout-set-metric-lbl">AVG</span>
+          </div>
+          <div class="workout-set-metric">
+            <span class="workout-set-metric-val">${maxV}${repCount > 0 ? ' m/s' : ''}</span>
+            <span class="workout-set-metric-lbl">PEAK</span>
+          </div>
+          <div class="workout-set-metric">
+            <span class="workout-set-metric-val">${avgR}</span>
+            <span class="workout-set-metric-lbl">RPE</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  tableEl.innerHTML = rowsHtml;
+}
+
+let activeRepPressCancel = null;
+
+/**
+ * Updates the Workout Tab Current Set card (Ring, Stats Grid, Reps Table)
  */
 function updateSetUI(set) {
+  if (typeof activeRepPressCancel === 'function') {
+    activeRepPressCancel();
+    activeRepPressCancel = null;
+  }
+
+  const effectiveLift = canonicalLift((set && set.lift) ? set.lift : currentLift);
+  const effectiveLiftKey = liftKeyOf(effectiveLift);
+
   if (!set || set.reps.length === 0) {
-    setBadgeLabel.textContent = set ? `SET ${set.setNumber}` : 'SET 1';
-    setLiftName.textContent   = currentLift.toUpperCase();
+    const nextSetNum = set ? set.setNumber : (activeWorkout && Array.isArray(activeWorkout.sets) ? activeWorkout.sets.length + 1 : 1);
+    setBadgeLabel.textContent = `SET ${nextSetNum}`;
+    setLiftName.textContent   = effectiveLift.toUpperCase();
+    setLiftName.setAttribute('data-lift', effectiveLiftKey);
     setRepCounter.textContent = '0 REPS RECORDED';
     setAvgVel.textContent     = '-';
     setMaxVel.textContent     = '-';
@@ -1127,11 +1486,13 @@ function updateSetUI(set) {
     if (setRingProgress) setRingProgress.style.strokeDashoffset = '565.48';
 
     activeSetRepsList.innerHTML = '<div class="empty-state">No reps recorded in this set yet. Lift the barbell to record.</div>';
+    updateWorkoutPage();
     return;
   }
 
   setBadgeLabel.textContent = `SET ${set.setNumber}`;
-  setLiftName.textContent   = set.lift.toUpperCase();
+  setLiftName.textContent   = effectiveLift.toUpperCase();
+  setLiftName.setAttribute('data-lift', effectiveLiftKey);
   setRepCounter.textContent = `${set.reps.length} ${set.reps.length === 1 ? 'REP' : 'REPS'} RECORDED`;
   activeSetRepCounter.textContent = `${set.reps.length} reps`;
 
@@ -1156,16 +1517,19 @@ function updateSetUI(set) {
     const isLatest = (idx === 0);
     const timeStr = new Date(rep.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const isPR = Boolean(rep.isPR);
+    const repLift = canonicalLift(rep.lift || effectiveLift);
+    const repLiftKey = liftKeyOf(repLift);
     const prBadgeHtml = isPR ? '<span class="rep-pr-badge gold-glow">PR</span>' : '';
     const progressRingHtml = isLatest
       ? `<div class="rep-press-progress-ring" aria-hidden="true"><svg class="radial-progress-svg" viewBox="0 0 44 44"><circle class="radial-track" cx="22" cy="22" r="18" /><circle class="radial-indicator" cx="22" cy="22" r="18" /></svg></div>`
       : '';
 
     html += `
-      <div class="rep-row-item ${isPR ? 'is-pr' : ''}" data-rep-number="${rep.repNumber}" ${isLatest ? 'data-is-latest="true"' : ''}>
+      <div class="rep-row-item ${isPR ? 'is-pr' : ''}" data-rep-number="${rep.repNumber}" data-lift="${repLiftKey}" ${isLatest ? 'data-is-latest="true"' : ''}>
         ${progressRingHtml}
         <div class="rep-row-left">
           <span class="rep-num-badge">#${rep.repNumber}</span>
+          <span class="lift-tag rep-lift-tag" data-lift="${repLiftKey}">${escapeHtml(repLift.toUpperCase())}</span>
           <span class="rep-row-time">${timeStr}</span>
           ${prBadgeHtml}
         </div>
@@ -1177,6 +1541,7 @@ function updateSetUI(set) {
     `;
   });
   activeSetRepsList.innerHTML = html;
+  updateWorkoutPage();
 
   // Attach 500ms long-press listeners on the latest repetition element
   const latestEl = activeSetRepsList.querySelector('.rep-row-item');
@@ -1198,9 +1563,14 @@ function updateSetUI(set) {
         latestEl.classList.remove('press-holding');
       }
     };
+    activeRepPressCancel = abortHold;
 
     latestEl.addEventListener('pointerdown', (e) => {
       if (e.button !== undefined && e.button !== 0) return;
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
       startX = e.clientX;
       startY = e.clientY;
       isHolding = true;
@@ -1211,6 +1581,7 @@ function updateSetUI(set) {
         isHolding = false;
         latestEl.classList.remove('press-holding');
         pressTimer = null;
+        if (!latestEl.isConnected || set.endTime || (activeSet && activeSet !== set)) return;
 
         // Haptic feedback & celebration fanfare
         HapticsFX.vibrate([40, 30, 60]);
@@ -1293,7 +1664,7 @@ function loadPrProfile() {
       }
     }
   } catch (err) {
-    console.warn('[VBT] Failed to parse PR storage; restoring default athlete profile:', err);
+    console.warn('[Eros] Failed to parse PR storage; restoring default athlete profile:', err);
     prProfile = JSON.parse(JSON.stringify(defaultPrProfile));
   }
 }
@@ -1305,7 +1676,7 @@ function persistPrProfile() {
   try {
     localStorage.setItem(PR_STORAGE_KEY, JSON.stringify(prProfile));
   } catch (err) {
-    console.error('[VBT] Failed to persist athlete PR profile to localStorage:', err);
+    console.error('[Eros] Failed to persist athlete PR profile to localStorage:', err);
   }
 }
 
@@ -1380,7 +1751,7 @@ function getDotsClassification(score) {
  * @param {Array} workoutList - Workout sessions array (defaults to workouts)
  * @returns {{ squat: number, bench: number, deadlift: number }}
  */
-function extractSensorPeakVelocities(workoutList = workouts) {
+function extractErosPeakVelocities(workoutList = workouts) {
   const peaks = {
     squat: 0.0,
     bench: 0.0,
@@ -1462,8 +1833,8 @@ function updatePrDashboardUI(updateInputs = true) {
   if (prCurrentTotal) prCurrentTotal.textContent = `${currentTotal.toFixed(1)} kg`;
   if (compPrTotal) compPrTotal.textContent = `${compTotal.toFixed(1)} kg`;
 
-  // Update sensor peak velocities from workout history
-  const peaks = extractSensorPeakVelocities();
+  // Update Eros peak velocities from workout history
+  const peaks = extractErosPeakVelocities();
   if (prSquatVel) prSquatVel.textContent = `${peaks.squat.toFixed(2)} m/s`;
   if (prBenchVel) prBenchVel.textContent = `${peaks.bench.toFixed(2)} m/s`;
   if (prDeadliftVel) prDeadliftVel.textContent = `${peaks.deadlift.toFixed(2)} m/s`;
@@ -1654,14 +2025,16 @@ function renderSessionSetsAccordion(sets) {
 
   let out = '';
   sets.forEach(s => {
+    const setLift = canonicalLift(s.lift || currentLift);
+    const setLiftKey = liftKeyOf(setLift);
     const repPills = (s.reps || []).map(r => `
       <span class="history-rep-pill font-mono">#${r.repNumber}: ${r.velocity.toFixed(2)}m/s${r.isPR ? ' <span class="rep-pr-badge gold-glow">PR</span>' : ''}</span>
     `).join('');
 
     out += `
-      <div class="session-set-item">
+      <div class="session-set-item" data-lift="${setLiftKey}">
         <div class="session-set-header">
-          <span class="session-set-tag">SET ${s.setNumber} — ${s.lift.toUpperCase()}</span>
+          <span class="session-set-tag" data-lift="${setLiftKey}">SET ${s.setNumber} — ${escapeHtml(setLift.toUpperCase())}</span>
           <div class="session-set-stats font-mono">
             <span class="set-stat-vel">Avg: ${s.avgVelocity.toFixed(2)} m/s</span>
             <span class="set-stat-loss">Loss: ${s.velocityLossPct.toFixed(1)}%</span>
@@ -1811,12 +2184,12 @@ navTabs.forEach(tab => {
 function setConnectedUI(connected) {
   btnConnect.disabled = false;
   if (connected) {
-    btnConnectText.textContent = 'DISCONNECT SENSOR';
+    if (btnConnectText) btnConnectText.innerHTML = 'DISCONNECT <span class="eros-wordmark">Eros</span>';
     btnConnect.classList.add('connected');
     statusBadge.className = 'glass-pill status-connected';
     statusBadge.querySelector('.status-label').textContent = 'Connected';
   } else {
-    btnConnectText.textContent = 'CONNECT SENSOR';
+    if (btnConnectText) btnConnectText.innerHTML = 'CONNECT <span class="eros-wordmark">Eros</span>';
     btnConnect.classList.remove('connected');
     statusBadge.className = 'glass-pill status-disconnected';
     statusBadge.querySelector('.status-label').textContent = 'Disconnected';
@@ -1847,4 +2220,5 @@ document.addEventListener('DOMContentLoaded', () => {
   applyLiftTheme('Deadlift');
   setTargetRpe(8.0);
   initTouchActiveStates();
+  initBleSheetDrag();
 });

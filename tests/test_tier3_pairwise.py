@@ -111,9 +111,9 @@ class TestTier3PairwiseCombinations(unittest.TestCase):
         self.assertLess(dur, 1.5, "Fast velocity must produce sub-1.5s rep animation duration")
 
     def test_p10_ble_disconnect_updates_status_badge_and_button_text(self):
-        """P10: Hardware disconnect (F12) sets status-badge to disconnected (F14) and updates text."""
+        """P10: Disconnect (F12) sets status-badge to disconnected (F14) and updates text."""
         self.assertIn("statusBadge.className = 'glass-pill status-disconnected';", self.js)
-        self.assertIn("btnConnectText.textContent = 'CONNECT SENSOR';", self.js)
+        self.assertIn('CONNECT <span class="eros-wordmark">Eros</span>', self.js)
 
     def test_p11_csv_export_matches_recorded_session_data(self):
         """P11: CSV export routine (F13) serializes workout session rows matching specification."""

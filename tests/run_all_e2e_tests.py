@@ -49,6 +49,9 @@ def load_test_suites(tier_filter="all", milestone_filter="all"):
     if tier_filter in ["overhaul", "all", "full"]:
         from tests import test_overhaul_e2e
         modules_to_load.append(("Overhaul", test_overhaul_e2e))
+    if tier_filter in ["polish", "all", "full"]:
+        from tests import test_eros_ui_polish
+        modules_to_load.append(("UI Polish", test_eros_ui_polish))
     if tier_filter in ["vbt1", "vbt", "vbt_all", "full"]:
         from tests import test_vbt_firmware_tier1
         modules_to_load.append(("VBT Tier 1", test_vbt_firmware_tier1))

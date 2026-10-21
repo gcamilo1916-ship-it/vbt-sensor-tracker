@@ -159,7 +159,7 @@ class TestChromeDeepQA(unittest.TestCase):
 
     @classmethod
     def eval_js(cls, expr):
-        req_id = cls._send_cdp("Runtime.evaluate", {"expression": expr, "returnByValue": True})
+        req_id = cls._send_cdp("Runtime.evaluate", {"expression": expr, "returnByValue": True, "awaitPromise": True})
         start_time = time.time()
         while time.time() - start_time < 3.0:
             msg = cls._recv_cdp(timeout=1.0)
@@ -206,7 +206,7 @@ class TestChromeDeepQA(unittest.TestCase):
         btn_connect = next(b for b in buttons if b["id"] == "btn-connect")
         btn_set = next(b for b in buttons if b["id"] == "btn-set-toggle")
         self.assertIn("START WORKOUT", btn_workout["text"])
-        self.assertIn("CONNECT SENSOR", btn_connect["text"])
+        self.assertIn("CONNECT Eros", btn_connect["text"])
         self.assertIn("START SET", btn_set["text"])
 
     def test_03_pill_button_border_radius(self):
@@ -343,5 +343,243 @@ class TestChromeDeepQA(unittest.TestCase):
         errors = [m for m in self.console_messages if m.get("type") in ("error", "assert")]
         self.assertEqual(len(errors), 0, f"Found console errors: {errors}")
 
+    def test_09_target_rpe_chips_no_clipping_geometry(self):
+        """Verify clicking @7.0-@9.5 chips never clips the top border or overflows a hidden scrollport."""
+        res = self.eval_js("""
+            (() => {
+                const container = document.querySelector('.target-rpe-chips');
+                const moduleEl = document.querySelector('#target-rpe-module');
+                const chips = Array.from(document.querySelectorAll('.target-chip'));
+                const containerStyle = window.getComputedStyle(container);
+                const moduleStyle = window.getComputedStyle(moduleEl);
+
+                const chipResults = chips.map(chip => {
+                    chip.click();
+                    const cRect = chip.getBoundingClientRect();
+                    const pRect = container.getBoundingClientRect();
+                    const mRect = moduleEl.getBoundingClientRect();
+                    return {
+                        rpe: chip.dataset.rpe,
+                        active: chip.classList.contains('active'),
+                        topDeltaParent: cRect.top - pRect.top,
+                        bottomDeltaParent: pRect.bottom - cRect.bottom,
+                        insideModule: cRect.top >= mRect.top && cRect.bottom <= mRect.bottom
+                    };
+                });
+
+                return {
+                    containerOverflowX: containerStyle.overflowX,
+                    containerOverflowY: containerStyle.overflowY,
+                    moduleOverflow: moduleStyle.overflow,
+                    chipResults
+                };
+            })()
+        """)
+        self.assertEqual(res["containerOverflowX"], "visible")
+        self.assertEqual(res["containerOverflowY"], "visible")
+        self.assertEqual(res["moduleOverflow"], "visible")
+        for cr in res["chipResults"]:
+            self.assertTrue(cr["active"], f"Chip @{cr['rpe']} must become .active on click")
+            self.assertGreaterEqual(cr["topDeltaParent"], 0.0, f"Chip @{cr['rpe']} top edge clipped outside parent")
+            self.assertGreaterEqual(cr["bottomDeltaParent"], 0.0, f"Chip @{cr['rpe']} bottom edge clipped outside parent")
+            self.assertTrue(cr["insideModule"], f"Chip @{cr['rpe']} must remain inside #target-rpe-module")
+
+    def test_10_mvt_baseline_left_align_and_warmup_badge(self):
+        """Verify #live-rpe-sub is left-aligned, #rpe-tier-badge shows WARMUP, and velocity pill has no emojis."""
+        res = self.eval_js("""
+            (() => {
+                updateRpeHeroBanner(6.5);
+                const sub = document.querySelector('#live-rpe-sub');
+                const subStyle = window.getComputedStyle(sub);
+                const badgeText = document.querySelector('#rpe-tier-badge').textContent.trim();
+
+                updateLiveDisplay({ lift: 'Deadlift', velocity: 0.65, rpe: 7.0 });
+                const velSubFast = document.querySelector('#live-vel-sub').textContent.trim();
+                updateLiveDisplay({ lift: 'Deadlift', velocity: 0.32, rpe: 9.0 });
+                const velSubSlow = document.querySelector('#live-vel-sub').textContent.trim();
+
+                return {
+                    textAlign: subStyle.textAlign,
+                    alignSelf: subStyle.alignSelf,
+                    badgeText,
+                    velSubFast,
+                    velSubSlow
+                };
+            })()
+        """)
+        self.assertEqual(res["textAlign"], "left")
+        self.assertEqual(res["alignSelf"], "flex-start")
+        self.assertEqual(res["badgeText"], "WARMUP")
+        self.assertEqual(res["velSubFast"], "Rep Completed: Explosive")
+        self.assertEqual(res["velSubSlow"], "Rep Completed: Grinding")
+
+    def test_11_workout_page_mid_set_lift_change_auto_save(self):
+        """Verify changing lift mid-set automatically ends & saves the set under its original lift, resets Current Set card, and survives rAF callbacks."""
+        res = self.eval_js("""
+            (async () => {
+                // Reset clean session
+                workouts = [];
+                activeWorkout = null;
+                activeSet = null;
+                applyLiftTheme('Deadlift');
+
+                const metricStyle = window.getComputedStyle(document.querySelector('.workout-summary-metric'));
+                const summaryMetricFlex = metricStyle.display === 'flex' && metricStyle.flexDirection === 'column';
+
+                // Set 1: 2 reps of Deadlift
+                recordRepetition({ lift: 'Deadlift', velocity: 0.55, rpe: 7.5 });
+                recordRepetition({ lift: 'Deadlift', velocity: 0.50, rpe: 8.0 });
+                await new Promise(r => setTimeout(r, 40));
+
+                // User switches lift dropdown to Squat while Set 1 is active
+                applyLiftTheme('Squat');
+                const setEndedOnSwitch = (activeSet === null);
+                const currentCardBadgeAfterSwitch = document.querySelector('#set-badge-label').textContent.trim();
+                const currentCardLiftAfterSwitch = document.querySelector('#set-lift-name').textContent.trim();
+                const currentCardRepsAfterSwitch = document.querySelector('#set-rep-counter').textContent.trim();
+                const currentCardRepRowsAfterSwitch = document.querySelectorAll('#active-set-reps-list .rep-row-item').length;
+
+                // Set 2: 2 reps of Squat
+                recordRepetition({ lift: 'Squat', velocity: 0.70, rpe: 7.0 });
+                recordRepetition({ lift: 'Squat', velocity: 0.65, rpe: 7.5 });
+
+                // Start an in-flight long-press PR hold on Set 2's latest rep, then interrupt it with lift change + new rep
+                const squatLatestEl = document.querySelector('#active-set-reps-list .rep-row-item');
+                squatLatestEl.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, clientY: 100, button: 0, bubbles: true }));
+
+                // User switches lift dropdown to Bench while Set 2 is active (before 500ms hold or rAF settles)
+                applyLiftTheme('Bench');
+
+                // Set 3: 1 rep of Bench
+                recordRepetition({ lift: 'Bench', velocity: 0.45, rpe: 8.5 });
+
+                // Wait past the 500ms long-press window and all queued requestAnimationFrame callbacks
+                await new Promise(r => setTimeout(r, 550));
+
+                const set2LastRepIsPrAfterHoldAbort = Boolean(workouts[0].sets[1].reps[1].isPR);
+                const activeSetStillOpenAfterRaf = Boolean(activeSet && activeSet.setNumber === 3 && activeSet.lift === 'Bench');
+                const currentLiftAfterRaf = currentLift;
+                const currentCardBadgeAfterRaf = document.querySelector('#set-badge-label').textContent.trim();
+                const currentCardLiftAfterRaf = document.querySelector('#set-lift-name').textContent.trim();
+                const currentCardRepsAfterRaf = document.querySelector('#set-rep-counter').textContent.trim();
+
+                const rows = Array.from(document.querySelectorAll('#workout-sets-table .workout-set-row')).map(r => ({
+                    setNumber: r.dataset.setNumber,
+                    lift: r.dataset.lift,
+                    text: r.textContent.replace(/\\s+/g, ' ').trim()
+                }));
+
+                const navSetLabel = document.querySelector('.nav-tab[data-target="set"] .nav-label').textContent.trim();
+                const sumSets = document.querySelector('#workout-sum-sets').textContent.trim();
+                const sumReps = document.querySelector('#workout-sum-reps').textContent.trim();
+
+                // Clean up
+                workouts = [];
+                activeWorkout = null;
+                activeSet = null;
+                localStorage.removeItem('vbt_workouts_v1');
+                applyLiftTheme('Deadlift');
+
+                return {
+                    summaryMetricFlex,
+                    setEndedOnSwitch,
+                    currentCardBadgeAfterSwitch,
+                    currentCardLiftAfterSwitch,
+                    currentCardRepsAfterSwitch,
+                    currentCardRepRowsAfterSwitch,
+                    set2LastRepIsPrAfterHoldAbort,
+                    activeSetStillOpenAfterRaf,
+                    currentLiftAfterRaf,
+                    currentCardBadgeAfterRaf,
+                    currentCardLiftAfterRaf,
+                    currentCardRepsAfterRaf,
+                    navSetLabel,
+                    sumSets,
+                    sumReps,
+                    rows
+                };
+            })()
+        """)
+        self.assertTrue(res["summaryMetricFlex"], ".workout-summary-metric must render as a flex column card")
+        self.assertTrue(res["setEndedOnSwitch"], "Switching lift while a set is active must end the active set")
+        self.assertEqual(res["currentCardBadgeAfterSwitch"], "SET 2")
+        self.assertEqual(res["currentCardLiftAfterSwitch"], "SQUAT")
+        self.assertEqual(res["currentCardRepsAfterSwitch"], "0 REPS RECORDED")
+        self.assertEqual(res["currentCardRepRowsAfterSwitch"], 0)
+        self.assertFalse(res["set2LastRepIsPrAfterHoldAbort"], "Interrupted long-press hold must not toggle isPR on ended set")
+        self.assertTrue(res["activeSetStillOpenAfterRaf"], "Queued rAF callbacks must not prematurely end the newly started set")
+        self.assertEqual(res["currentLiftAfterRaf"], "Bench")
+        self.assertEqual(res["currentCardBadgeAfterRaf"], "SET 3")
+        self.assertEqual(res["currentCardLiftAfterRaf"], "BENCH")
+        self.assertEqual(res["currentCardRepsAfterRaf"], "1 REP RECORDED")
+        self.assertEqual(res["navSetLabel"], "WORKOUT")
+        self.assertEqual(res["sumSets"], "3")
+        self.assertEqual(res["sumReps"], "5")
+        self.assertEqual(len(res["rows"]), 3)
+        self.assertEqual(res["rows"][0]["lift"], "deadlift")
+        self.assertIn("2 reps", res["rows"][0]["text"])
+        self.assertEqual(res["rows"][1]["lift"], "squat")
+        self.assertIn("2 reps", res["rows"][1]["text"])
+        self.assertEqual(res["rows"][2]["lift"], "bench")
+        self.assertIn("1 rep", res["rows"][2]["text"])
+
+    def test_12_eros_sheet_wordmark_and_drag_dismiss(self):
+        """Verify Eros connection sheet wordmark styling and slide-down drag-to-dismiss vs spring-back (including fast flick with dual pointer+touch events)."""
+        res = self.eval_js("""
+            (() => {
+                openBleSearchSheet();
+                const sheet = document.querySelector('#bluetooth-search-tab');
+                const dragZone = document.querySelector('#ble-drag-zone');
+                const content = document.querySelector('#ble-search-content');
+                const wordmarks = sheet.querySelectorAll('.eros-wordmark').length;
+                const openedOk = sheet.classList.contains('open');
+
+                // 1. Short drag (20px < 35% height) -> should spring back and remain open
+                dragZone.dispatchEvent(new PointerEvent('pointerdown', { clientY: 500, button: 0, bubbles: true }));
+                dragZone.dispatchEvent(new PointerEvent('pointermove', { clientY: 510, bubbles: true }));
+                // Pause >60ms or move slowly so it is not a fast flick
+                dragZone.dispatchEvent(new PointerEvent('pointerup', { clientY: 510, bubbles: true }));
+                const stillOpenAfterShortDrag = sheet.classList.contains('open');
+                const transformResetAfterShortDrag = content.style.transform === '';
+
+                // 2. Fast downward flick (45px < 35% height) with simultaneous TouchEvent + 0px lift-off step on window -> should dismiss sheet
+                dragZone.dispatchEvent(new PointerEvent('pointerdown', { clientY: 400, button: 0, bubbles: true }));
+                dragZone.dispatchEvent(new TouchEvent('touchstart', { touches: [new Touch({ identifier: 1, target: dragZone, clientY: 400 })], bubbles: true }));
+                window.dispatchEvent(new PointerEvent('pointermove', { clientY: 445, bubbles: true }));
+                window.dispatchEvent(new TouchEvent('touchmove', { touches: [new Touch({ identifier: 1, target: dragZone, clientY: 445 })], bubbles: true }));
+                // Stationary 0px pointermove right before lift-off
+                window.dispatchEvent(new PointerEvent('pointermove', { clientY: 445, bubbles: true }));
+                const transformDuringFlick = content.style.transform;
+                window.dispatchEvent(new PointerEvent('pointerup', { clientY: 445, bubbles: true }));
+                window.dispatchEvent(new TouchEvent('touchend', { changedTouches: [new Touch({ identifier: 1, target: dragZone, clientY: 445 })], bubbles: true }));
+                const closedAfterFastFlick = !sheet.classList.contains('open');
+
+                // 3. Re-open and full downward drag (250px > 35% height) -> should dismiss sheet
+                openBleSearchSheet();
+                dragZone.dispatchEvent(new PointerEvent('pointerdown', { clientY: 400, button: 0, bubbles: true }));
+                window.dispatchEvent(new PointerEvent('pointermove', { clientY: 650, bubbles: true }));
+                window.dispatchEvent(new PointerEvent('pointerup', { clientY: 650, bubbles: true }));
+                const closedAfterLongDrag = !sheet.classList.contains('open');
+
+                return {
+                    openedOk,
+                    wordmarks,
+                    transformDuringFlick,
+                    stillOpenAfterShortDrag,
+                    transformResetAfterShortDrag,
+                    closedAfterFastFlick,
+                    closedAfterLongDrag
+                };
+            })()
+        """)
+        self.assertTrue(res["openedOk"])
+        self.assertGreaterEqual(res["wordmarks"], 3, "Connection sheet must style Eros with .eros-wordmark")
+        self.assertIn("45px", res["transformDuringFlick"])
+        self.assertTrue(res["stillOpenAfterShortDrag"], "Short drag (<35% height) must spring back and keep sheet open")
+        self.assertTrue(res["transformResetAfterShortDrag"], "Spring-back must clear inline drag transform")
+        self.assertTrue(res["closedAfterFastFlick"], "Fast downward flick must dismiss sheet even when TouchEvents and 0px lift-off events also fire")
+        self.assertTrue(res["closedAfterLongDrag"], "Dragging past 35% sheet height must dismiss the sheet")
+
 if __name__ == '__main__':
     unittest.main()
+

@@ -16,7 +16,7 @@ The automated E2E test suite for the **Eros VBT Web Application Overhaul (Live R
 - **Current Baseline Pass Rate**: **225 / 243 (92.6% PASSED)**.
 - **Pending Implementation Failures**: **18 (strictly mapped to unmerged Milestones M2, M3, and M4)**.
 - **Milestone 1 Status (R1: Live Page RPE Hero & Non-Disruptive Set Controls)**: **41 / 41 PASSED (100.0%)**.
-- **Milestone 5 Status (R5: Backend & WebBLE Preservation)**: **55 / 55 PASSED (100.0%)**.
+- **Milestone 5 Status (R5: Backend & Bluetooth Preservation)**: **55 / 55 PASSED (100.0%)**.
 - **Milestone 6 Status (Chrome Headless Deep QA)**: **13 / 13 PASSED (100.0%)**.
 - **Milestone E2E Status (Real-World Scenarios)**: **15 / 15 PASSED (100.0%)**.
 
@@ -44,7 +44,7 @@ The automated E2E test suite for the **Eros VBT Web Application Overhaul (Live R
 | **R2: Floating Nav & Fluid View Transitions** | `TestOverhaulR2FloatingNavAndTransitions` | `.bottom-glass-nav` capsule, `.nav-indicator-pill` spring animation, `.leaving-section` GPU cross-fades, spring micro-interactions | 8 | 4 | 4 | *Awaiting Worker M2* |
 | **R3: Long-Press Rep PR Tagging** | `TestOverhaulR3LongPressRepPR` | 500ms press-and-hold gesture, 10px Euclidean displacement guard, radial progress glow, `navigator.vibrate`, gold PR badge, `isPR` persistence | 10 | 2 | 8 | *Awaiting Worker M3* |
 | **R4: History PR Dashboard & Live DOTS Calculator** | `TestOverhaulR4HistoryPRAndDots` | `#pr-competition-tracker`, Current PRs, peak velocity extraction, COMP PR card, official IPF 4th-degree polynomial DOTS engine (Male/Female), `vbt_pr_data_v1` persistence | 13 | 13 | 0 | **100% PASS** |
-| **R5: Backend & WebBLE Stability Preservation** | `TestOverhaulR5Stability` | GATT UUIDs (`4fafc201...`, `beb5483e...`, `5a7d3c90...`), `VBT_Tracker` filter, `CMD:SL:...`, telemetry parsing, `vbt_workouts_v1`, CSV/JSON exports | 10 | 10 | 0 | **100% PASS** |
+| **R5: Backend & Bluetooth Stability Preservation** | `TestOverhaulR5Stability` | GATT UUIDs (`4fafc201...`, `beb5483e...`, `5a7d3c90...`), Eros device filter, `CMD:SL:...`, telemetry parsing, `vbt_workouts_v1`, CSV/JSON exports | 10 | 10 | 0 | **100% PASS** |
 | **Tier 4 Scenarios** | `TestOverhaulTier4Scenarios` | High-cadence squat set, heavy bench PR lifecycle, competition prep DOTS, rapid multi-tab transitions, full SBD meet simulation | 5 | 5 | 0 | **100% PASS** |
 
 ---
@@ -70,7 +70,7 @@ The automated E2E test suite for the **Eros VBT Web Application Overhaul (Live R
 - [x] **Feature 17**: Competition PR box ("COMP PR") (all-time meet records card and total display) — **100% PASS**
 - [x] **Feature 18**: Official DOTS calculator module (IPF 4th-order polynomial for Male/Female) — **100% PASS**
 - [x] **Feature 19**: PR profile persistence (`vbt_pr_data_v1` in `localStorage`) — **100% PASS**
-- [x] **Feature 20**: WebBLE & FSM preservation (strict preservation of GATT UUIDs, commands, telemetry) — **100% PASS**
+- [x] **Feature 20**: Bluetooth & FSM preservation (strict preservation of GATT UUIDs, commands, telemetry) — **100% PASS**
 - [x] **Feature 21**: E2E test suite & coverage hardening (243 tests across Tiers 1-4 + Overhaul) — **100% PASS**
 
 ---
@@ -133,7 +133,7 @@ The 18 failing tests represent the exact acceptance gates for remaining overhaul
 ### Worker M4 Backlog (Milestone 4 — History PR Dashboard & Live DOTS Calculator)
 13. `test_r4_01_pr_competition_tracker_container_in_history`: Replace generic banner in `#tab-history` with `#pr-competition-tracker` in `index.html`.
 14. `test_r4_02_current_prs_card_and_1rm_inputs`: Add `#current-prs-card`, 1RM inputs (`#pr-squat-weight`, `#pr-bench-weight`, `#pr-deadlift-weight`), and Gym Total `#pr-current-total`.
-15. `test_r4_03_sensor_peak_velocities_displays`: Add peak velocity displays (`#pr-squat-vel`, `#pr-bench-vel`, `#pr-deadlift-vel`) dynamically populated from workout history.
+15. `test_r4_03_eros_peak_velocities_displays`: Add peak velocity displays (`#pr-squat-vel`, `#pr-bench-vel`, `#pr-deadlift-vel`) dynamically populated from workout history.
 16. `test_r4_04_comp_pr_box_and_records`: Add `#comp-pr-box` and competition 1RM inputs with `#comp-pr-total`.
 17. `test_r4_05_dots_calculator_module_and_controls`: Add `#dots-calculator-module` with bodyweight input, gender toggles, source toggles, and live score display `#dots-score-display`.
 18. `test_r4_09_persistence_schema_vbt_pr_data_v1`: Persist 1RMs, bodyweight, and gender under `localStorage` key `vbt_pr_data_v1`.

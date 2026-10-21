@@ -8,7 +8,7 @@ Testing is structured strictly around a **4-Tier Methodology**:
 - **Tier 1: Feature Coverage (>=5 test cases per feature across all 16 features from `PROJECT.md`)**
 - **Tier 2: Boundary, Negative & Adversarial Cases (>=5 test cases per feature across all 16 features)**
 - **Tier 3: Cross-Feature Combinations & Pairwise Interactions (multi-feature state transitions, theme syncing, telemetry rendering)**
-- **Tier 4: Real-World Application Workload Scenarios (5x5 strength training, endurance workloads, sensor reconnects, persistence & export)**
+- **Tier 4: Real-World Application Workload Scenarios (5x5 strength training, endurance workloads, Eros reconnects, persistence & export)**
 - **Browser Live Smoke & CDP Interception (Headless Chrome remote debugging on port 9444)**
 
 Total test cases implemented: **187 automated tests**.

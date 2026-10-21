@@ -33,7 +33,7 @@
           <span class="brand-title">Eros</span>
         </div>
         <div class="header-actions">
-          <div id="status-badge" class="glass-pill status-disconnected" role="button" tabindex="0" aria-label="Bluetooth Sensor Connection">
+          <div id="status-badge" class="glass-pill status-disconnected" role="button" tabindex="0" aria-label="Eros Connection">
             <span class="status-dot"></span>
             <span class="status-label">Disconnected</span>
             <svg class="status-ble-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -66,7 +66,7 @@
       <!-- ═══════════════════════════════════════════════ -->
       <section id="tab-live" class="tab-section active-section">
         
-        <!-- Hardware & Lift Control Center -->
+        <!-- Lift Control Center -->
         <!-- Exercise & Set Controls -->
         <div class="glass-card controls-panel">
           <div class="controls-row">
@@ -174,7 +174,7 @@
               </div>
               <div class="rpe-badge-group">
                 <span class="rpe-rir-pill font-mono" id="live-rir-pill">RIR: 10.0</span>
-                <span class="rpe-tier-badge" id="rpe-tier-badge">WARMUP TIER</span>
+                <span class="rpe-tier-badge" id="rpe-tier-badge">WARMUP</span>
               </div>
             </div>
             
@@ -211,15 +211,42 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════ -->
-      <!-- TAB 2: SET TRACKING                            -->
+      <!-- TAB 2: WORKOUT                                 -->
       <!-- ═══════════════════════════════════════════════ -->
-      <section id="tab-set" class="tab-section">
-        
-        <div class="glass-card set-hero-panel">
+      <section id="tab-set" class="tab-section" aria-label="Workout">
+
+        <!-- Workout Summary -->
+        <div class="glass-card workout-summary-card" id="workout-summary-card">
+          <div class="workout-summary-header">
+            <span class="workout-summary-title">WORKOUT</span>
+            <span class="workout-summary-status" id="workout-summary-status">No active workout</span>
+          </div>
+          <div class="workout-summary-grid">
+            <div class="workout-summary-metric">
+              <span class="workout-summary-val font-mono" id="workout-sum-sets">0</span>
+              <span class="workout-summary-lbl">SETS</span>
+            </div>
+            <div class="workout-summary-metric">
+              <span class="workout-summary-val font-mono" id="workout-sum-reps">0</span>
+              <span class="workout-summary-lbl">REPS</span>
+            </div>
+            <div class="workout-summary-metric">
+              <span class="workout-summary-val font-mono" id="workout-sum-avg-vel">-</span>
+              <span class="workout-summary-lbl">AVG M/S</span>
+            </div>
+            <div class="workout-summary-metric">
+              <span class="workout-summary-val font-mono" id="workout-sum-peak-vel">-</span>
+              <span class="workout-summary-lbl">PEAK M/S</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Set -->
+        <div class="glass-card set-hero-panel" id="current-set-card">
           <div class="set-meta-header">
             <div class="set-title-group">
               <span class="set-badge-pill" id="set-badge-label">SET 1</span>
-              <span class="set-lift-title" id="set-lift-name">DEADLIFT</span>
+              <span class="set-lift-title lift-tag" id="set-lift-name" data-lift="deadlift">DEADLIFT</span>
             </div>
             <div class="set-count-pill" id="set-rep-counter">0 REPS RECORDED</div>
           </div>
@@ -282,6 +309,17 @@
           </div>
         </section>
 
+        <!-- Sets Table: every set of the workout, tagged with its lift -->
+        <section class="workout-sets-section" id="workout-sets-section" aria-label="Workout Sets">
+          <div class="section-title-row">
+            <span class="section-heading">SETS</span>
+            <span class="section-subtext" id="workout-sets-counter">0 sets</span>
+          </div>
+          <div class="workout-sets-table glass-card" id="workout-sets-table">
+            <div class="empty-state">No sets recorded in this workout yet.</div>
+          </div>
+        </section>
+
       </section>
 
       <!-- ═══════════════════════════════════════════════ -->
@@ -327,8 +365,8 @@
                   <input type="number" id="pr-squat-weight" class="pr-num-input font-mono" value="140.0" step="0.5" min="0" max="600" aria-label="Squat 1RM weight in kg">
                   <span class="pr-unit">kg</span>
                 </div>
-                <div class="pr-sensor-telemetry">
-                  <span class="telemetry-lbl">PEAK SENSOR</span>
+                <div class="pr-eros-telemetry">
+                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>
                   <span id="pr-squat-vel" class="telemetry-val font-mono">0.00 m/s</span>
                 </div>
               </div>
@@ -339,8 +377,8 @@
                   <input type="number" id="pr-bench-weight" class="pr-num-input font-mono" value="100.0" step="0.5" min="0" max="500" aria-label="Bench Press 1RM weight in kg">
                   <span class="pr-unit">kg</span>
                 </div>
-                <div class="pr-sensor-telemetry">
-                  <span class="telemetry-lbl">PEAK SENSOR</span>
+                <div class="pr-eros-telemetry">
+                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>
                   <span id="pr-bench-vel" class="telemetry-val font-mono">0.00 m/s</span>
                 </div>
               </div>
@@ -351,8 +389,8 @@
                   <input type="number" id="pr-deadlift-weight" class="pr-num-input font-mono" value="180.0" step="0.5" min="0" max="600" aria-label="Deadlift 1RM weight in kg">
                   <span class="pr-unit">kg</span>
                 </div>
-                <div class="pr-sensor-telemetry">
-                  <span class="telemetry-lbl">PEAK SENSOR</span>
+                <div class="pr-eros-telemetry">
+                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>
                   <span id="pr-deadlift-vel" class="telemetry-val font-mono">0.00 m/s</span>
                 </div>
               </div>
@@ -484,12 +522,12 @@
         </svg>
         <span class="nav-label">LIVE</span>
       </button>
-      <button class="nav-tab" data-target="set" aria-label="Set Analytics Tab">
+      <button class="nav-tab" data-target="set" aria-label="Workout Tab">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="9"></circle>
           <path d="M12 7v5l3 3"></path>
         </svg>
-        <span class="nav-label">SET</span>
+        <span class="nav-label">WORKOUT</span>
       </button>
       <button class="nav-tab" data-target="history" aria-label="Workout History Tab">
         <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -504,19 +542,21 @@
 
   </div>
 
-  <!-- Animated In-App Bluetooth Search Tab / Drawer -->
+  <!-- Eros Connection Sheet (drag the handle or header down to dismiss) -->
   <div id="bluetooth-search-tab" class="bluetooth-search-sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="ble-search-title">
     <div class="ble-search-backdrop" id="ble-search-backdrop"></div>
-    <div class="ble-search-content glass-card">
-      <div class="ble-search-handle" aria-hidden="true"></div>
-      <div class="ble-search-header">
-        <div class="ble-title-group">
-          <span class="ble-badge font-mono">WEBBLE 100HZ</span>
-          <span id="ble-search-title" class="ble-search-title">BLUETOOTH SENSOR SEARCH</span>
+    <div class="ble-search-content glass-card" id="ble-search-content">
+      <div class="ble-drag-zone" id="ble-drag-zone">
+        <div class="ble-search-handle" id="ble-search-handle" aria-hidden="true"></div>
+        <div class="ble-search-header">
+          <div class="ble-title-group">
+            <span class="eros-wordmark ble-wordmark">Eros</span>
+            <span id="ble-search-title" class="ble-search-title">BLUETOOTH CONNECTION</span>
+          </div>
+          <button type="button" id="btn-close-ble-search" class="ble-close-btn" aria-label="Close Eros Connection">
+            <span class="close-label">CLOSE</span>
+          </button>
         </div>
-        <button type="button" id="btn-close-ble-search" class="ble-close-btn" aria-label="Close Bluetooth Search">
-          <span class="close-label">CLOSE</span>
-        </button>
       </div>
       
       <!-- Animated Radar Scanning Visualizer -->
@@ -533,7 +573,7 @@
       
       <div class="ble-search-status-box">
         <div class="ble-status-ping" id="ble-ping-dot"></div>
-        <span id="ble-search-status-text" class="ble-status-text font-mono">Ready to connect to ESP32-C6 sensor</span>
+        <span id="ble-search-status-text" class="ble-status-text font-mono">Ready to connect to <span class="eros-wordmark">Eros</span></span>
       </div>
       
       <!-- Discovered Device Card -->
@@ -546,8 +586,8 @@
             </svg>
           </div>
           <div class="ble-device-info">
-            <span class="ble-device-name">VBT_Tracker</span>
-            <span class="ble-device-sub font-mono" id="ble-device-meta">ESP32-C6 • 100Hz Madgwick IMU</span>
+            <span class="ble-device-name"><span class="eros-wordmark">Eros</span></span>
+            <span class="ble-device-sub font-mono" id="ble-device-meta">Tap to connect</span>
           </div>
         </div>
         <div class="ble-device-signal font-mono">
@@ -561,11 +601,11 @@
         </div>
       </div>
       
-      <!-- Connect Sensor Action Button -->
+      <!-- Connect Action Button -->
       <div class="ble-action-container">
         <button id="btn-connect" class="btn-glass-connect">
           <span class="btn-ripple"></span>
-          <span class="btn-text">CONNECT SENSOR</span>
+          <span class="btn-text">CONNECT <span class="eros-wordmark">Eros</span></span>
         </button>
       </div>
     </div>

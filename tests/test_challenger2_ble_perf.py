@@ -488,7 +488,11 @@ def run_ble_perf_suite():
                 { raw: "||||", shouldPass: false }
             ];
 
-            const initialReps = activeSet ? activeSet.reps.length : 0;
+            const countWorkoutReps = () => {
+                if (!activeWorkout || !Array.isArray(activeWorkout.sets)) return 0;
+                return activeWorkout.sets.reduce((acc, s) => acc + (Array.isArray(s.reps) ? s.reps.length : 0), 0);
+            };
+            const initialReps = countWorkoutReps();
             let currentExpectedReps = initialReps;
 
             for (const tc of testCases) {
@@ -499,7 +503,7 @@ def run_ble_perf_suite():
                         }
                     };
                     handleIncomingBLEData(evt);
-                    const nowReps = activeSet ? activeSet.reps.length : 0;
+                    const nowReps = countWorkoutReps();
                     if (tc.shouldPass) {
                         if (nowReps === currentExpectedReps + 1) {
                             results.acceptedPayloads++;
