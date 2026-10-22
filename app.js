@@ -13,6 +13,7 @@ const CMD_CHARACTERISTIC_UUID = '5a7d3c90-951d-444a-8f5b-11c500732890'; // Comma
 const DEVICE_NAME             = 'VBT_Tracker';
 const STORAGE_KEY             = 'vbt_workouts_v1';
 const PR_STORAGE_KEY          = 'vbt_pr_data_v1';
+const WEIGHT_STORAGE_KEY      = 'vbt_last_lift_weights_v1';
 
 // ── DOM References ──
 // Header & Master Workout Controls
@@ -34,6 +35,12 @@ const selectedLiftText  = document.getElementById('selected-lift-text');
 const customOptions     = liftSelectWrapper ? liftSelectWrapper.querySelectorAll('.custom-option') : [];
 const btnSetToggle      = document.getElementById('btn-set-toggle');
 const btnSetText        = document.getElementById('btn-set-text');
+
+// Live Weight Control (Milestone 2: R1)
+const liveWeightControl      = document.getElementById('live-weight-control');
+const liveSetWeightInput     = document.getElementById('live-set-weight-input');
+const btnLiveWeightDec       = document.getElementById('btn-live-weight-dec');
+const btnLiveWeightInc       = document.getElementById('btn-live-weight-inc');
 
 // Eros Connection Sheet Controls
 const bleSearchSheet       = document.getElementById('bluetooth-search-tab');
@@ -87,6 +94,12 @@ const setRingProgress   = document.getElementById('set-ring-progress');
 const activeSetRepsList = document.getElementById('active-set-reps-list');
 const activeSetRepCounter = document.getElementById('active-set-rep-counter');
 
+// Workout Set Weight Module (Milestone 2: R1)
+const workoutSetWeightModule = document.getElementById('workout-set-weight-module');
+const workoutSetWeightInput  = document.getElementById('workout-set-weight-input');
+const btnWorkoutWeightDec    = document.getElementById('btn-workout-weight-dec');
+const btnWorkoutWeightInc    = document.getElementById('btn-workout-weight-inc');
+
 // Workout Tab (summary + sets table)
 const workoutSummaryStatus = document.getElementById('workout-summary-status');
 const workoutSumSets       = document.getElementById('workout-sum-sets');
@@ -101,6 +114,7 @@ const sumWorkouts       = document.getElementById('sum-workouts');
 const sumSets           = document.getElementById('sum-sets');
 const sumReps           = document.getElementById('sum-reps');
 const sumBestVel        = document.getElementById('sum-best-vel');
+const sumVolume         = document.getElementById('sum-volume');
 const historySessionsList = document.getElementById('history-sessions-list');
 const btnExportCsv      = document.getElementById('btn-export-csv');
 const btnExportJson     = document.getElementById('btn-export-json');
@@ -114,6 +128,9 @@ const prSquatVel       = document.getElementById('pr-squat-vel');
 const prBenchVel       = document.getElementById('pr-bench-vel');
 const prDeadliftVel    = document.getElementById('pr-deadlift-vel');
 const prCurrentTotal   = document.getElementById('pr-current-total');
+const prSquatBadge     = document.getElementById('pr-squat-badge');
+const prBenchBadge     = document.getElementById('pr-bench-badge');
+const prDeadliftBadge  = document.getElementById('pr-deadlift-badge');
 
 const compSquatWeight  = document.getElementById('comp-squat-weight');
 const compBenchWeight  = document.getElementById('comp-bench-weight');
@@ -375,6 +392,148 @@ function initTouchActiveStates() {
 // 1. DATA STORAGE & INITIALIZATION
 // ═════════════════════════════════════════════════════════════════════════════
 
+// ── Set Weight & Volume State Engine (Milestone 2: R1 & R2) ──
+const DEFAULT_LIFT_WEIGHTS = {
+  Deadlift: 140.0,
+  Squat: 100.0,
+  Bench: 80.0
+};
+
+let lastLiftWeights = (() => {
+  try {
+    const raw = localStorage.getItem(WEIGHT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : { ...DEFAULT_LIFT_WEIGHTS };
+  } catch (e) {
+    return { ...DEFAULT_LIFT_WEIGHTS };
+  }
+})();
+
+function persistLastLiftWeights() {
+  try {
+    localStorage.setItem(WEIGHT_STORAGE_KEY, JSON.stringify(lastLiftWeights));
+  } catch (e) {}
+}
+
+function getLastWeightForLift(liftName) {
+  const canon = canonicalLift(liftName || currentLift);
+  // 1. Check active workout sets in reverse
+  if (activeWorkout && Array.isArray(activeWorkout.sets)) {
+    for (let i = activeWorkout.sets.length - 1; i >= 0; i--) {
+      const s = activeWorkout.sets[i];
+      if (sameLift(s.lift, canon) && typeof s.weight === 'number' && !isNaN(s.weight) && s.weight > 0) {
+        return s.weight;
+      }
+    }
+  }
+  // 2. Check stored history workouts in reverse
+  if (Array.isArray(workouts)) {
+    for (const w of workouts) {
+      if (Array.isArray(w.sets)) {
+        for (let i = w.sets.length - 1; i >= 0; i--) {
+          const s = w.sets[i];
+          if (sameLift(s.lift, canon) && typeof s.weight === 'number' && !isNaN(s.weight) && s.weight > 0) {
+            return s.weight;
+          }
+        }
+      }
+    }
+  }
+  // 3. Fallback to cached per-lift memory or default
+  if (lastLiftWeights && typeof lastLiftWeights[canon] === 'number' && !isNaN(lastLiftWeights[canon])) {
+    return lastLiftWeights[canon];
+  }
+  return DEFAULT_LIFT_WEIGHTS[canon] || 100.0;
+}
+
+let currentWorkingWeight = 140.0;
+
+function setWorkingWeight(val, updateInputs = true, source = null) {
+  let num = parseFloat(val);
+  if (isNaN(num)) num = 0;
+  num = Math.max(0, Math.min(600, Math.round(num * 10) / 10));
+  currentWorkingWeight = num;
+  const canon = canonicalLift(currentLift);
+  if (!lastLiftWeights) lastLiftWeights = { ...DEFAULT_LIFT_WEIGHTS };
+  lastLiftWeights[canon] = num;
+  persistLastLiftWeights();
+
+  const formatted = num.toFixed(1);
+  if (updateInputs) {
+    if (liveSetWeightInput && liveSetWeightInput.value !== formatted) {
+      liveSetWeightInput.value = formatted;
+    }
+    if (workoutSetWeightInput && workoutSetWeightInput.value !== formatted) {
+      workoutSetWeightInput.value = formatted;
+    }
+  } else {
+    if (source === 'live' && workoutSetWeightInput && workoutSetWeightInput.value !== String(val)) {
+      workoutSetWeightInput.value = val;
+    }
+    if (source === 'workout' && liveSetWeightInput && liveSetWeightInput.value !== String(val)) {
+      liveSetWeightInput.value = val;
+    }
+  }
+
+  if (activeSet) {
+    activeSet.weight = num;
+    persistStorage();
+    updateWorkoutPage();
+  }
+}
+
+function stepWorkingWeight(delta) {
+  const current = (typeof currentWorkingWeight === 'number' && !isNaN(currentWorkingWeight))
+    ? currentWorkingWeight
+    : getLastWeightForLift(currentLift);
+  const next = Math.max(0, Math.min(600, Math.round((current + delta) * 10) / 10));
+  setWorkingWeight(next, true);
+  if (typeof SoundFX !== 'undefined' && SoundFX.playStepperTick) SoundFX.playStepperTick();
+  if (typeof HapticsFX !== 'undefined' && HapticsFX.vibrate) HapticsFX.vibrate([10]);
+}
+
+let weightListenersInitialized = false;
+function initWeightControlListeners() {
+  if (weightListenersInitialized) return;
+  weightListenersInitialized = true;
+
+  if (btnLiveWeightDec) {
+    btnLiveWeightDec.addEventListener('click', () => stepWorkingWeight(-2.5));
+  }
+  if (btnLiveWeightInc) {
+    btnLiveWeightInc.addEventListener('click', () => stepWorkingWeight(2.5));
+  }
+  if (btnWorkoutWeightDec) {
+    btnWorkoutWeightDec.addEventListener('click', () => stepWorkingWeight(-2.5));
+  }
+  if (btnWorkoutWeightInc) {
+    btnWorkoutWeightInc.addEventListener('click', () => stepWorkingWeight(2.5));
+  }
+
+  if (liveSetWeightInput) {
+    liveSetWeightInput.addEventListener('input', (e) => {
+      setWorkingWeight(e.target.value, false, 'live');
+    });
+    liveSetWeightInput.addEventListener('change', (e) => {
+      setWorkingWeight(e.target.value, true);
+    });
+    liveSetWeightInput.addEventListener('blur', (e) => {
+      setWorkingWeight(e.target.value, true);
+    });
+  }
+
+  if (workoutSetWeightInput) {
+    workoutSetWeightInput.addEventListener('input', (e) => {
+      setWorkingWeight(e.target.value, false, 'workout');
+    });
+    workoutSetWeightInput.addEventListener('change', (e) => {
+      setWorkingWeight(e.target.value, true);
+    });
+    workoutSetWeightInput.addEventListener('blur', (e) => {
+      setWorkingWeight(e.target.value, true);
+    });
+  }
+}
+
 function initStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -386,6 +545,10 @@ function initStorage() {
     console.warn('[Eros] Failed to read localStorage:', err);
     workouts = [];
   }
+  currentWorkingWeight = getLastWeightForLift(currentLift);
+  if (liveSetWeightInput) liveSetWeightInput.value = currentWorkingWeight.toFixed(1);
+  if (workoutSetWeightInput) workoutSetWeightInput.value = currentWorkingWeight.toFixed(1);
+  initWeightControlListeners();
   loadPrProfile();
   updateHistoryStats();
   renderHistoryView();
@@ -519,10 +682,18 @@ function startNewSet(lift = currentLift) {
 
   const setLift = canonicalLift(lift || currentLift);
   const setNumber = activeWorkout.sets.length + 1;
+  const setWeight = (typeof currentWorkingWeight === 'number' && !isNaN(currentWorkingWeight))
+    ? currentWorkingWeight
+    : getLastWeightForLift(setLift);
+  currentWorkingWeight = setWeight;
+  if (liveSetWeightInput) liveSetWeightInput.value = setWeight.toFixed(1);
+  if (workoutSetWeightInput) workoutSetWeightInput.value = setWeight.toFixed(1);
+
   const newSet = {
     setId: `set_${Date.now()}_${setNumber}`,
     setNumber: setNumber,
     lift: setLift,
+    weight: setWeight,
     targetRpe: currentTargetRpe,
     startTime: Date.now(),
     endTime: null,
@@ -1232,6 +1403,10 @@ function applyLiftTheme(liftName) {
     liveRpeSub.textContent = `MVT Baseline: ${baseline.mvt.toFixed(2)} m/s`;
   }
 
+  // Restore remembered weight for this lift
+  const liftWeight = getLastWeightForLift(nextLift);
+  setWorkingWeight(liftWeight, true);
+
   // Keep Current Set card denomination synced and clear stale set reps when idle between sets
   if (!activeSet) {
     updateSetUI(null);
@@ -1428,6 +1603,10 @@ function updateWorkoutPage() {
     const maxV = repCount > 0 ? s.maxVelocity.toFixed(2) : '-';
     const avgR = repCount > 0 ? s.avgRpe.toFixed(1) : '-';
 
+    const setWeightVal = (typeof s.weight === 'number' && !isNaN(s.weight) && s.weight > 0)
+      ? `${s.weight.toFixed(1)} kg`
+      : '-';
+
     rowsHtml += `
       <div class="workout-set-row ${isCurrent ? 'is-active-set' : ''}" data-set-number="${s.setNumber}" data-lift="${liftKey}">
         <div class="workout-set-row-left">
@@ -1436,6 +1615,10 @@ function updateWorkoutPage() {
           <span class="workout-set-reps">${repCount} ${repCount === 1 ? 'rep' : 'reps'}</span>
         </div>
         <div class="workout-set-row-right">
+          <div class="workout-set-metric">
+            <span class="workout-set-metric-val">${setWeightVal}</span>
+            <span class="workout-set-metric-lbl">LOAD</span>
+          </div>
           <div class="workout-set-metric">
             <span class="workout-set-metric-val">${avgV}${repCount > 0 ? ' m/s' : ''}</span>
             <span class="workout-set-metric-lbl">AVG</span>
@@ -1468,6 +1651,16 @@ function updateSetUI(set) {
 
   const effectiveLift = canonicalLift((set && set.lift) ? set.lift : currentLift);
   const effectiveLiftKey = liftKeyOf(effectiveLift);
+
+  const displayWeight = (set && typeof set.weight === 'number' && !isNaN(set.weight))
+    ? set.weight
+    : (typeof currentWorkingWeight === 'number' ? currentWorkingWeight : getLastWeightForLift(effectiveLift));
+  if (liveSetWeightInput && document.activeElement !== liveSetWeightInput) {
+    liveSetWeightInput.value = displayWeight.toFixed(1);
+  }
+  if (workoutSetWeightInput && document.activeElement !== workoutSetWeightInput) {
+    workoutSetWeightInput.value = displayWeight.toFixed(1);
+  }
 
   if (!set || set.reps.length === 0) {
     const nextSetNum = set ? set.setNumber : (activeWorkout && Array.isArray(activeWorkout.sets) ? activeWorkout.sets.length + 1 : 1);
@@ -1520,9 +1713,7 @@ function updateSetUI(set) {
     const repLift = canonicalLift(rep.lift || effectiveLift);
     const repLiftKey = liftKeyOf(repLift);
     const prBadgeHtml = isPR ? '<span class="rep-pr-badge gold-glow">PR</span>' : '';
-    const progressRingHtml = isLatest
-      ? `<div class="rep-press-progress-ring" aria-hidden="true"><svg class="radial-progress-svg" viewBox="0 0 44 44"><circle class="radial-track" cx="22" cy="22" r="18" /><circle class="radial-indicator" cx="22" cy="22" r="18" /></svg></div>`
-      : '';
+    const progressRingHtml = `<div class="rep-press-progress-ring" aria-hidden="true"><svg class="radial-progress-svg" viewBox="0 0 44 44"><circle class="radial-track" cx="22" cy="22" r="18" /><circle class="radial-indicator" cx="22" cy="22" r="18" /></svg></div>`;
 
     html += `
       <div class="rep-row-item ${isPR ? 'is-pr' : ''}" data-rep-number="${rep.repNumber}" data-lift="${repLiftKey}" ${isLatest ? 'data-is-latest="true"' : ''}>
@@ -1543,73 +1734,108 @@ function updateSetUI(set) {
   activeSetRepsList.innerHTML = html;
   updateWorkoutPage();
 
-  // Attach 500ms long-press listeners on the latest repetition element
-  const latestEl = activeSetRepsList.querySelector('.rep-row-item');
-  if (latestEl && set.reps.length > 0) {
-    const rep = set.reps[set.reps.length - 1];
-    let pressTimer = null;
-    let startX = 0;
-    let startY = 0;
-    let isHolding = false;
-    const LONG_PRESS_MS = 500;
+  // Attach 500ms long-press listeners on repetition elements
+  const repEls = activeSetRepsList.querySelectorAll('.rep-row-item');
+  if (repEls.length > 0 && set.reps.length > 0) {
+    const cancelFns = [];
+    repEls.forEach((rowEl) => {
+      const repNum = parseInt(rowEl.getAttribute('data-rep-number'), 10);
+      const rep = set.reps.find(r => r.repNumber === repNum) || (repEls.length === 1 ? set.reps[0] : null);
+      if (!rep) return;
 
-    const abortHold = () => {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-      }
-      if (isHolding) {
-        isHolding = false;
-        latestEl.classList.remove('press-holding');
-      }
+      let pressTimer = null;
+      let startX = 0;
+      let startY = 0;
+      let isHolding = false;
+      const LONG_PRESS_MS = 500;
+
+      const abortHold = () => {
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+        if (isHolding) {
+          isHolding = false;
+          rowEl.classList.remove('press-holding');
+        }
+      };
+      cancelFns.push(abortHold);
+
+      rowEl.addEventListener('pointerdown', (e) => {
+        if (e.button !== undefined && e.button !== 0) return;
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+        startX = e.clientX;
+        startY = e.clientY;
+        isHolding = true;
+        rowEl.classList.add('press-holding');
+        SoundFX.playLongPressHold(0.2);
+
+        pressTimer = setTimeout(() => {
+          isHolding = false;
+          rowEl.classList.remove('press-holding');
+          pressTimer = null;
+          if (!rowEl.isConnected || set.endTime || (activeSet && activeSet !== set)) return;
+
+          // Haptic feedback & celebration fanfare
+          HapticsFX.vibrate([40, 30, 60]);
+          SoundFX.playPrFanfare();
+
+          // Toggle rep.isPR boolean state
+          rep.isPR = !rep.isPR;
+
+          // Promote to Gym PR if toggled true
+          if (rep.isPR) {
+            const repLift = canonicalLift(rep.lift || set.lift || currentLift);
+            const repLiftKey = liftKeyOf(repLift);
+            const repWeight = (typeof rep.weight === 'number' && rep.weight > 0)
+              ? rep.weight
+              : ((set && typeof set.weight === 'number' && set.weight > 0)
+                  ? set.weight
+                  : (prProfile.currentPRs[repLiftKey] || 100.0));
+
+            if (prProfile.currentPRs[repLiftKey] !== undefined) {
+              prProfile.currentPRs[repLiftKey] = repWeight;
+              if (!prProfile.currentPRDetails) prProfile.currentPRDetails = {};
+              prProfile.currentPRDetails[repLiftKey] = {
+                weight: repWeight,
+                velocity: Number((rep.peakVelocity || rep.velocity || 0).toFixed(2)),
+                rpe: Number((rep.rpe || 10).toFixed(1)),
+                timestamp: rep.timestamp || Date.now()
+              };
+              persistPrProfile();
+            }
+          }
+
+          persistStorage();
+
+          // Update UI
+          updateSetUI(set);
+          updatePrDashboardUI(true);
+          renderHistoryView();
+        }, LONG_PRESS_MS);
+      });
+
+      rowEl.addEventListener('pointermove', (e) => {
+        if (!isHolding) return;
+        const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
+        if (dist > 10) {
+          abortHold();
+        }
+      });
+
+      rowEl.addEventListener('pointerup', abortHold);
+      rowEl.addEventListener('pointercancel', abortHold);
+      rowEl.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+      });
+    });
+
+    activeRepPressCancel = () => {
+      cancelFns.forEach(fn => fn());
     };
-    activeRepPressCancel = abortHold;
-
-    latestEl.addEventListener('pointerdown', (e) => {
-      if (e.button !== undefined && e.button !== 0) return;
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-      }
-      startX = e.clientX;
-      startY = e.clientY;
-      isHolding = true;
-      latestEl.classList.add('press-holding');
-      SoundFX.playLongPressHold(0.2);
-
-      pressTimer = setTimeout(() => {
-        isHolding = false;
-        latestEl.classList.remove('press-holding');
-        pressTimer = null;
-        if (!latestEl.isConnected || set.endTime || (activeSet && activeSet !== set)) return;
-
-        // Haptic feedback & celebration fanfare
-        HapticsFX.vibrate([40, 30, 60]);
-        SoundFX.playPrFanfare();
-
-        // Toggle rep.isPR boolean state
-        rep.isPR = !rep.isPR;
-        persistStorage();
-
-        // Update UI
-        updateSetUI(set);
-        renderHistoryView();
-      }, LONG_PRESS_MS);
-    });
-
-    latestEl.addEventListener('pointermove', (e) => {
-      if (!isHolding) return;
-      const dist = Math.hypot(e.clientX - startX, e.clientY - startY);
-      if (dist > 10) {
-        abortHold();
-      }
-    });
-
-    latestEl.addEventListener('pointerup', abortHold);
-    latestEl.addEventListener('pointercancel', abortHold);
-    latestEl.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-    });
   }
 }
 
@@ -1625,6 +1851,11 @@ const defaultPrProfile = {
     squat: 140.0,
     bench: 100.0,
     deadlift: 180.0
+  },
+  currentPRDetails: {
+    squat: { weight: 140.0, velocity: 0.35, rpe: 9.5, timestamp: null },
+    bench: { weight: 100.0, velocity: 0.25, rpe: 9.5, timestamp: null },
+    deadlift: { weight: 180.0, velocity: 0.28, rpe: 9.5, timestamp: null }
   },
   compPRs: {
     squat: 150.0,
@@ -1645,14 +1876,42 @@ function loadPrProfile() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
+        const cSquat = parsed.currentPRs && typeof parsed.currentPRs.squat === 'number' ? parsed.currentPRs.squat : defaultPrProfile.currentPRs.squat;
+        const cBench = parsed.currentPRs && typeof parsed.currentPRs.bench === 'number' ? parsed.currentPRs.bench : defaultPrProfile.currentPRs.bench;
+        const cDead  = parsed.currentPRs && typeof parsed.currentPRs.deadlift === 'number' ? parsed.currentPRs.deadlift : defaultPrProfile.currentPRs.deadlift;
+
+        const parseDetail = (d, fallbackWeight, def) => {
+          if (d && typeof d === 'object') {
+            return {
+              weight: typeof d.weight === 'number' && !isNaN(d.weight) ? d.weight : fallbackWeight,
+              velocity: typeof d.velocity === 'number' && !isNaN(d.velocity) ? d.velocity : def.velocity,
+              rpe: typeof d.rpe === 'number' && !isNaN(d.rpe) ? d.rpe : def.rpe,
+              timestamp: d.timestamp || null
+            };
+          }
+          return {
+            weight: fallbackWeight,
+            velocity: def.velocity,
+            rpe: def.rpe,
+            timestamp: null
+          };
+        };
+
+        const pDetails = parsed.currentPRDetails || {};
+
         prProfile = {
           version: parsed.version || 1,
           bodyweight: typeof parsed.bodyweight === 'number' && parsed.bodyweight > 0 ? parsed.bodyweight : defaultPrProfile.bodyweight,
           gender: parsed.gender === 'female' ? 'female' : 'male',
           currentPRs: {
-            squat: parsed.currentPRs && typeof parsed.currentPRs.squat === 'number' ? parsed.currentPRs.squat : defaultPrProfile.currentPRs.squat,
-            bench: parsed.currentPRs && typeof parsed.currentPRs.bench === 'number' ? parsed.currentPRs.bench : defaultPrProfile.currentPRs.bench,
-            deadlift: parsed.currentPRs && typeof parsed.currentPRs.deadlift === 'number' ? parsed.currentPRs.deadlift : defaultPrProfile.currentPRs.deadlift
+            squat: cSquat,
+            bench: cBench,
+            deadlift: cDead
+          },
+          currentPRDetails: {
+            squat: parseDetail(pDetails.squat, cSquat, defaultPrProfile.currentPRDetails.squat),
+            bench: parseDetail(pDetails.bench, cBench, defaultPrProfile.currentPRDetails.bench),
+            deadlift: parseDetail(pDetails.deadlift, cDead, defaultPrProfile.currentPRDetails.deadlift)
           },
           compPRs: {
             squat: parsed.compPRs && typeof parsed.compPRs.squat === 'number' ? parsed.compPRs.squat : defaultPrProfile.compPRs.squat,
@@ -1674,6 +1933,9 @@ function loadPrProfile() {
  */
 function persistPrProfile() {
   try {
+    if (!prProfile.currentPRDetails) {
+      prProfile.currentPRDetails = JSON.parse(JSON.stringify(defaultPrProfile.currentPRDetails));
+    }
     localStorage.setItem(PR_STORAGE_KEY, JSON.stringify(prProfile));
   } catch (err) {
     console.error('[Eros] Failed to persist athlete PR profile to localStorage:', err);
@@ -1839,6 +2101,22 @@ function updatePrDashboardUI(updateInputs = true) {
   if (prBenchVel) prBenchVel.textContent = `${peaks.bench.toFixed(2)} m/s`;
   if (prDeadliftVel) prDeadliftVel.textContent = `${peaks.deadlift.toFixed(2)} m/s`;
 
+  // Update Gym PR Badges (R3)
+  const formatPrBadge = (details, fallbackWeight) => {
+    const w = (details && typeof details.weight === 'number' && !isNaN(details.weight)) ? details.weight : (fallbackWeight || 0);
+    const v = (details && typeof details.velocity === 'number' && !isNaN(details.velocity)) ? details.velocity : 0.0;
+    const r = (details && typeof details.rpe === 'number' && !isNaN(details.rpe)) ? details.rpe : 0.0;
+    return `${w.toFixed(1)} kg • ${v.toFixed(2)} m/s • RPE ${r.toFixed(1)}`;
+  };
+
+  const details = prProfile.currentPRDetails || {};
+  const elSquatBadge = prSquatBadge || document.getElementById('pr-squat-badge');
+  const elBenchBadge = prBenchBadge || document.getElementById('pr-bench-badge');
+  const elDeadBadge  = prDeadliftBadge || document.getElementById('pr-deadlift-badge');
+  if (elSquatBadge) elSquatBadge.textContent = formatPrBadge(details.squat, prProfile.currentPRs.squat);
+  if (elBenchBadge) elBenchBadge.textContent = formatPrBadge(details.bench, prProfile.currentPRs.bench);
+  if (elDeadBadge)  elDeadBadge.textContent  = formatPrBadge(details.deadlift, prProfile.currentPRs.deadlift);
+
   // Evaluate DOTS score from selected source total
   const evaluatedTotal = prProfile.activeDotsSource === 'comp' ? compTotal : currentTotal;
   if (dotsTotalDisplay) dotsTotalDisplay.textContent = `${evaluatedTotal.toFixed(1)} kg`;
@@ -1859,6 +2137,26 @@ function initPrDashboardListeners() {
     prProfile.currentPRs.squat = parseFloat(prSquatWeight.value) || 0;
     prProfile.currentPRs.bench = parseFloat(prBenchWeight.value) || 0;
     prProfile.currentPRs.deadlift = parseFloat(prDeadliftWeight.value) || 0;
+
+    if (!prProfile.currentPRDetails) prProfile.currentPRDetails = {};
+    if (!prProfile.currentPRDetails.squat) {
+      prProfile.currentPRDetails.squat = { weight: prProfile.currentPRs.squat, velocity: 0.35, rpe: 9.5, timestamp: null };
+    } else {
+      prProfile.currentPRDetails.squat.weight = prProfile.currentPRs.squat;
+    }
+
+    if (!prProfile.currentPRDetails.bench) {
+      prProfile.currentPRDetails.bench = { weight: prProfile.currentPRs.bench, velocity: 0.25, rpe: 9.5, timestamp: null };
+    } else {
+      prProfile.currentPRDetails.bench.weight = prProfile.currentPRs.bench;
+    }
+
+    if (!prProfile.currentPRDetails.deadlift) {
+      prProfile.currentPRDetails.deadlift = { weight: prProfile.currentPRs.deadlift, velocity: 0.28, rpe: 9.5, timestamp: null };
+    } else {
+      prProfile.currentPRDetails.deadlift.weight = prProfile.currentPRs.deadlift;
+    }
+
     persistPrProfile();
     updatePrDashboardUI(false);
   };
@@ -1936,17 +2234,19 @@ function updateHistoryStats() {
   let totalSets = 0;
   let totalReps = 0;
   let peakVel = 0.0;
+  let lifetimeVolume = 0;
 
   workouts.forEach(w => {
     if (w.sets) {
       totalSets += w.sets.length;
       w.sets.forEach(s => {
-        if (s.reps) {
-          totalReps += s.reps.length;
-          s.reps.forEach(r => {
-            if (r.velocity > peakVel) peakVel = r.velocity;
-          });
-        }
+        const reps = Array.isArray(s.reps) ? s.reps : [];
+        totalReps += reps.length;
+        const setWeight = (typeof s.weight === 'number' && !isNaN(s.weight)) ? s.weight : 0;
+        lifetimeVolume += setWeight * reps.length;
+        reps.forEach(r => {
+          if (r.velocity > peakVel) peakVel = r.velocity;
+        });
       });
     }
   });
@@ -1955,6 +2255,9 @@ function updateHistoryStats() {
   sumSets.textContent     = totalSets;
   sumReps.textContent     = totalReps;
   sumBestVel.textContent  = peakVel.toFixed(2);
+  if (sumVolume) {
+    sumVolume.textContent = `${Math.round(lifetimeVolume).toLocaleString('en-US')} kg`;
+  }
   updatePrDashboardUI(false);
 }
 
@@ -1974,29 +2277,32 @@ function renderHistoryView() {
     const setList = session.sets || [];
     let sessionRepsCount = 0;
     let velSum = 0;
+    let sessionVolume = 0;
 
     setList.forEach(s => {
-      if (s.reps) {
-        sessionRepsCount += s.reps.length;
-        s.reps.forEach(r => { velSum += r.velocity; });
-      }
+      const reps = Array.isArray(s.reps) ? s.reps : [];
+      sessionRepsCount += reps.length;
+      const sWeight = (typeof s.weight === 'number' && !isNaN(s.weight)) ? s.weight : 0;
+      sessionVolume += sWeight * reps.length;
+      reps.forEach(r => { velSum += r.velocity; });
     });
 
     const sessionAvgVel = sessionRepsCount > 0 ? (velSum / sessionRepsCount).toFixed(2) : '0.00';
     const durationMins = session.endTime
       ? Math.max(1, Math.round((session.endTime - session.startTime) / 60000))
       : 'Active';
+    const formattedVolume = `${Math.round(sessionVolume).toLocaleString('en-US')} kg`;
 
     html += `
       <div class="session-card ${isExpanded ? 'expanded' : ''}" data-session-id="${session.id}">
         <div class="session-card-header" onclick="toggleSessionCard('${session.id}')">
           <div class="session-card-title-group">
             <span class="session-card-title">${escapeHtml(session.name)}</span>
-            <span class="session-card-meta">${session.dateStr} • ${durationMins} ${typeof durationMins === 'number' ? 'mins' : ''}</span>
+            <span class="session-card-meta">${session.dateStr} • ${durationMins} ${typeof durationMins === 'number' ? 'mins' : ''} • ${setList.length}S / ${sessionRepsCount}R</span>
           </div>
           <div class="session-card-stats">
             <div class="session-stat-chip">
-              <span class="stat-chip-val font-mono">${setList.length}S / ${sessionRepsCount}R</span>
+              <span class="stat-chip-val font-mono">${formattedVolume}</span>
               <span class="stat-chip-lbl">VOLUME</span>
             </div>
             <div class="session-stat-chip">
@@ -2027,6 +2333,12 @@ function renderSessionSetsAccordion(sets) {
   sets.forEach(s => {
     const setLift = canonicalLift(s.lift || currentLift);
     const setLiftKey = liftKeyOf(setLift);
+    const sWeight = (typeof s.weight === 'number' && !isNaN(s.weight)) ? s.weight : 0;
+    const repCount = Array.isArray(s.reps) ? s.reps.length : 0;
+    const setVol = sWeight * repCount;
+    const formattedSetVol = `${Math.round(setVol).toLocaleString('en-US')} kg`;
+    const weightLabel = sWeight > 0 ? ` (${sWeight.toFixed(1)} kg)` : '';
+
     const repPills = (s.reps || []).map(r => `
       <span class="history-rep-pill font-mono">#${r.repNumber}: ${r.velocity.toFixed(2)}m/s${r.isPR ? ' <span class="rep-pr-badge gold-glow">PR</span>' : ''}</span>
     `).join('');
@@ -2034,8 +2346,9 @@ function renderSessionSetsAccordion(sets) {
     out += `
       <div class="session-set-item" data-lift="${setLiftKey}">
         <div class="session-set-header">
-          <span class="session-set-tag" data-lift="${setLiftKey}">SET ${s.setNumber} — ${escapeHtml(setLift.toUpperCase())}</span>
+          <span class="session-set-tag" data-lift="${setLiftKey}">SET ${s.setNumber} — ${escapeHtml(setLift.toUpperCase())}${weightLabel}</span>
           <div class="session-set-stats font-mono">
+            <span class="set-stat-vol">Vol: ${formattedSetVol}</span>
             <span class="set-stat-vel">Avg: ${s.avgVelocity.toFixed(2)} m/s</span>
             <span class="set-stat-loss">Loss: ${s.velocityLossPct.toFixed(1)}%</span>
           </div>
@@ -2137,6 +2450,43 @@ btnClearHistory.addEventListener('click', () => {
 // 6. NAVIGATION & UI UTILITIES
 // ═════════════════════════════════════════════════════════════════════════════
 
+const TAB_ORDER = {
+  live: 0,
+  set: 1,
+  history: 2
+};
+
+let tabTransitionTimeouts = [];
+
+function clearTabTransitions() {
+  tabTransitionTimeouts.forEach(t => clearTimeout(t));
+  tabTransitionTimeouts = [];
+  Object.values(tabSections).forEach(s => {
+    if (s) {
+      s.classList.remove(
+        'leaving-section',
+        'slide-left-out',
+        'slide-right-out',
+        'slide-left-in',
+        'slide-right-in'
+      );
+    }
+  });
+}
+
+function switchTab(target) {
+  const targetTab = Array.from(navTabs).find(t => t.getAttribute('data-target') === target);
+  if (targetTab) {
+    targetTab.click();
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.TAB_ORDER = TAB_ORDER;
+  window.clearTabTransitions = clearTabTransitions;
+  window.switchTab = switchTab;
+}
+
 navTabs.forEach(tab => {
   tab.addEventListener('click', () => {
     SoundFX.playNavTick();
@@ -2149,7 +2499,14 @@ navTabs.forEach(tab => {
     const prevTarget = currentTabTarget;
     currentTabTarget = target;
 
-    // Update active class on navTabs
+    const prevIndex = TAB_ORDER[prevTarget] !== undefined ? TAB_ORDER[prevTarget] : 0;
+    const targetIndex = TAB_ORDER[target] !== undefined ? TAB_ORDER[target] : 0;
+    const isForward = targetIndex > prevIndex;
+
+    const inClass = isForward ? 'slide-left-in' : 'slide-right-in';
+    const outClass = isForward ? 'slide-left-out' : 'slide-right-out';
+
+    // 1. Update active class on navTabs
     navTabs.forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
 
@@ -2158,26 +2515,42 @@ navTabs.forEach(tab => {
       bottomGlassNav.setAttribute('data-active', target);
     }
 
-    // Synchronously clear active-section and set active-section on target section
     const prevSection = tabSections[prevTarget];
     const targetSection = tabSections[target];
 
+    // 2. Clear any active transition states from rapid clicking
+    clearTabTransitions();
+
+    // 3. Mark non-target sections inactive
     Object.values(tabSections).forEach(s => {
-      if (s) s.classList.remove('active-section');
+      if (s && s !== targetSection) {
+        s.classList.remove('active-section');
+      }
     });
 
-    if (targetSection) {
-      targetSection.classList.remove('leaving-section');
-      targetSection.classList.add('active-section');
+    // 4. Stage leaving section
+    if (prevSection && prevSection !== targetSection) {
+      prevSection.classList.add('leaving-section', outClass);
     }
 
-    // Add leaving-section to previously active section and remove via setTimeout(..., 220)
-    if (prevSection && prevSection !== targetSection) {
-      prevSection.classList.add('leaving-section');
-      setTimeout(() => {
-        prevSection.classList.remove('leaving-section');
-      }, 220);
+    // 5. Activate target section with explicit WebKit reflow trigger
+    if (targetSection) {
+      targetSection.classList.add('active-section');
+      // Explicit iOS WebKit reflow trigger: forces style evaluation before animation
+      void targetSection.offsetHeight;
+      targetSection.classList.add(inClass);
     }
+
+    // 6. Cleanup after transition duration (280ms)
+    const timeoutId = setTimeout(() => {
+      if (prevSection) {
+        prevSection.classList.remove('leaving-section', outClass);
+      }
+      if (targetSection) {
+        targetSection.classList.remove(inClass);
+      }
+    }, 280);
+    tabTransitionTimeouts.push(timeoutId);
   });
 });
 

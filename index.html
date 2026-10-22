@@ -95,6 +95,16 @@
               </div>
             </div>
             
+            <!-- Set Weight Input Capsule (Live Page) -->
+            <div class="weight-control-wrapper glass-pill" id="live-weight-control" role="group" aria-label="Set Working Weight">
+              <button type="button" class="weight-stepper-btn" id="btn-live-weight-dec" aria-label="Decrease Working Weight">−</button>
+              <div class="weight-input-inner">
+                <input type="number" id="live-set-weight-input" class="set-weight-input font-mono tabular-nums" value="140.0" step="2.5" min="0" max="600" aria-label="Set weight in kg">
+                <span class="weight-unit">kg</span>
+              </div>
+              <button type="button" class="weight-stepper-btn" id="btn-live-weight-inc" aria-label="Increase Working Weight">+</button>
+            </div>
+
             <!-- Set Trigger Button -->
             <button id="btn-set-toggle" class="btn-glass-set">
               <span id="btn-set-text">START SET</span>
@@ -251,6 +261,22 @@
             <div class="set-count-pill" id="set-rep-counter">0 REPS RECORDED</div>
           </div>
 
+          <!-- Set Weight Module (Workout Page) -->
+          <div class="set-weight-module" id="workout-set-weight-module">
+            <div class="set-weight-label-wrap">
+              <span class="set-weight-badge">SET LOAD</span>
+              <span class="set-weight-help">WORKING WEIGHT</span>
+            </div>
+            <div class="weight-control-wrapper glass-pill" id="workout-weight-control" role="group" aria-label="Set Working Weight">
+              <button type="button" class="weight-stepper-btn" id="btn-workout-weight-dec" aria-label="Decrease Working Weight">−</button>
+              <div class="weight-input-inner">
+                <input type="number" id="workout-set-weight-input" class="set-weight-input font-mono tabular-nums" value="140.0" step="2.5" min="0" max="600" aria-label="Working Set Weight in kg">
+                <span class="weight-unit">kg</span>
+              </div>
+              <button type="button" class="weight-stepper-btn" id="btn-workout-weight-inc" aria-label="Increase Working Weight">+</button>
+            </div>
+          </div>
+
           <!-- Glass Progress Ring -->
           <div class="set-ring-container">
             <svg class="progress-ring-svg" viewBox="0 0 220 220">
@@ -345,6 +371,10 @@
             <span class="sum-val font-mono" id="sum-best-vel">0.00</span>
             <span class="sum-lbl">PEAK M/S</span>
           </div>
+          <div class="summary-metric">
+            <span class="sum-val font-mono" id="sum-volume">0 kg</span>
+            <span class="sum-lbl">VOLUME</span>
+          </div>
         </div>
 
         <!-- ═══════════════════════════════════════════════ -->
@@ -365,6 +395,9 @@
                   <input type="number" id="pr-squat-weight" class="pr-num-input font-mono" value="140.0" step="0.5" min="0" max="600" aria-label="Squat 1RM weight in kg">
                   <span class="pr-unit">kg</span>
                 </div>
+                <div class="pr-badge-wrap">
+                  <span class="pr-gym-badge font-mono" id="pr-squat-badge">140.0 kg • 0.35 m/s • RPE 9.5</span>
+                </div>
                 <div class="pr-eros-telemetry">
                   <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>
                   <span id="pr-squat-vel" class="telemetry-val font-mono">0.00 m/s</span>
@@ -377,6 +410,9 @@
                   <input type="number" id="pr-bench-weight" class="pr-num-input font-mono" value="100.0" step="0.5" min="0" max="500" aria-label="Bench Press 1RM weight in kg">
                   <span class="pr-unit">kg</span>
                 </div>
+                <div class="pr-badge-wrap">
+                  <span class="pr-gym-badge font-mono" id="pr-bench-badge">100.0 kg • 0.25 m/s • RPE 9.5</span>
+                </div>
                 <div class="pr-eros-telemetry">
                   <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>
                   <span id="pr-bench-vel" class="telemetry-val font-mono">0.00 m/s</span>
@@ -388,6 +424,9 @@
                 <div class="pr-input-wrap">
                   <input type="number" id="pr-deadlift-weight" class="pr-num-input font-mono" value="180.0" step="0.5" min="0" max="600" aria-label="Deadlift 1RM weight in kg">
                   <span class="pr-unit">kg</span>
+                </div>
+                <div class="pr-badge-wrap">
+                  <span class="pr-gym-badge font-mono" id="pr-deadlift-badge">180.0 kg • 0.28 m/s • RPE 9.5</span>
                 </div>
                 <div class="pr-eros-telemetry">
                   <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>

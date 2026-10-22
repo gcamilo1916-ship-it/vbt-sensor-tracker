@@ -328,8 +328,16 @@ def ingest_trial_evaluation(
     if os.path.exists(case_path) and not overwrite:
         return False, case_path, {"status": "SKIPPED_DUPLICATE", "case_id": case_id}
 
+    reps_val = eval_dict.get("expected_reps")
+    if reps_val is None:
+        reps_val = cfg_dict.get("num_reps") or (cfg_dict.get("kinematics", {}).get("rep_count") if isinstance(cfg_dict.get("kinematics"), dict) else None)
+    if reps_val is None and ("matched_reps" in eval_dict or "missed_reps" in eval_dict):
+        reps_val = eval_dict.get("matched_reps", 0) + eval_dict.get("missed_reps", 0)
+    if reps_val is None:
+        reps_val = 1
+
     gt = {
-        "reps": int(eval_dict.get("expected_reps", cfg_dict.get("num_reps", 1))),
+        "reps": int(reps_val),
         "displacement_m": round(float(eval_dict.get("true_displacement", 0.40)), 4),
         "duration_s": max(0.5, round(float(eval_dict.get("duration_s", cfg_dict.get("duration_s", 10.0))), 3)),
         "peak_velocity_mps": round(float(eval_dict.get("true_peak_vel", 0.60)), 4),
@@ -657,14 +665,23 @@ def main():
             else:
                 print(f"Dry-run: validated input JSON structure from {args.scan_report}")
         else:
-            ingested_path = ingest_from_json(args.scan_report, output_dir=args.output_dir)
-            if ingested_path:
-                print(f"Successfully ingested case: {ingested_path}")
-            else:
+            try:
+                with open(args.scan_report, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                data = None
+
+            if isinstance(data, dict) and ("trials" in data or "test_records" in data):
                 ingested = scan_and_ingest_report_failures(args.scan_report, args.output_dir)
                 print(f"Ingested {len(ingested)} failure cases from {args.scan_report}")
                 for p in ingested:
                     print(f"  -> {p}")
+            else:
+                ingested_path = ingest_from_json(args.scan_report, output_dir=args.output_dir)
+                if ingested_path:
+                    print(f"Successfully ingested case: {ingested_path}")
+                else:
+                    print(f"No failure cases found or ingested from {args.scan_report}")
     else:
         print("VBT Failure Ingestion Pipeline initialized successfully.")
         print(f"Catalog root: {args.output_dir}")

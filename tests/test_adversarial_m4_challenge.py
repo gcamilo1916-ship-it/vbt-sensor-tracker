@@ -558,9 +558,8 @@ class TestEmpiricalBugReproductions(unittest.TestCase):
 
     def test_bug_1_short_trajectory_slice_creates_unparseable_case(self):
         """
-        Bug 1: When a trajectory slice has fewer than 50 samples (e.g. 20 samples = 0.20s),
-        ingest_trajectory_slice writes duration_s = 0.20s without checking min_val=0.5.
-        The saved JSON fails RegressionCase.from_file() with ValidationError.
+        Regression Test 1: When a trajectory slice has fewer than 50 samples,
+        ingest_trajectory_slice clamps duration_s >= 0.5s so the case parses cleanly.
         """
         mock_sample = {
             "t": 1.0, "ax": 0.0, "ay": 0.0, "az": 9.81,
@@ -577,17 +576,15 @@ class TestEmpiricalBugReproductions(unittest.TestCase):
         self.assertTrue(ok)
         self.assertTrue(os.path.exists(path))
 
-        # Empirical proof: Attempting to load this file raises ValidationError on duration_s
-        with self.assertRaises(ValidationError) as ctx:
-            RegressionCase.from_file(path)
-        self.assertIn("Value 0.2 must be >= 0.5", ctx.exception.message)
-        self.assertEqual(ctx.exception.path, "$.simulation_config.duration_s")
+        # Verified regression invariant: file loads without error and duration is clamped to 0.5s
+        loaded = RegressionCase.from_file(path)
+        self.assertGreaterEqual(loaded.simulation_config.duration_s, 0.5)
+        self.assertEqual(loaded.simulation_config.duration_s, 0.5)
 
     def test_bug_2_floor_drop_num_reps_creates_invalid_case(self):
         """
-        Bug 2: When ingesting a trial with lift_type='FLOOR_DROP' and num_reps=1,
-        build_regression_case does not enforce reps=0 for edge case lifts.
-        The saved JSON fails RegressionCase.from_file() with ValidationError.
+        Regression Test 2: When ingesting a trial with lift_type='FLOOR_DROP',
+        build_regression_case enforces reps=0 so the case conforms to schema.
         """
         cfg = {"lift_type": "FLOOR_DROP", "num_reps": 1, "duration_s": 5.0}
         eval_data = {
@@ -597,17 +594,14 @@ class TestEmpiricalBugReproductions(unittest.TestCase):
         ok, path, _ = ingest_trial_evaluation(cfg, eval_data, output_dir=self.test_dir)
         self.assertTrue(ok)
 
-        # Empirical proof: Attempting to load this file raises ValidationError on expected_reps
-        with self.assertRaises(ValidationError) as ctx:
-            RegressionCase.from_file(path)
-        self.assertIn("must expect exactly 0 reps", ctx.exception.message)
-        self.assertEqual(ctx.exception.path, "$.ground_truth_expectations.expected_reps")
+        # Verified regression invariant: edge cases enforce expected_reps = 0 and load cleanly
+        loaded = RegressionCase.from_file(path)
+        self.assertEqual(loaded.ground_truth_expectations.expected_reps, 0)
 
     def test_bug_3_anomaly_name_with_slash_causes_path_and_regex_failure(self):
         """
-        Bug 3: When anomaly_type contains a slash (e.g. 'NAN/INF_POISONING'),
-        generate_case_id produces an illegal case_id with '/' and writes the file
-        into an unexpected subdirectory. Loading the file fails case_id regex.
+        Regression Test 3: When anomaly_type contains a slash (e.g. 'NAN/INF_POISONING'),
+        generate_case_id sanitizes slashes into underscores and avoids nested directory errors.
         """
         cfg = {"lift_type": "SQUAT", "num_reps": 3, "duration_s": 5.0}
         eval_data = {
@@ -616,27 +610,25 @@ class TestEmpiricalBugReproductions(unittest.TestCase):
         }
         ok, path, _ = ingest_trial_evaluation(cfg, eval_data, output_dir=self.test_dir)
         self.assertTrue(ok)
-        # Empirical proof: File path contains accidental subdirectory 'fail_squat_nan'
-        self.assertIn("fail_squat_nan", path)
 
-        # Empirical proof: Loading file raises ValidationError on case_id regex
-        with self.assertRaises(ValidationError) as ctx:
-            RegressionCase.from_file(path)
-        self.assertIn("case_id must match regex", ctx.exception.message)
-        self.assertEqual(ctx.exception.path, "$.metadata.case_id")
+        # Verified regression invariant: slash is sanitized, file path and case_id are valid
+        self.assertIn("fail_squat_nan_inf_poisoning", path)
+        loaded = RegressionCase.from_file(path)
+        self.assertNotIn("/", loaded.metadata.case_id)
+        self.assertIn("nan_inf_poisoning", loaded.metadata.case_id)
 
     def test_bug_4_string_anomaly_ignored_in_root_cause_extraction(self):
         """
-        Bug 4: extract_primary_root_cause ignores strings in the anomalies list,
-        defaulting to ('Threshold Mismatch', 'UNSPECIFIED_ANOMALY').
+        Regression Test 4: extract_primary_root_cause parses string anomalies and correctly
+        extracts root cause priority ('FSM Deadlock').
         """
         rc, anom = extract_primary_root_cause(["FSM Deadlock: CONCENTRIC_DEADLOCK"])
-        self.assertEqual(rc, "Threshold Mismatch")
-        self.assertEqual(anom, "UNSPECIFIED_ANOMALY")
+        self.assertEqual(rc, "FSM Deadlock")
+        self.assertEqual(anom, "FSM Deadlock: CONCENTRIC_DEADLOCK")
 
     def test_bug_5_failed_concentric_falls_through_to_squat(self):
         """
-        Bug 5: build_regression_case maps FAILED_CONCENTRIC to LiftCategory.SQUAT.
+        Regression Test 5: build_regression_case maps FAILED_CONCENTRIC to LiftCategory.FAILED_CONCENTRIC.
         """
         cfg = {"lift_type": "FAILED_CONCENTRIC", "num_reps": 1, "duration_s": 5.0}
         eval_data = {
@@ -646,7 +638,7 @@ class TestEmpiricalBugReproductions(unittest.TestCase):
         ok, path, _ = ingest_trial_evaluation(cfg, eval_data, output_dir=self.test_dir)
         self.assertTrue(ok)
         loaded = RegressionCase.from_file(path)
-        self.assertEqual(loaded.metadata.lift_type, LiftCategory.SQUAT)
+        self.assertEqual(loaded.metadata.lift_type, LiftCategory.FAILED_CONCENTRIC)
 
 
 class TestAdversarialCLIExecution(unittest.TestCase):

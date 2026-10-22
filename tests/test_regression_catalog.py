@@ -120,7 +120,7 @@ def replay_case(
     trial_cfg = TrialConfig(
         trial_id=case.metadata.case_id,
         lift_type=lt,
-        num_reps=gt_exp.expected_reps,
+        num_reps=sim.kinematics.rep_count if (hasattr(sim, "kinematics") and sim.kinematics and hasattr(sim.kinematics, "rep_count")) else gt_exp.expected_reps,
         duration_s=sim.duration_s,
         chaos=ChaosDomainConfig(domain1=d1, domain2=d2, domain3=d3, domain4=d4),
         sample_rate_hz=sim.sample_rate_hz,

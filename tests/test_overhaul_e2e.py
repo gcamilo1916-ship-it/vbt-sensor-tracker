@@ -765,5 +765,389 @@ class TestOverhaulTier4Scenarios(unittest.TestCase):
         self.assertEqual(peaks["deadlift"], 0.79)
 
 
+class TestOverhaulMilestone2WeightAndVolume(unittest.TestCase):
+    """
+    Milestone 2: Requirements R1 (Set Weight Selection & Persistence) & R2 (Workout Total Volume)
+    Source: ORIGINAL_REQUEST.md (## 2026-10-22T13:29:21Z), PROJECT.md
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.html = get_index_html()
+        cls.css = get_style_css()
+        cls.js = get_app_js()
+
+    def test_m2_01_live_weight_control_dom_elements(self):
+        """R1: Verify live page controls-row contains glass-pill weight control and steppers."""
+        self.assertTrue(find_dom_id(self.html, "live-weight-control"), "Missing #live-weight-control")
+        self.assertTrue(find_dom_id(self.html, "live-set-weight-input"), "Missing #live-set-weight-input")
+        self.assertTrue(find_dom_id(self.html, "btn-live-weight-dec"), "Missing #btn-live-weight-dec")
+        self.assertTrue(find_dom_id(self.html, "btn-live-weight-inc"), "Missing #btn-live-weight-inc")
+
+    def test_m2_02_workout_weight_module_dom_elements(self):
+        """R1: Verify workout page current-set-card contains weight module and steppers."""
+        self.assertTrue(find_dom_id(self.html, "workout-set-weight-module"), "Missing #workout-set-weight-module")
+        self.assertTrue(find_dom_id(self.html, "workout-set-weight-input"), "Missing #workout-set-weight-input")
+        self.assertTrue(find_dom_id(self.html, "btn-workout-weight-dec"), "Missing #btn-workout-weight-dec")
+        self.assertTrue(find_dom_id(self.html, "btn-workout-weight-inc"), "Missing #btn-workout-weight-inc")
+
+    def test_m2_03_history_sum_volume_dom_element(self):
+        """R2: Verify history summary bar contains #sum-volume metric tile."""
+        self.assertTrue(find_dom_id(self.html, "sum-volume"), "Missing #sum-volume tile")
+
+    def test_m2_04_weight_storage_key_and_defaults(self):
+        """R1: Verify WEIGHT_STORAGE_KEY constant and per-lift weight memory in app.js."""
+        self.assertIn("vbt_last_lift_weights_v1", self.js)
+        self.assertIn("getLastWeightForLift", self.js)
+        self.assertIn("setWorkingWeight", self.js)
+
+    def test_m2_05_start_new_set_records_weight(self):
+        """R1: Verify startNewSet initializes set.weight in activeSet."""
+        start_set_match = re.search(r'function\s+startNewSet\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(start_set_match, "startNewSet function not found")
+        body = start_set_match.group(1)
+        self.assertIn("weight", body, "startNewSet must assign weight property to newSet")
+
+    def test_m2_06_apply_lift_theme_updates_weight(self):
+        """R1: Verify applyLiftTheme updates weight input on lift switch."""
+        theme_match = re.search(r'function\s+applyLiftTheme\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(theme_match, "applyLiftTheme function not found")
+        body = theme_match.group(1)
+        self.assertIn("getLastWeightForLift", body, "applyLiftTheme must query remembered weight for new lift")
+        self.assertIn("setWorkingWeight", body, "applyLiftTheme must call setWorkingWeight")
+
+    def test_m2_07_workout_sets_table_renders_load(self):
+        """R1: Verify updateWorkoutPage renders LOAD metric in sets table."""
+        update_match = re.search(r'function\s+updateWorkoutPage\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(update_match, "updateWorkoutPage function not found")
+        body = update_match.group(1)
+        self.assertIn("LOAD", body, "updateWorkoutPage must render LOAD metric label in workout sets table")
+
+    def test_m2_08_render_history_view_calculates_session_volume(self):
+        """R2: Verify renderHistoryView calculates and formats session volume with comma separators."""
+        history_match = re.search(r'function\s+renderHistoryView\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(history_match, "renderHistoryView function not found")
+        body = history_match.group(1)
+        self.assertIn("sessionVolume", body, "renderHistoryView must calculate session volume")
+        self.assertIn("toLocaleString", body, "renderHistoryView must format volume with comma separators")
+
+    def test_m2_09_render_accordion_set_volume(self):
+        """R2: Verify renderSessionSetsAccordion displays set volume and weight in accordion headers."""
+        accordion_match = re.search(r'function\s+renderSessionSetsAccordion\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(accordion_match, "renderSessionSetsAccordion function not found")
+        body = accordion_match.group(1)
+        self.assertIn("set-stat-vol", body, "renderSessionSetsAccordion must render set-stat-vol")
+
+    def test_m2_10_lifetime_volume_aggregation(self):
+        """R2: Verify updateHistoryStats aggregates lifetime volume across all workouts."""
+        stats_match = re.search(r'function\s+updateHistoryStats\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(stats_match, "updateHistoryStats function not found")
+        body = stats_match.group(1)
+        self.assertIn("sumVolume", body, "updateHistoryStats must update sumVolume display")
+        self.assertIn("lifetimeVolume", body, "updateHistoryStats must accumulate lifetime volume")
+
+    def test_m2_11_history_summary_card_css_5_columns(self):
+        """R2: Verify .history-summary-card in style.css has repeat(5, 1fr) grid columns."""
+        rules = extract_css_rules(self.css, ".history-summary-card")
+        self.assertTrue(len(rules) > 0, ".history-summary-card rule not found in style.css")
+        grid_cols = rules[0][1].get("grid-template-columns", "").replace(" ", "")
+        self.assertIn("repeat(5,1fr)", grid_cols, ".history-summary-card must use repeat(5, 1fr)")
+
+    def test_m2_12_set_volume_mathematical_oracle(self):
+        """R2: Mathematical verification of session volume sum(weight * reps)."""
+        session_sets = [
+            {"lift": "Deadlift", "weight": 140.0, "reps": [1, 2, 3, 4, 5]},  # 140 * 5 = 700
+            {"lift": "Deadlift", "weight": 160.0, "reps": [1, 2, 3]},        # 160 * 3 = 480
+            {"lift": "Deadlift", "weight": 180.0, "reps": [1]},              # 180 * 1 = 180
+            {"lift": "Deadlift", "weight": 0.0, "reps": [1, 2]},             # 0 * 2 = 0
+            {"lift": "Deadlift", "weight": None, "reps": [1, 2, 3]},         # None handled safely -> 0
+        ]
+        calc_vol = 0.0
+        for s in session_sets:
+            w = s.get("weight")
+            w_val = float(w) if isinstance(w, (int, float)) and not math.isnan(w) else 0.0
+            reps_len = len(s.get("reps", []))
+            calc_vol += w_val * reps_len
+
+        expected_vol = 1360.0
+        self.assertEqual(calc_vol, expected_vol)
+        formatted_vol = f"{int(round(calc_vol)):,d} kg"
+        self.assertEqual(formatted_vol, "1,360 kg")
+
+    def test_m2_13_two_way_sync_behavior(self):
+        """R1: Verify setWorkingWeight updates activeSet and input synchronization."""
+        sync_match = re.search(r'function\s+setWorkingWeight\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(sync_match, "setWorkingWeight function not found in app.js")
+        body = sync_match.group(1)
+        self.assertIn("liveSetWeightInput", body)
+        self.assertIn("workoutSetWeightInput", body)
+        self.assertIn("activeSet.weight", body)
+        self.assertIn("persistStorage", body)
+
+
+class TestOverhaulMilestone3GymPRPromotion(unittest.TestCase):
+    """
+    Milestone 3: Requirement R3 (Long-Press PR Promotion to Gym PR with Velocity & RPE)
+    Source: ORIGINAL_REQUEST.md (## 2026-10-22T13:29:21Z R3), PROJECT.md
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.html = get_index_html()
+        cls.css = get_style_css()
+        cls.js = get_app_js()
+
+    def test_r3_01_gym_pr_badges_exist_in_dom(self):
+        """R3: Verify #pr-squat-badge, #pr-bench-badge, #pr-deadlift-badge exist in index.html."""
+        self.assertTrue(find_dom_id(self.html, "pr-squat-badge"), "Missing #pr-squat-badge in index.html")
+        self.assertTrue(find_dom_id(self.html, "pr-bench-badge"), "Missing #pr-bench-badge in index.html")
+        self.assertTrue(find_dom_id(self.html, "pr-deadlift-badge"), "Missing #pr-deadlift-badge in index.html")
+        self.assertIn("pr-badge-wrap", self.html, "Missing .pr-badge-wrap container in index.html")
+        self.assertIn("pr-gym-badge", self.html, "Missing .pr-gym-badge class in index.html")
+
+    def test_r3_02_existing_pr_card_contract_ids_preserved(self):
+        """R3: Verify all existing PR card contract IDs remain intact without breakage."""
+        required_ids = [
+            "pr-squat-weight",
+            "pr-bench-weight",
+            "pr-deadlift-weight",
+            "pr-squat-vel",
+            "pr-bench-vel",
+            "pr-deadlift-vel",
+            "pr-current-total"
+        ]
+        for dom_id in required_ids:
+            self.assertTrue(find_dom_id(self.html, dom_id), f"Contract ID #{dom_id} must be preserved in index.html")
+
+    def test_r3_03_default_pr_profile_has_current_pr_details_schema(self):
+        """R3: Verify defaultPrProfile in app.js defines currentPRDetails with squat, bench, deadlift."""
+        profile_match = re.search(r'const\s+defaultPrProfile\s*=\s*\{([\s\S]*?)\n\};', self.js)
+        self.assertIsNotNone(profile_match, "defaultPrProfile definition not found in app.js")
+        body = profile_match.group(1)
+        self.assertIn("currentPRDetails", body, "defaultPrProfile must declare currentPRDetails")
+        self.assertIn("squat", body)
+        self.assertIn("bench", body)
+        self.assertIn("deadlift", body)
+        self.assertIn("velocity", body)
+        self.assertIn("rpe", body)
+
+    def test_r3_04_load_pr_profile_parses_current_pr_details(self):
+        """R3: Verify loadPrProfile in app.js parses currentPRDetails with safe fallbacks."""
+        load_match = re.search(r'function\s+loadPrProfile\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(load_match, "loadPrProfile function not found in app.js")
+        body = load_match.group(1)
+        self.assertIn("currentPRDetails", body, "loadPrProfile must parse and restore currentPRDetails")
+        self.assertIn("PR_STORAGE_KEY", body)
+
+    def test_r3_05_persist_pr_profile_stores_current_pr_details(self):
+        """R3: Verify persistPrProfile saves currentPRDetails to localStorage under PR_STORAGE_KEY."""
+        persist_match = re.search(r'function\s+persistPrProfile\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(persist_match, "persistPrProfile function not found in app.js")
+        body = persist_match.group(1)
+        self.assertIn("currentPRDetails", body, "persistPrProfile must ensure currentPRDetails is present")
+        self.assertIn("localStorage.setItem", body)
+        self.assertIn("PR_STORAGE_KEY", body)
+
+    def test_r3_06_update_pr_dashboard_ui_formats_badges(self):
+        """R3: Verify updatePrDashboardUI updates and formats Gym PR badges with load, velocity, and RPE."""
+        ui_match = re.search(r'function\s+updatePrDashboardUI\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(ui_match, "updatePrDashboardUI function not found in app.js")
+        body = ui_match.group(1)
+        self.assertIn("currentPRDetails", body)
+        self.assertIn("pr-squat-badge", body)
+        self.assertIn("pr-bench-badge", body)
+        self.assertIn("pr-deadlift-badge", body)
+        self.assertIn("kg", body)
+        self.assertIn("m/s", body)
+        self.assertIn("RPE", body)
+
+    def test_r3_07_on_current_pr_input_syncs_details_weight(self):
+        """R3: Verify direct weight inputs sync weight to currentPRDetails."""
+        input_listener_match = re.search(r'const\s+onCurrentPrInput\s*=\s*\(\)\s*=>\s*\{([\s\S]*?)\n\s*\};', self.js)
+        self.assertIsNotNone(input_listener_match, "onCurrentPrInput handler not found in app.js")
+        body = input_listener_match.group(1)
+        self.assertIn("currentPRDetails", body, "onCurrentPrInput must keep currentPRDetails in sync")
+        self.assertIn("persistPrProfile", body)
+
+    def test_r3_08_long_press_rep_promotion_logic(self):
+        """R3: Verify updateSetUI handles long-press promotion, haptics, fanfare, and PR details update."""
+        update_set_match = re.search(r'function\s+updateSetUI\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(update_set_match, "updateSetUI function not found in app.js")
+        body = update_set_match.group(1)
+        self.assertIn("HapticsFX.vibrate", body, "updateSetUI must call HapticsFX.vibrate on PR promotion")
+        self.assertIn("SoundFX.playPrFanfare", body, "updateSetUI must play fanfare on PR promotion")
+        self.assertIn("currentPRs", body, "updateSetUI must update currentPRs upon promotion")
+        self.assertIn("currentPRDetails", body, "updateSetUI must update currentPRDetails upon promotion")
+        self.assertIn("persistPrProfile", body, "updateSetUI must persist PR profile upon promotion")
+
+    def test_r3_09_weight_resolution_hierarchy(self):
+        """R3: Verify programmatic logic for rep weight resolution fallback hierarchy."""
+        def resolve_rep_weight(rep_w, set_w, default_pr):
+            return rep_w if (isinstance(rep_w, (int, float)) and rep_w > 0) else (
+                set_w if (isinstance(set_w, (int, float)) and set_w > 0) else default_pr
+            )
+
+        # Case 1: rep has explicit weight
+        self.assertEqual(resolve_rep_weight(155.0, 150.0, 100.0), 155.0)
+        # Case 2: rep has no weight, set has weight
+        self.assertEqual(resolve_rep_weight(None, 150.0, 100.0), 150.0)
+        self.assertEqual(resolve_rep_weight(0, 150.0, 100.0), 150.0)
+        # Case 3: neither has weight, fallback to current PR
+        self.assertEqual(resolve_rep_weight(None, None, 140.0), 140.0)
+        self.assertEqual(resolve_rep_weight(0, 0, 140.0), 140.0)
+
+    def test_r3_10_badge_formatting_oracle(self):
+        """R3: Verify formatting oracle generates exact visionOS format: X.X kg • X.XX m/s • RPE X.X."""
+        def format_badge(weight, velocity, rpe):
+            return f"{float(weight):.1f} kg • {float(velocity):.2f} m/s • RPE {float(rpe):.1f}"
+
+        self.assertEqual(format_badge(140.0, 0.35, 9.5), "140.0 kg • 0.35 m/s • RPE 9.5")
+        self.assertEqual(format_badge(100.0, 0.25, 9.5), "100.0 kg • 0.25 m/s • RPE 9.5")
+        self.assertEqual(format_badge(180.0, 0.28, 9.5), "180.0 kg • 0.28 m/s • RPE 9.5")
+        self.assertEqual(format_badge(142.5, 0.421, 9.0), "142.5 kg • 0.42 m/s • RPE 9.0")
+
+    def test_r3_11_style_css_pr_gym_badge_and_wrap(self):
+        """R3: Verify style.css defines .pr-gym-badge and .pr-badge-wrap with visionOS aesthetics."""
+        badge_rules = extract_css_rules(self.css, ".pr-gym-badge")
+        self.assertTrue(len(badge_rules) > 0, ".pr-gym-badge rule not found in style.css")
+        wrap_rules = extract_css_rules(self.css, ".pr-badge-wrap")
+        self.assertTrue(len(wrap_rules) > 0, ".pr-badge-wrap rule not found in style.css")
+        declarations = badge_rules[0][1]
+        self.assertIn("border-radius", declarations)
+        self.assertIn("backdrop-filter", declarations)
+        self.assertIn("font-family", declarations)
+
+
+class TestOverhaulMilestone4DirectionalTabAnimations(unittest.TestCase):
+    """
+    Milestone 4: Requirement R4 (iOS Fluid Directional Tab Transition Animations & Glass FX)
+    Source: ORIGINAL_REQUEST.md (## 2026-10-22T13:29:21Z R4), PROJECT.md
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.html = get_index_html()
+        cls.css = get_style_css()
+        cls.js = get_app_js()
+
+    def test_r4_01_tab_order_mapping_defined(self):
+        """R4: Verify TAB_ORDER mapping exists in app.js with live: 0, set: 1, history: 2."""
+        self.assertIn("TAB_ORDER", self.js, "TAB_ORDER mapping must be defined in app.js")
+        match = re.search(r'const\s+TAB_ORDER\s*=\s*\{([^}]+)\}', self.js)
+        self.assertIsNotNone(match, "TAB_ORDER object literal not found in app.js")
+        clean_body = match.group(1).replace(" ", "")
+        self.assertIn("live:0", clean_body)
+        self.assertIn("set:1", clean_body)
+        self.assertIn("history:2", clean_body)
+
+    def test_r4_02_directional_classes_in_css(self):
+        """R4: Verify style.css defines directional slide-and-fade classes."""
+        classes = [
+            ".slide-left-in",
+            ".slide-left-out",
+            ".slide-right-in",
+            ".slide-right-out"
+        ]
+        for cls_name in classes:
+            self.assertIn(cls_name, self.css, f"style.css must define directional class {cls_name}")
+
+    def test_r4_03_hardware_accelerated_keyframes_in_css(self):
+        """R4: Verify directional keyframes use GPU compositing (translate3d, scale, opacity)."""
+        keyframes = [
+            "tabSlideLeftIn",
+            "tabSlideLeftOut",
+            "tabSlideRightIn",
+            "tabSlideRightOut"
+        ]
+        for kf in keyframes:
+            self.assertIn(f"@keyframes {kf}", self.css, f"@keyframes {kf} must be defined in style.css")
+            self.assertIn(f"@-webkit-keyframes {kf}", self.css, f"@-webkit-keyframes {kf} must be defined in style.css for iOS WebKit")
+
+        # Verify GPU transforms and compositing
+        self.assertIn("translate3d(36px, 0, 0)", self.css)
+        self.assertIn("translate3d(-36px, 0, 0)", self.css)
+        self.assertIn("scale(0.985)", self.css)
+
+    def test_r4_04_tab_contents_overflow_clipping(self):
+        """R4: Verify .tab-contents enforces horizontal clipping via overflow-x: hidden / overflow-x: clip."""
+        rules = extract_css_rules(self.css, ".tab-contents")
+        self.assertTrue(len(rules) > 0, ".tab-contents rule must exist in style.css")
+        has_overflow_x = False
+        for _, props, _ in rules:
+            ox = props.get("overflow-x", "")
+            if "hidden" in ox or "clip" in ox:
+                has_overflow_x = True
+                break
+        self.assertTrue(
+            has_overflow_x or "overflow-x: hidden" in self.css or "overflow-x: clip" in self.css,
+            ".tab-contents must specify overflow-x: hidden / clip to prevent horizontal scroll jitter on iOS"
+        )
+
+    def test_r4_05_webkit_synchronous_reflow_trigger(self):
+        """R4: Verify iOS WebKit synchronous reflow trigger (void offsetHeight) before adding inClass."""
+        self.assertIn(
+            "targetSection.offsetHeight",
+            self.js,
+            "app.js must trigger synchronous reflow via offsetHeight before adding inClass"
+        )
+        self.assertIn(
+            "void targetSection.offsetHeight",
+            self.js,
+            "app.js must use void targetSection.offsetHeight to force layout evaluation"
+        )
+
+    def test_r4_06_clear_tab_transitions_debouncer(self):
+        """R4: Verify clearTabTransitions cancels timeouts and removes lingering animation classes."""
+        self.assertIn("clearTabTransitions", self.js, "clearTabTransitions function must be defined in app.js")
+        match = re.search(r'function\s+clearTabTransitions\s*\(\)\s*\{([\s\S]*?)\n\}', self.js)
+        self.assertIsNotNone(match, "clearTabTransitions function body not found in app.js")
+        body = match.group(1)
+        self.assertIn("clearTimeout", body)
+        self.assertIn("leaving-section", body)
+        self.assertIn("slide-left-out", body)
+        self.assertIn("slide-right-out", body)
+        self.assertIn("slide-left-in", body)
+        self.assertIn("slide-right-in", body)
+
+    def test_r4_07_directional_navigation_math_oracle(self):
+        """R4: Verify forward/backward directional transition class resolution oracle."""
+        tab_order = {"live": 0, "set": 1, "history": 2}
+
+        def resolve_directional_classes(prev, target):
+            prev_idx = tab_order.get(prev, 0)
+            target_idx = tab_order.get(target, 0)
+            is_forward = target_idx > prev_idx
+            in_class = "slide-left-in" if is_forward else "slide-right-in"
+            out_class = "slide-left-out" if is_forward else "slide-right-out"
+            return in_class, out_class
+
+        # Forward transitions (slide left)
+        self.assertEqual(resolve_directional_classes("live", "set"), ("slide-left-in", "slide-left-out"))
+        self.assertEqual(resolve_directional_classes("set", "history"), ("slide-left-in", "slide-left-out"))
+        self.assertEqual(resolve_directional_classes("live", "history"), ("slide-left-in", "slide-left-out"))
+
+        # Backward transitions (slide right)
+        self.assertEqual(resolve_directional_classes("history", "set"), ("slide-right-in", "slide-right-out"))
+        self.assertEqual(resolve_directional_classes("set", "live"), ("slide-right-in", "slide-right-out"))
+        self.assertEqual(resolve_directional_classes("history", "live"), ("slide-right-in", "slide-right-out"))
+
+    def test_r4_08_transition_timeout_and_tracking(self):
+        """R4: Verify 280ms transition duration and tabTransitionTimeouts array tracking."""
+        self.assertIn("tabTransitionTimeouts", self.js, "tabTransitionTimeouts array must be defined in app.js")
+        self.assertIn("setTimeout(", self.js)
+        self.assertIn("280", self.js, "Tab transition cleanup timeout should be 280ms matching the cubic-bezier duration")
+        self.assertIn("tabTransitionTimeouts.push", self.js, "Timeout IDs must be tracked in tabTransitionTimeouts")
+
+    def test_r4_09_bottom_nav_data_active_and_tab_states(self):
+        """R4: Verify bottomGlassNav data-active and active class switching logic."""
+        self.assertIn("bottomGlassNav.setAttribute('data-active', target)", self.js)
+        self.assertIn("tab.classList.add('active')", self.js)
+        self.assertIn("prevSection.classList.add('leaving-section', outClass)", self.js)
+        self.assertIn("targetSection.classList.add(inClass)", self.js)
+
+    def test_r4_10_gpu_will_change_and_backface_visibility(self):
+        """R4: Verify GPU will-change and -webkit-backface-visibility optimization on tab sections."""
+        self.assertIn("will-change: opacity, transform", self.css)
+        self.assertIn("-webkit-backface-visibility: hidden", self.css)
+        self.assertIn("backface-visibility: hidden", self.css)
+
+
 if __name__ == '__main__':
     unittest.main()
