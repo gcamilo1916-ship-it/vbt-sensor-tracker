@@ -18,4 +18,32 @@ Portable, embedded IoT tracker engineered to measure barbell repetition velocity
 | :--- | :--- | :--- |
 | **Microcontroller** | Seeed Studio XIAO ESP32-C6 | 3.3V Logic, BLE 5.0 |
 | **Inertial Sensor** | MPU-6050 (GY-521 Breakout) | I2C (Address `0x68`) |
+| **Communication** | I2C Protocol | SDA (Pin D4), SCL (Pin D5) |
+| **Enclosure** | 3D-Printed Custom Casing | PLA/PETG, [e.g., 20%] Infill |
+
+### I2C Wiring Schematic
+![I2C Wiring Schematic](esquema_vbt.png)
+
+## Mechanical Prototyping & MVP
+* Designed internal mounting bosses and tolerances in SolidWorks to prevent IMU board movement and eliminate false acceleration spikes during barbell impact.
+* Iterated through [e.g., 3] physical enclosure prototypes to optimize magnetic barbell attachment and USB-C charging port accessibility.
+
+<p align="center">
+  <img src="mvp_foto_1.png" width="32%" alt="MVP View 1" />
+  <img src="mvp_foto_2.png" width="32%" alt="MVP View 2" />
+  <img src="mvp_foto_3.png" width="32%" alt="MVP View 3" />
+</p>
+
+## Firmware & Repository Structure
+* `src/main.cpp`: Core C++ source code handling I2C initialization, MPU-6050 register configuration, velocity integration, and WebBLE broadcasting.
+* `platformio.ini`: Build environment configuration, board definitions (`seeed_xiao_esp32c6`), and library dependencies.
+
+## Project Management Documentation
+Executed hardware procurement, CAD modeling, firmware debugging, and gym validation across a 6-week sprint schedule.
+* [Santander Project Management Certificate](nome_do_certificado.pdf)
+
+| Component | Specification / Role | Interface / Parameter |
+| :--- | :--- | :--- |
+| **Microcontroller** | Seeed Studio XIAO ESP32-C6 | 3.3V Logic, BLE 5.0 |
+| **Inertial Sensor** | MPU-6050 (GY-521 Breakout) | I2C (Address `0x68`) |
 | **Communication** | I
