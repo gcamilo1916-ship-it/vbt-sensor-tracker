@@ -5,6 +5,7 @@
 
 ## Summary
 Portable, embedded IoT tracker engineered to measure barbell repetition velocity and estimate Rating of Perceived Exertion (RPE) during strength training. The system integrates a custom 3D-printed mechanical enclosure with an ESP32-C6 microcontroller and an MPU-6050 accelerometer/gyroscope, transmitting real-time kinematic data via Bluetooth Low Energy (WebBLE).
+
 For detailed technicall information read through commited documents.
 
 ## Key Engineering Highlights
