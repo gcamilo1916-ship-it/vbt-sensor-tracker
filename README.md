@@ -40,7 +40,7 @@ Portable, embedded IoT tracker engineered to measure barbell repetition velocity
 
 ## Project Management Documentation
 Executed hardware procurement, CAD modeling, firmware debugging, and gym validation across a 6-week sprint schedule.
-* [Santander Project Management Certificate](nome_do_certificado.pdf)
+* [Santander Project Management Certificate](231_gcamilo1916@gmail.com.pdf)
 
 | Component | Specification / Role | Interface / Parameter |
 | :--- | :--- | :--- |
