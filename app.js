@@ -81,6 +81,15 @@ const hudActiveSet      = document.getElementById('hud-active-set');
 const hudSetReps        = document.getElementById('hud-set-reps');
 const hudVelLoss        = document.getElementById('hud-vel-loss');
 
+// Velocity Ergonomics & Bryan Mann Zone Badges (Milestone 3 / R2)
+const liveVelZoneBadge     = document.getElementById('live-vel-zone-badge');
+const livePeakZoneBadge    = document.getElementById('live-peak-zone-badge');
+const liveTargetVelBadge   = document.getElementById('live-target-vel-badge');
+const liveTargetVelVal     = document.getElementById('live-target-vel-val');
+const liveVelDelta         = document.getElementById('live-vel-delta');
+const hudFatigueArcFill    = document.getElementById('hud-fatigue-arc-fill');
+const hudVelLossCard       = document.getElementById('hud-vel-loss-card');
+
 // Set Tracking Tab
 const setBadgeLabel     = document.getElementById('set-badge-label');
 const setLiftName       = document.getElementById('set-lift-name');
@@ -197,6 +206,110 @@ function liftKeyOf(name) {
   if (k.includes('squat')) return 'squat';
   if (k.includes('bench')) return 'bench';
   return 'other';
+}
+
+/**
+ * Bryan Mann 5-Zone Velocity Continuum Resolver
+ * Zone 1: Speed / Power (>1.0 m/s) -> Laser Cyan (#00E5FF)
+ * Zone 2: Speed-Strength (0.75-1.0 m/s) -> Electric Emerald (#00FF66)
+ * Zone 3: Strength-Speed (0.50-0.75 m/s) -> Specular Gold (#FFD700)
+ * Zone 4: Accelerative Strength (0.30-0.50 m/s) -> Caution Orange (#FF9500)
+ * Zone 5: Absolute Strength / Grind (<0.30 m/s) -> Apple System Punchy Red (#FF3B30)
+ */
+function getBryanMannZone(velocity) {
+  if (typeof window !== 'undefined' && window.AthleteFX && typeof window.AthleteFX.getVelocityZone === 'function') {
+    return window.AthleteFX.getVelocityZone(velocity);
+  }
+  const v = Number(velocity) || 0;
+  if (v > 1.00) {
+    return {
+      id: 'power',
+      name: 'Power / Speed',
+      shortLabel: 'POWER',
+      min: 1.00,
+      cssClass: 'vel-zone-power',
+      textClass: 'vel-zone-power-text',
+      color: '#00E5FF'
+    };
+  }
+  if (v >= 0.75) {
+    return {
+      id: 'speed',
+      name: 'Speed-Strength',
+      shortLabel: 'SPEED-STRENGTH',
+      min: 0.75,
+      cssClass: 'vel-zone-speed',
+      textClass: 'vel-zone-speed-text',
+      color: '#00FF66'
+    };
+  }
+  if (v >= 0.50) {
+    return {
+      id: 'strength',
+      name: 'Strength-Speed',
+      shortLabel: 'STRENGTH-SPEED',
+      min: 0.50,
+      cssClass: 'vel-zone-strength',
+      textClass: 'vel-zone-strength-text',
+      color: '#FFD700'
+    };
+  }
+  if (v >= 0.30) {
+    return {
+      id: 'accel',
+      name: 'Accelerative Strength',
+      shortLabel: 'ACCEL',
+      min: 0.30,
+      cssClass: 'vel-zone-accel',
+      textClass: 'vel-zone-accel-text',
+      color: '#FF9500'
+    };
+  }
+  return {
+    id: 'grind',
+    name: 'Absolute Strength / Grind',
+    shortLabel: 'GRIND',
+    min: 0.00,
+    cssClass: 'vel-zone-grind',
+    textClass: 'vel-zone-grind-text',
+    color: '#FF3B30'
+  };
+}
+
+/**
+ * Checks if a recorded repetition sets a speed PR for the current lift & load
+ */
+function checkIfSpeedPR(lift, velocity, weight) {
+  if (!activeWorkout || !activeWorkout.sets) return false;
+  const canonical = canonicalLift(lift);
+  const v = Number(velocity) || 0;
+  if (v <= 0) return false;
+
+  // Check active workout sets
+  for (const s of activeWorkout.sets) {
+    if (!sameLift(s.lift, canonical)) continue;
+    if (typeof s.weight === 'number' && typeof weight === 'number' && Math.abs(s.weight - weight) < 0.5) {
+      if (s.reps && s.reps.some(r => r.velocity >= v)) {
+        return false;
+      }
+    }
+  }
+
+  // Check past sessions in storage
+  if (typeof allWorkouts !== 'undefined' && Array.isArray(allWorkouts)) {
+    for (const w of allWorkouts) {
+      if (!w.sets) continue;
+      for (const s of w.sets) {
+        if (!sameLift(s.lift, canonical)) continue;
+        if (typeof s.weight === 'number' && typeof weight === 'number' && Math.abs(s.weight - weight) < 0.5) {
+          if (s.reps && s.reps.some(r => r.velocity >= v)) {
+            return false;
+          }
+        }
+      }
+    }
+  }
+  return true;
 }
 
 /**
@@ -416,6 +529,29 @@ const SoundFX = (() => {
     playBleDisconnected() {
       playTone(659.25, 'sine', 0.12, 0.20, 0);
       playTone(440.0, 'sine', 0.22, 0.18, 0.09);
+    },
+
+    // Coach directive and technical cue arrival chime (subtle ascending two-tone glass chime)
+    playCoachDirectiveChime() {
+      playTone(659.25, 'sine', 0.14, 0.22, 0);
+      playTone(880.00, 'triangle', 0.24, 0.25, 0.08);
+    },
+
+    playCoachCueIncoming() {
+      playTone(659.25, 'sine', 0.14, 0.22, 0);
+      playTone(880.00, 'triangle', 0.24, 0.25, 0.08);
+    },
+
+    // Set Completion Triumph Fanfare (Major Triad Chime: D5 -> F#5 -> A5 -> D6)
+    playSetTriumph(isPR = false, velocityLossPct = 0) {
+      if (isPR) {
+        this.playPrFanfare();
+        return;
+      }
+      playTone(587.33, 'sine', 0.18, 0.25, 0.00);
+      playTone(739.99, 'sine', 0.22, 0.24, 0.08);
+      playTone(880.00, 'sine', 0.28, 0.22, 0.16);
+      playTone(1174.66, 'triangle', 0.45, 0.30, 0.24);
     }
   };
 })();
@@ -433,9 +569,18 @@ const HapticsFX = (() => {
       try {
         SoundFX.playSubBassThump();
       } catch (e) {}
+    },
+
+    vibrateCoachDirective() {
+      this.vibrate([60, 40, 100]);
     }
   };
 })();
+
+if (typeof window !== 'undefined') {
+  window.SoundFX = SoundFX;
+  window.HapticsFX = HapticsFX;
+}
 
 // Touch responsiveness & active tactile feedback
 document.addEventListener('touchstart', () => {}, { passive: true });
@@ -805,6 +950,18 @@ function startNewSet(lift = currentLift) {
   updateSetUI(activeSet);
   updateWorkoutPage();
   persistStorage();
+
+  // Dispatch to ErosSyncBus
+  if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
+    window.ErosSyncBus.emit('set:started', {
+      setId: newSet.setId,
+      setNumber: newSet.setNumber,
+      lift: newSet.lift,
+      weight: newSet.weight,
+      timestamp: newSet.startTime
+    });
+  }
+
   return newSet;
 }
 
@@ -826,7 +983,30 @@ function endActiveSet() {
     livePeakSub.textContent = `Set ${activeSet.setNumber} Concluded (Peak: ${activeSet.maxVelocity.toFixed(2)} m/s)`;
   }
 
+  // Dispatch to ErosSyncBus before nulling activeSet
+  if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function' && activeSet) {
+    window.ErosSyncBus.emit('set:completed', {
+      setId: activeSet.setId,
+      setNumber: activeSet.setNumber,
+      lift: activeSet.lift,
+      weight: activeSet.weight,
+      reps: Array.isArray(activeSet.reps) ? [...activeSet.reps] : [],
+      avgVelocity: activeSet.avgVelocity,
+      maxVelocity: activeSet.maxVelocity,
+      velocityLoss: activeSet.velocityLossPct,
+      timestamp: activeSet.endTime || Date.now()
+    });
+  }
+
+  const completedSetForCelebration = Object.assign({}, activeSet);
   activeSet = null;
+
+  // Trigger Athlete Celebratory FX & Post-Set Rest Transition
+  if (typeof triggerSetCompletionCelebration === 'function') {
+    triggerSetCompletionCelebration(completedSetForCelebration);
+  } else if (typeof window !== 'undefined' && typeof window.triggerSetCompletionCelebration === 'function') {
+    window.triggerSetCompletionCelebration(completedSetForCelebration);
+  }
 
   if (activeWorkout) {
     activeWorkout.name = formatWorkoutTitle(activeWorkout);
@@ -887,19 +1067,33 @@ function recordRepetition({ lift, velocity, rpe }) {
   }
 
   const repNumber = activeSet.reps.length + 1;
+  const isSpeedRecord = checkIfSpeedPR(repLift, velocity, (activeSet && typeof activeSet.weight === 'number') ? activeSet.weight : currentWorkingWeight);
   const repObj = {
     repNumber: repNumber,
     lift: repLift,
     velocity: velocity,
     rpe: rpe,
     timestamp: Date.now(),
-    isPR: false
+    isPR: isSpeedRecord
   };
 
   activeSet.reps.push(repObj);
   recalculateSetMetrics(activeSet);
 
   persistStorage();
+
+  // Dispatch to ErosSyncBus
+  if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function' && activeSet) {
+    window.ErosSyncBus.emit('rep:recorded', {
+      setId: activeSet.setId,
+      repNumber: repObj.repNumber,
+      velocity: repObj.velocity,
+      peakVelocity: (typeof repObj.peakVelocity === 'number') ? repObj.peakVelocity : repObj.velocity,
+      rom: (typeof repObj.rom === 'number') ? repObj.rom : 54.0,
+      rpe: repObj.rpe,
+      lossPercent: activeSet.velocityLossPct
+    });
+  }
 
   // Play rep chime and trigger light haptic pulse
   SoundFX.playRepChime(velocity, rpe);
@@ -1555,17 +1749,79 @@ function updateRpeHeroBanner(rpe) {
  * Updates Live Telemetry display and fires bar path physics animation
  */
 function updateLiveDisplay({ lift, velocity, rpe }, fromRepStream = false) {
-  if (liveVelocity) liveVelocity.textContent = velocity.toFixed(2);
+  // 5-Zone Bryan Mann Color Coding for Mean Concentric Velocity
+  const meanZone = getBryanMannZone(velocity);
+  if (liveVelocity) {
+    liveVelocity.textContent = velocity.toFixed(2);
+    liveVelocity.classList.remove(
+      'vel-zone-power-text', 'vel-zone-speed-text', 'vel-zone-strength-text',
+      'vel-zone-accel-text', 'vel-zone-grind-text', 'vel-speed',
+      'vel-speed-strength', 'vel-strength-speed', 'vel-accel', 'vel-max', 'vel-grind'
+    );
+    liveVelocity.classList.add(meanZone.textClass);
+    liveVelocity.style.color = meanZone.color;
+    liveVelocity.style.textShadow = `0 0 24px ${meanZone.color}`;
+  }
+
+  const velBadge = liveVelZoneBadge || document.getElementById('live-vel-zone-badge');
+  if (velBadge) {
+    velBadge.className = `vel-zone-badge ${meanZone.cssClass} font-mono`;
+    velBadge.textContent = meanZone.shortLabel || meanZone.name;
+    velBadge.style.display = 'inline-flex';
+  }
+
   if (liveRpe) liveRpe.textContent           = rpe.toFixed(1);
   if (liveVelSub) liveVelSub.textContent     = `Rep Completed: ${velocity >= 0.5 ? 'Explosive' : 'Grinding'}`;
 
   // Update Peak Velocity Hero Metric (Mean and Peak as Main Focus)
   const currentPeak = activeSet && activeSet.maxVelocity > 0 ? activeSet.maxVelocity : velocity;
+  const peakZone = getBryanMannZone(currentPeak);
   if (livePeakVel) {
     livePeakVel.textContent = currentPeak.toFixed(2);
+    livePeakVel.classList.remove(
+      'vel-zone-power-text', 'vel-zone-speed-text', 'vel-zone-strength-text',
+      'vel-zone-accel-text', 'vel-zone-grind-text', 'vel-speed',
+      'vel-speed-strength', 'vel-strength-speed', 'vel-accel', 'vel-max', 'vel-grind'
+    );
+    livePeakVel.classList.add(peakZone.textClass);
+    livePeakVel.style.color = peakZone.color;
+    livePeakVel.style.textShadow = `0 0 24px ${peakZone.color}`;
   }
+
+  const peakBadge = livePeakZoneBadge || document.getElementById('live-peak-zone-badge');
+  if (peakBadge) {
+    peakBadge.className = `vel-zone-badge ${peakZone.cssClass} font-mono`;
+    peakBadge.textContent = `PEAK • ${peakZone.shortLabel || peakZone.name}`;
+    peakBadge.style.display = 'inline-flex';
+  }
+
   if (livePeakSub) {
     livePeakSub.textContent = activeSet ? `Set ${activeSet.setNumber} Peak: ${currentPeak.toFixed(2)} m/s` : `Bar Ascent Peak: ${currentPeak.toFixed(2)} m/s`;
+  }
+
+  // PR / Target Velocity Delta Badge
+  const targetBadge = liveTargetVelBadge || document.getElementById('live-target-vel-badge');
+  const targetValEl = liveTargetVelVal || document.getElementById('live-target-vel-val');
+  const deltaEl = liveVelDelta || document.getElementById('live-vel-delta');
+  if (targetBadge && targetValEl && deltaEl) {
+    const effLift = canonicalLift(lift || currentLift);
+    const baseline = LIFT_BASELINES[effLift.toLowerCase()] || LIFT_BASELINES.deadlift;
+    const targetRpe = (activeSet && typeof activeSet.targetRpe === 'number') ? activeSet.targetRpe : currentTargetRpe;
+    const targetVel = baseline.rpe8 + (8.0 - targetRpe) * ((baseline.rpe8 - baseline.mvt) / 2.0);
+    const delta = velocity - targetVel;
+    const isPositive = delta >= 0;
+    const deltaSign = isPositive ? '+' : '';
+    const isPR = activeSet ? activeSet.reps.some(r => r.velocity === velocity && r.isPR) : false;
+
+    targetValEl.textContent = `${targetVel.toFixed(2)} m/s`;
+    if (isPR) {
+      deltaEl.textContent = `PR ${deltaSign}${delta.toFixed(2)}`;
+      deltaEl.className = 'badge-delta positive gold-glow';
+    } else {
+      deltaEl.textContent = `${deltaSign}${delta.toFixed(2)}`;
+      deltaEl.className = `badge-delta ${isPositive ? 'positive' : 'negative'}`;
+    }
+    targetBadge.style.display = 'inline-flex';
   }
 
   // Reactively update RPE Hero Banner on live display
@@ -1611,14 +1867,56 @@ function updateLiveDisplay({ lift, velocity, rpe }, fromRepStream = false) {
  * Updates the Live tab mini HUD
  */
 function updateLiveMiniHud() {
+  const velLossPct = activeSet ? activeSet.velocityLossPct : 0.0;
+  const arcFill = hudFatigueArcFill || document.getElementById('hud-fatigue-arc-fill');
+  const heroBanner = rpeHeroCard || document.getElementById('rpe-hero-card');
+
   if (activeSet) {
     hudActiveSet.textContent = `Set ${activeSet.setNumber}`;
     hudSetReps.textContent   = `${activeSet.reps.length}`;
-    hudVelLoss.textContent   = `${activeSet.velocityLossPct.toFixed(1)}%`;
+    hudVelLoss.textContent   = `${velLossPct.toFixed(1)}%`;
   } else {
     hudActiveSet.textContent = activeWorkout ? `Set ${activeWorkout.sets.length}` : 'Set 0';
     hudSetReps.textContent   = '0';
     hudVelLoss.textContent   = '0.0%';
+  }
+
+  // Dynamic Fatigue Color Tokens
+  if (hudVelLoss) {
+    hudVelLoss.classList.remove('fatigue-minimal', 'fatigue-optimal', 'fatigue-cutoff');
+    if (velLossPct > 20.0) {
+      hudVelLoss.classList.add('fatigue-cutoff');
+    } else if (velLossPct >= 10.0) {
+      hudVelLoss.classList.add('fatigue-optimal');
+    } else {
+      hudVelLoss.classList.add('fatigue-minimal');
+    }
+  }
+
+  // Dynamic SVG Fatigue Percentage Arc
+  if (arcFill) {
+    const circumference = 138.23; // 2 * Math.PI * 22
+    // Scale: 30% velocity loss maps to 100% full arc
+    const ratio = Math.min(Math.max(velLossPct / 30.0, 0), 1);
+    const offset = circumference - (circumference * ratio);
+    arcFill.style.strokeDashoffset = offset.toFixed(2);
+
+    if (velLossPct > 20.0) {
+      arcFill.style.stroke = '#FF3B30'; // Punchy Red
+    } else if (velLossPct >= 10.0) {
+      arcFill.style.stroke = '#FFD700'; // Specular Gold
+    } else {
+      arcFill.style.stroke = '#00FF66'; // Electric Emerald
+    }
+  }
+
+  // Cutoff threshold warning on hero banner
+  if (heroBanner) {
+    if (velLossPct > 20.0) {
+      heroBanner.classList.add('cutoff-exceeded');
+    } else {
+      heroBanner.classList.remove('cutoff-exceeded');
+    }
   }
 }
 
@@ -1758,10 +2056,16 @@ function updateSetUI(set) {
     setLiftName.setAttribute('data-lift', effectiveLiftKey);
     setRepCounter.textContent = '0 REPS RECORDED';
     setAvgVel.textContent     = '-';
+    setAvgVel.style.color     = '';
+    setAvgVel.style.textShadow = '';
     setMaxVel.textContent     = '-';
-    setVelLoss.textContent    = '-';
-    setAvgRpe.textContent     = '-';
+    setMaxVel.style.color     = '';
+    setMaxVel.style.textShadow = '';
     setMinVel.textContent     = '-';
+    setMinVel.style.color     = '';
+    setVelLoss.textContent    = '-';
+    setVelLoss.classList.remove('fatigue-minimal', 'fatigue-optimal', 'fatigue-cutoff');
+    setAvgRpe.textContent     = '-';
     activeSetRepCounter.textContent = '0 reps';
 
     // Reset ring (circumference = 565.48)
@@ -1779,10 +2083,29 @@ function updateSetUI(set) {
   activeSetRepCounter.textContent = `${set.reps.length} reps`;
 
   setAvgVel.textContent  = set.avgVelocity.toFixed(2);
+  const avgZone = getBryanMannZone(set.avgVelocity);
+  setAvgVel.style.color = avgZone.color;
+  setAvgVel.style.textShadow = `0 0 16px ${avgZone.color}`;
+
   setMaxVel.textContent  = set.maxVelocity.toFixed(2);
-  setVelLoss.textContent = `${set.velocityLossPct.toFixed(1)}`;
-  setAvgRpe.textContent  = set.avgRpe.toFixed(1);
+  const maxZone = getBryanMannZone(set.maxVelocity);
+  setMaxVel.style.color = maxZone.color;
+
   setMinVel.textContent  = set.minVelocity.toFixed(2);
+  const minZone = getBryanMannZone(set.minVelocity);
+  setMinVel.style.color = minZone.color;
+
+  setVelLoss.textContent = `${set.velocityLossPct.toFixed(1)}`;
+  setVelLoss.classList.remove('fatigue-minimal', 'fatigue-optimal', 'fatigue-cutoff');
+  if (set.velocityLossPct > 20.0) {
+    setVelLoss.classList.add('fatigue-cutoff');
+  } else if (set.velocityLossPct >= 10.0) {
+    setVelLoss.classList.add('fatigue-optimal');
+  } else {
+    setVelLoss.classList.add('fatigue-minimal');
+  }
+
+  setAvgRpe.textContent  = set.avgRpe.toFixed(1);
 
   // SVG Progress Ring (circumference = 2 * pi * 90 = 565.48)
   if (setRingProgress) {
@@ -1801,6 +2124,14 @@ function updateSetUI(set) {
     const isPR = Boolean(rep.isPR);
     const repLift = canonicalLift(rep.lift || effectiveLift);
     const repLiftKey = liftKeyOf(repLift);
+    const repZone = getBryanMannZone(rep.velocity);
+    const baseline = LIFT_BASELINES[repLiftKey] || LIFT_BASELINES.deadlift;
+    const targetRpe = (set && typeof set.targetRpe === 'number') ? set.targetRpe : currentTargetRpe;
+    const targetVel = baseline.rpe8 + (8.0 - targetRpe) * ((baseline.rpe8 - baseline.mvt) / 2.0);
+    const repDelta = rep.velocity - targetVel;
+    const deltaSign = repDelta >= 0 ? '+' : '';
+    const deltaClass = repDelta >= 0 ? 'positive' : 'negative';
+    const deltaBadgeHtml = `<span class="rep-delta-badge font-mono ${deltaClass}">${deltaSign}${repDelta.toFixed(2)}</span>`;
     const prBadgeHtml = isPR ? '<span class="rep-pr-badge gold-glow">PR</span>' : '';
     const progressRingHtml = `<div class="rep-press-progress-ring" aria-hidden="true"><svg class="radial-progress-svg" viewBox="0 0 44 44"><circle class="radial-track" cx="22" cy="22" r="18" /><circle class="radial-indicator" cx="22" cy="22" r="18" /></svg></div>`;
 
@@ -1814,7 +2145,8 @@ function updateSetUI(set) {
           ${prBadgeHtml}
         </div>
         <div class="rep-row-right">
-          <span class="rep-vel-pill">${rep.velocity.toFixed(2)} m/s</span>
+          <span class="rep-vel-pill ${repZone.cssClass}">${rep.velocity.toFixed(2)} m/s</span>
+          ${deltaBadgeHtml}
           <span class="rep-rpe-pill">RPE ${rep.rpe.toFixed(1)}</span>
         </div>
       </div>
@@ -2679,6 +3011,73 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ── Coach Downlink Directive Synchronization ──
+function initCoachDirectiveSync() {
+  if (typeof window === 'undefined' || !window.ErosSyncBus || typeof window.ErosSyncBus.on !== 'function') return;
+
+  // Listen for coach technical cues
+  window.ErosSyncBus.on('coach:cue', (payload) => {
+    if (!payload || !payload.text) return;
+    if (typeof AthleteFX !== 'undefined' && typeof AthleteFX.showCoachCue === 'function') {
+      AthleteFX.showCoachCue(payload.text, payload.type || 'technical', 6000);
+    }
+  });
+
+  // Listen for coach load overrides
+  window.ErosSyncBus.on('coach:load_override', (payload) => {
+    if (!payload) return;
+    const currentWeight = (typeof currentWorkingWeight === 'number' && !isNaN(currentWorkingWeight))
+      ? currentWorkingWeight
+      : 140.0;
+    const newWeight = (typeof payload.newWeight === 'number')
+      ? payload.newWeight
+      : Math.max(0, currentWeight + (payload.deltaKg || 0));
+
+    if (typeof AthleteFX !== 'undefined' && typeof AthleteFX.showCoachDirectiveModal === 'function') {
+      AthleteFX.showCoachDirectiveModal({
+        id: payload.id,
+        deltaKg: payload.deltaKg || (newWeight - currentWeight),
+        newWeight: newWeight,
+        prevWeight: currentWeight,
+        autoAcceptSeconds: payload.autoAcceptSeconds || 20,
+        cueText: payload.text || `Coach load modification: ${(newWeight - currentWeight) >= 0 ? '+' : ''}${(newWeight - currentWeight).toFixed(1)} kg`
+      }, {
+        onAccept: (acceptedWeight) => {
+          setWorkingWeight(acceptedWeight, true);
+          if (window.ErosSyncBus) {
+            window.ErosSyncBus.emit('coach:load_response', {
+              id: payload.id,
+              accepted: true,
+              finalWeight: acceptedWeight,
+              timestamp: Date.now()
+            });
+          }
+        },
+        onDismiss: (keptWeight) => {
+          if (window.ErosSyncBus) {
+            window.ErosSyncBus.emit('coach:load_response', {
+              id: payload.id,
+              accepted: false,
+              finalWeight: keptWeight,
+              timestamp: Date.now()
+            });
+          }
+        }
+      });
+    } else {
+      setWorkingWeight(newWeight, true);
+      if (window.ErosSyncBus) {
+        window.ErosSyncBus.emit('coach:load_response', {
+          id: payload.id,
+          accepted: true,
+          finalWeight: newWeight,
+          timestamp: Date.now()
+        });
+      }
+    }
+  });
+}
+
 // ── Kickoff Execution on DOM Ready ──
 document.addEventListener('DOMContentLoaded', () => {
   initStorage();
@@ -2686,4 +3085,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setTargetRpe(8.0);
   initTouchActiveStates();
   initBleSheetDrag();
+  initCoachDirectiveSync();
 });

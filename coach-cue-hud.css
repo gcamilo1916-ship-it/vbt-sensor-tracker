@@ -1,0 +1,393 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   EROS — COACH INTERACTION HUD & CUEING MODULE (coach-cue-hud.css)
+   Apple visionOS Spatial Glass OS Architecture — Requirement R2
+   Strict R4 Terminology Compliance: Zero restricted terms. Pure Eros.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── 1. In-Flight Floating Cue Pill (#coach-cue-hud) ── */
+#coach-cue-hud,
+.coach-cue-hud {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px) scale(0.96);
+  z-index: 85;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+#coach-cue-hud.active,
+.coach-cue-hud.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.coach-cue-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background: rgba(18, 20, 28, 0.90);
+  border: 1px solid rgba(191, 90, 242, 0.55); /* Spatial Violet Glass Highlight */
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65),
+              0 0 20px rgba(191, 90, 242, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+}
+
+.coach-cue-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #BF5AF2;
+  box-shadow: 0 0 10px #BF5AF2, 0 0 18px rgba(191, 90, 242, 0.85);
+  animation: cueDotPulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes cueDotPulse {
+  0%, 100% {
+    opacity: 0.70;
+    transform: scale(0.90);
+  }
+  50% {
+    opacity: 1.00;
+    transform: scale(1.18);
+    box-shadow: 0 0 14px #BF5AF2;
+  }
+}
+
+.coach-cue-prefix {
+  font-size: 11px;
+  font-weight: 800;
+  color: #BF5AF2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.coach-cue-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ECECEC;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* ── 2. Rest Interval Coach Directive Modal (#coach-directive-modal) ── */
+#coach-directive-modal,
+.coach-directive-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(5, 5, 7, 0.78);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#coach-directive-modal.open,
+.coach-directive-modal.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.coach-directive-card {
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  background: rgba(18, 20, 28, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.85),
+              inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(50px) saturate(210%);
+  -webkit-backdrop-filter: blur(50px) saturate(210%);
+  padding: 24px;
+  transform: translateY(22px) scale(0.96);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#coach-directive-modal.open .coach-directive-card,
+.coach-directive-modal.open .coach-directive-card {
+  transform: translateY(0) scale(1);
+}
+
+.directive-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.coach-avatar-badge {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(191, 90, 242, 0.40) 0%, rgba(0, 229, 255, 0.30) 100%);
+  border: 1px solid rgba(191, 90, 242, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  color: #FFFFFF;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(191, 90, 242, 0.30);
+}
+
+.coach-online-ping {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #00FF66;
+  border: 2px solid #0B0D14;
+  box-shadow: 0 0 8px #00FF66;
+}
+
+.directive-meta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.coach-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ECECEC;
+  line-height: 1.25;
+}
+
+.directive-type-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #BF5AF2;
+  margin-top: 2px;
+}
+
+.directive-timestamp {
+  font-size: 11px;
+  color: #71717A;
+}
+
+.directive-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.directive-load-box {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.load-comparison {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.load-previous {
+  color: #71717A;
+  text-decoration: line-through;
+  font-size: 15px;
+}
+
+.load-arrow {
+  color: #A1A8BA;
+  font-size: 15px;
+  user-select: none;
+}
+
+.load-prescribed {
+  color: #FFFFFF;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.load-prescribed.highlight-accent {
+  color: #00E5FF;
+  text-shadow: 0 0 18px rgba(0, 229, 255, 0.45);
+}
+
+.load-delta {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.load-delta.positive {
+  color: #00FF66;
+}
+
+.load-delta.negative {
+  color: #FF9500;
+}
+
+.load-reason {
+  font-size: 12px;
+  color: #A1A8BA;
+  margin-top: 8px;
+  line-height: 1.45;
+}
+
+.directive-cue-box {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(191, 90, 242, 0.08);
+  border: 1px solid rgba(191, 90, 242, 0.28);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.cue-quote-icon {
+  font-size: 22px;
+  line-height: 1;
+  color: #BF5AF2;
+  font-family: Georgia, serif;
+  user-select: none;
+}
+
+.cue-message {
+  font-size: 13px;
+  color: #ECECEC;
+  line-height: 1.45;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── 3. Actions & 20s Auto-Accept Ring ── */
+.directive-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-directive-dismiss {
+  flex: 1;
+  min-height: 50px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #B4B4B4;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.btn-directive-dismiss:hover,
+.btn-directive-dismiss:active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-directive-accept {
+  flex: 1.4;
+  min-height: 50px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #00E5FF 0%, #0099FF 100%);
+  border: none;
+  color: #050507;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.45);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+  padding: 0 16px;
+}
+
+.btn-directive-accept:hover,
+.btn-directive-accept:active {
+  box-shadow: 0 0 32px rgba(0, 229, 255, 0.65);
+  transform: scale(1.02);
+}
+
+.countdown-ring {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.auto-accept-svg,
+.countdown-ring-svg {
+  width: 24px;
+  height: 24px;
+  transform: rotate(-90deg);
+}
+
+.auto-accept-track {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.25);
+  stroke-width: 3;
+}
+
+.auto-accept-fill {
+  fill: none;
+  stroke: #050507;
+  stroke-width: 3;
+  stroke-dasharray: 81.68;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.15s linear;
+}
+
+.countdown-seconds {
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 24px;
+  text-align: left;
+}
+
+/* ── 4. Responsive Viewports ── */
+@media (max-width: 480px) {
+  .coach-directive-card {
+    padding: 20px 16px;
+  }
+  .directive-actions {
+    flex-direction: column-reverse;
+  }
+  .btn-directive-dismiss,
+  .btn-directive-accept {
+    width: 100%;
+    min-height: 48px;
+  }
+}

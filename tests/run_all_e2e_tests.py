@@ -52,6 +52,12 @@ def load_test_suites(tier_filter="all", milestone_filter="all"):
     if tier_filter in ["polish", "all", "full"]:
         from tests import test_eros_ui_polish
         modules_to_load.append(("UI Polish", test_eros_ui_polish))
+    if tier_filter in ["coach", "all", "full"]:
+        from tests import test_coach_portal_dark_ui
+        modules_to_load.append(("Coach Dark UI", test_coach_portal_dark_ui))
+    if tier_filter in ["athlete", "all", "full"]:
+        from tests import test_athlete_velocity_metrics
+        modules_to_load.append(("Athlete Velocity Metrics", test_athlete_velocity_metrics))
     if tier_filter in ["vbt1", "vbt", "vbt_all", "full"]:
         from tests import test_vbt_firmware_tier1
         modules_to_load.append(("VBT Tier 1", test_vbt_firmware_tier1))
@@ -268,7 +274,7 @@ def run_tests(tier="all", milestone="all", verbosity=1, json_report_path=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Eros VBT E2E Test Suite Runner")
-    parser.add_argument("--tier", choices=["1", "2", "3", "4", "browser", "overhaul", "all", "vbt", "vbt1", "vbt2", "vbt3", "vbt4", "vbt_all", "full"], default="all",
+    parser.add_argument("--tier", choices=["1", "2", "3", "4", "browser", "overhaul", "polish", "coach", "all", "vbt", "vbt1", "vbt2", "vbt3", "vbt4", "vbt_all", "full"], default="all",
                         help="Filter execution to specific test tier (default: all)")
     parser.add_argument("--milestone", choices=["M1", "M2", "M3", "M4", "M5", "M6", "E2E", "all"], default="all",
                         help="Filter execution to specific milestone (default: all)")

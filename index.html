@@ -15,6 +15,15 @@
   
   <!-- Glass OS Stylesheet -->
   <link rel="stylesheet" href="style.css" />
+  
+  <!-- Coach Portal Dark UI Stylesheet (ChatGPT Design System) -->
+  <link rel="stylesheet" href="coach.css" />
+
+  <!-- Athlete Celebration FX & Coach HUD Stylesheet -->
+  <link rel="stylesheet" href="athlete-fx.css" />
+
+  <!-- Coach Interaction HUD & Directive Modal Stylesheet -->
+  <link rel="stylesheet" href="coach-cue-hud.css" />
 </head>
 <body class="theme-deadlift">
   <!-- Dynamic Ambient Glow Backdrop -->
@@ -32,6 +41,27 @@
         <div class="branding">
           <span class="brand-title">Eros</span>
         </div>
+
+        <!-- Segmented Mode Switcher: Athlete vs Coach Portal -->
+        <div class="view-mode-toggle" id="view-mode-toggle" role="radiogroup" aria-label="Portal View Mode">
+          <button type="button" class="mode-toggle-btn active" id="btn-mode-athlete" data-mode="athlete" role="radio" aria-checked="true" aria-label="Athlete View">
+            <svg class="mode-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="mode-label">ATHLETE</span>
+          </button>
+          <button type="button" class="mode-toggle-btn" id="btn-mode-coach" data-mode="coach" role="radio" aria-checked="false" aria-label="Coach Portal">
+            <svg class="mode-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span class="mode-label">COACH</span>
+          </button>
+        </div>
+
         <div class="header-actions">
           <div id="status-badge" class="glass-pill status-disconnected" role="button" tabindex="0" aria-label="Eros Connection">
             <span class="status-dot"></span>
@@ -66,6 +96,15 @@
       <!-- ═══════════════════════════════════════════════ -->
       <section id="tab-live" class="tab-section active-section">
         
+        <!-- Athlete In-Flight Floating Coach Cue Pill (Requirement R2) -->
+        <div id="coach-cue-hud" class="coach-cue-hud" role="status" aria-live="polite" style="display: none;">
+          <div class="coach-cue-pill">
+            <span class="coach-cue-dot" aria-hidden="true"></span>
+            <span class="coach-cue-prefix">CUE:</span>
+            <span id="coach-cue-text" class="coach-cue-text font-mono"></span>
+          </div>
+        </div>
+
         <!-- Lift Control Center -->
         <!-- Exercise & Set Controls -->
         <div class="glass-card controls-panel">
@@ -145,6 +184,14 @@
                 <span id="live-velocity" class="metric-number font-mono tabular-nums">0.00</span>
                 <span class="metric-unit">m/s</span>
               </div>
+              <div class="metric-zone-tag-wrap" id="live-vel-badge-wrap">
+                <span class="vel-zone-badge font-mono" id="live-vel-zone-badge" style="display: none;">SPEED</span>
+                <div class="target-velocity-badge font-mono" id="live-target-vel-badge" style="display: none;">
+                  <span class="badge-label">TARGET</span>
+                  <span class="badge-value" id="live-target-vel-val">0.35</span>
+                  <span class="badge-delta positive" id="live-vel-delta">+0.00</span>
+                </div>
+              </div>
               <div class="metric-subtext" id="live-vel-sub">Waiting for concentric drive...</div>
             </div>
             
@@ -169,6 +216,9 @@
               <div class="metric-display">
                 <span id="live-peak-vel" class="metric-number font-mono tabular-nums">0.00</span>
                 <span class="metric-unit">m/s</span>
+              </div>
+              <div class="metric-zone-tag-wrap" id="live-peak-badge-wrap">
+                <span class="vel-zone-badge font-mono" id="live-peak-zone-badge" style="display: none;">PEAK</span>
               </div>
               <div class="metric-subtext" id="live-peak-sub">Bar Ascent Peak</div>
             </div>
@@ -200,6 +250,36 @@
             </div>
             <div class="rpe-baseline-sub font-mono" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
           </div>
+
+          <!-- Set Celebration Particle Burst Overlay -->
+          <div class="set-celebration-overlay" id="set-celebration-stage" aria-hidden="true">
+            <div class="burst-emitter" id="burst-emitter"></div>
+          </div>
+
+          <!-- In-Flight Floating Coach Cue HUD -->
+          <div class="coach-cue-hud" id="in-flight-coach-cue" aria-live="polite">
+            <div class="coach-cue-pill">
+              <span class="coach-cue-dot"></span>
+              <span class="coach-cue-text font-mono" id="in-flight-cue-text">CUE: Drive hips!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Post-Set Summary Banner (Reveals dynamically on set completion) -->
+        <div class="set-summary-banner glass-card" id="set-summary-banner" role="status" aria-live="polite">
+          <div class="summary-check-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div class="summary-text-block">
+            <span class="summary-title" id="summary-set-title">SET 1 COMPLETED</span>
+            <span class="summary-metrics font-mono" id="summary-set-metrics">1 REP @ 0.0 kg • AVG 0.00 m/s</span>
+          </div>
+          <div class="summary-rest-countdown font-mono" id="summary-rest-countdown">
+            <span class="rest-timer-label">REST</span>
+            <span class="rest-time-val" id="summary-rest-time">03:00</span>
+          </div>
         </div>
 
         <!-- Quick Summary Mini-HUD -->
@@ -212,9 +292,17 @@
             <span class="mini-label">SET REPS</span>
             <span class="mini-val font-mono" id="hud-set-reps">0</span>
           </div>
-          <div class="mini-hud-item glass-card">
+          <div class="mini-hud-item glass-card vel-loss-hud-item" id="hud-vel-loss-card">
             <span class="mini-label">VEL LOSS</span>
-            <span class="mini-val font-mono" id="hud-vel-loss">0.0%</span>
+            <div class="fatigue-arc-wrap">
+              <svg class="fatigue-arc-svg" viewBox="0 0 52 52" aria-hidden="true">
+                <circle class="fatigue-arc-track" cx="26" cy="26" r="22"></circle>
+                <circle class="fatigue-arc-fill" id="hud-fatigue-arc-fill" cx="26" cy="26" r="22"></circle>
+              </svg>
+              <div class="fatigue-arc-readout">
+                <span class="mini-val font-mono" id="hud-vel-loss">0.0%</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -551,6 +639,197 @@
 
     </main>
 
+    <!-- Dedicated Coach View Portal (ChatGPT-Inspired Dark UI) -->
+    <section id="view-coach" class="coach-portal-container" style="display: none;" aria-label="Coach Control Center">
+      
+      <!-- Component 1: Squad Ribbon & Athlete Selector -->
+      <div class="coach-squad-ribbon">
+        <div class="coach-squad-left">
+          <div class="coach-athlete-selector-group">
+            <label for="coach-athlete-select" class="coach-selector-label">ATHLETE:</label>
+            <select id="coach-athlete-select" class="coach-select" aria-label="Select Athlete">
+              <option value="ath_01" selected>Alex Vance (Rack 01)</option>
+              <option value="ath_02">Jordan Bell (Rack 02)</option>
+              <option value="ath_03">Elena Rostova (Rack 03)</option>
+            </select>
+          </div>
+          <div id="coach-session-status-badge" class="coach-session-status-badge">
+            <span class="coach-status-dot"></span>
+            <span id="coach-session-status-text">SESSION READY</span>
+          </div>
+        </div>
+        <div class="coach-squad-stats">
+          <div class="coach-stat-chip">
+            <span class="coach-stat-label">Daily Readiness</span>
+            <span id="coach-readiness-val" class="coach-stat-value optimal">94% [OPTIMAL]</span>
+          </div>
+          <div class="coach-stat-chip">
+            <span class="coach-stat-label">Session Volume</span>
+            <span id="coach-volume-val" class="coach-stat-value">7,420 kg</span>
+          </div>
+          <div class="coach-stat-chip">
+            <span class="coach-stat-label">Daily e1RM</span>
+            <span id="coach-e1rm-val" class="coach-stat-value">272.5 kg</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Component 2: Active Set Live Monitor -->
+      <div class="coach-active-set-monitor" id="coach-active-set-card">
+        <div class="coach-monitor-header">
+          <div class="coach-monitor-title-group">
+            <span class="coach-lift-badge lift-deadlift">DEADLIFT</span>
+            <h2 id="coach-active-set-title" class="coach-active-set-title">DEADLIFT — SET 1</h2>
+          </div>
+          <div class="coach-monitor-meta" id="coach-active-set-meta">
+            140.0 kg | Target RPE @8.0
+          </div>
+        </div>
+
+        <!-- 4 Bento Cards Grid -->
+        <div class="coach-metrics-grid">
+          <div class="coach-metric-card">
+            <div class="coach-metric-header">
+              <span class="coach-metric-label">Mean Velocity (MCV)</span>
+              <span class="coach-metric-unit">m/s</span>
+            </div>
+            <div class="coach-metric-value" id="coach-live-mcv">0.00</div>
+            <div class="coach-metric-footer">
+              <span>Target: 0.42 m/s</span>
+              <span class="text-cyan">Live</span>
+            </div>
+          </div>
+
+          <div class="coach-metric-card">
+            <div class="coach-metric-header">
+              <span class="coach-metric-label">Peak Velocity (PV)</span>
+              <span class="coach-metric-unit">m/s</span>
+            </div>
+            <div class="coach-metric-value" id="coach-live-pv">0.00</div>
+            <div class="coach-metric-footer">
+              <span>Apex Ascent</span>
+              <span class="text-cyan">Live</span>
+            </div>
+          </div>
+
+          <div class="coach-metric-card">
+            <div class="coach-metric-header">
+              <span class="coach-metric-label">Range of Motion</span>
+              <span class="coach-metric-unit">cm</span>
+            </div>
+            <div class="coach-metric-value" id="coach-live-rom">0.0</div>
+            <div class="coach-metric-footer">
+              <span>Displacement</span>
+              <span>Vertical</span>
+            </div>
+          </div>
+
+          <div class="coach-metric-card">
+            <div class="coach-metric-header">
+              <span class="coach-metric-label">Velocity Loss</span>
+              <span class="coach-metric-unit">%</span>
+            </div>
+            <div class="coach-metric-value" id="coach-live-vl">0.0%</div>
+            <div class="coach-vl-gauge-container">
+              <div class="coach-vl-bar" role="progressbar" aria-label="Velocity Loss Fatigue Gauge">
+                <div class="coach-vl-bar-fill" id="coach-live-vl-gauge"></div>
+              </div>
+              <div class="coach-metric-footer">
+                <span>Fatigue Drop-off</span>
+                <span>Ceiling: 20%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Repetition Stream -->
+        <div class="coach-rep-stream-container">
+          <div class="coach-rep-stream-title">Active Set Repetitions</div>
+          <div class="coach-rep-stream-list" id="coach-live-reps-stream">
+            <span class="coach-empty-stream-msg">No active set in progress. Start a set in Athlete view to begin streaming.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Component 3: Coach Prescriptive Feedback Console -->
+      <div class="coach-feedback-console" id="coach-feedback-console">
+        <div class="coach-console-header">
+          <span class="coach-console-title">Coach Prescriptive Console</span>
+          <span class="coach-console-status" id="coach-feedback-status">Ready</span>
+        </div>
+
+        <!-- Load Adjustment Pills -->
+        <div class="coach-console-block">
+          <span class="coach-block-label">Load Adjustment Next Set:</span>
+          <div class="coach-load-pills-row">
+            <button type="button" class="coach-load-pill pill-sub" data-delta="-5.0">-5.0 kg</button>
+            <button type="button" class="coach-load-pill pill-sub" data-delta="-2.5">-2.5 kg</button>
+            <button type="button" class="coach-load-pill pill-keep" data-delta="0.0">Keep Load</button>
+            <button type="button" class="coach-load-pill pill-add" data-delta="2.5">+2.5 kg</button>
+            <button type="button" class="coach-load-pill pill-add" data-delta="5.0">+5.0 kg</button>
+          </div>
+        </div>
+
+        <!-- Quick Technical Cue Chips -->
+        <div class="coach-console-block">
+          <span class="coach-block-label">Quick Technical Cues:</span>
+          <div class="coach-cue-chips-row">
+            <button type="button" class="coach-cue-chip" data-cue="Drive hips!">Drive hips!</button>
+            <button type="button" class="coach-cue-chip" data-cue="Squeeze lats before floor break">Squeeze lats</button>
+            <button type="button" class="coach-cue-chip" data-cue="Stay tight in hole">Stay tight in hole</button>
+            <button type="button" class="coach-cue-chip" data-cue="Rack bar — fatigue cutoff reached">Rack bar — cutoff</button>
+            <button type="button" class="coach-cue-chip" data-cue="Take 3m rest before next attempt">Take 3m rest</button>
+          </div>
+        </div>
+
+        <!-- Custom Directive Input -->
+        <div class="coach-console-block">
+          <span class="coach-block-label">Custom Technical Directive:</span>
+          <div class="coach-custom-cue-row">
+            <input type="text" id="coach-custom-cue-input" class="coach-custom-input" placeholder="Type technical cue for athlete rest HUD..." aria-label="Custom technical cue input" />
+            <button type="button" id="btn-coach-send-custom" class="btn-coach-send" aria-label="Send custom cue">
+              <span>SEND CUE</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Component 4: Sets Performance History Table -->
+      <div class="coach-sets-history-card">
+        <div class="coach-history-header">
+          <span class="coach-history-title">Sets Performance History</span>
+          <span class="coach-stat-label font-mono" id="coach-sets-counter">0 Completed</span>
+        </div>
+        <div class="coach-table-wrapper">
+          <table class="coach-table" id="coach-sets-table">
+            <thead>
+              <tr>
+                <th>SET #</th>
+                <th>LIFT</th>
+                <th>LOAD</th>
+                <th>REPS</th>
+                <th>AVG VEL</th>
+                <th>PEAK VEL</th>
+                <th>VEL LOSS</th>
+                <th>RPE</th>
+                <th>DETAILS</th>
+              </tr>
+            </thead>
+            <tbody id="coach-sets-table-body">
+              <tr>
+                <td colspan="9" class="coach-empty-cell">No sets completed yet in this session.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
     <!-- Floating Glass OS Bottom Navigation Bar -->
     <nav class="bottom-glass-nav" data-active="live" aria-label="Main Navigation">
       <div class="nav-indicator-pill" id="nav-indicator-pill" aria-hidden="true"></div>
@@ -650,12 +929,66 @@
     </div>
   </div>
 
+  <!-- Athlete Rest Interval Coach Directive Modal with 20s Auto-Accept Countdown Ring (Requirement R2) -->
+  <div id="coach-directive-modal" class="coach-directive-modal" role="dialog" aria-modal="true" aria-labelledby="coach-directive-title" style="display: none;">
+    <div class="coach-directive-card glass-card">
+      <div class="directive-header">
+        <div class="coach-avatar-badge" aria-hidden="true">
+          <span class="coach-avatar-initials">CM</span>
+          <span class="coach-online-ping"></span>
+        </div>
+        <div class="directive-meta">
+          <span class="coach-name" id="coach-directive-title">Coach Directive</span>
+          <span class="directive-type-label" id="coach-directive-type">LOAD OVERRIDE</span>
+        </div>
+        <span class="directive-timestamp font-mono" id="coach-directive-time">Just now</span>
+      </div>
+
+      <div class="directive-body">
+        <div class="directive-load-box" id="coach-directive-load-box">
+          <div class="load-comparison font-mono">
+            <span class="load-previous" id="coach-prev-weight">140.0 kg</span>
+            <span class="load-arrow">→</span>
+            <span class="load-prescribed highlight-accent" id="coach-new-weight">142.5 kg</span>
+            <span class="load-delta positive" id="coach-load-delta">(+2.5 kg)</span>
+          </div>
+          <div class="load-reason" id="coach-override-reason">Prescribed load modification for upcoming set</div>
+        </div>
+
+        <div class="directive-cue-box" id="coach-directive-cue-box" style="display: none;">
+          <span class="cue-quote-icon">“</span>
+          <p class="cue-message" id="coach-directive-cue-text"></p>
+        </div>
+      </div>
+
+      <div class="directive-actions">
+        <button type="button" class="btn-directive-dismiss glass-pill" id="btn-directive-decline">
+          <span id="btn-decline-text">Decline</span>
+        </button>
+        <button type="button" class="btn-directive-accept glass-pill-primary" id="btn-directive-accept">
+          <span class="countdown-ring">
+            <svg id="countdown-ring-svg" class="auto-accept-svg countdown-ring-svg" viewBox="0 0 32 32" aria-hidden="true">
+              <circle class="auto-accept-track" cx="16" cy="16" r="13"></circle>
+              <circle id="coach-accept-ring" class="auto-accept-fill" cx="16" cy="16" r="13"></circle>
+            </svg>
+          </span>
+          <span class="btn-accept-label" id="btn-accept-label">Accept</span>
+          <span class="countdown-seconds font-mono" id="coach-countdown-sec">20s</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Error & Notification Glass Banner -->
   <div id="sync-banner" class="glass-banner hidden" role="alert">
     <span id="sync-banner-text">Sync Error</span>
   </div>
 
-  <!-- JavaScript Module -->
+  <!-- JavaScript Modules -->
+  <script src="sync-bus.js"></script>
+  <script src="coach-portal.js"></script>
+  <script src="athlete-fx.js"></script>
+  <script src="coach-cue-hud.js"></script>
   <script src="app.js"></script>
 
   <!-- Interactive Dropdown & Accessibility Keyboard Navigation (Milestone 3) -->
