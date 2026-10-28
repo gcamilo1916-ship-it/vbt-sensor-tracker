@@ -29,15 +29,15 @@
   --text-dark: #000000;
 
   /* Lift Accent Neon Spectrum */
-  --accent-dl: #FF0055;        /* Cyberpunk Magenta */
-  --accent-dl-rgb: 255, 0, 85;
+  --accent-dl: #FF3B30;        /* Apple System Red / Punchy Red */
+  --accent-dl-rgb: 255, 59, 48;
   --accent-sq: #00FF66;        /* Electric Emerald */
   --accent-sq-rgb: 0, 255, 102;
   --accent-bp: #00E5FF;        /* Laser Cyan */
   --accent-bp-rgb: 0, 229, 255;
 
-  /* Lighter Lift Pill Text Tints (WCAG AA+ contrast on dark glass) */
-  --lift-text-dl: #FF80AC;
+  /* Lighter Lift Pill Text Tints (WCAG AAA contrast on dark glass) */
+  --lift-text-dl: #FF857D;
   --lift-text-sq: #66FFA3;
   --lift-text-bp: #70F0FF;
 
@@ -476,10 +476,10 @@ html, body {
 }
 
 .btn-glass-primary.session-active {
-  background: rgba(255, 0, 85, 0.16);
-  border-color: rgba(255, 0, 85, 0.45);
-  color: #FF4D79;
-  box-shadow: var(--specular-top), 0 0 16px rgba(255, 0, 85, 0.25);
+  background: rgba(255, 59, 48, 0.16);
+  border-color: rgba(255, 59, 48, 0.45);
+  color: #FF857D;
+  box-shadow: var(--specular-top), 0 0 16px rgba(255, 59, 48, 0.25);
 }
 
 /* ── Tab Viewport ── */
@@ -967,12 +967,12 @@ html, body {
   background: var(--bg-glass-card);
   border: 1px solid var(--border-glass-bright);
   border-radius: 999px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   box-shadow: var(--specular-top);
   height: 48px;
   box-sizing: border-box;
   flex: 1;
-  min-width: 95px;
+  min-width: 110px;
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -985,7 +985,7 @@ html, body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-main);
   font-size: 15px;
@@ -1018,6 +1018,8 @@ html, body {
   justify-content: center;
   min-width: 0;
   flex: 1;
+  padding: 0 4px;
+  gap: 2px;
 }
 
 .set-weight-input {
@@ -1026,10 +1028,10 @@ html, body {
   outline: none;
   color: var(--text-main);
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 800;
   text-align: right;
-  width: 44px;
+  width: 48px;
   padding: 0;
   margin: 0;
   -moz-appearance: textfield;
@@ -1049,7 +1051,7 @@ html, body {
 }
 
 .weight-unit {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
   color: var(--current-accent);
   margin-left: 2px;
@@ -2013,8 +2015,8 @@ html, body {
 }
 
 .lift-tag[data-lift="deadlift"] {
-  background: rgba(255, 0, 85, 0.14);
-  border-color: rgba(255, 0, 85, 0.35);
+  background: rgba(255, 59, 48, 0.14);
+  border-color: rgba(255, 59, 48, 0.35);
   color: var(--lift-text-dl);
 }
 
@@ -2445,21 +2447,23 @@ html, body {
 }
 
 #workout-set-weight-module .weight-control-wrapper {
-  height: 40px;
-  max-width: 160px;
-  background: rgba(0, 0, 0, 0.3);
-  border-color: rgba(255, 255, 255, 0.08);
+  height: 46px;
+  min-width: 150px;
+  max-width: 175px;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 #workout-set-weight-module .weight-stepper-btn {
-  width: 26px;
-  height: 26px;
-  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  font-size: 15px;
 }
 
 #workout-set-weight-module .set-weight-input {
-  font-size: 13px;
-  width: 44px;
+  font-size: 14px;
+  width: 48px;
 }
 
 /* ── Workout Sets Table ── */
@@ -3330,7 +3334,7 @@ html, body {
   right: 16px;
   max-width: 440px;
   margin: 0 auto;
-  background: rgba(255, 0, 85, 0.85);
+  background: rgba(255, 59, 48, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   color: #FFFFFF;
@@ -3340,7 +3344,7 @@ html, body {
   font-weight: 800;
   text-align: center;
   z-index: 1000;
-  box-shadow: 0 10px 30px rgba(255, 0, 85, 0.4);
+  box-shadow: 0 10px 30px rgba(255, 59, 48, 0.4);
   animation: bannerSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -3733,4 +3737,58 @@ html, body {
 .ble-device-card.touch-active {
   transform: scale3d(0.985, 0.985, 1);
   transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ── Mobile Viewport Responsive Grid (<= 430px) ── */
+@media (max-width: 430px) {
+  .controls-panel {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .controls-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: auto;
+    gap: 10px;
+  }
+
+  /* Row 1, Column 1: Lift Dropdown */
+  .controls-row .custom-select-wrapper,
+  .custom-select-wrapper {
+    grid-column: 1 / 2;
+    grid-row: 1;
+    width: 100%;
+    height: 48px;
+    flex: unset;
+  }
+
+  .custom-select-trigger {
+    padding: 0 10px;
+    font-size: 11.5px;
+  }
+
+  /* Row 1, Column 2: Set Weight Selector Pill */
+  #live-weight-control,
+  #live-weight-control.weight-control-wrapper {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 3px 8px;
+    flex: unset;
+  }
+
+  /* Row 2: Full-Width Start Set Action Button */
+  .btn-glass-set,
+  #btn-set-toggle {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    min-height: 48px;
+    font-size: 13px;
+    letter-spacing: 0.8px;
+    flex: unset;
+  }
 }

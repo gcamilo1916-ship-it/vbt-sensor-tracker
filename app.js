@@ -199,6 +199,81 @@ function liftKeyOf(name) {
   return 'other';
 }
 
+/**
+ * R3: Resolves workout naming based on Powerlifting hierarchy rules:
+ * - Squat and Deadlift are always "Main" ("Main squat", "Main deadlift")
+ * - Bench is "Bench"
+ * - Squat, Bench, and Deadlift together -> "SBD"
+ * - Deadlift + Bench -> "Main deadlift + Bench"
+ * - Squat + Bench -> "Main squat + Bench"
+ * - Squat + Deadlift -> "Main squat + Main deadlift"
+ * - Bench only -> "Bench"
+ * - Custom lifts preserved with canonical formatting
+ */
+function formatWorkoutTitle(session) {
+  if (!session) return 'Main deadlift';
+
+  const liftSet = new Set();
+  const sets = Array.isArray(session.sets) ? session.sets : [];
+
+  sets.forEach(s => {
+    if (s && s.lift) {
+      liftSet.add(canonicalLift(s.lift));
+    } else if (s && Array.isArray(s.reps)) {
+      s.reps.forEach(r => {
+        if (r && r.lift) liftSet.add(canonicalLift(r.lift));
+      });
+    }
+  });
+
+  // If no sets are logged yet, deduce lift from session.name or currentLift
+  if (liftSet.size === 0) {
+    if (session.name && typeof session.name === 'string') {
+      const cleaned = session.name.replace(/\s+Session$/i, '').trim();
+      if (cleaned.length > 0) {
+        if (cleaned === 'SBD' || cleaned.includes('+') || cleaned.startsWith('Main ')) {
+          return session.name;
+        }
+        liftSet.add(canonicalLift(cleaned));
+      }
+    }
+    if (liftSet.size === 0 && typeof currentLift !== 'undefined' && currentLift) {
+      liftSet.add(canonicalLift(currentLift));
+    }
+  }
+
+  const lifts = Array.from(liftSet);
+  const hasSquat = lifts.some(l => sameLift(l, 'Squat'));
+  const hasBench = lifts.some(l => sameLift(l, 'Bench'));
+  const hasDeadlift = lifts.some(l => sameLift(l, 'Deadlift'));
+
+  const customLifts = lifts.filter(l =>
+    !sameLift(l, 'Squat') && !sameLift(l, 'Bench') && !sameLift(l, 'Deadlift')
+  );
+
+  // 1. Squat, Bench, and Deadlift together -> "SBD"
+  if (hasSquat && hasBench && hasDeadlift) {
+    return customLifts.length > 0 ? `SBD + ${customLifts.join(' + ')}` : 'SBD';
+  }
+
+  // 2. Canonical parts in priority order: Squat, Deadlift, Bench, then custom lifts
+  const parts = [];
+  if (hasSquat) parts.push('Main squat');
+  if (hasDeadlift) parts.push('Main deadlift');
+  if (hasBench) parts.push('Bench');
+  customLifts.forEach(l => parts.push(l));
+
+  if (parts.length === 0) {
+    return 'Main deadlift';
+  }
+
+  return parts.join(' + ');
+}
+
+if (typeof window !== 'undefined') {
+  window.formatWorkoutTitle = formatWorkoutTitle;
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // SYNTHETIC SOUND & HAPTIC ENGINE (Web Audio Unlocking)
 // ═════════════════════════════════════════════════════════════════════════════
@@ -539,6 +614,12 @@ function initStorage() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       workouts = JSON.parse(raw);
+      if (Array.isArray(workouts)) {
+        workouts.forEach(w => {
+          w.name = formatWorkoutTitle(w);
+        });
+        persistStorage();
+      }
       console.log(`[Eros] Loaded ${workouts.length} workout sessions from localStorage.`);
     }
   } catch (err) {
@@ -582,7 +663,7 @@ function startWorkoutSession() {
     startTime: now.getTime(),
     endTime: null,
     dateStr: now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-    name: `${currentLift} Session`,
+    name: formatWorkoutTitle({ sets: [{ lift: currentLift }] }),
     sets: []
   };
 
@@ -616,6 +697,7 @@ function endWorkoutSession() {
     endActiveSet();
   }
 
+  activeWorkout.name = formatWorkoutTitle(activeWorkout);
   activeWorkout.endTime = Date.now();
   stopSessionTimer();
 
@@ -707,6 +789,9 @@ function startNewSet(lift = currentLift) {
 
   activeWorkout.sets.push(newSet);
   activeSet = newSet;
+  if (activeWorkout) {
+    activeWorkout.name = formatWorkoutTitle(activeWorkout);
+  }
 
   // Update Controls UI
   btnSetText.textContent = 'END SET';
@@ -742,6 +827,10 @@ function endActiveSet() {
   }
 
   activeSet = null;
+
+  if (activeWorkout) {
+    activeWorkout.name = formatWorkoutTitle(activeWorkout);
+  }
 
   // Update Controls UI
   btnSetText.textContent = 'START SET';
@@ -2293,11 +2382,14 @@ function renderHistoryView() {
       : 'Active';
     const formattedVolume = `${Math.round(sessionVolume).toLocaleString('en-US')} kg`;
 
+    const sessionTitle = formatWorkoutTitle(session);
+    session.name = sessionTitle;
+
     html += `
       <div class="session-card ${isExpanded ? 'expanded' : ''}" data-session-id="${session.id}">
         <div class="session-card-header" onclick="toggleSessionCard('${session.id}')">
           <div class="session-card-title-group">
-            <span class="session-card-title">${escapeHtml(session.name)}</span>
+            <span class="session-card-title">${escapeHtml(sessionTitle)}</span>
             <span class="session-card-meta">${session.dateStr} • ${durationMins} ${typeof durationMins === 'number' ? 'mins' : ''} • ${setList.length}S / ${sessionRepsCount}R</span>
           </div>
           <div class="session-card-stats">
