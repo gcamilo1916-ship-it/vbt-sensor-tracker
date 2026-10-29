@@ -255,6 +255,78 @@ class TestCoachPortalDarkUi(unittest.TestCase):
         self.assertEqual(len(find_emojis_in_text(self.coach_js)), 0, "coach-portal.js must contain zero emojis")
         self.assertEqual(len(find_emojis_in_text(self.html)), 0, "index.html must contain zero emojis")
 
+    # ─────────────────────────────────────────────────────────────────────────
+    # 9. Manual Coach-Athlete Bonding Mechanism (Requirement R2)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def test_r2_bonding_components_and_methods(self):
+        """R2: Bonding modal, pairing code, QR preview, pending/active roster lists & methods."""
+        self.assertTrue(find_dom_id(self.html, "coach-bond-modal"), "#coach-bond-modal must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-pairing-code-display"), "#coach-pairing-code-display must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-pairing-ttl"), "#coach-pairing-ttl must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-bond-pending-list"), "#coach-bond-pending-list must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-bonded-roster-list"), "#coach-bonded-roster-list must exist")
+        self.assertTrue(find_dom_id(self.html, "btn-coach-bond-open"), "#btn-coach-bond-open must exist")
+        self.assertTrue(find_dom_id(self.html, "btn-coach-bond-close"), "#btn-coach-bond-close must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-cloud-sync-pill"), "#coach-cloud-sync-pill must exist")
+
+        self.assertIn("generatePairingCode", self.coach_js, "coach-portal.js must provide generatePairingCode")
+        self.assertIn("openBondModal", self.coach_js, "coach-portal.js must provide openBondModal")
+        self.assertIn("closeBondModal", self.coach_js, "coach-portal.js must provide closeBondModal")
+        self.assertIn("approvePendingBond", self.coach_js, "coach-portal.js must provide approvePendingBond")
+        self.assertIn("declinePendingBond", self.coach_js, "coach-portal.js must provide declinePendingBond")
+        self.assertIn("manualLinkAthlete", self.coach_js, "coach-portal.js must provide manualLinkAthlete")
+        self.assertIn("revokeAthleteBond", self.coach_js, "coach-portal.js must provide revokeAthleteBond")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 10. Live Squad Overview & Multi-Athlete Roster Grid (Requirement R3)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def test_r3_live_squad_grid_and_bryan_mann_tokens(self):
+        """R3: Live squad overview, roster grid, filter tabs, Bryan Mann 5-zone tokens."""
+        self.assertTrue(find_dom_id(self.html, "coach-squad-overview"), "#coach-squad-overview must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-squad-grid"), "#coach-squad-grid must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-roster-filters"), "#coach-roster-filters must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-kpi-summary-pill"), "#coach-kpi-summary-pill must exist")
+
+        self.assertIn(".coach-zone-badge.zone-starting", self.coach_css)
+        self.assertIn(".coach-zone-badge.zone-speed-strength", self.coach_css)
+        self.assertIn(".coach-zone-badge.zone-strength-speed", self.coach_css)
+        self.assertIn(".coach-zone-badge.zone-accelerative", self.coach_css)
+        self.assertIn(".coach-zone-badge.zone-absolute", self.coach_css)
+        self.assertIn(".coach-squad-card-actions", self.coach_css)
+
+        self.assertIn("classifyBryanMannZone", self.coach_js, "coach-portal.js must provide classifyBryanMannZone")
+        self.assertIn("renderSquadOverview", self.coach_js, "coach-portal.js must provide renderSquadOverview")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 11. Athlete History Bento Quad, Calendar & Day Inspector (Requirement R4)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def test_r4_history_bento_quad_and_calendar_components(self):
+        """R4: In-Comp Total, Gym Total dual models, Weekly Adherence, 7-col Calendar, Day Inspector."""
+        self.assertTrue(find_dom_id(self.html, "coach-athlete-history-panel"), "#coach-athlete-history-panel must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-comp-total-card"), "#coach-comp-total-card must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-gym-total-card"), "#coach-gym-total-card must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-total-diff-card"), "#coach-total-diff-card must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-weekly-adherence-card"), "#coach-weekly-adherence-card must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-weekly-segments"), "#coach-weekly-segments must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-monthly-calendar-card"), "#coach-monthly-calendar-card must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-calendar-grid"), "#coach-calendar-grid must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-day-inspector"), "#coach-day-inspector must exist")
+        self.assertTrue(find_dom_id(self.html, "btn-coach-export-day"), "#btn-coach-export-day must exist")
+        self.assertTrue(find_dom_id(self.html, "btn-coach-export-day-csv"), "#btn-coach-export-day-csv must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-previous-workouts-card"), "#coach-previous-workouts-card must exist")
+
+    def test_r4_ols_e1rm_and_canonical_workout_naming(self):
+        """R4: OLS linear regression e1RM, canonical 'Main' workout naming, adherence & DOTS calculation."""
+        self.assertIn("calculateOlsE1rm", self.coach_js, "coach-portal.js must implement calculateOlsE1rm")
+        self.assertIn("formatCanonicalWorkoutName", self.coach_js, "coach-portal.js must implement formatCanonicalWorkoutName")
+        self.assertIn("computeDotsScore", self.coach_js, "coach-portal.js must implement computeDotsScore")
+        self.assertIn("computeWeeklyAdherence", self.coach_js, "coach-portal.js must implement computeWeeklyAdherence")
+        self.assertIn("getResolvedAthleteTotals", self.coach_js, "coach-portal.js must implement getResolvedAthleteTotals")
+
 
 if __name__ == "__main__":
     unittest.main()
+

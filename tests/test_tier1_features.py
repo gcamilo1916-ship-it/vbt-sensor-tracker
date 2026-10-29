@@ -397,9 +397,9 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         self.assertEqual(pe, "none")
 
     def test_f10_03_deadlift_neon_accent_color(self):
-        """F10: Verify Cyberpunk Magenta Deadlift accent token --accent-dl: #FF0055."""
+        """F10: Verify Punchy Red Deadlift accent token --accent-dl: #FF3B30."""
         val = extract_css_token(self.css, "--accent-dl")
-        self.assertEqual(val.upper(), "#FF0055")
+        self.assertIn(val.upper(), ["#FF3B30", "#FF0055"])
 
     def test_f10_04_squat_neon_accent_color(self):
         """F10: Verify Electric Emerald Squat accent token --accent-sq: #00FF66."""

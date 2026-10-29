@@ -657,6 +657,14 @@
             <span class="coach-status-dot"></span>
             <span id="coach-session-status-text">SESSION READY</span>
           </div>
+          <button type="button" id="btn-coach-bond-open" class="coach-bond-trigger-btn" aria-label="Link or Manage Bonded Athletes">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span>LINK ATHLETE</span>
+            <span id="coach-bond-pending-count" class="coach-bond-badge-count">1</span>
+          </button>
         </div>
         <div class="coach-squad-stats">
           <div class="coach-stat-chip">
@@ -674,158 +682,469 @@
         </div>
       </div>
 
-      <!-- Component 2: Active Set Live Monitor -->
-      <div class="coach-active-set-monitor" id="coach-active-set-card">
-        <div class="coach-monitor-header">
-          <div class="coach-monitor-title-group">
-            <span class="coach-lift-badge lift-deadlift">DEADLIFT</span>
-            <h2 id="coach-active-set-title" class="coach-active-set-title">DEADLIFT — SET 1</h2>
+      <!-- Coach Sub-Navigation Bar: Live Panel vs Athlete History Panel -->
+      <div class="coach-subnav-bar" id="coach-subnav-bar" role="tablist" aria-label="Coach Portal Sections">
+        <div class="coach-subnav-tabs">
+          <button type="button" id="btn-coach-panel-live" class="coach-subnav-btn active" data-panel="live" role="tab" aria-selected="true" aria-controls="coach-live-panel">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <span>LIVE PANEL</span>
+          </button>
+          <button type="button" id="btn-coach-panel-history" class="coach-subnav-btn" data-panel="history" role="tab" aria-selected="false" aria-controls="coach-athlete-history-panel">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>ATHLETE HISTORY PANEL</span>
+          </button>
+        </div>
+        <div class="coach-sync-architecture-pill" id="coach-cloud-sync-pill" title="Client-side ErosSyncBus active. Cloud PostgreSQL schema ready for deployment upon backend approval.">
+          <span class="coach-sync-dot"></span>
+          <span id="coach-cloud-sync-text" class="font-mono">EROS SYNC: LOCAL BUS [CLOUD READY]</span>
+        </div>
+      </div>
+
+      <!-- Manual Coach-Athlete Bonding Modal / Drawer (Requirement R2) -->
+      <div id="coach-bond-modal" class="coach-bond-modal" role="dialog" aria-modal="true" aria-labelledby="coach-bond-modal-title" style="display: none;">
+        <div class="coach-bond-card">
+          <div class="coach-bond-header">
+            <div class="coach-bond-title-wrap">
+              <h3 id="coach-bond-modal-title" class="coach-bond-title">MANUAL COACH-ATHLETE BONDING</h3>
+              <span class="coach-bond-subtitle">Dual-Consent Handshake &amp; Sovereign Access Control</span>
+            </div>
+            <button type="button" id="btn-coach-bond-close" class="coach-bond-close-btn" aria-label="Close Bonding Modal">CLOSE</button>
           </div>
-          <div class="coach-monitor-meta" id="coach-active-set-meta">
-            140.0 kg | Target RPE @8.0
+
+          <div class="coach-bond-grid">
+            <!-- Left Column: Ephemeral 6-Char Pairing Code & QR -->
+            <div class="coach-bond-panel">
+              <div class="coach-bond-section-hdr">
+                <span class="coach-block-label">1. Ephemeral 6-Char Pairing Code</span>
+                <span id="coach-pairing-ttl" class="coach-ttl-badge font-mono">TTL: 15:00</span>
+              </div>
+              <div class="coach-pairing-code-box">
+                <span id="coach-pairing-code-display" class="coach-pairing-code font-mono">EROS-7X9K</span>
+                <div class="coach-pairing-actions">
+                  <button type="button" id="btn-coach-copy-code" class="coach-sm-btn">Copy Code</button>
+                  <button type="button" id="btn-coach-regen-code" class="coach-sm-btn">Regenerate</button>
+                </div>
+              </div>
+              <div class="coach-qr-preview-row">
+                <div class="coach-qr-box" id="coach-pairing-qr-box" aria-label="Eros Pairing QR Code">
+                  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                    <rect x="4" y="4" width="18" height="18" stroke="#ececec" stroke-width="3"/>
+                    <rect x="9" y="9" width="8" height="8" fill="#10a37f"/>
+                    <rect x="42" y="4" width="18" height="18" stroke="#ececec" stroke-width="3"/>
+                    <rect x="47" y="9" width="8" height="8" fill="#ececec"/>
+                    <rect x="4" y="42" width="18" height="18" stroke="#ececec" stroke-width="3"/>
+                    <rect x="9" y="47" width="8" height="8" fill="#ececec"/>
+                    <rect x="28" y="8" width="6" height="6" fill="#ececec"/>
+                    <rect x="28" y="20" width="6" height="12" fill="#10a37f"/>
+                    <rect x="8" y="28" width="12" height="6" fill="#ececec"/>
+                    <rect x="28" y="38" width="10" height="6" fill="#ececec"/>
+                    <rect x="44" y="28" width="14" height="6" fill="#ececec"/>
+                    <rect x="42" y="42" width="8" height="8" fill="#10a37f"/>
+                    <rect x="52" y="50" width="8" height="10" fill="#ececec"/>
+                    <rect x="28" y="50" width="8" height="10" fill="#ececec"/>
+                  </svg>
+                </div>
+                <div class="coach-qr-instructions">
+                  <span class="coach-qr-title">Direct Athlete Link with Eros</span>
+                  <p class="coach-qr-desc">Athlete enters this 6-character Crockford Base32 code or scans the QR token to request a verified training bond.</p>
+                </div>
+              </div>
+
+              <!-- Manual Direct Link Form -->
+              <div class="coach-manual-link-form">
+                <span class="coach-block-label">Manual Athlete Link (By Name / Handle / Code):</span>
+                <div class="coach-manual-link-inputs">
+                  <input type="text" id="coach-bond-athlete-name" class="coach-custom-input" placeholder="Athlete Name (e.g. Marcus Sterling)" aria-label="Athlete Full Name" />
+                  <input type="text" id="coach-bond-athlete-rack" class="coach-custom-input coach-rack-input" placeholder="Rack 04" value="Rack 04" aria-label="Assigned Rack" />
+                  <button type="button" id="btn-coach-bond-manual-add" class="btn-coach-send">LINK</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Pending Handshake Requests & Active Roster Bonds -->
+            <div class="coach-bond-panel">
+              <div class="coach-bond-section-hdr">
+                <span class="coach-block-label">2. Pending Dual-Consent Requests</span>
+              </div>
+              <div id="coach-bond-pending-list" class="coach-bond-list">
+                <!-- Populated by coach-portal.js -->
+              </div>
+
+              <div class="coach-bond-section-hdr" style="margin-top: 8px;">
+                <span class="coach-block-label">3. Active Bonded Athletes (Sovereign Access)</span>
+              </div>
+              <div id="coach-bonded-roster-list" class="coach-bond-list">
+                <!-- Populated by coach-portal.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- PANEL A: COACH LIVE PANEL (Requirement R3)                          -->
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <div id="coach-live-panel" class="coach-panel-section" role="tabpanel" aria-labelledby="btn-coach-panel-live">
+
+        <!-- Live Squad Overview & Multi-Athlete Roster Grid -->
+        <div class="coach-squad-overview-card" id="coach-squad-overview">
+          <div class="coach-overview-top-row">
+            <div class="coach-overview-title-group">
+              <span class="coach-history-title">Live Squad Overview</span>
+              <span class="coach-overview-sub font-mono" id="coach-kpi-summary-pill">3 Connected • 1 Lifting • 0 Fatigue Alerts</span>
+            </div>
+            <div class="coach-roster-filters" id="coach-roster-filters" role="group" aria-label="Filter Squad Roster">
+              <button type="button" class="coach-filter-pill active" data-filter="all">All Connected</button>
+              <button type="button" class="coach-filter-pill" data-filter="lifting">Actively Lifting</button>
+              <button type="button" class="coach-filter-pill" data-filter="resting">Resting</button>
+              <button type="button" class="coach-filter-pill" data-filter="idle">Idle</button>
+            </div>
+          </div>
+
+          <!-- Multi-Athlete Live Cards Grid -->
+          <div class="coach-squad-grid" id="coach-squad-grid">
+            <!-- Populated dynamically by coach-portal.js -->
           </div>
         </div>
 
-        <!-- 4 Bento Cards Grid -->
-        <div class="coach-metrics-grid">
-          <div class="coach-metric-card">
-            <div class="coach-metric-header">
-              <span class="coach-metric-label">Mean Velocity (MCV)</span>
-              <span class="coach-metric-unit">m/s</span>
+        <!-- Component 2: Active Set Live Monitor -->
+        <div class="coach-active-set-monitor" id="coach-active-set-card">
+          <div class="coach-monitor-header">
+            <div class="coach-monitor-title-group">
+              <span id="coach-active-lift-badge" class="coach-lift-badge lift-deadlift">MAIN DEADLIFT</span>
+              <h2 id="coach-active-set-title" class="coach-active-set-title">DEADLIFT — SET 1</h2>
+              <span id="coach-live-zone-badge" class="coach-zone-badge zone-accelerative font-mono">ACCELERATIVE STRENGTH</span>
             </div>
-            <div class="coach-metric-value" id="coach-live-mcv">0.00</div>
-            <div class="coach-metric-footer">
-              <span>Target: 0.42 m/s</span>
-              <span class="text-cyan">Live</span>
-            </div>
-          </div>
-
-          <div class="coach-metric-card">
-            <div class="coach-metric-header">
-              <span class="coach-metric-label">Peak Velocity (PV)</span>
-              <span class="coach-metric-unit">m/s</span>
-            </div>
-            <div class="coach-metric-value" id="coach-live-pv">0.00</div>
-            <div class="coach-metric-footer">
-              <span>Apex Ascent</span>
-              <span class="text-cyan">Live</span>
+            <div class="coach-monitor-meta" id="coach-active-set-meta">
+              140.0 kg | Target RPE @8.0
             </div>
           </div>
 
-          <div class="coach-metric-card">
-            <div class="coach-metric-header">
-              <span class="coach-metric-label">Range of Motion</span>
-              <span class="coach-metric-unit">cm</span>
-            </div>
-            <div class="coach-metric-value" id="coach-live-rom">0.0</div>
-            <div class="coach-metric-footer">
-              <span>Displacement</span>
-              <span>Vertical</span>
-            </div>
-          </div>
-
-          <div class="coach-metric-card">
-            <div class="coach-metric-header">
-              <span class="coach-metric-label">Velocity Loss</span>
-              <span class="coach-metric-unit">%</span>
-            </div>
-            <div class="coach-metric-value" id="coach-live-vl">0.0%</div>
-            <div class="coach-vl-gauge-container">
-              <div class="coach-vl-bar" role="progressbar" aria-label="Velocity Loss Fatigue Gauge">
-                <div class="coach-vl-bar-fill" id="coach-live-vl-gauge"></div>
+          <!-- 4 Bento Cards Grid -->
+          <div class="coach-metrics-grid">
+            <div class="coach-metric-card">
+              <div class="coach-metric-header">
+                <span class="coach-metric-label">Mean Velocity (MCV)</span>
+                <span class="coach-metric-unit">m/s</span>
               </div>
+              <div class="coach-metric-value" id="coach-live-mcv">0.00</div>
               <div class="coach-metric-footer">
-                <span>Fatigue Drop-off</span>
-                <span>Ceiling: 20%</span>
+                <span>Target: 0.42 m/s</span>
+                <span class="text-cyan">Live with Eros</span>
               </div>
+            </div>
+
+            <div class="coach-metric-card">
+              <div class="coach-metric-header">
+                <span class="coach-metric-label">Peak Velocity (PV)</span>
+                <span class="coach-metric-unit">m/s</span>
+              </div>
+              <div class="coach-metric-value" id="coach-live-pv">0.00</div>
+              <div class="coach-metric-footer">
+                <span>Apex Ascent</span>
+                <span class="text-cyan">Live</span>
+              </div>
+            </div>
+
+            <div class="coach-metric-card">
+              <div class="coach-metric-header">
+                <span class="coach-metric-label">Range of Motion</span>
+                <span class="coach-metric-unit">cm</span>
+              </div>
+              <div class="coach-metric-value" id="coach-live-rom">0.0</div>
+              <div class="coach-metric-footer">
+                <span>Displacement</span>
+                <span>Vertical</span>
+              </div>
+            </div>
+
+            <div class="coach-metric-card">
+              <div class="coach-metric-header">
+                <span class="coach-metric-label">Velocity Loss</span>
+                <span class="coach-metric-unit">%</span>
+              </div>
+              <div class="coach-metric-value" id="coach-live-vl">0.0%</div>
+              <div class="coach-vl-gauge-container">
+                <div class="coach-vl-bar" role="progressbar" aria-label="Velocity Loss Fatigue Gauge">
+                  <div class="coach-vl-bar-fill" id="coach-live-vl-gauge"></div>
+                </div>
+                <div class="coach-metric-footer">
+                  <span>Fatigue Drop-off</span>
+                  <span>Ceiling: 20%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Repetition Stream -->
+          <div class="coach-rep-stream-container">
+            <div class="coach-rep-stream-title">Active Set Repetitions</div>
+            <div class="coach-rep-stream-list" id="coach-live-reps-stream">
+              <span class="coach-empty-stream-msg">No active set in progress. Start a set in Athlete view to begin streaming.</span>
             </div>
           </div>
         </div>
 
-        <!-- Active Repetition Stream -->
-        <div class="coach-rep-stream-container">
-          <div class="coach-rep-stream-title">Active Set Repetitions</div>
-          <div class="coach-rep-stream-list" id="coach-live-reps-stream">
-            <span class="coach-empty-stream-msg">No active set in progress. Start a set in Athlete view to begin streaming.</span>
+        <!-- Component 3: Coach Prescriptive Feedback Console -->
+        <div class="coach-feedback-console" id="coach-feedback-console">
+          <div class="coach-console-header">
+            <span class="coach-console-title">Coach Prescriptive Console</span>
+            <span class="coach-console-status" id="coach-feedback-status">Ready</span>
+          </div>
+
+          <!-- Load Adjustment Pills -->
+          <div class="coach-console-block">
+            <span class="coach-block-label">Load Adjustment Next Set:</span>
+            <div class="coach-load-pills-row">
+              <button type="button" class="coach-load-pill pill-sub" data-delta="-5.0">-5.0 kg</button>
+              <button type="button" class="coach-load-pill pill-sub" data-delta="-2.5">-2.5 kg</button>
+              <button type="button" class="coach-load-pill pill-keep" data-delta="0.0">Keep Load</button>
+              <button type="button" class="coach-load-pill pill-add" data-delta="2.5">+2.5 kg</button>
+              <button type="button" class="coach-load-pill pill-add" data-delta="5.0">+5.0 kg</button>
+            </div>
+          </div>
+
+          <!-- Quick Technical Cue Chips -->
+          <div class="coach-console-block">
+            <span class="coach-block-label">Quick Technical Cues:</span>
+            <div class="coach-cue-chips-row">
+              <button type="button" class="coach-cue-chip" data-cue="Drive hips!">Drive hips!</button>
+              <button type="button" class="coach-cue-chip" data-cue="Squeeze lats before floor break">Squeeze lats</button>
+              <button type="button" class="coach-cue-chip" data-cue="Stay tight in hole">Stay tight in hole</button>
+              <button type="button" class="coach-cue-chip" data-cue="Rack bar — fatigue cutoff reached">Rack bar — cutoff</button>
+              <button type="button" class="coach-cue-chip" data-cue="Take 3m rest before next attempt">Take 3m rest</button>
+            </div>
+          </div>
+
+          <!-- Custom Directive Input -->
+          <div class="coach-console-block">
+            <span class="coach-block-label">Custom Technical Directive:</span>
+            <div class="coach-custom-cue-row">
+              <input type="text" id="coach-custom-cue-input" class="coach-custom-input" placeholder="Type technical cue for athlete rest HUD..." aria-label="Custom technical cue input" />
+              <button type="button" id="btn-coach-send-custom" class="btn-coach-send" aria-label="Send custom cue">
+                <span>SEND CUE</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
+
+        <!-- Component 4: Sets Performance History Table -->
+        <div class="coach-sets-history-card">
+          <div class="coach-history-header">
+            <span class="coach-history-title">Sets Performance History</span>
+            <span class="coach-stat-label font-mono" id="coach-sets-counter">0 Completed</span>
+          </div>
+          <div class="coach-table-wrapper">
+            <table class="coach-table" id="coach-sets-table">
+              <thead>
+                <tr>
+                  <th>SET #</th>
+                  <th>LIFT</th>
+                  <th>LOAD</th>
+                  <th>REPS</th>
+                  <th>AVG VEL</th>
+                  <th>PEAK VEL</th>
+                  <th>VEL LOSS</th>
+                  <th>RPE</th>
+                  <th>DETAILS</th>
+                </tr>
+              </thead>
+              <tbody id="coach-sets-table-body">
+                <tr>
+                  <td colspan="9" class="coach-empty-cell">No sets completed yet in this session.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Component 3: Coach Prescriptive Feedback Console -->
-      <div class="coach-feedback-console" id="coach-feedback-console">
-        <div class="coach-console-header">
-          <span class="coach-console-title">Coach Prescriptive Console</span>
-          <span class="coach-console-status" id="coach-feedback-status">Ready</span>
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <!-- PANEL B: ATHLETE HISTORY PANEL (Requirement R4)                     -->
+      <!-- ═══════════════════════════════════════════════════════════════════ -->
+      <div id="coach-athlete-history-panel" class="coach-panel-section" role="tabpanel" aria-labelledby="btn-coach-panel-history" style="display: none;">
+
+        <!-- 1. Bento Quad: In-Competition Total, Gym Total, Differential & Weekly Adherence -->
+        <div class="coach-history-bento-quad" id="coach-history-bento-quad">
+
+          <!-- Card 1: Current In-Competition Total -->
+          <div class="coach-bento-card" id="coach-comp-total-card">
+            <div class="coach-bento-top">
+              <span class="coach-metric-label">IN-COMPETITION TOTAL</span>
+              <button type="button" id="btn-coach-edit-comp" class="coach-inline-action-btn" aria-label="Edit Competition PRs">Edit</button>
+            </div>
+            <div class="coach-bento-hero font-mono" id="coach-comp-total-val">602.5 kg</div>
+            <div class="coach-bento-sub font-mono" id="coach-comp-breakdown">SQ: 215.0 | BP: 142.5 | DL: 245.0 kg</div>
+            <div class="coach-bento-footer">
+              <span class="coach-verified-pill" id="coach-comp-meta">IPF Verified Meet • DOTS: 412.8</span>
+            </div>
+
+            <!-- Inline Comp Total Editor (toggled via Edit button) -->
+            <div id="coach-comp-edit-drawer" class="coach-inline-edit-drawer" style="display: none;">
+              <div class="coach-inline-inputs-row">
+                <label class="coach-mini-field">
+                  <span>SQ</span>
+                  <input type="number" id="coach-edit-comp-sq" class="coach-mini-input font-mono" step="2.5" value="215.0" aria-label="Competition Squat kg" />
+                </label>
+                <label class="coach-mini-field">
+                  <span>BP</span>
+                  <input type="number" id="coach-edit-comp-bp" class="coach-mini-input font-mono" step="2.5" value="142.5" aria-label="Competition Bench kg" />
+                </label>
+                <label class="coach-mini-field">
+                  <span>DL</span>
+                  <input type="number" id="coach-edit-comp-dl" class="coach-mini-input font-mono" step="2.5" value="245.0" aria-label="Competition Deadlift kg" />
+                </label>
+                <button type="button" id="btn-coach-save-comp" class="coach-sm-btn accent">Save</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Current Gym Total (Dual Models: Absolute 1RM vs Load-Velocity e1RM) -->
+          <div class="coach-bento-card" id="coach-gym-total-card">
+            <div class="coach-bento-top">
+              <span class="coach-metric-label">CURRENT GYM TOTAL</span>
+              <div class="coach-model-switch" id="coach-gym-model-toggle" role="group" aria-label="Gym Total Calculation Model">
+                <button type="button" id="btn-coach-gym-model-abs" class="coach-model-btn active" data-model="abs">Abs 1RM</button>
+                <button type="button" id="btn-coach-gym-model-e1rm" class="coach-model-btn" data-model="e1rm">e1RM</button>
+              </div>
+            </div>
+            <div class="coach-bento-hero font-mono text-cyan" id="coach-gym-total-val">627.5 kg</div>
+            <div class="coach-bento-sub font-mono" id="coach-gym-breakdown">SQ: 222.5 | BP: 147.5 | DL: 257.5 kg</div>
+            <div class="coach-bento-footer">
+              <span id="coach-gym-meta" class="coach-muted-caption">Tracked with Eros • MVT Validated</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Gym vs In-Comp Total Differential & Transfer Gap -->
+          <div class="coach-bento-card" id="coach-total-diff-card">
+            <div class="coach-bento-top">
+              <span class="coach-metric-label">GYM VS COMP TRANSFER</span>
+              <span id="coach-diff-badge" class="coach-transfer-badge optimal">OPTIMAL TRANSFER</span>
+            </div>
+            <div class="coach-bento-hero font-mono" id="coach-diff-val">+25.0 kg (+4.1%)</div>
+            <div class="coach-bento-sub" id="coach-diff-directive">Standard gym-to-meet variance (+2% to +6%). Athlete is competition-ready.</div>
+            <div class="coach-bento-footer">
+              <span class="coach-muted-caption">MVT: SQ 0.30 | BP 0.15 | DL 0.15 m/s</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Weekly Adherence Tracker ("x/7 workouts completed this week with Eros") -->
+          <div class="coach-bento-card" id="coach-weekly-adherence-card">
+            <div class="coach-bento-top">
+              <span class="coach-metric-label">WEEKLY EROS ADHERENCE</span>
+              <span id="coach-weekly-ratio-badge" class="coach-adherence-pill font-mono">4/7 DAYS</span>
+            </div>
+            <div class="coach-adherence-headline" id="coach-weekly-adherence-val">4/7 workouts completed this week with Eros</div>
+            <div class="coach-weekly-segments" id="coach-weekly-segments" role="list" aria-label="Weekly Training Days Monday to Sunday">
+              <!-- Populated dynamically with Mon-Sun 7 segments -->
+            </div>
+            <div class="coach-bento-footer">
+              <span id="coach-weekly-meta" class="coach-muted-caption font-mono">ISO Week Mon-Sun • 34.8t Weekly Volume</span>
+            </div>
+          </div>
+
         </div>
 
-        <!-- Load Adjustment Pills -->
-        <div class="coach-console-block">
-          <span class="coach-block-label">Load Adjustment Next Set:</span>
-          <div class="coach-load-pills-row">
-            <button type="button" class="coach-load-pill pill-sub" data-delta="-5.0">-5.0 kg</button>
-            <button type="button" class="coach-load-pill pill-sub" data-delta="-2.5">-2.5 kg</button>
-            <button type="button" class="coach-load-pill pill-keep" data-delta="0.0">Keep Load</button>
-            <button type="button" class="coach-load-pill pill-add" data-delta="2.5">+2.5 kg</button>
-            <button type="button" class="coach-load-pill pill-add" data-delta="5.0">+5.0 kg</button>
+        <!-- 2. Monthly Calendar View of Completed Workouts with Accessible Data -->
+        <div class="coach-monthly-calendar-card" id="coach-monthly-calendar-card">
+          <div class="coach-calendar-header">
+            <div class="coach-cal-title-block">
+              <span class="coach-history-title">Monthly Completed Workouts Calendar</span>
+              <span id="coach-cal-summary-stats" class="coach-cal-stats font-mono">12 Workouts with Eros • 118.4t Monthly Volume</span>
+            </div>
+            <div class="coach-cal-nav-controls">
+              <button type="button" id="btn-coach-cal-prev" class="coach-cal-nav-btn" aria-label="Previous Month">Prev</button>
+              <span id="coach-cal-month-title" class="coach-cal-month-label font-mono">OCTOBER 2026</span>
+              <button type="button" id="btn-coach-cal-next" class="coach-cal-nav-btn" aria-label="Next Month">Next</button>
+              <button type="button" id="btn-coach-cal-today" class="coach-cal-nav-btn today-btn" aria-label="Jump to Current Month">Today</button>
+            </div>
+          </div>
+
+          <!-- 7-Column Weekday Header (Monday to Sunday ISO) -->
+          <div class="coach-calendar-weekdays" aria-hidden="true">
+            <span>MON</span>
+            <span>TUE</span>
+            <span>WED</span>
+            <span>THU</span>
+            <span>FRI</span>
+            <span>SAT</span>
+            <span>SUN</span>
+          </div>
+
+          <!-- 7-Column Accessible Calendar Grid -->
+          <div id="coach-calendar-grid" class="coach-calendar-grid" role="grid" aria-label="Monthly Completed Workouts Calendar Grid">
+            <!-- Populated dynamically by coach-portal.js -->
+          </div>
+
+          <!-- Accessible Day Workout Inspector Drawer (Shows full sets/reps data when a calendar day is clicked) -->
+          <div id="coach-day-inspector" class="coach-day-inspector" role="region" aria-live="polite" aria-label="Selected Day Workout Telemetry Inspector">
+            <div class="coach-inspector-header">
+              <div class="coach-inspector-title-wrap">
+                <span id="coach-inspector-date" class="coach-inspector-date font-mono">2026-10-26</span>
+                <h3 id="coach-inspector-title" class="coach-inspector-title">Main deadlift + Bench</h3>
+              </div>
+              <div class="coach-inspector-actions">
+                <span id="coach-inspector-meta" class="coach-inspector-meta font-mono">14,250 kg Volume • 5 Sets with Eros • Avg 0.44 m/s</span>
+                <button type="button" id="btn-coach-export-day" class="coach-sm-btn">Export JSON</button>
+                <button type="button" id="btn-coach-export-day-csv" class="coach-sm-btn">Export CSV</button>
+              </div>
+            </div>
+            <div class="coach-table-wrapper">
+              <table class="coach-table" id="coach-inspector-sets-table">
+                <thead>
+                  <tr>
+                    <th>SET #</th>
+                    <th>MOVEMENT</th>
+                    <th>LOAD</th>
+                    <th>REPS</th>
+                    <th>MEAN VEL</th>
+                    <th>PEAK VEL</th>
+                    <th>ROM</th>
+                    <th>VEL LOSS</th>
+                    <th>VELOCITY ZONE</th>
+                    <th>RPE</th>
+                  </tr>
+                </thead>
+                <tbody id="coach-inspector-sets-tbody">
+                  <!-- Populated dynamically when a day is selected -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <!-- Quick Technical Cue Chips -->
-        <div class="coach-console-block">
-          <span class="coach-block-label">Quick Technical Cues:</span>
-          <div class="coach-cue-chips-row">
-            <button type="button" class="coach-cue-chip" data-cue="Drive hips!">Drive hips!</button>
-            <button type="button" class="coach-cue-chip" data-cue="Squeeze lats before floor break">Squeeze lats</button>
-            <button type="button" class="coach-cue-chip" data-cue="Stay tight in hole">Stay tight in hole</button>
-            <button type="button" class="coach-cue-chip" data-cue="Rack bar — fatigue cutoff reached">Rack bar — cutoff</button>
-            <button type="button" class="coach-cue-chip" data-cue="Take 3m rest before next attempt">Take 3m rest</button>
+        <!-- 3. Chronological Previous Workouts Feed -->
+        <div class="coach-sets-history-card" id="coach-previous-workouts-card">
+          <div class="coach-history-header">
+            <div class="coach-overview-title-group">
+              <span class="coach-history-title">Previous Workouts Logbook (Tracked with Eros)</span>
+              <span id="coach-previous-workouts-count" class="coach-stat-label font-mono">0 Sessions</span>
+            </div>
+            <div class="coach-roster-filters" id="coach-history-lift-filters" role="group" aria-label="Filter Previous Workouts by Lift">
+              <button type="button" class="coach-filter-pill active" data-lift-filter="all">All Workouts</button>
+              <button type="button" class="coach-filter-pill" data-lift-filter="Main squat">Main squat</button>
+              <button type="button" class="coach-filter-pill" data-lift-filter="Bench">Bench</button>
+              <button type="button" class="coach-filter-pill" data-lift-filter="Main deadlift">Main deadlift</button>
+              <button type="button" class="coach-filter-pill" data-lift-filter="SBD">SBD</button>
+            </div>
+          </div>
+          <div id="coach-previous-workouts-list" class="coach-previous-workouts-list">
+            <!-- Populated dynamically by coach-portal.js -->
           </div>
         </div>
 
-        <!-- Custom Directive Input -->
-        <div class="coach-console-block">
-          <span class="coach-block-label">Custom Technical Directive:</span>
-          <div class="coach-custom-cue-row">
-            <input type="text" id="coach-custom-cue-input" class="coach-custom-input" placeholder="Type technical cue for athlete rest HUD..." aria-label="Custom technical cue input" />
-            <button type="button" id="btn-coach-send-custom" class="btn-coach-send" aria-label="Send custom cue">
-              <span>SEND CUE</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Component 4: Sets Performance History Table -->
-      <div class="coach-sets-history-card">
-        <div class="coach-history-header">
-          <span class="coach-history-title">Sets Performance History</span>
-          <span class="coach-stat-label font-mono" id="coach-sets-counter">0 Completed</span>
-        </div>
-        <div class="coach-table-wrapper">
-          <table class="coach-table" id="coach-sets-table">
-            <thead>
-              <tr>
-                <th>SET #</th>
-                <th>LIFT</th>
-                <th>LOAD</th>
-                <th>REPS</th>
-                <th>AVG VEL</th>
-                <th>PEAK VEL</th>
-                <th>VEL LOSS</th>
-                <th>RPE</th>
-                <th>DETAILS</th>
-              </tr>
-            </thead>
-            <tbody id="coach-sets-table-body">
-              <tr>
-                <td colspan="9" class="coach-empty-cell">No sets completed yet in this session.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
 
     </section>
