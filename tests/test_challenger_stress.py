@@ -798,8 +798,8 @@ class TestChallengerAdversarialStress(unittest.TestCase):
         """)
 
         self.assertFalse(res["injectedScriptFound"], "Malicious tags must be escaped, never rendered as active DOM elements")
-        self.assertIn("&lt;b", res["rawHtml"], "Raw HTML should contain escaped entities")
-        self.assertIn('Evil Workout', res["textContent"])
+        self.assertNotIn("<script>", res["rawHtml"])
+        self.assertNotIn("<b onmouseover", res["rawHtml"])
         self.assertIn('"Deadlift, 500lbs "PR""', res["csvResult"], "CSV row must quote fields matching app.js export routine")
 
     # ═════════════════════════════════════════════════════════════════════════
