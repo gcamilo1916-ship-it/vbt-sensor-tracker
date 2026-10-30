@@ -9,7 +9,8 @@
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
     module.exports = factory();
-  } else {
+  }
+  if (root) {
     root.CoachPortal = factory();
     root.initCoachPortal = root.CoachPortal.init;
     root.switchMode = root.CoachPortal.switchMode;
@@ -43,77 +44,36 @@
   const CROCKFORD_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
   const BONDS_STORAGE_KEY = 'eros_coach_bonds_v1';
 
-  // Default Bonded Squad Roster with Rich Biomechanical & Historical Profiles
-  const DEFAULT_SQUAD_ATHLETES = [
-    {
+  // Genuine Active Session Athlete bound to ath_01 (No fake personas)
+  function createSessionAthlete(name = 'Active Athlete', rack = 'Rack 01') {
+    return {
       id: 'ath_01',
-      name: 'Alex Vance',
-      rack: 'Rack 01',
+      name: name,
+      rack: rack,
       weightClass: '-93 kg',
-      bodyweightKg: 91.8,
-      gender: 'male',
-      status: 'lifting',
+      bodyweightKg: 85.0,
+      gender: 'unspecified',
+      status: 'resting',
       currentLift: 'Main deadlift',
-      currentLoadKg: 210.0,
-      currentMcv: 0.44,
-      currentPv: 0.62,
-      currentRomCm: 58.2,
-      currentVlPct: 11.4,
-      readiness: '94% [OPTIMAL]',
-      e1rm: '272.5 kg',
-      volume: '7,420 kg',
-      compPrs: { squat: 215.0, bench: 142.5, deadlift: 245.0, federation: 'IPF Verified Meet' },
-      gymPrs: { squat: 222.5, bench: 147.5, deadlift: 257.5 },
-      e1rmPrs: { squat: 225.0, bench: 149.2, deadlift: 260.0 },
+      currentLoadKg: 140.0,
+      currentMcv: 0.0,
+      currentPv: 0.0,
+      currentRomCm: 0.0,
+      currentVlPct: 0.0,
+      readiness: '100% [OPTIMAL]',
+      e1rm: '—',
+      volume: '0 kg',
+      compPrs: { squat: 0, bench: 0, deadlift: 0 },
+      gymPrs: { squat: 0, bench: 0, deadlift: 0 },
+      e1rmPrs: { squat: 0, bench: 0, deadlift: 0 },
       bondStatus: 'active',
-      bondedSince: '2026-10-01'
-    },
-    {
-      id: 'ath_02',
-      name: 'Jordan Bell',
-      rack: 'Rack 02',
-      weightClass: '-83 kg',
-      bodyweightKg: 82.1,
-      gender: 'male',
-      status: 'resting',
-      currentLift: 'Main squat',
-      currentLoadKg: 185.0,
-      currentMcv: 0.52,
-      currentPv: 0.71,
-      currentRomCm: 61.5,
-      currentVlPct: 8.2,
-      readiness: '88% [GOOD]',
-      e1rm: '240.0 kg',
-      volume: '5,850 kg',
-      compPrs: { squat: 195.0, bench: 130.0, deadlift: 225.0, federation: 'IPF Verified Meet' },
-      gymPrs: { squat: 202.5, bench: 135.0, deadlift: 232.5 },
-      e1rmPrs: { squat: 205.0, bench: 136.5, deadlift: 235.0 },
-      bondStatus: 'active',
-      bondedSince: '2026-10-04'
-    },
-    {
-      id: 'ath_03',
-      name: 'Elena Rostova',
-      rack: 'Rack 03',
-      weightClass: '-63 kg',
-      bodyweightKg: 62.4,
-      gender: 'female',
-      status: 'resting',
-      currentLift: 'Bench',
-      currentLoadKg: 92.5,
-      currentMcv: 0.39,
-      currentPv: 0.54,
-      currentRomCm: 33.8,
-      currentVlPct: 14.5,
-      readiness: '96% [PRIME]',
-      e1rm: '215.0 kg',
-      volume: '8,100 kg',
-      compPrs: { squat: 152.5, bench: 97.5, deadlift: 182.5, federation: 'IPF Verified Meet' },
-      gymPrs: { squat: 157.5, bench: 100.0, deadlift: 190.0 },
-      e1rmPrs: { squat: 160.0, bench: 101.5, deadlift: 192.5 },
-      bondStatus: 'active',
-      bondedSince: '2026-10-08'
-    }
+      bondedSince: 'Session Active'
+    };
+  }
+
+  // DEFAULT_SQUAD_ATHLETES contains genuine bonded athletes only (default: local session athlete ath_01)
+  const DEFAULT_SQUAD_ATHLETES = [
+    createSessionAthlete('Active Athlete', 'Rack 01')
   ];
 
   let SQUAD_ATHLETES = DEFAULT_SQUAD_ATHLETES.map(a => ({
@@ -123,19 +83,7 @@
     e1rmPrs: { ...a.e1rmPrs }
   }));
 
-  let pendingBondRequests = [
-    {
-      id: 'req_01',
-      name: 'Liam Thorne',
-      rack: 'Rack 04',
-      weightClass: '-105 kg',
-      codeEntered: 'EROS-7X9K',
-      requestedAt: 'Just now',
-      compPrs: { squat: 240.0, bench: 160.0, deadlift: 275.0, federation: 'IPF Verified Meet' },
-      gymPrs: { squat: 247.5, bench: 165.0, deadlift: 285.0 },
-      e1rmPrs: { squat: 250.0, bench: 167.5, deadlift: 288.0 }
-    }
-  ];
+  let pendingBondRequests = [];
 
   let currentAthlete = SQUAD_ATHLETES[0];
 
@@ -185,6 +133,13 @@
     if (/deadlift/i.test(s)) return 'Main deadlift';
     if (/bench/i.test(s)) return 'Bench';
     return s;
+  }
+
+  function formatRestDuration(seconds) {
+    if (typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) return '-';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
   // ── Helper: Bryan Mann 5-Zone Velocity Continuum ──
@@ -352,6 +307,7 @@
       customCueInput: document.getElementById('coach-custom-cue-input'),
       btnSendCustom: document.getElementById('btn-coach-send-custom'),
       loadPills: document.querySelectorAll('.coach-load-pill'),
+      restPills: document.querySelectorAll('.coach-rest-pill'),
       cueChips: document.querySelectorAll('.coach-cue-chip'),
 
       // Athlete History Panel: Bento Quad
@@ -511,113 +467,6 @@
       } catch (_) {}
     }
 
-    // 2. Deterministic Baseline Training Schedule in Current Month & Current ISO Week
-    const baseRef = new Date(currentCalYear, currentCalMonth, 1);
-    const year = baseRef.getFullYear();
-    const month = baseRef.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    const templates = targetId === 'ath_02'
-      ? [
-          { dayOffset: 1, lifts: ['Squat', 'Bench'], sets: [
-            { setNumber: 1, lift: 'Main squat', weight: 170.0, repsCount: 4, avgVelocity: 0.54, maxVelocity: 0.72, rom: 61.2, velocityLossPct: 8.5, rpe: 7.5 },
-            { setNumber: 2, lift: 'Main squat', weight: 185.0, repsCount: 3, avgVelocity: 0.46, maxVelocity: 0.64, rom: 60.8, velocityLossPct: 11.2, rpe: 8.5 },
-            { setNumber: 3, lift: 'Bench', weight: 115.0, repsCount: 5, avgVelocity: 0.49, maxVelocity: 0.67, rom: 36.4, velocityLossPct: 12.0, rpe: 8.0 }
-          ]},
-          { dayOffset: 3, lifts: ['Deadlift'], sets: [
-            { setNumber: 1, lift: 'Main deadlift', weight: 195.0, repsCount: 4, avgVelocity: 0.48, maxVelocity: 0.66, rom: 56.4, velocityLossPct: 9.8, rpe: 8.0 },
-            { setNumber: 2, lift: 'Main deadlift', weight: 210.0, repsCount: 2, avgVelocity: 0.37, maxVelocity: 0.52, rom: 56.1, velocityLossPct: 14.1, rpe: 9.0 }
-          ]},
-          { dayOffset: 5, lifts: ['Squat', 'Bench', 'Deadlift'], sets: [
-            { setNumber: 1, lift: 'Main squat', weight: 180.0, repsCount: 3, avgVelocity: 0.49, maxVelocity: 0.68, rom: 61.0, velocityLossPct: 9.2, rpe: 8.0 },
-            { setNumber: 2, lift: 'Bench', weight: 120.0, repsCount: 3, avgVelocity: 0.44, maxVelocity: 0.61, rom: 36.0, velocityLossPct: 10.5, rpe: 8.5 },
-            { setNumber: 3, lift: 'Main deadlift', weight: 205.0, repsCount: 3, avgVelocity: 0.41, maxVelocity: 0.58, rom: 56.2, velocityLossPct: 12.8, rpe: 8.5 }
-          ]}
-        ]
-      : [
-          { dayOffset: 0, lifts: ['Deadlift', 'Bench'], sets: [
-            { setNumber: 1, lift: 'Main deadlift', weight: 190.0, repsCount: 4, avgVelocity: 0.51, maxVelocity: 0.70, rom: 58.2, velocityLossPct: 8.4, rpe: 7.5 },
-            { setNumber: 2, lift: 'Main deadlift', weight: 215.0, repsCount: 3, avgVelocity: 0.42, maxVelocity: 0.59, rom: 58.0, velocityLossPct: 12.6, rpe: 8.5 },
-            { setNumber: 3, lift: 'Main deadlift', weight: 230.0, repsCount: 2, avgVelocity: 0.34, maxVelocity: 0.48, rom: 57.6, velocityLossPct: 16.2, rpe: 9.0 },
-            { setNumber: 4, lift: 'Bench', weight: 130.0, repsCount: 5, avgVelocity: 0.47, maxVelocity: 0.64, rom: 34.5, velocityLossPct: 13.5, rpe: 8.0 }
-          ]},
-          { dayOffset: 1, lifts: ['Squat'], sets: [
-            { setNumber: 1, lift: 'Main squat', weight: 185.0, repsCount: 4, avgVelocity: 0.56, maxVelocity: 0.75, rom: 62.4, velocityLossPct: 7.9, rpe: 7.5 },
-            { setNumber: 2, lift: 'Main squat', weight: 202.5, repsCount: 3, avgVelocity: 0.45, maxVelocity: 0.63, rom: 62.1, velocityLossPct: 11.8, rpe: 8.5 },
-            { setNumber: 3, lift: 'Main squat', weight: 212.5, repsCount: 2, avgVelocity: 0.38, maxVelocity: 0.54, rom: 61.8, velocityLossPct: 14.9, rpe: 9.0 }
-          ]},
-          { dayOffset: 3, lifts: ['Bench'], sets: [
-            { setNumber: 1, lift: 'Bench', weight: 125.0, repsCount: 5, avgVelocity: 0.52, maxVelocity: 0.71, rom: 34.8, velocityLossPct: 9.4, rpe: 7.5 },
-            { setNumber: 2, lift: 'Bench', weight: 135.0, repsCount: 4, avgVelocity: 0.43, maxVelocity: 0.59, rom: 34.4, velocityLossPct: 14.2, rpe: 8.5 },
-            { setNumber: 3, lift: 'Bench', weight: 142.5, repsCount: 2, avgVelocity: 0.31, maxVelocity: 0.45, rom: 34.1, velocityLossPct: 17.8, rpe: 9.0 }
-          ]},
-          { dayOffset: 5, lifts: ['Squat', 'Bench', 'Deadlift'], sets: [
-            { setNumber: 1, lift: 'Main squat', weight: 205.0, repsCount: 3, avgVelocity: 0.44, maxVelocity: 0.62, rom: 62.0, velocityLossPct: 10.4, rpe: 8.5 },
-            { setNumber: 2, lift: 'Bench', weight: 137.5, repsCount: 3, avgVelocity: 0.39, maxVelocity: 0.55, rom: 34.2, velocityLossPct: 12.1, rpe: 8.5 },
-            { setNumber: 3, lift: 'Main deadlift', weight: 235.0, repsCount: 2, avgVelocity: 0.32, maxVelocity: 0.47, rom: 57.9, velocityLossPct: 15.6, rpe: 9.0 }
-          ]}
-        ];
-
-    // Populate across the weeks of the viewed month
-    for (let d = 1; d <= daysInMonth; d++) {
-      const cellDate = new Date(year, month, d);
-      const jsDay = cellDate.getDay(); // 0=Sun..6=Sat
-      const isoDayIdx = (jsDay + 6) % 7; // 0=Mon..6=Sun
-      const tpl = templates.find(t => t.dayOffset === isoDayIdx);
-      if (!tpl) continue;
-
-      const dStr = formatIsoDate(cellDate);
-      if (seenDates.has(dStr)) continue;
-
-      // Only include sessions up to today (or up to day 26 if viewing a past/future month for review)
-      const currentNow = new Date();
-      const isCurrentMonth = (year === currentNow.getFullYear() && month === currentNow.getMonth());
-      if (isCurrentMonth && d > currentNow.getDate()) continue;
-
-      seenDates.add(dStr);
-      const wName = formatCanonicalWorkoutName(tpl.lifts);
-      const totalVol = tpl.sets.reduce((acc, s) => acc + s.weight * s.repsCount, 0);
-      const avgVel = tpl.sets.reduce((acc, s) => acc + s.avgVelocity, 0) / tpl.sets.length;
-
-      results.push({
-        id: `ws_${targetId}_${dStr}`,
-        athleteId: targetId,
-        date: dStr,
-        name: wName,
-        totalVolumeKg: totalVol,
-        totalSets: tpl.sets.length,
-        avgVelocity: avgVel,
-        sets: tpl.sets
-      });
-    }
-
-    // Ensure current ISO week has workouts populated even if week crosses month boundary
-    const currentNowWeek = new Date();
-    const mondayOfCurrentWeek = getMondayOfIsoWeek(currentNowWeek);
-    templates.forEach(tpl => {
-      const wDate = new Date(mondayOfCurrentWeek);
-      wDate.setDate(mondayOfCurrentWeek.getDate() + tpl.dayOffset);
-      if (wDate <= currentNowWeek) {
-        const dStr = formatIsoDate(wDate);
-        if (!seenDates.has(dStr)) {
-          seenDates.add(dStr);
-          const wName = formatCanonicalWorkoutName(tpl.lifts);
-          const totalVol = tpl.sets.reduce((acc, s) => acc + s.weight * s.repsCount, 0);
-          const avgVel = tpl.sets.reduce((acc, s) => acc + s.avgVelocity, 0) / tpl.sets.length;
-          results.push({
-            id: `ws_${targetId}_${dStr}`,
-            athleteId: targetId,
-            date: dStr,
-            name: wName,
-            totalVolumeKg: totalVol,
-            totalSets: tpl.sets.length,
-            avgVelocity: avgVel,
-            sets: tpl.sets
-          });
-        }
-      }
-    });
-
     results.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
     return results;
   }
@@ -635,6 +484,26 @@
   function init() {
     queryElements();
     loadPersistedBonds();
+
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const connRaw = localStorage.getItem('eros_athlete_coach_connection_v1');
+        if (connRaw) {
+          const conn = JSON.parse(connRaw);
+          if (conn && conn.athleteName) {
+            const ath = SQUAD_ATHLETES.find(a => a.id === (conn.athleteId || 'ath_01'));
+            if (ath) {
+              ath.name = conn.athleteName;
+              ath.rack = conn.rackId || 'Rack 01';
+            }
+            if (elements.athleteSelect) {
+              const opt = elements.athleteSelect.querySelector(`option[value="${conn.athleteId || 'ath_01'}"]`);
+              if (opt) opt.textContent = `${conn.athleteName} (${conn.rackId || 'Rack 01'})`;
+            }
+          }
+        }
+      }
+    } catch (_) {}
 
     // Mode Toggle Clicks
     if (elements.btnModeAthlete && !elements.btnModeAthlete._coachBound) {
@@ -1189,6 +1058,11 @@
       elements.kpiSummaryPill.textContent = `${SQUAD_ATHLETES.length} Connected • ${liftingCount} Lifting • ${alertCount} Fatigue Alerts`;
     }
 
+    if (SQUAD_ATHLETES.length === 0) {
+      elements.squadGrid.innerHTML = '<div class="coach-empty-stream-msg">No bonded athletes connected.</div>';
+      return;
+    }
+
     const filtered = SQUAD_ATHLETES.filter(a => {
       if (activeRosterFilter === 'all') return true;
       return a.status === activeRosterFilter;
@@ -1205,7 +1079,7 @@
       const liftBadgeClass = /squat/i.test(ath.currentLift)
         ? 'lift-squat'
         : (/bench/i.test(ath.currentLift) ? 'lift-bench' : 'lift-deadlift');
-      const restSecs = ath.restSeconds || (ath.id === 'ath_02' ? 102 : 165);
+      const restSecs = ath.restSeconds || 0;
       const restMinsStr = String(Math.floor(restSecs / 60)).padStart(2, '0');
       const restSecsStr = String(restSecs % 60).padStart(2, '0');
       const statusLabel = ath.status === 'lifting'
@@ -1247,8 +1121,6 @@
             </div>
           </div>
           <div class="coach-squad-card-actions">
-            <button type="button" class="coach-squad-action-btn" data-action="sub-load" data-athlete-id="${ath.id}" aria-label="Subtract 2.5kg for ${ath.name}">-2.5 kg</button>
-            <button type="button" class="coach-squad-action-btn" data-action="add-load" data-athlete-id="${ath.id}" aria-label="Add 2.5kg for ${ath.name}">+2.5 kg</button>
             <button type="button" class="coach-squad-action-btn focus-btn" data-action="focus" data-athlete-id="${ath.id}" aria-label="Focus ${ath.name}">Focus</button>
           </div>
         </div>
@@ -1260,20 +1132,7 @@
         e.stopPropagation();
         const athId = btn.getAttribute('data-athlete-id');
         const action = btn.getAttribute('data-action');
-        const targetAth = SQUAD_ATHLETES.find(a => a.id === athId);
-        if (!targetAth) return;
-
-        if (action === 'sub-load') {
-          const newWeight = Math.max(0, (targetAth.currentLoadKg || 140) - 2.5);
-          targetAth.currentLoadKg = newWeight;
-          sendCoachPrescription(`Load adjustment: -2.5 kg for next set (${newWeight.toFixed(1)} kg)`, -2.5, newWeight, targetAth.id);
-          renderSquadOverview();
-        } else if (action === 'add-load') {
-          const newWeight = (targetAth.currentLoadKg || 140) + 2.5;
-          targetAth.currentLoadKg = newWeight;
-          sendCoachPrescription(`Load adjustment: +2.5 kg for next set (${newWeight.toFixed(1)} kg)`, 2.5, newWeight, targetAth.id);
-          renderSquadOverview();
-        } else if (action === 'focus') {
+        if (action === 'focus') {
           selectAthleteById(athId);
         }
       });
@@ -1861,10 +1720,19 @@
       bus.on('rep:recorded', handleRepRecorded);
       bus.on('set:completed', handleSetCompleted);
       bus.on('coach:load_response', handleLoadResponse);
+      bus.on('athlete:connect', handleAthleteConnect);
+      bus.on('coach:rest_target', handleCoachRestTarget);
       bus.on('workout:updated', () => {
         if (isCoachMode) renderFullCoachDashboard();
       });
       bus._coachPortalAttached = true;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function' && !window._coachAthleteConnectBound) {
+      window.addEventListener('eros:athlete_connect', (e) => {
+        if (e && e.detail) handleAthleteConnect(e.detail);
+      });
+      window._coachAthleteConnectBound = true;
     }
 
     if (typeof window !== 'undefined' && window.ErosSyncBus) {
@@ -2037,6 +1905,52 @@
     }
   }
 
+  function handleAthleteConnect(payload) {
+    if (!payload) return;
+    const athleteId = payload.athleteId || 'ath_01';
+    const athleteName = payload.athleteName || 'Active Athlete';
+    const rackId = payload.rackId || 'Rack 01';
+
+    let athlete = SQUAD_ATHLETES.find(a => a.id === athleteId);
+    if (athlete) {
+      athlete.name = athleteName;
+      athlete.rack = rackId;
+    } else {
+      athlete = createSessionAthlete(athleteName, rackId);
+      athlete.id = athleteId;
+      SQUAD_ATHLETES.push(athlete);
+    }
+
+    if (!elements.athleteSelect) queryElements();
+    if (elements.athleteSelect) {
+      let opt = elements.athleteSelect.querySelector(`option[value="${athleteId}"]`);
+      if (opt) {
+        opt.textContent = `${athleteName} (${rackId})`;
+      } else {
+        opt = document.createElement('option');
+        opt.value = athleteId;
+        opt.textContent = `${athleteName} (${rackId})`;
+        elements.athleteSelect.appendChild(opt);
+      }
+    }
+
+    renderSquadOverview();
+    showFeedbackMessage(`Athlete connected: ${athleteName} (${rackId})`);
+  }
+
+  function handleCoachRestTarget(payload) {
+    if (!payload || !payload.targetSeconds) return;
+    const targetSeconds = payload.targetSeconds;
+    const athleteId = payload.athleteId || 'ath_01';
+    const athlete = SQUAD_ATHLETES.find(a => a.id === athleteId);
+    if (athlete) {
+      athlete.prescribedRestSeconds = targetSeconds;
+    }
+    if (currentAthlete && currentAthlete.id === athleteId) {
+      currentAthlete.prescribedRestSeconds = targetSeconds;
+    }
+  }
+
   // ── Render Dashboard Functions ──
   function renderFullCoachDashboard() {
     updateSquadRibbon();
@@ -2179,7 +2093,7 @@
     if (sets.length === 0) {
       elements.setsTableBody.innerHTML = `
         <tr>
-          <td colspan="9" class="coach-empty-cell">No sets completed yet in this session.</td>
+          <td colspan="10" class="coach-empty-cell">No sets completed yet in this session.</td>
         </tr>
       `;
       return;
@@ -2192,6 +2106,9 @@
       const liftLower = lift.toLowerCase();
       const isExpanded = expandedSetIds.has(setId);
       const isCutoff = (set.velocityLossPct || 0) >= 20.0;
+      const restDuration = (typeof set.restSeconds === 'number' && set.restSeconds > 0)
+        ? formatRestDuration(set.restSeconds)
+        : '-';
 
       rowsHtml += `
         <tr class="coach-history-row ${isExpanded ? 'expanded' : ''}" data-set-id="${setId}">
@@ -2202,6 +2119,7 @@
           <td class="font-mono">${(set.avgVelocity || 0).toFixed(2)} m/s</td>
           <td class="font-mono">${(set.maxVelocity || 0).toFixed(2)} m/s</td>
           <td class="font-mono ${isCutoff ? 'text-danger' : ''}">${(set.velocityLossPct || 0).toFixed(1)}%</td>
+          <td class="font-mono">${restDuration}</td>
           <td class="font-mono">@${(set.avgRpe || 8.0).toFixed(1)}</td>
           <td>
             <button type="button" class="coach-expand-btn" data-toggle-id="${setId}" aria-label="Toggle details for set ${set.setNumber}">
@@ -2214,7 +2132,7 @@
       if (isExpanded && set.reps && set.reps.length > 0) {
         rowsHtml += `
           <tr class="coach-expanded-drawer-row" id="drawer-${setId}">
-            <td colspan="9">
+            <td colspan="10">
               <div class="coach-rep-drawer-inner">
                 <table class="coach-rep-subtable">
                   <thead>
@@ -2290,6 +2208,39 @@
             : `Keep current working load (${currentWeight.toFixed(1)} kg)`;
 
           sendCoachPrescription(cueText, delta, newWeight);
+        });
+        pill._coachBound = true;
+      });
+    }
+
+    if (elements.restPills && elements.restPills.length > 0) {
+      elements.restPills.forEach(pill => {
+        if (pill._coachBound) return;
+        pill.addEventListener('click', () => {
+          elements.restPills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          const targetSeconds = parseInt(pill.getAttribute('data-rest-seconds') || '180', 10);
+          const targetId = currentAthlete ? currentAthlete.id : 'ath_01';
+
+          if (currentAthlete) {
+            currentAthlete.prescribedRestSeconds = targetSeconds;
+          }
+
+          if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
+            window.ErosSyncBus.emit('coach:rest_target', {
+              athleteId: targetId,
+              targetSeconds: targetSeconds,
+              timestamp: Date.now()
+            });
+          }
+
+          if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
+            window.dispatchEvent(new CustomEvent('eros:coach_rest_target', {
+              detail: { athleteId: targetId, targetSeconds: targetSeconds, timestamp: Date.now() }
+            }));
+          }
+
+          showFeedbackMessage(`Configured target rest: ${targetSeconds}s for ${currentAthlete ? currentAthlete.name : 'Athlete'}`);
         });
         pill._coachBound = true;
       });

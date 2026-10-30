@@ -180,17 +180,18 @@
     emitter.appendChild(fragment);
   }
 
-  // ── Rest Countdown Controller ──
+  // ── Rest Timer Controller ──
   let restCountdownInterval = null;
+  let restElapsedSeconds = 0;
 
   /**
-   * Starts a rest interval countdown in the summary banner.
-   * @param {number} seconds - Rest duration in seconds (default 180s = 3m).
+   * Starts an inter-set rest timer displaying elapsed rest time in MM:SS.
+   * @param {number} [targetSeconds=180] - Prescribed rest duration target in seconds.
    * @param {HTMLElement} [displayEl] - Element receiving the MM:SS text.
    */
-  function startRestCountdown(seconds = 180, displayEl = null) {
+  function startRestCountdown(targetSeconds = 180, displayEl = null) {
     stopRestCountdown();
-    let remaining = Math.max(0, parseInt(seconds, 10) || 180);
+    restElapsedSeconds = 0;
 
     const targetEl = displayEl || (typeof document !== 'undefined' ? document.getElementById('summary-rest-time') : null);
 
@@ -201,27 +202,44 @@
     }
 
     if (targetEl) {
-      targetEl.textContent = formatTime(remaining);
+      targetEl.textContent = formatTime(0);
     }
 
     restCountdownInterval = setInterval(() => {
-      remaining -= 1;
-      if (remaining <= 0) {
-        stopRestCountdown();
-        if (targetEl) targetEl.textContent = '00:00';
-      } else if (targetEl) {
-        targetEl.textContent = formatTime(remaining);
+      restElapsedSeconds += 1;
+      if (targetEl) {
+        targetEl.textContent = formatTime(restElapsedSeconds);
       }
     }, 1000);
   }
 
   /**
-   * Cancels active rest countdown.
+   * Cancels active rest timer.
    */
   function stopRestCountdown() {
     if (restCountdownInterval) {
       clearInterval(restCountdownInterval);
       restCountdownInterval = null;
+    }
+  }
+
+  /**
+   * Returns currently accumulated elapsed rest duration in seconds.
+   */
+  function getElapsedRestSeconds() {
+    return restElapsedSeconds;
+  }
+
+  /**
+   * Dismisses post-set summary banner and stops rest countdown.
+   */
+  function dismissSummaryBanner() {
+    stopRestCountdown();
+    if (typeof document !== 'undefined') {
+      const banner = document.getElementById('set-summary-banner');
+      if (banner) {
+        banner.classList.remove('visible');
+      }
     }
   }
 
@@ -624,7 +642,9 @@
     showCoachCue,
     hideCoachCue,
     showCoachDirectiveModal,
-    dismissCoachDirectiveModal
+    dismissCoachDirectiveModal,
+    dismissSummaryBanner,
+    getElapsedRestSeconds
   };
 
   // Expose directly to global/window context for seamless inter-module use
@@ -633,6 +653,8 @@
     global.triggerSetCompletionCelebration = triggerSetCompletionCelebration;
     global.renderVelocityZoneBadge = renderVelocityZoneBadge;
     global.getVelocityZone = getVelocityZone;
+    global.dismissSummaryBanner = dismissSummaryBanner;
+    global.getElapsedRestSeconds = getElapsedRestSeconds;
   }
 
   if (typeof module !== 'undefined' && module.exports) {

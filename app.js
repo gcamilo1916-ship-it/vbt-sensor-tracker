@@ -846,6 +846,16 @@ function endWorkoutSession() {
   activeWorkout.endTime = Date.now();
   stopSessionTimer();
 
+  if (interSetRestInterval) {
+    clearInterval(interSetRestInterval);
+    interSetRestInterval = null;
+  }
+  restStartTime = null;
+  currentRestElapsedSeconds = 0;
+  if (typeof AthleteFX !== 'undefined' && typeof AthleteFX.stopRestCountdown === 'function') {
+    AthleteFX.stopRestCountdown();
+  }
+
   activeWorkout = null;
   activeSet = null;
 
@@ -898,6 +908,18 @@ function stopSessionTimer() {
   }
 }
 
+// ── Inter-Set Rest Stopwatch Controller (Requirement R2) ──
+let restStartTime = null;
+let interSetRestInterval = null;
+let currentRestElapsedSeconds = 0;
+
+function formatRestDuration(seconds) {
+  if (typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) return '-';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 /**
  * Starts a new set under the active workout
  */
@@ -906,6 +928,46 @@ function startNewSet(lift = currentLift) {
   if (!activeWorkout) {
     startWorkoutSession();
   }
+
+  // Dismiss Post-Set Summary Banner (R1)
+  const summaryBanner = document.getElementById('set-summary-banner');
+  if (summaryBanner) {
+    summaryBanner.classList.remove('visible');
+  }
+  if (typeof AthleteFX !== 'undefined' && typeof AthleteFX.dismissSummaryBanner === 'function') {
+    AthleteFX.dismissSummaryBanner();
+  }
+
+  // Stop & Reset Inter-Set Rest Stopwatch (R2)
+  if (restStartTime) {
+    const elapsedSeconds = Math.round((Date.now() - restStartTime) / 1000);
+    if (activeWorkout && Array.isArray(activeWorkout.sets) && activeWorkout.sets.length > 0) {
+      const previousSet = activeWorkout.sets[activeWorkout.sets.length - 1];
+      if (previousSet) {
+        previousSet.restSeconds = elapsedSeconds;
+        if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
+          window.ErosSyncBus.emit('set:completed', {
+            setId: previousSet.setId,
+            setNumber: previousSet.setNumber,
+            lift: previousSet.lift,
+            weight: previousSet.weight,
+            reps: Array.isArray(previousSet.reps) ? [...previousSet.reps] : [],
+            avgVelocity: previousSet.avgVelocity,
+            maxVelocity: previousSet.maxVelocity,
+            velocityLoss: previousSet.velocityLossPct,
+            restSeconds: previousSet.restSeconds,
+            timestamp: previousSet.endTime || Date.now()
+          });
+        }
+      }
+    }
+  }
+  if (interSetRestInterval) {
+    clearInterval(interSetRestInterval);
+    interSetRestInterval = null;
+  }
+  restStartTime = null;
+  currentRestElapsedSeconds = 0;
 
   const setLift = canonicalLift(lift || currentLift);
   const setNumber = activeWorkout.sets.length + 1;
@@ -924,6 +986,7 @@ function startNewSet(lift = currentLift) {
     targetRpe: currentTargetRpe,
     startTime: Date.now(),
     endTime: null,
+    restSeconds: null,
     avgVelocity: 0.0,
     maxVelocity: 0.0,
     minVelocity: 0.0,
@@ -958,6 +1021,7 @@ function startNewSet(lift = currentLift) {
       setNumber: newSet.setNumber,
       lift: newSet.lift,
       weight: newSet.weight,
+      restSeconds: null,
       timestamp: newSet.startTime
     });
   }
@@ -994,12 +1058,30 @@ function endActiveSet() {
       avgVelocity: activeSet.avgVelocity,
       maxVelocity: activeSet.maxVelocity,
       velocityLoss: activeSet.velocityLossPct,
+      restSeconds: typeof activeSet.restSeconds === 'number' ? activeSet.restSeconds : null,
       timestamp: activeSet.endTime || Date.now()
     });
   }
 
   const completedSetForCelebration = Object.assign({}, activeSet);
   activeSet = null;
+
+  // ── Inter-Set Rest Stopwatch: start counting immediately upon set completion (R2)
+  restStartTime = Date.now();
+  currentRestElapsedSeconds = 0;
+  if (interSetRestInterval) {
+    clearInterval(interSetRestInterval);
+    interSetRestInterval = null;
+  }
+  const updateRestDisplay = () => {
+    if (!restStartTime) return;
+    currentRestElapsedSeconds = Math.round((Date.now() - restStartTime) / 1000);
+    const timeStr = formatRestDuration(currentRestElapsedSeconds);
+    const restEl = document.getElementById('summary-rest-time');
+    if (restEl) restEl.textContent = timeStr;
+  };
+  updateRestDisplay();
+  interSetRestInterval = setInterval(updateRestDisplay, 1000);
 
   // Trigger Athlete Celebratory FX & Post-Set Rest Transition
   if (typeof triggerSetCompletionCelebration === 'function') {
@@ -1990,6 +2072,10 @@ function updateWorkoutPage() {
     const maxV = repCount > 0 ? s.maxVelocity.toFixed(2) : '-';
     const avgR = repCount > 0 ? s.avgRpe.toFixed(1) : '-';
 
+    const restStr = (typeof s.restSeconds === 'number' && s.restSeconds > 0)
+      ? formatRestDuration(s.restSeconds)
+      : '-';
+
     const setWeightVal = (typeof s.weight === 'number' && !isNaN(s.weight) && s.weight > 0)
       ? `${s.weight.toFixed(1)} kg`
       : '-';
@@ -2013,6 +2099,10 @@ function updateWorkoutPage() {
           <div class="workout-set-metric">
             <span class="workout-set-metric-val">${maxV}${repCount > 0 ? ' m/s' : ''}</span>
             <span class="workout-set-metric-lbl">PEAK</span>
+          </div>
+          <div class="workout-set-metric">
+            <span class="workout-set-metric-val">${restStr}</span>
+            <span class="workout-set-metric-lbl">REST</span>
           </div>
           <div class="workout-set-metric">
             <span class="workout-set-metric-val">${avgR}</span>
@@ -2767,6 +2857,10 @@ function renderSessionSetsAccordion(sets) {
       <span class="history-rep-pill font-mono">#${r.repNumber}: ${r.velocity.toFixed(2)}m/s${r.isPR ? ' <span class="rep-pr-badge gold-glow">PR</span>' : ''}</span>
     `).join('');
 
+    const restStr = (typeof s.restSeconds === 'number' && s.restSeconds > 0)
+      ? formatRestDuration(s.restSeconds)
+      : '-';
+
     out += `
       <div class="session-set-item" data-lift="${setLiftKey}">
         <div class="session-set-header">
@@ -2775,6 +2869,7 @@ function renderSessionSetsAccordion(sets) {
             <span class="set-stat-vol">Vol: ${formattedSetVol}</span>
             <span class="set-stat-vel">Avg: ${s.avgVelocity.toFixed(2)} m/s</span>
             <span class="set-stat-loss">Loss: ${s.velocityLossPct.toFixed(1)}%</span>
+            <span class="set-stat-rest">Rest: ${restStr}</span>
           </div>
         </div>
         <div class="session-reps-pills">
@@ -2803,11 +2898,12 @@ btnExportCsv.addEventListener('click', () => {
   }
 
   const rows = [
-    ['Workout ID', 'Workout Date', 'Set Number', 'Lift', 'Rep Number', 'Velocity (m/s)', 'RPE', 'Set Avg Velocity', 'Set Velocity Loss %', 'Timestamp']
+    ['Workout ID', 'Workout Date', 'Set Number', 'Lift', 'Rep Number', 'Velocity (m/s)', 'RPE', 'Set Avg Velocity', 'Set Velocity Loss %', 'Rest Time (s)', 'Timestamp']
   ];
 
   workouts.forEach(w => {
     (w.sets || []).forEach(s => {
+      const restSecVal = (typeof s.restSeconds === 'number' && !isNaN(s.restSeconds)) ? s.restSeconds : '';
       (s.reps || []).forEach(r => {
         rows.push([
           `"${w.id}"`,
@@ -2819,6 +2915,7 @@ btnExportCsv.addEventListener('click', () => {
           r.rpe.toFixed(1),
           s.avgVelocity.toFixed(2),
           s.velocityLossPct.toFixed(1),
+          restSecVal,
           `"${new Date(r.timestamp).toISOString()}"`
         ]);
       });
@@ -3076,6 +3173,172 @@ function initCoachDirectiveSync() {
       }
     }
   });
+
+  // Listen for coach target rest configuration
+  window.ErosSyncBus.on('coach:rest_target', (payload) => {
+    if (!payload || !payload.targetSeconds) return;
+    const targetSeconds = payload.targetSeconds;
+    if (activeSet) {
+      activeSet.prescribedRestSeconds = targetSeconds;
+    }
+  });
+}
+
+// ── Athlete Settings Micro-Menu & Coach Connection (Requirement R4) ──
+function initAthleteSettings() {
+  const btnSettings = document.getElementById('btn-athlete-settings');
+  const modal = document.getElementById('athlete-settings-modal');
+  const btnClose = document.getElementById('btn-athlete-settings-close');
+  const backdrop = document.getElementById('athlete-settings-backdrop');
+  const nameInput = document.getElementById('athlete-settings-name');
+  const rackInput = document.getElementById('athlete-settings-rack');
+  const coachCodeInput = document.getElementById('athlete-settings-coach-code');
+  const btnConnect = document.getElementById('btn-athlete-connect-coach');
+  const btnConnectText = document.getElementById('btn-athlete-connect-text');
+  const statusBadge = document.getElementById('athlete-coach-status-badge');
+  const statusText = document.getElementById('athlete-coach-status-text');
+
+  if (!btnSettings || !modal) return;
+
+  const STORAGE_KEY = 'eros_athlete_coach_connection_v1';
+
+  function loadConnectionState() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      }
+    } catch (_) {}
+    return {
+      connected: false,
+      athleteName: 'Active Athlete',
+      rackId: 'Rack 01',
+      coachCode: '',
+      athleteId: 'ath_01',
+      lastSync: null
+    };
+  }
+
+  function saveConnectionState(state) {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+    } catch (_) {}
+  }
+
+  function updateUI(state) {
+    if (nameInput && state.athleteName) nameInput.value = state.athleteName;
+    if (rackInput && state.rackId) rackInput.value = state.rackId;
+    if (coachCodeInput && state.coachCode) coachCodeInput.value = state.coachCode;
+
+    if (statusBadge && statusText && btnConnect && btnConnectText) {
+      if (state.connected) {
+        statusBadge.className = 'athlete-coach-status-badge status-connected';
+        statusText.textContent = 'Connected';
+        btnConnect.classList.add('connected-mode');
+        btnConnectText.textContent = 'Disconnect from Coach';
+      } else {
+        statusBadge.className = 'athlete-coach-status-badge status-disconnected';
+        statusText.textContent = 'Disconnected';
+        btnConnect.classList.remove('connected-mode');
+        btnConnectText.textContent = 'Connect to Coach';
+      }
+    }
+  }
+
+  let currentState = loadConnectionState();
+  updateUI(currentState);
+
+  function openModal() {
+    currentState = loadConnectionState();
+    updateUI(currentState);
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+  }
+
+  if (!btnSettings._athleteBound) {
+    btnSettings.addEventListener('click', openModal);
+    btnSettings._athleteBound = true;
+  }
+  if (btnClose && !btnClose._athleteBound) {
+    btnClose.addEventListener('click', closeModal);
+    btnClose._athleteBound = true;
+  }
+  if (backdrop && !backdrop._athleteBound) {
+    backdrop.addEventListener('click', closeModal);
+    backdrop._athleteBound = true;
+  }
+
+  if (typeof document !== 'undefined' && !document._athleteEscBound) {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display !== 'none') {
+        closeModal();
+      }
+    });
+    document._athleteEscBound = true;
+  }
+
+  if (btnConnect && !btnConnect._athleteBound) {
+    btnConnect.addEventListener('click', () => {
+      const isCurrentlyConnected = currentState.connected;
+      const athleteName = (nameInput && nameInput.value.trim()) || 'Active Athlete';
+      const rackId = (rackInput && rackInput.value.trim()) || 'Rack 01';
+      let coachCode = (coachCodeInput && coachCodeInput.value.trim().toUpperCase()) || '';
+
+      if (isCurrentlyConnected) {
+        currentState = {
+          connected: false,
+          athleteName: athleteName,
+          rackId: rackId,
+          coachCode: coachCode,
+          athleteId: 'ath_01',
+          lastSync: Date.now()
+        };
+        saveConnectionState(currentState);
+        updateUI(currentState);
+      } else {
+        if (!coachCode) {
+          coachCode = 'EROS-7X9K';
+          if (coachCodeInput) coachCodeInput.value = coachCode;
+        }
+        currentState = {
+          connected: true,
+          athleteName: athleteName,
+          rackId: rackId,
+          coachCode: coachCode,
+          athleteId: 'ath_01',
+          lastSync: Date.now()
+        };
+        saveConnectionState(currentState);
+        updateUI(currentState);
+
+        const payload = {
+          athleteId: 'ath_01',
+          athleteName: athleteName,
+          rackId: rackId,
+          coachCode: coachCode,
+          timestamp: Date.now()
+        };
+
+        if (window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
+          window.ErosSyncBus.emit('athlete:connect', payload);
+        }
+
+        if (typeof CustomEvent === 'function') {
+          window.dispatchEvent(new CustomEvent('eros:athlete_connect', { detail: payload }));
+        }
+      }
+    });
+    btnConnect._athleteBound = true;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.initAthleteSettings = initAthleteSettings;
 }
 
 // ── Kickoff Execution on DOM Ready ──
@@ -3086,4 +3349,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initTouchActiveStates();
   initBleSheetDrag();
   initCoachDirectiveSync();
+  initAthleteSettings();
 });

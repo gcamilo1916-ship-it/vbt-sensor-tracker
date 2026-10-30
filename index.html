@@ -441,6 +441,18 @@
       <!-- ═══════════════════════════════════════════════ -->
       <section id="tab-history" class="tab-section">
         
+        <!-- History Top Bar: Athlete Settings Access (Requirement R4) -->
+        <div class="history-top-bar">
+          <div class="history-top-bar-title font-mono">ATHLETE RECORDS</div>
+          <button type="button" id="btn-athlete-settings" class="btn-athlete-settings" aria-label="Open Athlete & Coach Settings">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>SETTINGS</span>
+          </button>
+        </div>
+
         <!-- Lifetime Analytics Bar -->
         <div class="glass-card history-summary-card">
           <div class="summary-metric">
@@ -648,9 +660,7 @@
           <div class="coach-athlete-selector-group">
             <label for="coach-athlete-select" class="coach-selector-label">ATHLETE:</label>
             <select id="coach-athlete-select" class="coach-select" aria-label="Select Athlete">
-              <option value="ath_01" selected>Alex Vance (Rack 01)</option>
-              <option value="ath_02">Jordan Bell (Rack 02)</option>
-              <option value="ath_03">Elena Rostova (Rack 03)</option>
+              <option value="ath_01" selected>Active Athlete (Rack 01)</option>
             </select>
           </div>
           <div id="coach-session-status-badge" class="coach-session-status-badge">
@@ -901,13 +911,26 @@
 
           <!-- Load Adjustment Pills -->
           <div class="coach-console-block">
-            <span class="coach-block-label">Load Adjustment Next Set:</span>
+            <span class="coach-block-label">Load Adjustment Next Set / Next Rep:</span>
             <div class="coach-load-pills-row">
               <button type="button" class="coach-load-pill pill-sub" data-delta="-5.0">-5.0 kg</button>
               <button type="button" class="coach-load-pill pill-sub" data-delta="-2.5">-2.5 kg</button>
               <button type="button" class="coach-load-pill pill-keep" data-delta="0.0">Keep Load</button>
+              <button type="button" class="coach-load-pill pill-add" data-delta="1.0">+1.0 kg</button>
               <button type="button" class="coach-load-pill pill-add" data-delta="2.5">+2.5 kg</button>
               <button type="button" class="coach-load-pill pill-add" data-delta="5.0">+5.0 kg</button>
+            </div>
+          </div>
+
+          <!-- Inter-Set Rest Configuration Pills (Requirement R3) -->
+          <div class="coach-console-block" id="coach-rest-target-block">
+            <span class="coach-block-label">Target Rest Configuration:</span>
+            <div class="coach-rest-pills-row">
+              <button type="button" class="coach-rest-pill" data-rest-seconds="60">60s</button>
+              <button type="button" class="coach-rest-pill" data-rest-seconds="90">90s</button>
+              <button type="button" class="coach-rest-pill" data-rest-seconds="120">120s</button>
+              <button type="button" class="coach-rest-pill active" data-rest-seconds="180">180s</button>
+              <button type="button" class="coach-rest-pill" data-rest-seconds="300">300s</button>
             </div>
           </div>
 
@@ -956,13 +979,14 @@
                   <th>AVG VEL</th>
                   <th>PEAK VEL</th>
                   <th>VEL LOSS</th>
+                  <th>REST</th>
                   <th>RPE</th>
                   <th>DETAILS</th>
                 </tr>
               </thead>
               <tbody id="coach-sets-table-body">
                 <tr>
-                  <td colspan="9" class="coach-empty-cell">No sets completed yet in this session.</td>
+                  <td colspan="10" class="coach-empty-cell">No sets completed yet in this session.</td>
                 </tr>
               </tbody>
             </table>
@@ -1294,6 +1318,56 @@
           <span class="btn-accept-label" id="btn-accept-label">Accept</span>
           <span class="countdown-seconds font-mono" id="coach-countdown-sec">20s</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Athlete Settings & Coach Connection Micro-Menu (Requirement R4) -->
+  <div id="athlete-settings-modal" class="athlete-settings-modal" role="dialog" aria-modal="true" aria-labelledby="athlete-settings-title" style="display: none;">
+    <div class="athlete-settings-backdrop" id="athlete-settings-backdrop"></div>
+    <div class="athlete-settings-card glass-card">
+      <div class="athlete-settings-header">
+        <div class="athlete-settings-title-group">
+          <h3 id="athlete-settings-title" class="athlete-settings-title">ATHLETE & COACH SETTINGS</h3>
+          <span class="athlete-settings-sub">Connection & Profile Configuration</span>
+        </div>
+        <button type="button" id="btn-athlete-settings-close" class="athlete-settings-close-btn" aria-label="Close Settings">CLOSE</button>
+      </div>
+
+      <div class="athlete-settings-body">
+        <!-- Status Indicator Banner -->
+        <div class="athlete-coach-status-banner">
+          <span class="status-label">Coach Link Status:</span>
+          <span id="athlete-coach-status-badge" class="athlete-coach-status-badge status-disconnected">
+            <span class="status-dot"></span>
+            <span id="athlete-coach-status-text">Disconnected</span>
+          </span>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="athlete-settings-section">
+          <label class="athlete-settings-label" for="athlete-settings-name">Athlete Display Name</label>
+          <input type="text" id="athlete-settings-name" class="athlete-settings-input" placeholder="e.g. Active Athlete" value="Active Athlete" aria-label="Athlete Name" />
+        </div>
+
+        <div class="athlete-settings-section">
+          <label class="athlete-settings-label" for="athlete-settings-rack">Assigned Rack ID</label>
+          <input type="text" id="athlete-settings-rack" class="athlete-settings-input" placeholder="e.g. Rack 01" value="Rack 01" aria-label="Rack ID" />
+        </div>
+
+        <!-- Coach Pairing Section -->
+        <div class="athlete-settings-section">
+          <label class="athlete-settings-label" for="athlete-settings-coach-code">Coach Pairing Code</label>
+          <input type="text" id="athlete-settings-coach-code" class="athlete-settings-input font-mono" placeholder="EROS-7X9K" maxlength="12" aria-label="Coach Pairing Code" />
+          <span class="athlete-settings-help">Enter Crockford pairing code provided by your coach.</span>
+        </div>
+
+        <!-- Action Button -->
+        <div class="athlete-settings-actions">
+          <button type="button" id="btn-athlete-connect-coach" class="btn-athlete-connect glass-pill-primary">
+            <span id="btn-athlete-connect-text">Connect to Coach</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

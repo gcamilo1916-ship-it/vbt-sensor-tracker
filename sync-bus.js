@@ -24,7 +24,9 @@
     SET_COMPLETED: 'set:completed',
     COACH_CUE: 'coach:cue',
     COACH_LOAD_OVERRIDE: 'coach:load_override',
-    COACH_LOAD_RESPONSE: 'coach:load_response'
+    COACH_LOAD_RESPONSE: 'coach:load_response',
+    COACH_REST_TARGET: 'coach:rest_target',
+    ATHLETE_CONNECT: 'athlete:connect'
   });
 
   const BROADCAST_CHANNEL_NAME = 'eros_coach_sync_v1';
@@ -54,13 +56,25 @@
       ? data.timestamp
       : Date.now();
 
-    return {
+    let restSeconds = null;
+    if (data.restSeconds != null) {
+      const parsed = Number(data.restSeconds);
+      if (!isNaN(parsed) && parsed >= 0) {
+        restSeconds = Math.round(parsed);
+      }
+    }
+
+    const payload = {
       setId: String(data.setId).trim(),
       setNumber: Math.round(setNumber),
       lift: data.lift.trim(),
       weight: Math.round(weight * 10) / 10,
       timestamp: timestamp
     };
+    if (restSeconds !== null) {
+      payload.restSeconds = restSeconds;
+    }
+    return payload;
   }
 
   function validateRepRecorded(data) {
@@ -120,7 +134,15 @@
       ? data.timestamp
       : Date.now();
 
-    return {
+    let restSeconds = null;
+    if (data.restSeconds != null) {
+      const parsed = Number(data.restSeconds);
+      if (!isNaN(parsed) && parsed >= 0) {
+        restSeconds = Math.round(parsed);
+      }
+    }
+
+    const payload = {
       setId: String(data.setId).trim(),
       setNumber: Math.round(setNumber),
       lift: data.lift.trim(),
@@ -131,6 +153,10 @@
       velocityLoss: Math.round(velocityLoss * 10) / 10,
       timestamp: timestamp
     };
+    if (restSeconds !== null) {
+      payload.restSeconds = restSeconds;
+    }
+    return payload;
   }
 
   function validateCoachCue(data) {
@@ -213,13 +239,66 @@
     };
   }
 
+  function validateCoachRestTarget(data) {
+    if (!data || typeof data !== 'object') {
+      throw new TypeError('[ErosSyncBus] Payload for coach:rest_target must be an object');
+    }
+    const targetSeconds = Number(data.targetSeconds != null ? data.targetSeconds : data.seconds);
+    if (isNaN(targetSeconds) || targetSeconds <= 0) {
+      throw new TypeError('[ErosSyncBus] coach:rest_target requires positive numeric targetSeconds');
+    }
+    const athleteId = (data.athleteId != null && String(data.athleteId).trim() !== '')
+      ? String(data.athleteId).trim()
+      : 'ath_01';
+    const timestamp = (typeof data.timestamp === 'number' && !isNaN(data.timestamp))
+      ? data.timestamp
+      : Date.now();
+
+    return {
+      athleteId: athleteId,
+      targetSeconds: Math.round(targetSeconds),
+      timestamp: timestamp
+    };
+  }
+
+  function validateAthleteConnect(data) {
+    if (!data || typeof data !== 'object') {
+      throw new TypeError('[ErosSyncBus] Payload for athlete:connect must be an object');
+    }
+    const athleteId = (data.athleteId != null && String(data.athleteId).trim() !== '')
+      ? String(data.athleteId).trim()
+      : 'ath_01';
+    const athleteName = (data.athleteName != null && String(data.athleteName).trim() !== '')
+      ? String(data.athleteName).trim()
+      : 'Active Athlete';
+    const coachCode = (data.coachCode != null && String(data.coachCode).trim() !== '')
+      ? String(data.coachCode).trim().toUpperCase()
+      : '';
+    const rackId = (data.rackId != null && String(data.rackId).trim() !== '')
+      ? String(data.rackId).trim()
+      : 'Rack 01';
+    const timestamp = (typeof data.timestamp === 'number' && !isNaN(data.timestamp))
+      ? data.timestamp
+      : Date.now();
+
+    return {
+      athleteId: athleteId,
+      athleteName: athleteName,
+      coachCode: coachCode,
+      rackId: rackId,
+      timestamp: timestamp
+    };
+  }
+
   const VALIDATORS = {
     [EVENTS.SET_STARTED]: validateSetStarted,
     [EVENTS.REP_RECORDED]: validateRepRecorded,
     [EVENTS.SET_COMPLETED]: validateSetCompleted,
     [EVENTS.COACH_CUE]: validateCoachCue,
     [EVENTS.COACH_LOAD_OVERRIDE]: validateCoachLoadOverride,
-    [EVENTS.COACH_LOAD_RESPONSE]: validateCoachLoadResponse
+    [EVENTS.COACH_LOAD_RESPONSE]: validateCoachLoadResponse,
+    [EVENTS.COACH_REST_TARGET]: validateCoachRestTarget,
+    [EVENTS.ATHLETE_CONNECT]: validateAthleteConnect
   };
 
   /**
