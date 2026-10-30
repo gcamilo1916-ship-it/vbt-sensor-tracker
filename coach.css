@@ -93,6 +93,36 @@
   stroke: var(--coach-accent-teal);
 }
 
+/* Coach button is hidden by default in athlete mode until athlete button is long pressed */
+.view-mode-toggle:not(.coach-unlocked) #btn-mode-coach {
+  display: none !important;
+}
+
+/* Revealed when coach option is unlocked via long-press or in coach mode */
+.view-mode-toggle.coach-unlocked #btn-mode-coach,
+body.portal-coach .view-mode-toggle #btn-mode-coach {
+  display: inline-flex !important;
+  animation: coachButtonReveal 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes coachButtonReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+}
+
+.mode-toggle-btn.holding-longpress {
+  transform: scale(0.95);
+  border-color: rgba(0, 229, 255, 0.5) !important;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.35) !important;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
 /* ── Body Class Mode Switching Rules ── */
 body.portal-coach {
   background-color: var(--coach-bg-canvas) !important;
@@ -122,6 +152,76 @@ body.portal-coach #view-coach {
   display: none;
 }
 
+/* ── Coach Orientation Advisory Banner ── */
+.coach-orientation-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(23, 23, 23, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--coach-radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--coach-shadow-card);
+  color: var(--coach-accent-amber);
+  animation: bannerSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  user-select: none;
+}
+
+.coach-orientation-banner.dismissed {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+@keyframes bannerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.coach-orientation-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.coach-orientation-icon {
+  flex-shrink: 0;
+  stroke: var(--coach-accent-amber);
+}
+
+.coach-orientation-text {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: #ECECEC;
+  letter-spacing: -0.01em;
+}
+
+.coach-orientation-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--coach-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: var(--coach-radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.coach-orientation-dismiss:hover {
+  color: var(--coach-text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* ── Coach Portal Container ── */
 .coach-portal-container {
   display: flex;
@@ -139,6 +239,126 @@ body.portal-coach #view-coach {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ── Staggered Entrance Animations for Coach Dashboard ── */
+.coach-portal-container > * {
+  animation: coachCardEntrance 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.coach-portal-container > *:nth-child(1) { animation-delay: 0.02s; }
+.coach-portal-container > *:nth-child(2) { animation-delay: 0.05s; }
+.coach-portal-container > *:nth-child(3) { animation-delay: 0.09s; }
+.coach-portal-container > *:nth-child(4) { animation-delay: 0.13s; }
+.coach-portal-container > *:nth-child(5) { animation-delay: 0.17s; }
+
+@keyframes coachCardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tactile button press animations */
+.coach-load-pill:active,
+.coach-rest-pill:active,
+.coach-cue-chip:active,
+.coach-subnav-btn:active,
+.coach-bond-trigger-btn:active,
+.coach-action-btn:active,
+.coach-sm-btn:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+/* Pulse glow on feedback status update */
+.coach-console-status.status-pulse {
+  animation: feedbackStatusGlow 1.2s ease-out;
+}
+
+@keyframes feedbackStatusGlow {
+  0% {
+    transform: scale(1.04);
+    color: var(--coach-accent-teal);
+    text-shadow: 0 0 8px rgba(16, 163, 127, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    color: var(--coach-text-muted);
+    text-shadow: none;
+  }
+}
+
+/* ── Coach Panel Mobile Viewport Optimizations ── */
+@media (max-width: 540px) {
+  .coach-squad-ribbon {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .coach-squad-left {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .coach-squad-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .coach-stat-chip {
+    padding: 6px 8px;
+  }
+  .coach-stat-label {
+    font-size: 9px;
+  }
+  .coach-stat-value {
+    font-size: 12px;
+  }
+  .coach-subnav-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .coach-sync-architecture-pill {
+    justify-content: center;
+  }
+}
+
+/* ── Coach Panel Landscape & Tablet Optimizations ── */
+@media (orientation: landscape) and (max-height: 600px) {
+  .coach-portal-container {
+    gap: 10px;
+  }
+  .coach-squad-ribbon {
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .coach-active-set-monitor {
+    padding: 12px;
+  }
+  .coach-metrics-grid {
+    gap: 8px;
+  }
+  .coach-metric-card {
+    padding: 10px 12px;
+  }
+  .coach-feedback-console {
+    padding: 12px;
+  }
+  .coach-console-row {
+    margin-bottom: 8px;
+  }
+}
+
+@media (min-width: 768px) {
+  body.portal-coach .app-container {
+    max-width: 1080px;
   }
 }
 

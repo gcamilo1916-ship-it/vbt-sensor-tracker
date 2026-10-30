@@ -460,11 +460,26 @@
 
     cueHud.classList.add('active');
 
+    // Only synchronize fixed #coach-cue-hud if #in-flight-coach-cue is absent
+    if (!cueHud) {
+      const mainHud = document.getElementById('coach-cue-hud');
+      if (mainHud) {
+        const mainText = mainHud.querySelector('#coach-cue-text') || mainHud.querySelector('.coach-cue-text');
+        if (mainText) mainText.textContent = cueText;
+        mainHud.style.display = 'block';
+        mainHud.classList.add('active');
+      }
+    }
+
+    const parsedDuration = (typeof durationMs === 'number' && !isNaN(durationMs) && durationMs > 0)
+      ? durationMs
+      : 4500;
+
     if (coachCueTimeout) clearTimeout(coachCueTimeout);
-    if (durationMs > 0) {
+    if (parsedDuration > 0) {
       coachCueTimeout = setTimeout(() => {
         hideCoachCue();
-      }, durationMs);
+      }, parsedDuration);
     }
   }
 
@@ -476,6 +491,16 @@
     const cueHud = document.getElementById('in-flight-coach-cue');
     if (cueHud) {
       cueHud.classList.remove('active');
+    } else {
+      const mainHud = document.getElementById('coach-cue-hud');
+      if (mainHud) {
+        mainHud.classList.remove('active');
+        setTimeout(() => {
+          if (!mainHud.classList.contains('active')) {
+            mainHud.style.display = 'none';
+          }
+        }, 350);
+      }
     }
     if (coachCueTimeout) {
       clearTimeout(coachCueTimeout);

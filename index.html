@@ -96,15 +96,6 @@
       <!-- ═══════════════════════════════════════════════ -->
       <section id="tab-live" class="tab-section active-section">
         
-        <!-- Athlete In-Flight Floating Coach Cue Pill (Requirement R2) -->
-        <div id="coach-cue-hud" class="coach-cue-hud" role="status" aria-live="polite" style="display: none;">
-          <div class="coach-cue-pill">
-            <span class="coach-cue-dot" aria-hidden="true"></span>
-            <span class="coach-cue-prefix">CUE:</span>
-            <span id="coach-cue-text" class="coach-cue-text font-mono"></span>
-          </div>
-        </div>
-
         <!-- Lift Control Center -->
         <!-- Exercise & Set Controls -->
         <div class="glass-card controls-panel">
@@ -257,10 +248,10 @@
           </div>
 
           <!-- In-Flight Floating Coach Cue HUD -->
-          <div class="coach-cue-hud" id="in-flight-coach-cue" aria-live="polite">
+          <div class="coach-cue-hud" id="in-flight-coach-cue" aria-live="polite" style="display: none;">
             <div class="coach-cue-pill">
               <span class="coach-cue-dot"></span>
-              <span class="coach-cue-text font-mono" id="in-flight-cue-text">CUE: Drive hips!</span>
+              <span class="coach-cue-text font-mono" id="in-flight-cue-text"></span>
             </div>
           </div>
         </div>
@@ -654,6 +645,19 @@
     <!-- Dedicated Coach View Portal (ChatGPT-Inspired Dark UI) -->
     <section id="view-coach" class="coach-portal-container" style="display: none;" aria-label="Coach Control Center">
       
+      <!-- Orientation Advisory Banner -->
+      <div id="coach-orientation-banner" class="coach-orientation-banner" role="status" aria-live="polite">
+        <div class="coach-orientation-content">
+          <svg class="coach-orientation-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span class="coach-orientation-text">Coach Panel is better used in landscape mode or Large Screens</span>
+        </div>
+        <button type="button" id="btn-dismiss-orientation" class="coach-orientation-dismiss" aria-label="Dismiss orientation advisory">×</button>
+      </div>
+
       <!-- Component 1: Squad Ribbon & Athlete Selector -->
       <div class="coach-squad-ribbon">
         <div class="coach-squad-left">
@@ -1269,6 +1273,15 @@
           <span class="btn-text">CONNECT <span class="eros-wordmark">Eros</span></span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Athlete In-Flight Floating Coach Cue Pill (Requirement R2 / Viewport Overlay) -->
+  <div id="coach-cue-hud" class="coach-cue-hud" role="status" aria-live="polite" style="display: none;">
+    <div class="coach-cue-pill">
+      <span class="coach-cue-dot" aria-hidden="true"></span>
+      <span class="coach-cue-prefix">CUE:</span>
+      <span id="coach-cue-text" class="coach-cue-text font-mono"></span>
     </div>
   </div>
 

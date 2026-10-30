@@ -244,6 +244,57 @@
 
   // ── DOM Element Cache ──
   let elements = {};
+  let coachUnlocked = false;
+  let athleteLongPressTimer = null;
+  let athletePressStartTime = 0;
+  const LONG_PRESS_DURATION_MS = 500;
+
+  function revealCoachOption() {
+    coachUnlocked = true;
+    if (!elements.viewModeToggle) elements.viewModeToggle = document.getElementById('view-mode-toggle');
+    if (elements.viewModeToggle) {
+      elements.viewModeToggle.classList.add('coach-unlocked');
+    }
+    if (typeof HapticsFX !== 'undefined' && typeof HapticsFX.vibrate === 'function') {
+      try { HapticsFX.vibrate([40, 30, 40]); } catch (_) {}
+    }
+    if (typeof SoundFX !== 'undefined') {
+      if (typeof SoundFX.playCoachDirectiveChime === 'function') {
+        try { SoundFX.playCoachDirectiveChime(); } catch (_) {}
+      } else if (typeof SoundFX.playNavTick === 'function') {
+        try { SoundFX.playNavTick(); } catch (_) {}
+      }
+    }
+  }
+
+  function showCoachOrientationAdvisory() {
+    if (typeof document === 'undefined') return;
+    const banner = document.getElementById('coach-orientation-banner');
+    if (!banner) return;
+    const isLandscape = (typeof window !== 'undefined' && window.innerWidth > window.innerHeight);
+    const isLargeScreen = (typeof window !== 'undefined' && window.innerWidth >= 1024);
+
+    banner.classList.remove('dismissed');
+    banner.style.display = 'flex';
+
+    if (banner._dismissTimeout) clearTimeout(banner._dismissTimeout);
+    const autoDismissMs = (isLandscape || isLargeScreen) ? 4500 : 7000;
+    banner._dismissTimeout = setTimeout(() => {
+      dismissCoachOrientationBanner();
+    }, autoDismissMs);
+  }
+
+  function dismissCoachOrientationBanner() {
+    if (typeof document === 'undefined') return;
+    const banner = document.getElementById('coach-orientation-banner');
+    if (!banner) return;
+    banner.classList.add('dismissed');
+    setTimeout(() => {
+      if (banner && banner.classList.contains('dismissed')) {
+        banner.style.display = 'none';
+      }
+    }, 350);
+  }
 
   function queryElements() {
     elements = {
@@ -505,14 +556,72 @@
       }
     } catch (_) {}
 
-    // Mode Toggle Clicks
+    // Mode Toggle Clicks & Long-Press Handling
+    function startAthleteLongPress(e) {
+      if (e && typeof e.button === 'number' && e.button !== 0) return;
+      if (isCoachMode) return;
+      athletePressStartTime = Date.now();
+      if (elements.btnModeAthlete) elements.btnModeAthlete.classList.add('holding-longpress');
+      if (athleteLongPressTimer) clearTimeout(athleteLongPressTimer);
+      athleteLongPressTimer = setTimeout(() => {
+        revealCoachOption();
+        athleteLongPressTimer = null;
+        if (elements.btnModeAthlete) elements.btnModeAthlete.classList.remove('holding-longpress');
+      }, LONG_PRESS_DURATION_MS);
+    }
+
+    function cancelAthleteLongPress() {
+      if (athleteLongPressTimer) {
+        clearTimeout(athleteLongPressTimer);
+        athleteLongPressTimer = null;
+      }
+      if (elements.btnModeAthlete) elements.btnModeAthlete.classList.remove('holding-longpress');
+    }
+
     if (elements.btnModeAthlete && !elements.btnModeAthlete._coachBound) {
-      elements.btnModeAthlete.addEventListener('click', () => switchMode('athlete'));
+      elements.btnModeAthlete.addEventListener('click', () => {
+        if (isCoachMode) switchMode('athlete');
+      });
+      elements.btnModeAthlete.addEventListener('touchstart', startAthleteLongPress, { passive: true });
+      elements.btnModeAthlete.addEventListener('touchend', cancelAthleteLongPress, { passive: true });
+      elements.btnModeAthlete.addEventListener('touchcancel', cancelAthleteLongPress, { passive: true });
+      elements.btnModeAthlete.addEventListener('touchmove', cancelAthleteLongPress, { passive: true });
+      elements.btnModeAthlete.addEventListener('mousedown', startAthleteLongPress);
+      elements.btnModeAthlete.addEventListener('mouseup', cancelAthleteLongPress);
+      elements.btnModeAthlete.addEventListener('mouseleave', cancelAthleteLongPress);
+      elements.btnModeAthlete.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (!athleteLongPressTimer && !coachUnlocked) {
+            startAthleteLongPress(e);
+          }
+        }
+      });
+      elements.btnModeAthlete.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          cancelAthleteLongPress();
+        }
+      });
       elements.btnModeAthlete._coachBound = true;
     }
     if (elements.btnModeCoach && !elements.btnModeCoach._coachBound) {
       elements.btnModeCoach.addEventListener('click', () => switchMode('coach'));
       elements.btnModeCoach._coachBound = true;
+    }
+
+    // Orientation Advisory Dismiss Handler
+    const btnDismissOri = document.getElementById('btn-dismiss-orientation');
+    if (btnDismissOri && !btnDismissOri._bound) {
+      btnDismissOri.addEventListener('click', dismissCoachOrientationBanner);
+      btnDismissOri._bound = true;
+    }
+
+    if (typeof window !== 'undefined' && !window._coachOrientationBound) {
+      window.addEventListener('resize', () => {
+        if (isCoachMode && (window.innerWidth > window.innerHeight || window.innerWidth >= 1024)) {
+          dismissCoachOrientationBanner();
+        }
+      }, { passive: true });
+      window._coachOrientationBound = true;
     }
 
     // Sub-Navigation Tabs (Live Panel vs Athlete History Panel)
@@ -632,9 +741,13 @@
   function switchMode(mode) {
     isCoachMode = (mode === 'coach');
 
-    // Trigger subtle UI tick audio if available
-    if (typeof SoundFX !== 'undefined' && typeof SoundFX.playNavTick === 'function') {
-      try { SoundFX.playNavTick(); } catch (_) {}
+    // Trigger subtle UI tick / entrance audio if available
+    if (typeof SoundFX !== 'undefined') {
+      if (isCoachMode && typeof SoundFX.playCoachPanelOpen === 'function') {
+        try { SoundFX.playCoachPanelOpen(); } catch (_) {}
+      } else if (typeof SoundFX.playNavTick === 'function') {
+        try { SoundFX.playNavTick(); } catch (_) {}
+      }
     }
     if (typeof HapticsFX !== 'undefined' && typeof HapticsFX.vibrate === 'function') {
       try { HapticsFX.vibrate([20]); } catch (_) {}
@@ -644,6 +757,7 @@
 
     if (isCoachMode) {
       document.body.classList.add('portal-coach');
+      revealCoachOption();
       if (elements.btnModeCoach) {
         elements.btnModeCoach.classList.add('active');
         elements.btnModeCoach.setAttribute('aria-checked', 'true');
@@ -655,6 +769,7 @@
       if (elements.viewCoach) {
         elements.viewCoach.style.display = 'flex';
       }
+      showCoachOrientationAdvisory();
       startRestTicker();
       renderFullCoachDashboard();
     } else {
@@ -677,6 +792,13 @@
   // ── Sub-Navigation Switcher: Live Panel vs Athlete History Panel ──
   function switchCoachPanel(panelName) {
     activeCoachPanel = (panelName === 'history') ? 'history' : 'live';
+    if (typeof SoundFX !== 'undefined') {
+      if (typeof SoundFX.playCoachPanelSwitch === 'function') {
+        try { SoundFX.playCoachPanelSwitch(); } catch (_) {}
+      } else if (typeof SoundFX.playNavTick === 'function') {
+        try { SoundFX.playNavTick(); } catch (_) {}
+      }
+    }
     if (!elements.panelLive) queryElements();
 
     if (activeCoachPanel === 'history') {
@@ -2200,6 +2322,9 @@
       elements.loadPills.forEach(pill => {
         if (pill._coachBound) return;
         pill.addEventListener('click', () => {
+          if (typeof SoundFX !== 'undefined' && typeof SoundFX.playCoachPillSelect === 'function') {
+            try { SoundFX.playCoachPillSelect(); } catch (_) {}
+          }
           const delta = parseFloat(pill.getAttribute('data-delta') || '0');
           const currentWeight = getSafeWorkingWeight();
           const newWeight = Math.max(0, currentWeight + delta);
@@ -2217,6 +2342,9 @@
       elements.restPills.forEach(pill => {
         if (pill._coachBound) return;
         pill.addEventListener('click', () => {
+          if (typeof SoundFX !== 'undefined' && typeof SoundFX.playCoachPillSelect === 'function') {
+            try { SoundFX.playCoachPillSelect(); } catch (_) {}
+          }
           elements.restPills.forEach(p => p.classList.remove('active'));
           pill.classList.add('active');
           const targetSeconds = parseInt(pill.getAttribute('data-rest-seconds') || '180', 10);
@@ -2250,6 +2378,9 @@
       elements.cueChips.forEach(chip => {
         if (chip._coachBound) return;
         chip.addEventListener('click', () => {
+          if (typeof SoundFX !== 'undefined' && typeof SoundFX.playCoachPillSelect === 'function') {
+            try { SoundFX.playCoachPillSelect(); } catch (_) {}
+          }
           const cue = chip.getAttribute('data-cue');
           if (cue) {
             sendCoachPrescription(cue, 0, getSafeWorkingWeight());
@@ -2311,6 +2442,10 @@
       if (deltaKg !== 0) {
         window.dispatchEvent(new CustomEvent('eros:coach_load_override', { detail: payload }));
       }
+    }
+
+    if (typeof SoundFX !== 'undefined' && typeof SoundFX.playCoachActionSend === 'function') {
+      try { SoundFX.playCoachActionSend(); } catch (_) {}
     }
 
     // 3. Local state synchronization with athlete working load (only for local primary athlete ath_01)
@@ -2415,11 +2550,19 @@
 
     elements.feedbackStatus.textContent = msg;
     elements.feedbackStatus.style.opacity = '1';
+    if (elements.feedbackStatus.classList) {
+      elements.feedbackStatus.classList.remove('status-pulse');
+      if (typeof void 0 !== 'undefined') void elements.feedbackStatus.offsetWidth;
+      elements.feedbackStatus.classList.add('status-pulse');
+    }
 
     if (feedbackTimer) clearTimeout(feedbackTimer);
     feedbackTimer = setTimeout(() => {
       if (elements.feedbackStatus) {
         elements.feedbackStatus.style.opacity = '0';
+        if (elements.feedbackStatus.classList) {
+          elements.feedbackStatus.classList.remove('status-pulse');
+        }
       }
     }, 4000);
   }

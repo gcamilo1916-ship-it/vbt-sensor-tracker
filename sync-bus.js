@@ -176,12 +176,18 @@
       ? data.timestamp
       : Date.now();
 
-    return {
+    const payload = {
       id: id,
       text: String(data.text).trim(),
       type: type,
       timestamp: timestamp
     };
+    if (data.coachName) payload.coachName = String(data.coachName).trim();
+    if (data.athleteId) payload.athleteId = String(data.athleteId).trim();
+    if (typeof data.deltaKg === 'number') payload.deltaKg = data.deltaKg;
+    if (typeof data.newWeight === 'number') payload.newWeight = data.newWeight;
+    if (typeof data.autoAcceptSeconds === 'number') payload.autoAcceptSeconds = data.autoAcceptSeconds;
+    return payload;
   }
 
   function validateCoachLoadOverride(data) {
@@ -206,13 +212,19 @@
       ? data.timestamp
       : Date.now();
 
-    return {
+    const payload = {
       id: id,
       deltaKg: Math.round(deltaKg * 10) / 10,
       newWeight: Math.round(newWeight * 10) / 10,
       autoAcceptSeconds: Math.round(autoAcceptSeconds),
       timestamp: timestamp
     };
+    if (data.coachName) payload.coachName = String(data.coachName).trim();
+    if (data.text) payload.text = String(data.text).trim();
+    if (data.reason) payload.reason = String(data.reason).trim();
+    if (data.cueText) payload.cueText = String(data.cueText).trim();
+    if (data.athleteId) payload.athleteId = String(data.athleteId).trim();
+    return payload;
   }
 
   function validateCoachLoadResponse(data) {

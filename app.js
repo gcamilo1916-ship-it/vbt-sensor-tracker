@@ -542,6 +542,25 @@ const SoundFX = (() => {
       playTone(880.00, 'triangle', 0.24, 0.25, 0.08);
     },
 
+    // Coach Portal Sound Effects
+    playCoachPanelOpen() {
+      playTone(392.00, 'sine', 0.12, 0.20, 0);
+      playTone(587.33, 'triangle', 0.24, 0.22, 0.06);
+    },
+
+    playCoachActionSend() {
+      playTone(784.00, 'sine', 0.08, 0.22, 0);
+      playTone(1174.66, 'triangle', 0.16, 0.25, 0.04);
+    },
+
+    playCoachPillSelect() {
+      playTone(1250.00, 'sine', 0.02, 0.12, 0);
+    },
+
+    playCoachPanelSwitch() {
+      playTone(950.00, 'sine', 0.03, 0.12, 0);
+    },
+
     // Set Completion Triumph Fanfare (Major Triad Chime: D5 -> F#5 -> A5 -> D6)
     playSetTriumph(isPR = false, velocityLossPct = 0) {
       if (isPR) {
@@ -3081,12 +3100,16 @@ function setConnectedUI(connected) {
     if (btnConnectText) btnConnectText.innerHTML = 'DISCONNECT <span class="eros-wordmark">Eros</span>';
     btnConnect.classList.add('connected');
     statusBadge.className = 'glass-pill status-connected';
-    statusBadge.querySelector('.status-label').textContent = 'Connected';
+    statusBadge.setAttribute('aria-label', 'Eros Connected');
+    const statusLblConn = statusBadge.querySelector('.status-label');
+    if (statusLblConn) statusLblConn.textContent = 'Connected';
   } else {
     if (btnConnectText) btnConnectText.innerHTML = 'CONNECT <span class="eros-wordmark">Eros</span>';
     btnConnect.classList.remove('connected');
     statusBadge.className = 'glass-pill status-disconnected';
-    statusBadge.querySelector('.status-label').textContent = 'Disconnected';
+    statusBadge.setAttribute('aria-label', 'Eros Disconnected');
+    const statusLblDisc = statusBadge.querySelector('.status-label');
+    if (statusLblDisc) statusLblDisc.textContent = 'Disconnected';
   }
 }
 
@@ -3115,14 +3138,20 @@ function initCoachDirectiveSync() {
   // Listen for coach technical cues
   window.ErosSyncBus.on('coach:cue', (payload) => {
     if (!payload || !payload.text) return;
-    if (typeof AthleteFX !== 'undefined' && typeof AthleteFX.showCoachCue === 'function') {
-      AthleteFX.showCoachCue(payload.text, payload.type || 'technical', 6000);
+    if (typeof CoachCueHUD !== 'undefined' && typeof CoachCueHUD.showCoachCue === 'function') {
+      CoachCueHUD.showCoachCue(payload, 4500);
+    } else if (typeof AthleteFX !== 'undefined' && typeof AthleteFX.showCoachCue === 'function') {
+      AthleteFX.showCoachCue(payload.text, 4500);
     }
   });
 
   // Listen for coach load overrides
   window.ErosSyncBus.on('coach:load_override', (payload) => {
     if (!payload) return;
+    if (typeof CoachCueHUD !== 'undefined' && typeof CoachCueHUD.showCoachDirective === 'function') {
+      CoachCueHUD.showCoachDirective(payload);
+      return;
+    }
     const currentWeight = (typeof currentWorkingWeight === 'number' && !isNaN(currentWorkingWeight))
       ? currentWorkingWeight
       : 140.0;

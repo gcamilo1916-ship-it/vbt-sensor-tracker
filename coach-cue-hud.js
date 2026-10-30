@@ -35,6 +35,9 @@
 
   // ── Module State ──
   let cueFadeTimeout = null;
+  let cueHideTimeout = null;
+  let lastCueSignature = null;
+  let lastCueTimestamp = 0;
   let autoAcceptInterval = null;
   let activeDirective = null;
   let pendingDirective = null;
@@ -215,7 +218,12 @@
   }
 
   // ── Audio & Haptic Chimes ──
+  let lastDirectiveAlertTime = 0;
   function playDirectiveArrivalAlert() {
+    const now = Date.now();
+    if (now - lastDirectiveAlertTime < 250) return;
+    lastDirectiveAlertTime = now;
+
     if (typeof SoundFX !== 'undefined') {
       if (typeof SoundFX.playCoachDirectiveChime === 'function') {
         SoundFX.playCoachDirectiveChime();
@@ -235,29 +243,48 @@
   // ── 1. In-Flight Floating Cue Pill ──
   /**
    * Displays a non-intrusive floating frosted pill at the top of the Live tab.
-   * Automatically fades out cleanly after 4 seconds.
+   * Automatically fades out cleanly after durationMs (default 4.5s).
    *
    * @param {string|Object} cue - Cue text or payload object.
-   * @param {number} [durationMs=4000] - Duration in milliseconds (default 4s).
+   * @param {number} [durationMs=4500] - Duration in milliseconds (default 4.5s).
    */
-  function showCoachCue(cue, durationMs = 4000) {
+  function showCoachCue(cue, durationMs = 4500) {
     ensureElements();
     if (!dom.cueHud) return;
 
-    const cueText = (typeof cue === 'object' && cue !== null)
+    const rawCueText = (typeof cue === 'object' && cue !== null)
       ? (cue.text || cue.cueText || cue.message || '')
       : String(cue || '');
 
-    if (!cueText) return;
+    if (!rawCueText) return;
+
+    // Remove redundant CUE: prefix if already present
+    const cleanText = rawCueText.replace(/^CUE:\s*/i, '').trim();
+    if (!cleanText) return;
+
+    // De-duplicate rapid duplicate events (within 400ms)
+    const cueSignature = (typeof cue === 'object' && cue !== null && cue.id)
+      ? cue.id
+      : cleanText;
+    const now = Date.now();
+    if (cueSignature === lastCueSignature && (now - lastCueTimestamp < 400)) {
+      return;
+    }
+    lastCueSignature = cueSignature;
+    lastCueTimestamp = now;
 
     if (dom.cueText) {
-      dom.cueText.textContent = cueText;
+      dom.cueText.textContent = cleanText;
     }
 
-    // Cancel existing timeout if active
+    // Cancel existing fade or hide timeouts
     if (cueFadeTimeout) {
       clearTimeout(cueFadeTimeout);
       cueFadeTimeout = null;
+    }
+    if (cueHideTimeout) {
+      clearTimeout(cueHideTimeout);
+      cueHideTimeout = null;
     }
 
     // Display frosted pill
@@ -266,13 +293,25 @@
     void dom.cueHud.offsetWidth;
     dom.cueHud.classList.add('active');
 
+    // Tap to dismiss early
+    if (!dom.cueHud._dismissBound) {
+      dom.cueHud.addEventListener('click', () => dismissCue());
+      dom.cueHud._dismissBound = true;
+    }
+
     // Acoustic & tactile notification
     playDirectiveArrivalAlert();
 
-    // Clean 4-second auto-fade
+    const parsedDuration = (typeof durationMs === 'number' && !isNaN(durationMs) && durationMs > 0)
+      ? durationMs
+      : ((typeof cue === 'object' && cue !== null && typeof cue.durationMs === 'number' && cue.durationMs > 0)
+          ? cue.durationMs
+          : 4500);
+
+    // Clean auto-fade
     cueFadeTimeout = setTimeout(() => {
       dismissCue();
-    }, Math.max(50, durationMs));
+    }, parsedDuration);
   }
 
   /**
@@ -283,13 +322,18 @@
       clearTimeout(cueFadeTimeout);
       cueFadeTimeout = null;
     }
+    if (cueHideTimeout) {
+      clearTimeout(cueHideTimeout);
+      cueHideTimeout = null;
+    }
     if (!dom.cueHud) ensureElements();
     if (dom.cueHud) {
       dom.cueHud.classList.remove('active');
-      setTimeout(() => {
-        if (!dom.cueHud.classList.contains('active')) {
+      cueHideTimeout = setTimeout(() => {
+        if (dom.cueHud && !dom.cueHud.classList.contains('active')) {
           dom.cueHud.style.display = 'none';
         }
+        cueHideTimeout = null;
       }, 350);
     }
   }
