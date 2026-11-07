@@ -257,6 +257,37 @@ class TestVBTFirmwareTier4Workloads(unittest.TestCase):
         self.assertEqual(tracker.currentState, "IDLE", "Must abort to IDLE")
         self.assertEqual(len(tracker.reps), 0, "Failed dumped repetition must NOT count as a rep")
 
+    def test_w07_squat_with_horizontal_sway_and_path_efficiency(self):
+        """W7: Compare plumb-line squat (0.0cm dev, 100% eff) vs forward-pitching squat (>1.0cm dev, <100% eff)."""
+        tracker = RobustVBTTracker(initial_baseline=9.81)
+        tracker.filter.init_from_gravity(0.0, 0.0, 9.81)
+        dt = 0.01
+        t = 0.0
+
+        # Rep 1: Purely vertical squat
+        for a_vert, _ in make_bell_profile(1.1, 0.50, is_downward=True) + make_bell_profile(0.9, 0.62, is_downward=False):
+            tracker.step(t, 0.0, 0.0, 9.81 + a_vert, 0.0, 0.0, 0.0, dt)
+            t += dt
+        for _ in range(50):
+            tracker.step(t, 0.0, 0.0, 9.81, 0.0, 0.0, 0.0, dt)
+            t += dt
+
+        # Rep 2: Squat with horizontal forward sway
+        stroke = make_bell_profile(1.1, 0.50, is_downward=True) + make_bell_profile(0.9, 0.62, is_downward=False)
+        for idx, (a_vert, g_rot) in enumerate(stroke):
+            ax_sway = 1.5 * math.sin(2.0 * math.pi * (idx / len(stroke)))
+            tracker.step(t, ax_sway, 0.0, 9.81 + a_vert, g_rot, 0.0, 0.0, dt)
+            t += dt
+        for _ in range(50):
+            tracker.step(t, 0.0, 0.0, 9.81, 0.0, 0.0, 0.0, dt)
+            t += dt
+
+        self.assertEqual(len(tracker.reps), 2)
+        self.assertAlmostEqual(tracker.reps[0]["max_horiz_dev_cm"], 0.0, delta=0.05)
+        self.assertAlmostEqual(tracker.reps[0]["path_efficiency_pct"], 100.0, delta=0.1)
+        self.assertGreater(tracker.reps[1]["max_horiz_dev_cm"], 1.0)
+        self.assertLess(tracker.reps[1]["path_efficiency_pct"], 99.5)
+
 
 if __name__ == "__main__":
     unittest.main()

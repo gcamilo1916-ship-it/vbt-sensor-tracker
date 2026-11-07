@@ -427,6 +427,11 @@ class TestVBTFirmwareTier1Features(unittest.TestCase):
         self.assertIn("Tier 3: Cross-Feature Interactions", infra_text)
         self.assertIn("Tier 4: Real-World Scenarios", infra_text)
 
+    def test_f24_01_horizontal_deviation_and_path_efficiency_in_source(self):
+        """F24: Verify Earth-horizontal acceleration projection, max_horiz_dev_cm, path_efficiency_pct, and DEV BLE payload."""
+        verified, msg = self.analyzer.verify_horizontal_deviation_kinematics()
+        self.assertTrue(verified, msg)
+
 
 if __name__ == "__main__":
     unittest.main()

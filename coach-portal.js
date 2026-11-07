@@ -249,6 +249,18 @@
   let athletePressStartTime = 0;
   const LONG_PRESS_DURATION_MS = 500;
 
+  // ── Coach Focal Center State (R2) ──
+  let coachCanvasMode = 'PATH'; // 'PATH' or 'VEL'
+  let coachReplaySpeed = 1.0;   // 1.0 or 0.5
+  let coachPlaybackActive = false;
+  let coachPlaybackAnimFrame = null;
+  let coachScrubProgress = 1.0;
+  let coachActiveTrajectory = [];
+  let coachRep1Trajectory = null;
+  let coachActiveReps = [];
+  let coachSelectedRepIdx = -1;
+  let coachActiveTargetRpe = 8.0;
+
   function revealCoachOption() {
     coachUnlocked = true;
     if (!elements.viewModeToggle) elements.viewModeToggle = document.getElementById('view-mode-toggle');
@@ -346,6 +358,23 @@
       liveVl: document.getElementById('coach-live-vl'),
       liveVlGauge: document.getElementById('coach-live-vl-gauge'),
       repsStream: document.getElementById('coach-live-reps-stream'),
+
+      // Coach Focal Center (Requirement R2)
+      barpathCard: document.getElementById('coach-barpath-card'),
+      barpathCanvas: document.getElementById('coach-barpath-canvas'),
+      btnBarpathMode: document.getElementById('coach-btn-barpath-mode'),
+      devSummary: document.getElementById('coach-dev-summary'),
+      btnBarpathReplay: document.getElementById('coach-btn-barpath-replay'),
+      btnBarpathSpeed: document.getElementById('coach-btn-barpath-speed'),
+      barpathScrubber: document.getElementById('coach-barpath-scrubber'),
+      barpathRepPills: document.getElementById('coach-barpath-rep-pills'),
+      rpePillCard: document.getElementById('coach-rpe-pill-card'),
+      liveRpe: document.getElementById('coach-live-rpe'),
+      liveRirPill: document.getElementById('coach-live-rir-pill'),
+      rpeTierBadge: document.getElementById('coach-rpe-tier-badge'),
+      rpeGaugeFill: document.getElementById('coach-rpe-gauge-fill'),
+      rpeTargetPin: document.getElementById('coach-rpe-target-pin'),
+      rpeSub: document.getElementById('coach-rpe-sub'),
 
       // Sets History Table
       setsTable: document.getElementById('coach-sets-table'),
@@ -662,6 +691,9 @@
     // Feedback Controls
     initFeedbackHandlers();
 
+    // Coach Bar Path & Replay Controls (Requirement R2)
+    initCoachBarpathHandlers();
+
     // Subscribe to Event Bus
     bindSyncBusEvents();
 
@@ -683,6 +715,81 @@
         if (isCoachMode) renderFullCoachDashboard();
       });
       window._coachStorageBound = true;
+    }
+
+    // URL query auto-entry: ?mode=coach (Requirement R3)
+    try {
+      if (typeof window !== 'undefined' && window.location && window.location.search) {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('mode') === 'coach') {
+          revealCoachOption();
+          switchMode('coach');
+        }
+      }
+    } catch (_) {}
+
+    // Global & Laptop Keyboard Shortcuts (Requirement R3)
+    if (typeof document !== 'undefined' && !document._coachKeyboardShortcutsBound) {
+      document.addEventListener('keydown', (e) => {
+        // 1. Entry Shortcut: Ctrl+Shift+C / Cmd+Shift+C (global, works from athlete or coach mode)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+          e.preventDefault();
+          if (!isCoachMode) {
+            revealCoachOption();
+            switchMode('coach');
+          } else {
+            switchMode('athlete');
+          }
+          return;
+        }
+
+        // 2. In-Coach Telemetry Shortcuts: Only active in body.portal-coach
+        if (!document.body || !document.body.classList.contains('portal-coach')) {
+          return;
+        }
+
+        // Guard: ignore if typing in input, textarea, select, or editable element
+        const activeEl = document.activeElement;
+        if (activeEl) {
+          const tag = (activeEl.tagName || '').toUpperCase();
+          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+          if (activeEl.isContentEditable || activeEl.getAttribute('contenteditable') === 'true') return;
+        }
+
+        // Ignore if modifier keys are pressed for telemetry shortcuts
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+        // R: Replay bar path
+        if (e.key === 'r' || e.key === 'R') {
+          e.preventDefault();
+          const replayBtn = document.getElementById('coach-btn-barpath-replay');
+          if (replayBtn) replayBtn.click();
+          return;
+        }
+
+        // M: Toggle PATH / VEL mode
+        if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault();
+          const modeBtn = document.getElementById('coach-btn-barpath-mode');
+          if (modeBtn) modeBtn.click();
+          return;
+        }
+
+        // [: Step previous rep
+        if (e.key === '[') {
+          e.preventDefault();
+          stepCoachRepSelection(-1);
+          return;
+        }
+
+        // ]: Step next rep
+        if (e.key === ']') {
+          e.preventDefault();
+          stepCoachRepSelection(1);
+          return;
+        }
+      });
+      document._coachKeyboardShortcutsBound = true;
     }
 
     // Initial check
@@ -1879,6 +1986,14 @@
     lastProcessedSetId = (payload && payload.setId) ? payload.setId : '';
 
     activeRepsStream = [];
+    coachActiveReps = [];
+    coachActiveTrajectory = [];
+    coachRep1Trajectory = null;
+    coachSelectedRepIdx = -1;
+    if (payload && payload.targetRpe) {
+      coachActiveTargetRpe = Number(payload.targetRpe) || 8.0;
+    }
+
     if (!elements.viewCoach) queryElements();
 
     const lift = (payload && payload.lift) || (typeof currentLift !== 'undefined' ? currentLift : 'Deadlift');
@@ -1927,6 +2042,15 @@
     if (elements.repsStream) {
       elements.repsStream.innerHTML = '<span class="coach-empty-stream-msg">Set initiated. Lift with Eros to record repetitions...</span>';
     }
+
+    // Reset Bar Path Stage & RPE Pill
+    if (elements.devSummary) {
+      elements.devSummary.textContent = 'MAX DEV: 0.0 cm • EFF: 100.0%';
+    }
+    renderCoachBarpathRepPills();
+    updateCoachRpePill(8.0, 0, 0);
+    renderCoachBarPathCanvas();
+
     renderSquadOverview();
   }
 
@@ -1939,18 +2063,40 @@
     const peakVel = typeof payload.peakVelocity === 'number' ? payload.peakVelocity : (vel * 1.25);
     const rom = typeof payload.rom === 'number' ? payload.rom : (payload.romCm || 54.0);
     const vl = typeof payload.lossPercent === 'number' ? payload.lossPercent : (payload.velocityLossPct || 0);
+    const dev = (typeof payload.deviationCm === 'number') ? payload.deviationCm : null;
+    const maxDev = (typeof payload.maxDeviationCm === 'number') ? payload.maxDeviationCm : dev;
+    const eff = (typeof payload.pathEfficiencyPct === 'number') ? payload.pathEfficiencyPct : null;
+    let traj = Array.isArray(payload.trajectoryPoints) ? payload.trajectoryPoints : null;
 
     const repKey = `${payload.setId || ''}_${repNum}_${vel.toFixed(2)}`;
     if (repKey === lastProcessedRepKey) return;
     lastProcessedRepKey = repKey;
 
-    activeRepsStream.push({
+    if (!traj && typeof window !== 'undefined' && typeof window.synthesizeRepTrajectory === 'function') {
+      const lift = (currentAthlete && currentAthlete.currentLift) || 'Deadlift';
+      const synth = window.synthesizeRepTrajectory(lift, vel, dev, rom);
+      traj = synth.points;
+    }
+
+    const repObj = {
       repNumber: repNum,
       velocity: vel,
       peakVelocity: peakVel,
       rom: rom,
-      lossPercent: vl
-    });
+      lossPercent: vl,
+      rpe: payload.rpe != null ? payload.rpe : 8.0,
+      deviationCm: dev,
+      maxDeviationCm: maxDev,
+      pathEfficiencyPct: eff,
+      trajectoryPoints: traj
+    };
+
+    activeRepsStream.push(repObj);
+    coachActiveReps.push(repObj);
+
+    if (coachActiveReps.length === 1 && traj) {
+      coachRep1Trajectory = traj;
+    }
 
     if (currentAthlete) {
       currentAthlete.status = 'lifting';
@@ -1988,6 +2134,10 @@
     // Append to Reps Stream
     renderRepsStream();
     renderSquadOverview();
+
+    // Render Pills and Load latest rep trajectory into Coach Bar Path
+    renderCoachBarpathRepPills();
+    loadCoachRepTrajectory(coachActiveReps.length - 1);
   }
 
   function handleSetCompleted(payload) {
@@ -2176,9 +2326,20 @@
         velocity: r.velocity || 0,
         peakVelocity: r.peakVelocity || (r.velocity ? r.velocity * 1.25 : 0),
         rom: r.rom || 56.0,
-        lossPercent: r.lossPercent || 0
+        lossPercent: r.lossPercent || 0,
+        rpe: r.rpe || 8.0,
+        deviationCm: r.deviationCm,
+        maxDeviationCm: r.maxDeviationCm || r.deviationCm,
+        pathEfficiencyPct: r.pathEfficiencyPct,
+        trajectoryPoints: r.trajectoryPoints
       }));
+      coachActiveReps = [...activeRepsStream];
+      if (coachActiveReps[0] && coachActiveReps[0].trajectoryPoints) {
+        coachRep1Trajectory = coachActiveReps[0].trajectoryPoints;
+      }
       renderRepsStream();
+      renderCoachBarpathRepPills();
+      loadCoachRepTrajectory(coachActiveReps.length - 1);
     }
   }
 
@@ -2189,16 +2350,25 @@
       return;
     }
 
-    elements.repsStream.innerHTML = activeRepsStream.map(rep => {
+    elements.repsStream.innerHTML = activeRepsStream.map((rep, idx) => {
       const isCutoff = rep.lossPercent >= 20.0;
+      const isSelected = (idx === coachSelectedRepIdx);
       return `
-        <div class="coach-rep-stream-pill ${isCutoff ? 'cutoff-alert' : ''}">
+        <div class="coach-rep-stream-pill ${isCutoff ? 'cutoff-alert' : ''} ${isSelected ? 'active' : ''}" data-rep-idx="${idx}" role="button" tabindex="0" aria-label="Select Rep ${rep.repNumber}">
           <span class="rep-num">R${rep.repNumber}:</span>
           <span class="rep-vel">${rep.velocity.toFixed(2)} m/s</span>
           <span class="rep-loss">(${rep.lossPercent > 0 ? '-' : ''}${rep.lossPercent.toFixed(1)}%)</span>
         </div>
       `;
     }).join('');
+
+    elements.repsStream.querySelectorAll('.coach-rep-stream-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const idx = parseInt(pill.getAttribute('data-rep-idx'), 10);
+        loadCoachRepTrajectory(idx);
+        playCoachReplay();
+      });
+    });
   }
 
   function renderSetsHistoryTable() {
@@ -2244,9 +2414,12 @@
           <td class="font-mono">${restDuration}</td>
           <td class="font-mono">@${(set.avgRpe || 8.0).toFixed(1)}</td>
           <td>
-            <button type="button" class="coach-expand-btn" data-toggle-id="${setId}" aria-label="Toggle details for set ${set.setNumber}">
-              ${isExpanded ? 'Hide Reps' : 'View Reps'}
-            </button>
+            <div class="coach-table-actions">
+              <button type="button" class="coach-replay-set-btn" data-action="replay" data-set-id="${setId}" aria-label="Replay set ${set.setNumber}">REPLAY</button>
+              <button type="button" class="coach-expand-btn" data-toggle-id="${setId}" aria-label="Toggle details for set ${set.setNumber}">
+                ${isExpanded ? 'Hide Reps' : 'View Reps'}
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -2297,6 +2470,15 @@
       });
     });
 
+    const replayButtons = elements.setsTableBody.querySelectorAll('.coach-replay-set-btn');
+    replayButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-set-id');
+        replayCompletedSet(id);
+      });
+    });
+
     const rows = elements.setsTableBody.querySelectorAll('.coach-history-row');
     rows.forEach(row => {
       row.addEventListener('click', () => {
@@ -2314,6 +2496,497 @@
       expandedSetIds.add(setId);
     }
     renderSetsHistoryTable();
+  }
+
+  // ── Coach Bar Path & Replay Engine (Requirement R2) ──
+  function initCoachBarpathHandlers() {
+    if (!elements.barpathCard) queryElements();
+
+    if (elements.btnBarpathMode && !elements.btnBarpathMode._coachBound) {
+      elements.btnBarpathMode.addEventListener('click', toggleCoachCanvasMode);
+      elements.btnBarpathMode._coachBound = true;
+    }
+
+    if (elements.btnBarpathReplay && !elements.btnBarpathReplay._coachBound) {
+      elements.btnBarpathReplay.addEventListener('click', toggleCoachReplay);
+      elements.btnBarpathReplay._coachBound = true;
+    }
+
+    if (elements.btnBarpathSpeed && !elements.btnBarpathSpeed._coachBound) {
+      elements.btnBarpathSpeed.addEventListener('click', toggleCoachReplaySpeed);
+      elements.btnBarpathSpeed._coachBound = true;
+    }
+
+    if (elements.barpathScrubber && !elements.barpathScrubber._coachBound) {
+      elements.barpathScrubber.addEventListener('input', (e) => {
+        pauseCoachReplay();
+        coachScrubProgress = Math.max(0, Math.min(1.0, Number(e.target.value) / 100));
+        renderCoachBarPathCanvas();
+      });
+      elements.barpathScrubber._coachBound = true;
+    }
+
+    renderCoachBarPathCanvas();
+  }
+
+  function renderCoachBarPathCanvas() {
+    if (!elements.barpathCanvas) queryElements();
+    const canvas = elements.barpathCanvas;
+    if (!canvas || typeof canvas.getContext !== 'function') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width || 280;
+    const h = canvas.height || 210;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, w, h);
+
+    const plumbX = w / 2; // 140
+    const topY = 25;
+    const botY = h - 25; // 185
+    const corridorWidth2cm = 32; // ~16px per cm
+    const corridorWidth4cm = 64;
+
+    if (coachCanvasMode === 'PATH') {
+      // Mode A: Sagittal 2D Deviation (cm vs % ROM)
+      ctx.save();
+
+      // 0.0 cm plumb line
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = 1;
+      if (typeof ctx.setLineDash === 'function') ctx.setLineDash([4, 4]);
+      ctx.moveTo(plumbX, topY - 10);
+      ctx.lineTo(plumbX, botY + 10);
+      ctx.stroke();
+      if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
+
+      // ±2.0 cm corridor
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.12)';
+      ctx.strokeRect(plumbX - corridorWidth2cm, topY, corridorWidth2cm * 2, botY - topY);
+
+      // ±4.0 cm corridor
+      ctx.strokeStyle = 'rgba(255, 59, 48, 0.08)';
+      ctx.strokeRect(plumbX - corridorWidth4cm, topY, corridorWidth4cm * 2, botY - topY);
+
+      // Rep 1 Ghost Trail (if active rep is > 0)
+      if (coachRep1Trajectory && coachRep1Trajectory.length > 1 && coachSelectedRepIdx > 0) {
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.lineWidth = 1.5;
+        if (typeof ctx.setLineDash === 'function') ctx.setLineDash([3, 3]);
+        coachRep1Trajectory.forEach((pt, i) => {
+          const ptRom = (pt.y != null) ? pt.y : 0;
+          const maxRom = coachRep1Trajectory[coachRep1Trajectory.length - 1]?.y || 54.0;
+          const pct = maxRom > 0 ? ptRom / maxRom : i / (coachRep1Trajectory.length - 1);
+          const px = plumbX + (pt.dx || 0) * 16;
+          const py = botY - pct * (botY - topY);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+        if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
+      }
+
+      // Active Trajectory Curve up to coachScrubProgress
+      const pts = coachActiveTrajectory;
+      if (pts && pts.length > 1) {
+        const totalPts = pts.length;
+        const visiblePtsCount = Math.max(2, Math.min(totalPts, Math.ceil(coachScrubProgress * totalPts)));
+        const maxRom = pts[totalPts - 1]?.y || 54.0;
+
+        for (let i = 1; i < visiblePtsCount; i++) {
+          const pPrev = pts[i - 1];
+          const pCur = pts[i];
+          const pctPrev = maxRom > 0 ? (pPrev.y || 0) / maxRom : (i - 1) / (totalPts - 1);
+          const pctCur = maxRom > 0 ? (pCur.y || 0) / maxRom : i / (totalPts - 1);
+
+          const x1 = plumbX + (pPrev.dx || 0) * 16;
+          const y1 = botY - pctPrev * (botY - topY);
+          const x2 = plumbX + (pCur.dx || 0) * 16;
+          const y2 = botY - pctCur * (botY - topY);
+
+          // Color-grade segments by drift deviation
+          const drift = Math.abs(pCur.dx || 0);
+          let segColor = '#00FF66';
+          if (drift > 3.5) segColor = '#FF3B30';
+          else if (drift > 2.0) segColor = '#FFB800';
+
+          ctx.beginPath();
+          ctx.strokeStyle = segColor;
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = 'round';
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+
+        // Barbell Puck at current scrub point
+        const curPt = pts[visiblePtsCount - 1];
+        const curPct = maxRom > 0 ? (curPt.y || 0) / maxRom : (visiblePtsCount - 1) / (totalPts - 1);
+        const puckX = plumbX + (curPt.dx || 0) * 16;
+        const puckY = botY - curPct * (botY - topY);
+
+        ctx.beginPath();
+        ctx.arc(puckX, puckY, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#00E5FF';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    } else {
+      // Mode B: Velocity vs ROM Profile (Instantaneous m/s vs % ROM)
+      ctx.save();
+
+      // Axis grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(35, topY);
+      ctx.lineTo(35, botY);
+      ctx.lineTo(w - 20, botY);
+      ctx.stroke();
+
+      const pts = coachActiveTrajectory;
+      if (pts && pts.length > 1) {
+        const totalPts = pts.length;
+        const visiblePtsCount = Math.max(2, Math.min(totalPts, Math.ceil(coachScrubProgress * totalPts)));
+        const maxRom = pts[totalPts - 1]?.y || 54.0;
+        const maxV = 1.2; // ceiling 1.2 m/s
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#00E5FF';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+
+        for (let i = 0; i < visiblePtsCount; i++) {
+          const pt = pts[i];
+          const pct = maxRom > 0 ? (pt.y || 0) / maxRom : i / (totalPts - 1);
+          const vel = Math.min(maxV, Math.max(0, pt.v || 0));
+          const px = 35 + (vel / maxV) * (w - 60);
+          const py = botY - pct * (botY - topY);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Cursor Puck
+        const curPt = pts[visiblePtsCount - 1];
+        const curPct = maxRom > 0 ? (curPt.y || 0) / maxRom : (visiblePtsCount - 1) / (totalPts - 1);
+        const curV = Math.min(maxV, Math.max(0, curPt.v || 0));
+        const puckX = 35 + (curV / maxV) * (w - 60);
+        const puckY = botY - curPct * (botY - topY);
+
+        ctx.beginPath();
+        ctx.arc(puckX, puckY, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFB800';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  function playCoachReplay() {
+    coachPlaybackActive = true;
+    updateCoachReplayButtonState();
+
+    if (coachScrubProgress >= 1.0) {
+      coachScrubProgress = 0.0;
+      if (elements.barpathScrubber) elements.barpathScrubber.value = '0';
+    }
+
+    const durationMs = (1200 / coachReplaySpeed);
+    let startTime = null;
+    const initialProgress = coachScrubProgress;
+
+    function animStep(timestamp) {
+      if (!coachPlaybackActive) return;
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(1.0, initialProgress + (elapsed / durationMs));
+      coachScrubProgress = progress;
+
+      if (elements.barpathScrubber) {
+        elements.barpathScrubber.value = Math.round(progress * 100);
+      }
+      renderCoachBarPathCanvas();
+
+      if (progress < 1.0) {
+        coachPlaybackAnimFrame = (typeof requestAnimationFrame === 'function')
+          ? requestAnimationFrame(animStep)
+          : null;
+      } else {
+        pauseCoachReplay();
+      }
+    }
+
+    if (coachPlaybackAnimFrame && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(coachPlaybackAnimFrame);
+    }
+    if (typeof requestAnimationFrame === 'function') {
+      coachPlaybackAnimFrame = requestAnimationFrame(animStep);
+    } else {
+      coachScrubProgress = 1.0;
+      if (elements.barpathScrubber) elements.barpathScrubber.value = '100';
+      renderCoachBarPathCanvas();
+      pauseCoachReplay();
+    }
+  }
+
+  function pauseCoachReplay() {
+    coachPlaybackActive = false;
+    if (coachPlaybackAnimFrame && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(coachPlaybackAnimFrame);
+      coachPlaybackAnimFrame = null;
+    }
+    updateCoachReplayButtonState();
+  }
+
+  function toggleCoachReplay() {
+    if (coachPlaybackActive) {
+      pauseCoachReplay();
+    } else {
+      playCoachReplay();
+    }
+  }
+
+  function updateCoachReplayButtonState() {
+    if (!elements.btnBarpathReplay) queryElements();
+    const btn = elements.btnBarpathReplay;
+    if (!btn) return;
+    if (coachPlaybackActive) {
+      btn.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="6" y="4" width="4" height="16"></rect>
+          <rect x="14" y="4" width="4" height="16"></rect>
+        </svg>
+        <span>PAUSE</span>
+      `;
+      btn.classList.add('active');
+    } else {
+      btn.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span>REPLAY</span>
+      `;
+      btn.classList.remove('active');
+    }
+  }
+
+  function toggleCoachReplaySpeed() {
+    coachReplaySpeed = (coachReplaySpeed === 1.0) ? 0.5 : 1.0;
+    if (elements.btnBarpathSpeed) {
+      elements.btnBarpathSpeed.textContent = `${coachReplaySpeed.toFixed(1)}X`;
+    }
+  }
+
+  function toggleCoachCanvasMode() {
+    coachCanvasMode = (coachCanvasMode === 'PATH') ? 'VEL' : 'PATH';
+    if (elements.btnBarpathMode) {
+      elements.btnBarpathMode.textContent = coachCanvasMode;
+    }
+    renderCoachBarPathCanvas();
+  }
+
+  function loadCoachRepTrajectory(repIdxOrPoints, maxDevArg, effArg) {
+    if (Array.isArray(repIdxOrPoints)) {
+      coachActiveTrajectory = repIdxOrPoints;
+      const maxDev = (typeof maxDevArg === 'number') ? maxDevArg : 0;
+      const eff = (typeof effArg === 'number') ? effArg : 100.0;
+      if (elements.devSummary) {
+        elements.devSummary.textContent = `MAX DEV: ${maxDev >= 0 ? '+' : ''}${maxDev.toFixed(1)} cm • EFF: ${eff.toFixed(1)}%`;
+      }
+      renderCoachBarPathCanvas();
+      return;
+    }
+
+    const repIdx = repIdxOrPoints;
+    if (!coachActiveReps || !coachActiveReps.length) return;
+    if (repIdx < 0 || repIdx >= coachActiveReps.length) return;
+
+    coachSelectedRepIdx = repIdx;
+    const rep = coachActiveReps[repIdx];
+    if (rep.trajectoryPoints && rep.trajectoryPoints.length > 0) {
+      coachActiveTrajectory = rep.trajectoryPoints;
+    } else if (typeof window !== 'undefined' && typeof window.synthesizeRepTrajectory === 'function') {
+      const lift = (currentAthlete && currentAthlete.currentLift) || 'Deadlift';
+      const synth = window.synthesizeRepTrajectory(lift, rep.velocity || 0.6, rep.deviationCm, rep.rom || 54.0);
+      coachActiveTrajectory = synth.points;
+    }
+
+    const maxDev = (typeof rep.maxDeviationCm === 'number') ? rep.maxDeviationCm : (rep.deviationCm || 0);
+    const eff = (typeof rep.pathEfficiencyPct === 'number') ? rep.pathEfficiencyPct : 100.0;
+    if (elements.devSummary) {
+      elements.devSummary.textContent = `MAX DEV: ${maxDev >= 0 ? '+' : ''}${maxDev.toFixed(1)} cm • EFF: ${eff.toFixed(1)}%`;
+    }
+
+    // Update active rep pill highlighting in #coach-barpath-rep-pills
+    if (elements.barpathRepPills) {
+      elements.barpathRepPills.querySelectorAll('.coach-barpath-rep-pill').forEach((pill, idx) => {
+        if (idx === repIdx) pill.classList.add('active');
+        else pill.classList.remove('active');
+      });
+    }
+
+    // Update active rep stream pill highlighting in #coach-live-reps-stream
+    if (elements.repsStream) {
+      elements.repsStream.querySelectorAll('.coach-rep-stream-pill').forEach((pill, idx) => {
+        if (idx === repIdx) pill.classList.add('active');
+        else pill.classList.remove('active');
+      });
+    }
+
+    // Update Live RPE Pill readout to this rep
+    updateCoachRpePill(rep.rpe || 8.0, maxDev, rep.lossPercent || 0);
+
+    renderCoachBarPathCanvas();
+  }
+
+  function updateCoachRpePill(rpeVal, deviationCm = 0, lossPct = 0) {
+    if (!elements.liveRpe) queryElements();
+    const rpe = Number(rpeVal) || 8.0;
+    if (elements.liveRpe) elements.liveRpe.textContent = `@${rpe.toFixed(1)}`;
+    if (elements.liveRirPill) elements.liveRirPill.textContent = `${Math.max(0, 10.0 - rpe).toFixed(1)} RIR`;
+
+    if (elements.rpeTierBadge) {
+      let tier = 'OPTIMAL';
+      let tierClass = 'tier-optimal';
+      if (rpe < 7.0) {
+        tier = 'WARMUP';
+        tierClass = 'tier-optimal';
+      } else if (rpe < 8.5) {
+        tier = 'OPTIMAL';
+        tierClass = 'tier-optimal';
+      } else if (rpe < 9.5) {
+        tier = 'HEAVY EFFORT';
+        tierClass = 'tier-heavy';
+      } else {
+        tier = 'LIMIT';
+        tierClass = 'tier-limit';
+      }
+      elements.rpeTierBadge.textContent = tier;
+      elements.rpeTierBadge.className = `coach-tier-badge ${tierClass} font-mono`;
+    }
+
+    if (elements.rpeGaugeFill) {
+      const pct = Math.min(100, Math.max(10, rpe * 10));
+      elements.rpeGaugeFill.style.width = `${pct}%`;
+    }
+
+    if (elements.rpeTargetPin) {
+      const targetPct = Math.min(100, Math.max(10, coachActiveTargetRpe * 10));
+      elements.rpeTargetPin.style.left = `${targetPct}%`;
+      elements.rpeTargetPin.title = `Target RPE @${coachActiveTargetRpe.toFixed(1)}`;
+    }
+
+    if (elements.rpeSub) {
+      if (Math.abs(deviationCm) > 3.0) {
+        elements.rpeSub.textContent = 'TECHNICAL DRIFT DETECTED';
+        elements.rpeSub.style.color = '#FF3B30';
+      } else if (lossPct >= 20.0) {
+        elements.rpeSub.textContent = 'FATIGUE CEILING REACHED';
+        elements.rpeSub.style.color = '#FF3B30';
+      } else if (rpe >= coachActiveTargetRpe) {
+        elements.rpeSub.textContent = 'TARGET RPE ATTAINED';
+        elements.rpeSub.style.color = '#00E5FF';
+      } else {
+        elements.rpeSub.textContent = 'ON TARGET GROOVE';
+        elements.rpeSub.style.color = '#00FF66';
+      }
+    }
+  }
+
+  function renderCoachBarpathRepPills() {
+    if (!elements.barpathRepPills) queryElements();
+    const container = elements.barpathRepPills;
+    if (!container) return;
+    if (!coachActiveReps || !coachActiveReps.length) {
+      container.innerHTML = '';
+      return;
+    }
+    container.innerHTML = coachActiveReps.map((r, idx) => `
+      <button type="button" class="coach-barpath-rep-pill ${idx === coachSelectedRepIdx ? 'active' : ''}" data-rep-idx="${idx}" aria-label="Select Rep ${r.repNumber || idx + 1}">
+        R${r.repNumber || idx + 1}
+      </button>
+    `).join('');
+
+    container.querySelectorAll('.coach-barpath-rep-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-rep-idx'), 10);
+        loadCoachRepTrajectory(idx);
+        playCoachReplay();
+      });
+    });
+  }
+
+  function replayCompletedSet(setIdOrSet) {
+    let targetSet = null;
+    if (typeof setIdOrSet === 'object' && setIdOrSet !== null) {
+      targetSet = setIdOrSet;
+    } else {
+      const safeWorkout = getSafeActiveWorkout();
+      const sets = (safeWorkout && Array.isArray(safeWorkout.sets)) ? safeWorkout.sets : [];
+      targetSet = sets.find(s => (s.setId || `set_${s.setNumber}`) === setIdOrSet);
+    }
+    if (!targetSet) return;
+
+    let repsList = [];
+    if (Array.isArray(targetSet.reps) && targetSet.reps.length > 0) {
+      repsList = targetSet.reps;
+    } else {
+      repsList = [{
+        repNumber: 1,
+        velocity: targetSet.mcv || targetSet.avgVelocity || 0.6,
+        peakVelocity: targetSet.peakVelocity || targetSet.maxVelocity || 0.8,
+        rom: targetSet.rom || 54.0,
+        lossPercent: targetSet.velocityLoss || targetSet.velocityLossPct || 0,
+        deviationCm: targetSet.deviationCm,
+        maxDeviationCm: targetSet.maxDeviationCm || targetSet.deviationCm,
+        pathEfficiencyPct: targetSet.pathEfficiencyPct,
+        trajectoryPoints: targetSet.trajectoryPoints
+      }];
+    }
+
+    coachActiveReps = repsList.map((r, idx) => ({
+      repNumber: r.repNumber || idx + 1,
+      velocity: r.velocity || 0,
+      peakVelocity: r.peakVelocity || (r.velocity ? r.velocity * 1.25 : 0),
+      rom: r.rom || 54.0,
+      lossPercent: r.lossPercent || 0,
+      rpe: r.rpe || targetSet.avgRpe || 8.0,
+      deviationCm: r.deviationCm,
+      maxDeviationCm: r.maxDeviationCm || r.deviationCm,
+      pathEfficiencyPct: r.pathEfficiencyPct,
+      trajectoryPoints: r.trajectoryPoints
+    }));
+
+    if (coachActiveReps[0] && coachActiveReps[0].trajectoryPoints) {
+      coachRep1Trajectory = coachActiveReps[0].trajectoryPoints;
+    } else {
+      coachRep1Trajectory = null;
+    }
+
+    renderCoachBarpathRepPills();
+    loadCoachRepTrajectory(0);
+    playCoachReplay();
+    showFeedbackMessage(`Loaded Set ${targetSet.setNumber} trajectory for replay`);
+  }
+
+  function stepCoachRepSelection(delta) {
+    if (!coachActiveReps || !coachActiveReps.length) return;
+    let nextIdx = coachSelectedRepIdx + delta;
+    if (nextIdx < 0) nextIdx = coachActiveReps.length - 1;
+    if (nextIdx >= coachActiveReps.length) nextIdx = 0;
+    loadCoachRepTrajectory(nextIdx);
+    playCoachReplay();
   }
 
   // ── Feedback Controls & Downlink Dispatch ──
@@ -2583,6 +3256,7 @@
   // Public Interface
   return {
     init,
+    initCoachPortal: init,
     switchMode,
     switchCoachPanel,
     renderFullCoachDashboard,
@@ -2604,6 +3278,19 @@
     formatCanonicalWorkoutName,
     classifyBryanMannZone,
     sendCoachPrescription,
+    renderCoachBarPathCanvas,
+    playCoachReplay,
+    pauseCoachReplay,
+    toggleCoachReplay,
+    toggleCoachCanvasMode,
+    toggleCoachReplaySpeed,
+    loadCoachRepTrajectory,
+    replayCompletedSet,
+    stepCoachRepSelection,
+    updateCoachRpePill,
+    getCoachCanvasMode: () => coachCanvasMode,
+    getCoachReplaySpeed: () => coachReplaySpeed,
+    getCoachActiveTrajectory: () => coachActiveTrajectory,
     getIsCoachMode: () => isCoachMode,
     getActiveCoachPanel: () => activeCoachPanel,
     getSquadAthletes: () => SQUAD_ATHLETES,

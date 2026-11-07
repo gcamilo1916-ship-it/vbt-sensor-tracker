@@ -97,7 +97,7 @@
     const rpe = Number(data.rpe != null ? data.rpe : 0);
     const lossPercent = Number(data.lossPercent != null ? data.lossPercent : (data.velocityLossPct != null ? data.velocityLossPct : 0));
 
-    return {
+    const payload = {
       setId: String(data.setId).trim(),
       repNumber: Math.round(repNumber),
       velocity: Math.round(velocity * 100) / 100,
@@ -106,6 +106,31 @@
       rpe: Math.round(rpe * 10) / 10,
       lossPercent: Math.round(lossPercent * 10) / 10
     };
+    if (data.deviationCm != null) {
+      const dev = Number(data.deviationCm);
+      if (!isNaN(dev)) payload.deviationCm = Math.round(dev * 10) / 10;
+    }
+    if (data.maxDeviationCm != null) {
+      const maxDev = Number(data.maxDeviationCm);
+      if (!isNaN(maxDev)) payload.maxDeviationCm = Math.round(maxDev * 10) / 10;
+    }
+    if (data.pathEfficiencyPct != null) {
+      const eff = Number(data.pathEfficiencyPct);
+      if (!isNaN(eff)) payload.pathEfficiencyPct = Math.round(eff * 10) / 10;
+    }
+    if (Array.isArray(data.trajectoryPoints)) {
+      payload.trajectoryPoints = data.trajectoryPoints.map(pt => {
+        if (!pt || typeof pt !== 'object') return pt;
+        const out = { ...pt };
+        if (pt.t != null) out.t = Number(pt.t);
+        if (pt.y != null) out.y = Math.round(Number(pt.y) * 10) / 10;
+        if (pt.dx != null) out.dx = Math.round(Number(pt.dx) * 10) / 10;
+        if (pt.x != null) out.x = Math.round(Number(pt.x) * 10) / 10;
+        if (pt.v != null) out.v = Math.round(Number(pt.v) * 100) / 100;
+        return out;
+      });
+    }
+    return payload;
   }
 
   function validateSetCompleted(data) {
@@ -155,6 +180,49 @@
     };
     if (restSeconds !== null) {
       payload.restSeconds = restSeconds;
+    }
+    if (data.deviationCm != null) {
+      const dev = Number(data.deviationCm);
+      if (!isNaN(dev)) payload.deviationCm = Math.round(dev * 10) / 10;
+    }
+    if (data.maxDeviationCm != null) {
+      const maxDev = Number(data.maxDeviationCm);
+      if (!isNaN(maxDev)) payload.maxDeviationCm = Math.round(maxDev * 10) / 10;
+    } else if (payload.deviationCm != null) {
+      payload.maxDeviationCm = payload.deviationCm;
+    }
+    if (data.pathEfficiencyPct != null) {
+      const eff = Number(data.pathEfficiencyPct);
+      if (!isNaN(eff)) payload.pathEfficiencyPct = Math.round(eff * 10) / 10;
+    }
+    if (Array.isArray(data.trajectoryPoints)) {
+      payload.trajectoryPoints = data.trajectoryPoints.map(pt => {
+        if (!pt || typeof pt !== 'object') return pt;
+        const out = { ...pt };
+        if (pt.t != null) out.t = Number(pt.t);
+        if (pt.y != null) out.y = Math.round(Number(pt.y) * 10) / 10;
+        if (pt.dx != null) out.dx = Math.round(Number(pt.dx) * 10) / 10;
+        if (pt.x != null) out.x = Math.round(Number(pt.x) * 10) / 10;
+        if (pt.v != null) out.v = Math.round(Number(pt.v) * 100) / 100;
+        return out;
+      });
+    }
+    if (typeof data.avgRpe === 'number' && !isNaN(data.avgRpe)) {
+      payload.avgRpe = Math.round(data.avgRpe * 10) / 10;
+    } else if (typeof data.rpe === 'number' && !isNaN(data.rpe)) {
+      payload.avgRpe = Math.round(data.rpe * 10) / 10;
+    }
+    if (typeof data.targetRpe === 'number' && !isNaN(data.targetRpe)) {
+      payload.targetRpe = Math.round(data.targetRpe * 10) / 10;
+    }
+    if (data.athleteId) {
+      payload.athleteId = String(data.athleteId).trim();
+    }
+    if (data.athleteName) {
+      payload.athleteName = String(data.athleteName).trim();
+    }
+    if (data.pairingCode) {
+      payload.pairingCode = String(data.pairingCode).trim();
     }
     return payload;
   }
@@ -330,6 +398,12 @@
       this.maxHistory = options.maxHistory || 100;
       this.isClosed = false;
 
+      // Base44 Cloud Bridge state
+      this.cloudRoom = null;
+      this.cloudSub = null;
+      this.cloudPairingCode = null;
+      this.base44Client = options.base44Client || null;
+
       // Bind storage listener for cleanup
       this._onStorageEvent = this._onStorageEvent.bind(this);
 
@@ -338,6 +412,10 @@
 
       // Initialize localStorage fallback listener
       this._initStorageFallback();
+
+      if (options.pairingCode) {
+        this.connectCloud(options.pairingCode, this.base44Client);
+      }
     }
 
     static get EVENTS() {
@@ -467,10 +545,13 @@
       // 3. Dispatch locally
       this._dispatchLocal(event, validated, true);
 
-      // 4. Broadcast cross-tab if enabled
+      // 4. Broadcast cross-tab and cloud if enabled
       const shouldBroadcast = options.broadcast !== false;
       if (shouldBroadcast) {
         this._broadcastCrossTab(event, validated);
+        if (typeof this._broadcastCloud === 'function') {
+          this._broadcastCloud(event, validated);
+        }
       }
 
       return validated;
@@ -585,11 +666,90 @@
     }
 
     /**
+     * Connects to the Base44 realtime actor room for cross-device synchronization
+     * @param {string} [pairingCode] Room / squad session code (e.g. 'EROS-7X9K')
+     * @param {Object} [client] Optional Base44 SDK client instance
+     * @returns {boolean} Whether connection was initiated
+     */
+    connectCloud(pairingCode, client) {
+      if (client) this.base44Client = client;
+      const b44 = this.base44Client || (typeof base44 !== 'undefined' ? base44 : (typeof window !== 'undefined' ? window.base44 : null));
+      if (!b44 || !b44.actors || typeof b44.actors.SquadSession !== 'function') {
+        return false;
+      }
+
+      const code = String(pairingCode || this.cloudPairingCode || 'EROS-7X9K').trim().toUpperCase();
+      if (this.cloudRoom && this.cloudPairingCode === code) {
+        return true;
+      }
+
+      this.disconnectCloud();
+      this.cloudPairingCode = code;
+
+      try {
+        const room = b44.actors.SquadSession(code).connect();
+        const sub = room.subscribe((msg) => {
+          if (this.isClosed || !msg || typeof msg !== 'object') return;
+          const type = msg.type;
+          const data = msg.data !== undefined ? msg.data : msg.payload;
+          const senderId = msg.senderId || (data && data.senderId);
+          if (senderId && senderId === this.busId) return;
+          if (type && data) {
+            this._dispatchLocal(type, data, false);
+          }
+        });
+
+        this.cloudRoom = room;
+        this.cloudSub = sub;
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
+
+    /**
+     * Disconnects from the current Base44 realtime actor room
+     */
+    disconnectCloud() {
+      if (this.cloudSub && typeof this.cloudSub.unsubscribe === 'function') {
+        try {
+          this.cloudSub.unsubscribe();
+        } catch (_) {}
+      }
+      this.cloudSub = null;
+
+      if (this.cloudRoom && typeof this.cloudRoom.close === 'function') {
+        try {
+          this.cloudRoom.close();
+        } catch (_) {}
+      }
+      this.cloudRoom = null;
+      this.cloudPairingCode = null;
+    }
+
+    _broadcastCloud(event, payload) {
+      if (this.isClosed || !this.cloudRoom || typeof this.cloudRoom.send !== 'function') return;
+      try {
+        this.cloudRoom.send({
+          type: event,
+          data: {
+            ...payload,
+            senderId: this.busId,
+            timestamp: payload.timestamp || Date.now()
+          }
+        });
+      } catch (_) {
+        // Non-blocking: offline primary path remains untouched
+      }
+    }
+
+    /**
      * Closes the bus instance, disposing BroadcastChannel and event listeners
      */
     destroy() {
       this.isClosed = true;
       this.clear();
+      this.disconnectCloud();
       if (this.channel) {
         try {
           this.channel.close();
@@ -608,6 +768,8 @@
   return {
     ErosEventBus,
     ErosSyncBus,
-    EVENTS
+    EVENTS,
+    validateRepRecorded,
+    validateSetCompleted
   };
 });

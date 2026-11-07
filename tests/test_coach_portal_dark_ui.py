@@ -11,6 +11,7 @@ Covers all specifications:
 
 import os
 import re
+import subprocess
 import unittest
 from .conftest_base import (
     ROOT_DIR,
@@ -25,6 +26,7 @@ from .conftest_base import (
 
 COACH_CSS_PATH = os.path.join(ROOT_DIR, "coach.css")
 COACH_PORTAL_JS_PATH = os.path.join(ROOT_DIR, "coach-portal.js")
+E2E_JS_TEST = os.path.join(ROOT_DIR, "tests", "test_coach_portal_desktop_cockpit_e2e.js")
 
 
 def _srgb_channel_lum(c):
@@ -326,7 +328,75 @@ class TestCoachPortalDarkUi(unittest.TestCase):
         self.assertIn("computeWeeklyAdherence", self.coach_js, "coach-portal.js must implement computeWeeklyAdherence")
         self.assertIn("getResolvedAthleteTotals", self.coach_js, "coach-portal.js must implement getResolvedAthleteTotals")
 
+    # ─────────────────────────────────────────────────────────────────────────
+    # 12. Coach Focal Center: Barbell Deviation & Live RPE Pill (Requirement R2)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def test_r2_coach_focal_center_dom(self):
+        """R2: Twin Focal Center DOM verification inside #coach-active-set-card."""
+        self.assertTrue(find_dom_id(self.html, "coach-focal-telemetry-split"), "#coach-focal-telemetry-split must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-barpath-card"), "#coach-barpath-card must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-barpath-canvas"), "#coach-barpath-canvas must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-btn-barpath-mode"), "#coach-btn-barpath-mode must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-dev-summary"), "#coach-dev-summary must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-btn-barpath-replay"), "#coach-btn-barpath-replay must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-btn-barpath-speed"), "#coach-btn-barpath-speed must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-barpath-scrubber"), "#coach-barpath-scrubber must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-barpath-rep-pills"), "#coach-barpath-rep-pills must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-rpe-pill-card"), "#coach-rpe-pill-card must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-live-rpe"), "#coach-live-rpe must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-live-rir-pill"), "#coach-live-rir-pill must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-rpe-tier-badge"), "#coach-rpe-tier-badge must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-rpe-gauge-fill"), "#coach-rpe-gauge-fill must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-rpe-target-pin"), "#coach-rpe-target-pin must exist")
+        self.assertTrue(find_dom_id(self.html, "coach-rpe-sub"), "#coach-rpe-sub must exist")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 13. Widescreen 3-Column Cockpit Layout (Requirement R3)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def test_r3_widescreen_cockpit_css(self):
+        """R3: Widescreen @media (min-width: 1150px), 1680px container, and 3-column cockpit grid."""
+        self.assertIn("@media (min-width: 1150px)", self.coach_css)
+        self.assertIn("max-width: 1680px", self.coach_css)
+        self.assertIn("grid-template-columns: 300px minmax(0, 1fr) 360px", self.coach_css)
+        self.assertIn(".coach-sets-history-card", self.coach_css)
+        self.assertIn("grid-column: 1 / -1", self.coach_css)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 14. Entry Shortcuts & Laptop Hotkeys (Requirement R3)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def test_r3_shortcuts_and_query_entry(self):
+        """R3: 500ms long press, ?mode=coach URL auto-entry, Ctrl+Shift+C toggle, and hotkeys R, M, [, ]."""
+        self.assertIn("?mode=coach", self.coach_js)
+        self.assertIn("Ctrl+Shift+C", self.coach_js)
+        self.assertIn("stepCoachRepSelection", self.coach_js)
+        self.assertIn("toggleCoachCanvasMode", self.coach_js)
+        self.assertIn("toggleCoachReplay", self.coach_js)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 15. Automated E2E Standalone Node Test Runner (Requirement R5)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def test_r5_desktop_cockpit_e2e_node_runner(self):
+        """R5: Executes tests/test_coach_portal_desktop_cockpit_e2e.js verifying 100% pass across all 6 suites."""
+        self.assertTrue(os.path.exists(E2E_JS_TEST), f"Missing E2E test file: {E2E_JS_TEST}")
+        result = subprocess.run(
+            ["node", E2E_JS_TEST],
+            cwd=ROOT_DIR,
+            capture_output=True,
+            text=True
+        )
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"E2E Node test failed with code {result.returncode}:\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        )
+        self.assertIn("ALL COACH PORTAL E2E TESTS PASSED (100% OK)", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

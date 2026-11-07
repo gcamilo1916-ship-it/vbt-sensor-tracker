@@ -69,6 +69,24 @@ const livePeakSub       = document.getElementById('live-peak-sub');
 const liveRpeSub        = document.getElementById('live-rpe-sub');
 const orb               = document.getElementById('orb');
 const apexGlow          = document.getElementById('apex-glow');
+const controlsPanel     = document.querySelector('.controls-panel');
+
+// 2D Sagittal Bar Path & Replay Controls (R1)
+const barPathCanvas       = document.getElementById('bar-path-canvas');
+const btnBarpathMode      = document.getElementById('btn-barpath-mode');
+const barpathModePath     = document.getElementById('barpath-mode-path');
+const barpathModeVel      = document.getElementById('barpath-mode-vel');
+const barpathHudDev       = document.getElementById('barpath-hud-dev');
+const barpathHudEff       = document.getElementById('barpath-hud-eff');
+const barpathScrubber     = document.getElementById('barpath-scrubber');
+const barpathScrubRom     = document.getElementById('barpath-scrub-rom');
+const barpathScrubInstVel = document.getElementById('barpath-scrub-inst-vel');
+const barpathScrubInstDev = document.getElementById('barpath-scrub-inst-dev');
+const btnBarpathReplay    = document.getElementById('btn-barpath-replay');
+const barpathReplayText   = document.getElementById('barpath-replay-text');
+const btnBarpathSpeed     = document.getElementById('btn-barpath-speed');
+const barpathSpeedLabel   = document.getElementById('barpath-speed-label');
+const barpathRepPills     = document.getElementById('barpath-rep-pills');
 
 // Live RPE Hero Banner
 const rpeHeroCard       = document.getElementById('rpe-hero-card');
@@ -877,6 +895,9 @@ function endWorkoutSession() {
 
   activeWorkout = null;
   activeSet = null;
+  if (controlsPanel) {
+    controlsPanel.classList.remove('set-active-compact');
+  }
 
   // Reset UI
   btnWorkoutText.textContent = 'START WORKOUT';
@@ -965,7 +986,7 @@ function startNewSet(lift = currentLift) {
       if (previousSet) {
         previousSet.restSeconds = elapsedSeconds;
         if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
-          window.ErosSyncBus.emit('set:completed', {
+          const completedPayload = {
             setId: previousSet.setId,
             setNumber: previousSet.setNumber,
             lift: previousSet.lift,
@@ -976,7 +997,11 @@ function startNewSet(lift = currentLift) {
             velocityLoss: previousSet.velocityLossPct,
             restSeconds: previousSet.restSeconds,
             timestamp: previousSet.endTime || Date.now()
-          });
+          };
+          if (typeof previousSet.maxDeviationCm === 'number' && !isNaN(previousSet.maxDeviationCm)) {
+            completedPayload.maxDeviationCm = previousSet.maxDeviationCm;
+          }
+          window.ErosSyncBus.emit('set:completed', completedPayload);
         }
       }
     }
@@ -1024,6 +1049,9 @@ function startNewSet(lift = currentLift) {
   btnSetText.textContent = 'END SET';
   btnSetToggle.classList.add('set-active');
   btnSetToggle.classList.add('recording');
+  if (controlsPanel) {
+    controlsPanel.classList.add('set-active-compact');
+  }
 
   if (livePeakVel) livePeakVel.textContent = '0.00';
   if (livePeakSub) livePeakSub.textContent = `Set ${setNumber} Initialized`;
@@ -1068,7 +1096,7 @@ function endActiveSet() {
 
   // Dispatch to ErosSyncBus before nulling activeSet
   if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function' && activeSet) {
-    window.ErosSyncBus.emit('set:completed', {
+    const completedPayload = {
       setId: activeSet.setId,
       setNumber: activeSet.setNumber,
       lift: activeSet.lift,
@@ -1079,7 +1107,21 @@ function endActiveSet() {
       velocityLoss: activeSet.velocityLossPct,
       restSeconds: typeof activeSet.restSeconds === 'number' ? activeSet.restSeconds : null,
       timestamp: activeSet.endTime || Date.now()
-    });
+    };
+    if (typeof activeSet.maxDeviationCm === 'number' && !isNaN(activeSet.maxDeviationCm)) {
+      completedPayload.maxDeviationCm = activeSet.maxDeviationCm;
+    }
+    if (typeof activeSet.deviationCm === 'number' && !isNaN(activeSet.deviationCm)) {
+      completedPayload.deviationCm = activeSet.deviationCm;
+    }
+    if (typeof activeSet.pathEfficiencyPct === 'number' && !isNaN(activeSet.pathEfficiencyPct)) {
+      completedPayload.pathEfficiencyPct = activeSet.pathEfficiencyPct;
+    }
+    const lastRep = (activeSet.reps && activeSet.reps.length > 0) ? activeSet.reps[activeSet.reps.length - 1] : null;
+    if (lastRep && Array.isArray(lastRep.trajectoryPoints)) {
+      completedPayload.trajectoryPoints = lastRep.trajectoryPoints;
+    }
+    window.ErosSyncBus.emit('set:completed', completedPayload);
   }
 
   const completedSetForCelebration = Object.assign({}, activeSet);
@@ -1117,6 +1159,13 @@ function endActiveSet() {
   btnSetText.textContent = 'START SET';
   btnSetToggle.classList.remove('set-active');
   btnSetToggle.classList.remove('recording');
+  if (controlsPanel) {
+    controlsPanel.classList.remove('set-active-compact');
+  }
+  if (liveRpeSub) {
+    const baseline = LIFT_BASELINES[currentLift.toLowerCase()] || LIFT_BASELINES.deadlift;
+    liveRpeSub.textContent = `MVT Baseline: ${baseline.mvt.toFixed(2)} m/s`;
+  }
 
   updateLiveMiniHud();
   updateWorkoutPage();
@@ -1141,9 +1190,112 @@ btnSetToggle.addEventListener('click', () => {
 });
 
 /**
+ * Synthesizes deterministic 2D trajectory curve points and deviation metrics
+ * for a repetition based on lift biomechanics and velocity.
+ */
+function synthesizeRepTrajectory(liftOrConfig, velocityArg, deviationCmArg = null, romCmArg = 50.0) {
+  let lift, velocity, deviationCm, romCm, rpe;
+  if (typeof liftOrConfig === 'object' && liftOrConfig !== null) {
+    lift = liftOrConfig.lift;
+    velocity = liftOrConfig.velocity;
+    deviationCm = liftOrConfig.deviationCm;
+    romCm = liftOrConfig.romCm || liftOrConfig.rom;
+    rpe = liftOrConfig.rpe;
+  } else {
+    lift = liftOrConfig;
+    velocity = velocityArg;
+    deviationCm = deviationCmArg;
+    romCm = romCmArg;
+    rpe = 7.5;
+  }
+
+  const liftName = canonicalLift(lift || (typeof currentLift !== 'undefined' ? currentLift : 'Deadlift')).toLowerCase();
+  const N = 40;
+  const meanVel = Math.max(0.10, Number(velocity) || 0.45);
+  const numRpe = Math.max(0, Math.min(10, Number(rpe) || 7.5));
+  const rom = Math.max(20.0, Number(romCm) || 50.0);
+  const repDuration = (rom / 100.0) / meanVel;
+
+  // 1. Generate base kinematic drift dxRaw(p)
+  const rawPoints = [];
+  for (let i = 0; i < N; i++) {
+    const p = i / (N - 1); // 0.0 to 1.0 (% ROM)
+    let dxRaw = 0.0;
+
+    if (liftName.includes('squat')) {
+      // In the hole: slight anterior lean; sticking region: forward drift; lockout: returns to midfoot
+      dxRaw = 0.8 * Math.pow(1 - p, 2) + 1.8 * Math.sin(Math.PI * p) * (1 - 0.4 * p);
+    } else if (liftName.includes('bench')) {
+      // McLaughlin J-curve: touches chest, flares backward over shoulder joint (-dx), presses to lockout
+      dxRaw = 1.6 * Math.pow(1 - p, 2) - 3.2 * Math.sin(Math.PI * Math.pow(p, 0.75)) * (1 - 0.2 * p);
+    } else {
+      // Deadlift: sweeping into thighs as bar clears knees, stabilizing at hip lockout
+      dxRaw = -0.9 * Math.sin(Math.PI * (1 - p)) + 2.0 * Math.sin(2 * Math.PI * p) * p;
+    }
+    rawPoints.push({ p, dxRaw });
+  }
+
+  // 2. Scale amplitude with measured DEV or RPE fatigue model
+  const meanRaw = rawPoints.reduce((s, pt) => s + Math.abs(pt.dxRaw), 0) / N;
+  let scale = 1.0;
+  if (typeof deviationCm === 'number' && !isNaN(deviationCm) && deviationCm > 0) {
+    scale = deviationCm / (meanRaw || 1.0);
+  } else {
+    scale = 0.8 + (numRpe / 10.0) * 0.6 + Math.max(0, 0.5 - meanVel) * 0.5;
+  }
+
+  // 3. Instantaneous velocity curve v(p) with sticking point valley
+  const vPeak = Math.max(meanVel * 1.35, meanVel + 0.15);
+  const vStick = Math.max(0.12, meanVel * (1.0 - 0.45 * (numRpe / 10.0)));
+
+  const points = rawPoints.map(pt => {
+    const p = pt.p;
+    const dx = Math.round(pt.dxRaw * scale * 10) / 10;
+
+    let v = meanVel;
+    if (p <= 0.25) {
+      v = 0.10 + (vPeak - 0.10) * Math.sin((p / 0.25) * (Math.PI / 2));
+    } else if (p <= 0.55) {
+      const progressInStick = (p - 0.25) / 0.30;
+      v = vPeak - (vPeak - vStick) * Math.sin(progressInStick * Math.PI);
+    } else {
+      const progressInLockout = (p - 0.55) / 0.45;
+      v = vStick + (vPeak * 0.95 - vStick) * Math.sin(progressInLockout * Math.PI);
+    }
+    v = Math.max(0.08, Math.round(v * 100) / 100);
+
+    const t = Math.round(p * repDuration * 1000) / 1000;
+    return { t, y: Math.round(p * 1000) / 1000, dx, v };
+  });
+
+  const maxDeviationCm = Math.round(Math.max(...points.map(pt => Math.abs(pt.dx))) * 10) / 10;
+  const meanDevCm = Math.round((points.reduce((s, pt) => s + Math.abs(pt.dx), 0) / N) * 10) / 10;
+
+  // Path efficiency % = (ROM / actualPathLength) * 100
+  let actualPathLen = 0.0;
+  for (let i = 1; i < N; i++) {
+    const dy = (points[i].y - points[i - 1].y) * rom;
+    const ddx = points[i].dx - points[i - 1].dx;
+    actualPathLen += Math.sqrt(dy * dy + ddx * ddx);
+  }
+  const pathEfficiencyPct = Math.min(100.0, Math.round((rom / (actualPathLen || rom)) * 1000) / 10);
+
+  return {
+    points,
+    trajectoryPoints: points,
+    maxDeviationCm,
+    deviationCm: meanDevCm,
+    pathEfficiencyPct
+  };
+}
+if (typeof window !== 'undefined') {
+  window.synthesizeRepTrajectory = synthesizeRepTrajectory;
+}
+
+/**
  * Pushes an ingested repetition into the active set hierarchy
  */
-function recordRepetition({ lift, velocity, rpe }) {
+function recordRepetition({ lift, velocity, rpe, deviationCm = null, trajectoryPoints = null }) {
   const repLift = canonicalLift(lift);
 
   // Auto-start workout session if idle
@@ -1177,6 +1329,19 @@ function recordRepetition({ lift, velocity, rpe }) {
     timestamp: Date.now(),
     isPR: isSpeedRecord
   };
+  if (typeof deviationCm === 'number' && !isNaN(deviationCm)) {
+    repObj.deviationCm = parseFloat(deviationCm.toFixed(1));
+  }
+
+  // Synthesize or attach trajectory points and kinematic metrics
+  const romVal = (activeSet && typeof activeSet.rom === 'number') ? activeSet.rom : 50.0;
+  const synth = synthesizeRepTrajectory(repLift, velocity, repObj.deviationCm, romVal);
+  repObj.trajectoryPoints = (Array.isArray(trajectoryPoints) && trajectoryPoints.length > 0) ? trajectoryPoints : synth.points;
+  repObj.maxDeviationCm = synth.maxDeviationCm;
+  if (repObj.deviationCm == null) {
+    repObj.deviationCm = synth.deviationCm;
+  }
+  repObj.pathEfficiencyPct = synth.pathEfficiencyPct;
 
   activeSet.reps.push(repObj);
   recalculateSetMetrics(activeSet);
@@ -1185,15 +1350,20 @@ function recordRepetition({ lift, velocity, rpe }) {
 
   // Dispatch to ErosSyncBus
   if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function' && activeSet) {
-    window.ErosSyncBus.emit('rep:recorded', {
+    const syncRepPayload = {
       setId: activeSet.setId,
       repNumber: repObj.repNumber,
       velocity: repObj.velocity,
       peakVelocity: (typeof repObj.peakVelocity === 'number') ? repObj.peakVelocity : repObj.velocity,
-      rom: (typeof repObj.rom === 'number') ? repObj.rom : 54.0,
+      rom: (typeof repObj.rom === 'number') ? repObj.rom : 50.0,
       rpe: repObj.rpe,
-      lossPercent: activeSet.velocityLossPct
-    });
+      lossPercent: activeSet.velocityLossPct,
+      deviationCm: repObj.deviationCm,
+      maxDeviationCm: repObj.maxDeviationCm,
+      pathEfficiencyPct: repObj.pathEfficiencyPct,
+      trajectoryPoints: repObj.trajectoryPoints
+    };
+    window.ErosSyncBus.emit('rep:recorded', syncRepPayload);
   }
 
   // Play rep chime and trigger light haptic pulse
@@ -1209,7 +1379,7 @@ function recordRepetition({ lift, velocity, rpe }) {
   }
 
   // Reactively update RPE Hero Banner, Current Set Card, and Workout Sets Table on repetition recording
-  updateRpeHeroBanner(rpe);
+  updateRpeHeroBanner(rpe, repObj);
   updateSetUI(activeSet);
   updateLiveMiniHud();
   updateHistoryStats();
@@ -1217,6 +1387,7 @@ function recordRepetition({ lift, velocity, rpe }) {
   // Asynchronous UI Dispatch (Non-blocking Observability)
   requestAnimationFrame(() => {
     updateLiveDisplay(repObj, true);
+    renderBarPathStage(repObj.repNumber - 1, 1.0);
   });
 }
 
@@ -1248,12 +1419,478 @@ function recalculateSetMetrics(set) {
   set.minVelocity = parseFloat(minV.toFixed(2));
   set.avgRpe      = parseFloat((sumR / rpes.length).toFixed(1));
 
+  const devs = set.reps
+    .map(r => r.deviationCm)
+    .filter(d => typeof d === 'number' && !isNaN(d));
+  if (devs.length > 0) {
+    set.maxDeviationCm = parseFloat(Math.max(...devs.map(d => Math.abs(d))).toFixed(1));
+    set.deviationCm = parseFloat((devs.reduce((a, b) => a + b, 0) / devs.length).toFixed(1));
+  }
+  const effs = set.reps
+    .map(r => r.pathEfficiencyPct)
+    .filter(e => typeof e === 'number' && !isNaN(e));
+  if (effs.length > 0) {
+    set.pathEfficiencyPct = parseFloat((effs.reduce((a, b) => a + b, 0) / effs.length).toFixed(1));
+  }
+
   // Velocity Loss Calculation: ((Max - Last) / Max) * 100
   if (maxV > 0) {
     const loss = ((maxV - lastV) / maxV) * 100;
     set.velocityLossPct = parseFloat(Math.max(0, loss).toFixed(1));
   } else {
     set.velocityLossPct = 0.0;
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// 2D BARBELL VERTICAL DEVIATION & REPLAY ENGINE (Requirement R1)
+// ═════════════════════════════════════════════════════════════════════════════
+
+let barPathMode = 'path'; // 'path' or 'vel'
+let currentReplayRepIdx = 0;
+let replaySpeed = 1.0;
+let isReplaying = false;
+let replayAnimId = null;
+
+function renderBarPathStage(repIndex = 0, scrubProgress = 1.0) {
+  const canvas = document.getElementById('bar-path-canvas');
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;  // 220
+  const h = canvas.height; // 210
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Background subtle fill
+  ctx.fillStyle = '#080A10';
+  ctx.fillRect(0, 0, w, h);
+
+  const reps = (activeSet && Array.isArray(activeSet.reps)) ? activeSet.reps : [];
+  if (reps.length === 0) {
+    // Empty state
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.font = '10px -apple-system, BlinkMacSystemFont, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('WAITING FOR REP 1...', w / 2, h / 2);
+    
+    // Clear HUD values
+    const devEl = document.getElementById('barpath-hud-dev');
+    const effEl = document.getElementById('barpath-hud-eff');
+    if (devEl) devEl.textContent = '0.0 cm';
+    if (effEl) effEl.textContent = '100%';
+    updateRepPills(0, 0);
+    return;
+  }
+
+  const targetIdx = Math.min(Math.max(0, repIndex), reps.length - 1);
+  currentReplayRepIdx = targetIdx;
+  const currentRep = reps[targetIdx];
+  const pts = currentRep.trajectoryPoints || [];
+  if (pts.length < 2) return;
+
+  // Update HUD text
+  const devEl = document.getElementById('barpath-hud-dev');
+  const effEl = document.getElementById('barpath-hud-eff');
+  const devVal = (typeof currentRep.deviationCm === 'number') ? currentRep.deviationCm : 0.0;
+  const effVal = (typeof currentRep.pathEfficiencyPct === 'number') ? currentRep.pathEfficiencyPct : 100.0;
+  if (devEl) devEl.textContent = `${devVal >= 0 ? '+' : ''}${devVal.toFixed(1)} cm`;
+  if (effEl) effEl.textContent = `${effVal.toFixed(1)}%`;
+
+  if (barPathMode === 'path') {
+    renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx);
+  } else {
+    renderVelocityMode(ctx, w, h, pts, scrubProgress);
+  }
+
+  updateRepPills(reps.length, targetIdx);
+}
+
+function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx) {
+  const centerX = w / 2; // 110 px (0.0 cm plumb line)
+  const scaleX = 18;     // 18 px per cm (±5.0 cm range)
+  const topY = 25;
+  const botY = 185;
+
+  const mapX = (dx) => Math.max(8, Math.min(w - 8, centerX + dx * scaleX));
+  const mapY = (y) => {
+    const normY = y > 1.5 ? (y / 50.0) : y;
+    return botY - normY * (botY - topY);
+  };
+
+  // 1. Optimal Corridor (+-2.0cm)
+  ctx.fillStyle = 'rgba(0, 255, 102, 0.04)';
+  ctx.fillRect(centerX - 2 * scaleX, topY, 4 * scaleX, botY - topY);
+
+  ctx.strokeStyle = 'rgba(0, 255, 102, 0.25)';
+  ctx.setLineDash([3, 3]);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(centerX - 2 * scaleX, topY); ctx.lineTo(centerX - 2 * scaleX, botY);
+  ctx.moveTo(centerX + 2 * scaleX, topY); ctx.lineTo(centerX + 2 * scaleX, botY);
+  ctx.stroke();
+
+  // 2. Warning Corridor (+-4.0cm)
+  ctx.strokeStyle = 'rgba(255, 184, 0, 0.20)';
+  ctx.beginPath();
+  ctx.moveTo(centerX - 4 * scaleX, topY); ctx.lineTo(centerX - 4 * scaleX, botY);
+  ctx.moveTo(centerX + 4 * scaleX, topY); ctx.lineTo(centerX + 4 * scaleX, botY);
+  ctx.stroke();
+
+  // 3. 0.0 cm Plumb Line
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.40)';
+  ctx.setLineDash([]);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(centerX, topY);
+  ctx.lineTo(centerX, botY);
+  ctx.stroke();
+
+  // Axis Labels
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('0.0', centerX, botY + 14);
+  ctx.fillText('-2', centerX - 2 * scaleX, botY + 14);
+  ctx.fillText('+2', centerX + 2 * scaleX, botY + 14);
+
+  // Rep 1 Ghost Trail (25% opacity dashed) if current rep is not Rep 1
+  if (targetIdx > 0 && reps.length > 0 && reps[0].trajectoryPoints) {
+    const rep1Pts = reps[0].trajectoryPoints;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(mapX(rep1Pts[0].dx), mapY(rep1Pts[0].y));
+    for (let i = 1; i < rep1Pts.length; i++) {
+      ctx.lineTo(mapX(rep1Pts[i].dx), mapY(rep1Pts[i].y));
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Active Rep Color-Graded Segments
+  const maxIdx = Math.max(0, Math.min(pts.length - 1, Math.round((pts.length - 1) * scrubProgress)));
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([]);
+
+  for (let i = 1; i <= maxIdx; i++) {
+    const pPrev = pts[i - 1];
+    const pCurr = pts[i];
+    const dev = Math.abs(pCurr.dx);
+
+    let strokeColor = '#00FF66';
+    if (dev > 3.5) strokeColor = '#FF3B30';
+    else if (dev > 2.0) strokeColor = '#FFB800';
+
+    ctx.strokeStyle = strokeColor;
+    ctx.beginPath();
+    ctx.moveTo(mapX(pPrev.dx), mapY(pPrev.y));
+    ctx.lineTo(mapX(pCurr.dx), mapY(pCurr.y));
+    ctx.stroke();
+  }
+
+  // Puck Position & Metrics at scrubProgress
+  const currentPt = pts[maxIdx];
+  if (currentPt) {
+    const puckX = mapX(currentPt.dx);
+    const puckY = mapY(currentPt.y);
+
+    // Connector hairline to plumb line
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.setLineDash([2, 2]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(centerX, puckY);
+    ctx.lineTo(puckX, puckY);
+    ctx.stroke();
+    ctx.restore();
+
+    // Puck outer halo
+    const dev = Math.abs(currentPt.dx);
+    let haloColor = 'rgba(0, 255, 102, 0.35)';
+    if (dev > 3.5) haloColor = 'rgba(255, 59, 48, 0.45)';
+    else if (dev > 2.0) haloColor = 'rgba(255, 184, 0, 0.40)';
+
+    ctx.fillStyle = haloColor;
+    ctx.beginPath();
+    ctx.arc(puckX, puckY, 9, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Puck core
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(puckX, puckY, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Update scrubber HUD values
+    const normProgress = currentPt.y > 1.5 ? (currentPt.y / 50.0) : currentPt.y;
+    const romPct = Math.round(Math.max(0, Math.min(1, scrubProgress)) * 100);
+    const romEl = document.getElementById('barpath-scrub-rom');
+    const instVelEl = document.getElementById('barpath-scrub-inst-vel');
+    const instDevEl = document.getElementById('barpath-scrub-inst-dev');
+    if (romEl) romEl.textContent = `${romPct}% ROM`;
+    if (instVelEl) instVelEl.textContent = `${currentPt.v.toFixed(2)} m/s`;
+    if (instDevEl) instDevEl.textContent = `${currentPt.dx >= 0 ? '+' : ''}${currentPt.dx.toFixed(1)} cm`;
+  }
+}
+
+function renderVelocityMode(ctx, w, h, pts, scrubProgress) {
+  const topY = 25;
+  const botY = 185;
+  const leftX = 35;
+  const rightX = w - 20;
+
+  // Horizontal velocity axis: 0.0 to 1.2 m/s
+  const maxVel = 1.2;
+  const mapX = (v) => leftX + (Math.max(0, Math.min(maxVel, v)) / maxVel) * (rightX - leftX);
+  const mapY = (y) => {
+    const normY = y > 1.5 ? (y / 50.0) : y;
+    return botY - normY * (botY - topY);
+  };
+
+  // Background Grid Lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+
+  // Horizontal ROM dividers (25%, 50%, 75%)
+  [0.25, 0.50, 0.75].forEach(r => {
+    ctx.beginPath();
+    ctx.moveTo(leftX, mapY(r)); ctx.lineTo(rightX, mapY(r));
+    ctx.stroke();
+  });
+
+  // Vertical velocity markers (0.3, 0.6, 0.9 m/s)
+  [0.3, 0.6, 0.9].forEach(v => {
+    ctx.beginPath();
+    ctx.moveTo(mapX(v), topY); ctx.lineTo(mapX(v), botY);
+    ctx.stroke();
+  });
+
+  // Baseline MVT reference vertical dashed line
+  const baseline = LIFT_BASELINES[currentLift.toLowerCase()] || LIFT_BASELINES.deadlift;
+  const mvtX = mapX(baseline.mvt);
+  ctx.strokeStyle = 'rgba(255, 59, 48, 0.5)';
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(mvtX, topY); ctx.lineTo(mvtX, botY);
+  ctx.stroke();
+
+  // Axis Labels
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('0.0', leftX, botY + 14);
+  ctx.fillText('0.6', mapX(0.6), botY + 14);
+  ctx.fillText('1.2', rightX, botY + 14);
+
+  // Find sticking point (minimum velocity between 20% and 70% ROM)
+  let stickPt = null;
+  let minVInMid = 999;
+  pts.forEach(p => {
+    const normY = p.y > 1.5 ? (p.y / 50.0) : p.y;
+    if (normY >= 0.20 && normY <= 0.70 && p.v < minVInMid) {
+      minVInMid = p.v;
+      stickPt = p;
+    }
+  });
+
+  // Draw velocity curve
+  const maxIdx = Math.max(0, Math.min(pts.length - 1, Math.round((pts.length - 1) * scrubProgress)));
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([]);
+  ctx.strokeStyle = '#00E5FF';
+
+  ctx.beginPath();
+  ctx.moveTo(mapX(pts[0].v), mapY(pts[0].y));
+  for (let i = 1; i <= maxIdx; i++) {
+    ctx.lineTo(mapX(pts[i].v), mapY(pts[i].y));
+  }
+  ctx.stroke();
+
+  // Sticking Point annotation
+  if (stickPt && mapY(stickPt.y) <= mapY(pts[maxIdx].y)) {
+    ctx.save();
+    ctx.fillStyle = '#FFB800';
+    ctx.beginPath();
+    ctx.arc(mapX(stickPt.v), mapY(stickPt.y), 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255, 184, 0, 0.9)';
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`STICK ${stickPt.v.toFixed(2)}m/s`, mapX(stickPt.v) + 6, mapY(stickPt.y) + 3);
+    ctx.restore();
+  }
+
+  // Puck Position at scrubProgress
+  const currentPt = pts[maxIdx];
+  if (currentPt) {
+    const puckX = mapX(currentPt.v);
+    const puckY = mapY(currentPt.y);
+
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.4)';
+    ctx.beginPath();
+    ctx.arc(puckX, puckY, 9, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(puckX, puckY, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Update scrubber HUD values
+    const normProgress = currentPt.y > 1.5 ? (currentPt.y / 50.0) : currentPt.y;
+    const romPct = Math.round(Math.max(0, Math.min(1, scrubProgress)) * 100);
+    const romEl = document.getElementById('barpath-scrub-rom');
+    const instVelEl = document.getElementById('barpath-scrub-inst-vel');
+    const instDevEl = document.getElementById('barpath-scrub-inst-dev');
+    if (romEl) romEl.textContent = `${romPct}% ROM`;
+    if (instVelEl) instVelEl.textContent = `${currentPt.v.toFixed(2)} m/s`;
+    if (instDevEl) instDevEl.textContent = `${currentPt.dx >= 0 ? '+' : ''}${currentPt.dx.toFixed(1)} cm`;
+  }
+}
+
+function updateRepPills(totalReps, activeIdx) {
+  const container = document.getElementById('barpath-rep-pills');
+  if (!container) return;
+
+  if (totalReps === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  if (container.children.length !== totalReps) {
+    container.innerHTML = '';
+    for (let i = 0; i < totalReps; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `barpath-rep-pill font-mono ${i === activeIdx ? 'active' : ''}`;
+      btn.setAttribute('data-rep', String(i));
+      btn.setAttribute('aria-label', `Select Repetition ${i + 1}`);
+      btn.textContent = `R${i + 1}`;
+      btn.addEventListener('click', () => {
+        stopReplay();
+        currentReplayRepIdx = i;
+        const scrubber = document.getElementById('barpath-scrubber');
+        if (scrubber) scrubber.value = '100';
+        renderBarPathStage(i, 1.0);
+      });
+      container.appendChild(btn);
+    }
+  } else {
+    Array.from(container.children).forEach((child, i) => {
+      if (i === activeIdx) child.classList.add('active');
+      else child.classList.remove('active');
+    });
+  }
+}
+
+function toggleReplay() {
+  if (isReplaying) {
+    stopReplay();
+  } else {
+    startReplay();
+  }
+}
+
+function startReplay() {
+  const reps = (activeSet && Array.isArray(activeSet.reps)) ? activeSet.reps : [];
+  if (reps.length === 0) return;
+
+  isReplaying = true;
+  const replayText = document.getElementById('barpath-replay-text');
+  if (replayText) replayText.textContent = 'PAUSE';
+
+  const scrubber = document.getElementById('barpath-scrubber');
+  let currentVal = scrubber ? parseFloat(scrubber.value) : 100;
+  if (currentVal >= 99) {
+    currentVal = 0;
+    if (scrubber) scrubber.value = '0';
+  }
+
+  const durationMs = (1200 / replaySpeed); // 1.2s baseline concentric duration
+  let lastTime = performance.now();
+
+  function step(now) {
+    if (!isReplaying) return;
+    const delta = now - lastTime;
+    lastTime = now;
+
+    currentVal += (delta / durationMs) * 100;
+    if (currentVal >= 100) {
+      currentVal = 100;
+      if (scrubber) scrubber.value = '100';
+      renderBarPathStage(currentReplayRepIdx, 1.0);
+      stopReplay();
+      return;
+    }
+
+    if (scrubber) scrubber.value = String(Math.round(currentVal));
+    renderBarPathStage(currentReplayRepIdx, currentVal / 100.0);
+    replayAnimId = requestAnimationFrame(step);
+  }
+
+  replayAnimId = requestAnimationFrame(step);
+}
+
+function stopReplay() {
+  isReplaying = false;
+  if (replayAnimId) {
+    cancelAnimationFrame(replayAnimId);
+    replayAnimId = null;
+  }
+  const replayText = document.getElementById('barpath-replay-text');
+  if (replayText) replayText.textContent = 'REPLAY';
+}
+
+function toggleReplaySpeed() {
+  replaySpeed = replaySpeed === 1.0 ? 0.5 : 1.0;
+  const speedLabel = document.getElementById('barpath-speed-label');
+  if (speedLabel) speedLabel.textContent = `${replaySpeed.toFixed(1)}X`;
+}
+
+function toggleBarPathMode() {
+  barPathMode = barPathMode === 'path' ? 'vel' : 'path';
+  const pathOpt = document.getElementById('barpath-mode-path');
+  const velOpt = document.getElementById('barpath-mode-vel');
+  if (pathOpt) pathOpt.classList.toggle('active', barPathMode === 'path');
+  if (velOpt) velOpt.classList.toggle('active', barPathMode === 'vel');
+
+  const scrubber = document.getElementById('barpath-scrubber');
+  const progress = scrubber ? (parseFloat(scrubber.value) || 100) / 100 : 1.0;
+  renderBarPathStage(currentReplayRepIdx, progress);
+}
+
+function initBarPathControls() { if (initBarPathControls._initialized) return; initBarPathControls._initialized = true;
+  const modeBtn = document.getElementById('btn-barpath-mode');
+  if (modeBtn) {
+    modeBtn.addEventListener('click', toggleBarPathMode);
+  }
+
+  const replayBtn = document.getElementById('btn-barpath-replay');
+  if (replayBtn) {
+    replayBtn.addEventListener('click', toggleReplay);
+  }
+
+  const speedBtn = document.getElementById('btn-barpath-speed');
+  if (speedBtn) {
+    speedBtn.addEventListener('click', toggleReplaySpeed);
+  }
+
+  const scrubber = document.getElementById('barpath-scrubber');
+  if (scrubber) {
+    scrubber.addEventListener('input', (e) => {
+      stopReplay();
+      const progress = (parseFloat(e.target.value) || 0) / 100.0;
+      renderBarPathStage(currentReplayRepIdx, progress);
+    });
   }
 }
 
@@ -1669,7 +2306,7 @@ function onBLEDisconnected() {
 
 /**
  * Safe, robust parser for incoming telemetry payload:
- * Format: "Lift Name | 0.45 m/s | RPE: 8.5"
+ * Format: "Lift Name | 0.45 m/s | RPE: 8.5" or "Lift Name | 0.45 m/s | RPE: 8.5 | DEV: 2.4cm"
  */
 function handleIncomingBLEData(event) {
   try {
@@ -1693,8 +2330,21 @@ function handleIncomingBLEData(event) {
 
     if (isNaN(velocity) || isNaN(rpe)) return;
 
+    let deviationCm = null;
+    for (let i = 3; i < parts.length; i++) {
+      if (/^DEV\s*:/i.test(parts[i])) {
+        const devMatch = parts[i].match(/([+-]?[\d.]+)/);
+        if (devMatch) {
+          const parsedDev = parseFloat(devMatch[1]);
+          if (!isNaN(parsedDev)) {
+            deviationCm = Math.max(0, parsedDev);
+          }
+        }
+      }
+    }
+
     // Dispatch to nested data hierarchy
-    recordRepetition({ lift, velocity, rpe });
+    recordRepetition({ lift, velocity, rpe, deviationCm });
 
   } catch (err) {
     console.warn('[Eros] Failed to parse BLE frame:', err);
@@ -1802,7 +2452,7 @@ function applyLiftTheme(liftName) {
 /**
  * Reactively updates Live Page RPE Hero Banner components & effort tier
  */
-function updateRpeHeroBanner(rpe) {
+function updateRpeHeroBanner(rpe, repObj = null) {
   const card = rpeHeroCard || document.getElementById('rpe-hero-card');
   const rpeEl = liveRpe || document.getElementById('live-rpe');
   const rirEl = liveRirPill || document.getElementById('live-rir-pill');
@@ -1825,6 +2475,30 @@ function updateRpeHeroBanner(rpe) {
   const gaugePercent = Math.max(0, Math.min(100, (numRpe / 10) * 100));
   if (fill) {
     fill.style.width = `${gaugePercent}%`;
+  }
+
+  // Dynamic groove/deviation feedback in #live-rpe-sub (R2)
+  if (liveRpeSub) {
+    const baseline = LIFT_BASELINES[currentLift.toLowerCase()] || LIFT_BASELINES.deadlift;
+    if (activeSet && activeSet.reps && activeSet.reps.length > 0) {
+      const lastRep = repObj || activeSet.reps[activeSet.reps.length - 1];
+      const dev = (lastRep && typeof lastRep.deviationCm === 'number') ? lastRep.deviationCm : null;
+      if (typeof dev === 'number' && !isNaN(dev)) {
+        const absDev = Math.abs(dev);
+        const sign = dev >= 0 ? '+' : '-';
+        let grooveTag = 'GROOVE: LOCKED';
+        if (absDev > 3.5) {
+          grooveTag = 'GROOVE: BAR DRIFT';
+        } else if (absDev > 2.0) {
+          grooveTag = 'GROOVE: MILD DRIFT';
+        }
+        liveRpeSub.textContent = `${grooveTag} (${sign}${absDev.toFixed(1)} cm) • MVT ${baseline.mvt.toFixed(2)} m/s`;
+      } else {
+        liveRpeSub.textContent = `GROOVE: LOCKED (±0.0 cm) • MVT ${baseline.mvt.toFixed(2)} m/s`;
+      }
+    } else {
+      liveRpeSub.textContent = `MVT Baseline: ${baseline.mvt.toFixed(2)} m/s`;
+    }
   }
 
   // Toggle tier classes on #rpe-hero-card
@@ -3368,6 +4042,11 @@ function initAthleteSettings() {
 
 if (typeof window !== 'undefined') {
   window.initAthleteSettings = initAthleteSettings;
+  window.synthesizeRepTrajectory = synthesizeRepTrajectory;
+  window.renderBarPathStage = renderBarPathStage;
+  window.toggleBarPathMode = toggleBarPathMode;
+  window.startReplay = startReplay;
+  window.stopReplay = stopReplay; initBarPathControls();
 }
 
 // ── Kickoff Execution on DOM Ready ──
@@ -3379,4 +4058,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initBleSheetDrag();
   initCoachDirectiveSync();
   initAthleteSettings();
+  initBarPathControls();
+  renderBarPathStage(0, 1.0);
 });

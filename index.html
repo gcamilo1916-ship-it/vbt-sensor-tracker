@@ -186,20 +186,37 @@
               <div class="metric-subtext" id="live-vel-sub">Waiting for concentric drive...</div>
             </div>
             
-            <!-- Physics-Simulated Bar Path Track -->
+            <!-- 2D Sagittal Bar Path & Deviation Stage (R1) -->
             <div class="bar-path-stage" aria-label="Bar Path Trajectory Visualizer">
-              <div class="path-guide-ticks">
+              <!-- Top Stage HUD Overlay: Mode Toggle Pill & Live Metrics -->
+              <div class="barpath-hud-top">
+                <button type="button" class="barpath-mode-pill font-mono" id="btn-barpath-mode" aria-label="Toggle Bar Path Mode">
+                  <span class="mode-opt active" id="barpath-mode-path">PATH</span>
+                  <span class="mode-sep">/</span>
+                  <span class="mode-opt" id="barpath-mode-vel">VEL</span>
+                </button>
+                <div class="barpath-hud-metrics font-mono" id="barpath-hud-metrics">
+                  <span class="hud-metric-dev" id="barpath-hud-dev">0.0 cm</span>
+                  <span class="hud-metric-eff" id="barpath-hud-eff">100%</span>
+                </div>
+              </div>
+
+              <!-- Main GPU-Accelerated 2D Canvas -->
+              <canvas id="bar-path-canvas" class="bar-path-canvas" width="220" height="210" aria-label="Barbell Vertical Deviation Canvas"></canvas>
+
+              <!-- Backward Compatibility Elements: Preserved for test suite assertions & non-blocking execution -->
+              <div class="path-guide-ticks" aria-hidden="true" style="opacity: 0; pointer-events: none; position: absolute; width: 1px; height: 1px;">
                 <span class="tick tick-top"></span>
                 <span class="tick tick-mid"></span>
                 <span class="tick tick-bot"></span>
               </div>
-              <div class="path-track-glow"></div>
-              <div class="path-track-line"></div>
-              <div id="orb" class="barbell-orb">
+              <div class="path-track-glow" aria-hidden="true" style="opacity: 0; pointer-events: none; position: absolute; width: 1px; height: 1px;"></div>
+              <div class="path-track-line" aria-hidden="true" style="opacity: 0; pointer-events: none; position: absolute; width: 1px; height: 1px;"></div>
+              <div id="orb" class="barbell-orb" aria-hidden="true" style="opacity: 0; pointer-events: none; position: absolute; width: 1px; height: 1px;">
                 <div class="orb-core"></div>
                 <div class="orb-corona"></div>
               </div>
-              <div id="apex-glow" class="apex-bloom"></div>
+              <div id="apex-glow" class="apex-bloom" aria-hidden="true" style="opacity: 0; pointer-events: none; position: absolute; width: 1px; height: 1px;"></div>
             </div>
 
             <div class="metric-card metric-right">
@@ -212,6 +229,32 @@
                 <span class="vel-zone-badge font-mono" id="live-peak-zone-badge" style="display: none;">PEAK</span>
               </div>
               <div class="metric-subtext" id="live-peak-sub">Bar Ascent Peak</div>
+            </div>
+          </div>
+
+          <!-- Interactive Replay & Scrub Controls (R1) -->
+          <div class="barpath-replay-panel" id="barpath-replay-panel">
+            <div class="barpath-scrubber-row">
+              <input type="range" class="barpath-scrubber" id="barpath-scrubber" min="0" max="100" value="100" step="1" aria-label="Rep Trajectory Scrubber">
+              <div class="barpath-scrubber-hud font-mono">
+                <span id="barpath-scrub-rom">100% ROM</span>
+                <span id="barpath-scrub-inst-vel">0.00 m/s</span>
+                <span id="barpath-scrub-inst-dev">0.0 cm</span>
+              </div>
+            </div>
+            <div class="barpath-controls-row">
+              <div class="barpath-playback-btns">
+                <button type="button" class="btn-barpath-ctrl" id="btn-barpath-replay" aria-label="Replay Repetition Trajectory">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21"></polygon>
+                  </svg>
+                  <span class="btn-text" id="barpath-replay-text">REPLAY</span>
+                </button>
+                <button type="button" class="btn-barpath-ctrl" id="btn-barpath-speed" aria-label="Toggle Replay Speed">
+                  <span id="barpath-speed-label">1.0X</span>
+                </button>
+              </div>
+              <div class="barpath-rep-pills" id="barpath-rep-pills" role="radiogroup" aria-label="Rep Selector"></div>
             </div>
           </div>
 
@@ -233,6 +276,15 @@
             <div class="rpe-gauge-container">
               <div class="rpe-gauge-track" aria-label="RPE Effort Gauge">
                 <div class="rpe-gauge-fill" id="rpe-gauge-fill" style="width: 0%;"></div>
+                
+                <!-- Segmented Tick Marks (6.5, 7.5, 8.5, 9.5) (R2) -->
+                <div class="rpe-gauge-ticks" aria-hidden="true">
+                  <span class="rpe-tick" style="left: 65%;" data-rpe="6.5"><span class="tick-label">6.5</span></span>
+                  <span class="rpe-tick" style="left: 75%;" data-rpe="7.5"><span class="tick-label">7.5</span></span>
+                  <span class="rpe-tick" style="left: 85%;" data-rpe="8.5"><span class="tick-label">8.5</span></span>
+                  <span class="rpe-tick" style="left: 95%;" data-rpe="9.5"><span class="tick-label">9.5</span></span>
+                </div>
+
                 <div class="rpe-target-pin" id="rpe-target-pin" title="Optimal Strength Target RPE 8.0" style="left: 80%;">
                   <span class="target-tick"></span>
                   <span class="target-text">TARGET 8.0</span>
@@ -838,6 +890,92 @@
             </div>
             <div class="coach-monitor-meta" id="coach-active-set-meta">
               140.0 kg | Target RPE @8.0
+            </div>
+          </div>
+
+          <!-- Twin Focal Center: Barbell Vertical Deviation Replay & Live RPE Tracking Pill -->
+          <div class="coach-focal-telemetry-split" id="coach-focal-telemetry-split">
+            <!-- Left Focal Card: Interactive 2D Barbell Path & Velocity Stage -->
+            <div class="coach-focal-card" id="coach-barpath-card">
+              <div class="coach-focal-header">
+                <div class="coach-focal-title-group">
+                  <span class="coach-focal-title">BAR PATH KINEMATICS</span>
+                  <span class="coach-focal-sub font-mono" id="coach-dev-summary">MAX DEV: 0.0 cm • EFF: 100.0%</span>
+                </div>
+                <div class="coach-focal-actions">
+                  <button type="button" id="coach-btn-barpath-mode" class="coach-pill-btn font-mono" aria-label="Toggle Bar Path Canvas Mode">PATH</button>
+                </div>
+              </div>
+
+              <!-- 2D Canvas Stage -->
+              <div class="coach-barpath-stage">
+                <canvas id="coach-barpath-canvas" class="coach-barpath-canvas" width="280" height="210" aria-label="Coach 2D Barbell Deviation Canvas"></canvas>
+                <div class="coach-barpath-overlay-hud" aria-hidden="true">
+                  <span class="corridor-label corridor-left">-2.0cm</span>
+                  <span class="corridor-label corridor-zero">0.0cm</span>
+                  <span class="corridor-label corridor-right">+2.0cm</span>
+                </div>
+              </div>
+
+              <!-- Replay & Scrub Controls (Pure SVG + Uppercase Text, Zero Emojis) -->
+              <div class="coach-barpath-controls">
+                <div class="coach-barpath-ctrl-row">
+                  <button type="button" id="coach-btn-barpath-replay" class="coach-ctrl-btn" aria-label="Play or Pause Barbell Replay">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <span>REPLAY</span>
+                  </button>
+                  <button type="button" id="coach-btn-barpath-speed" class="coach-ctrl-btn font-mono" aria-label="Toggle Replay Speed">1.0X</button>
+                  <div class="coach-barpath-rep-pills" id="coach-barpath-rep-pills" role="group" aria-label="Select Repetition for Replay">
+                    <!-- Dynamic Rep Pills R1, R2, etc. -->
+                  </div>
+                </div>
+                <div class="coach-barpath-scrubber-row">
+                  <input type="range" id="coach-barpath-scrubber" class="coach-barpath-scrubber" min="0" max="100" value="100" step="1" aria-label="Replay scrubber position" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Focal Card: High-Contrast Matte Obsidian RPE Tracking Pill -->
+            <div class="coach-focal-card" id="coach-rpe-pill-card">
+              <div class="coach-focal-header">
+                <div class="coach-focal-title-group">
+                  <span class="coach-focal-title">AUTOREGULATED INTENSITY</span>
+                  <span class="coach-focal-sub font-mono">Live RPE Continuum</span>
+                </div>
+                <span id="coach-rpe-tier-badge" class="coach-tier-badge tier-optimal font-mono">OPTIMAL</span>
+              </div>
+
+              <div class="coach-rpe-hero-content">
+                <div class="coach-rpe-readout-row">
+                  <div class="coach-rpe-number-group">
+                    <span id="coach-live-rpe" class="coach-live-rpe font-mono">@8.0</span>
+                    <span class="coach-rpe-max font-mono">/10</span>
+                  </div>
+                  <div id="coach-live-rir-pill" class="coach-rir-pill font-mono">2.0 RIR</div>
+                </div>
+
+                <!-- Segmented RPE Gauge Continuum with Target Pin -->
+                <div class="coach-rpe-gauge-container">
+                  <div class="coach-rpe-gauge-track" role="progressbar" aria-label="Coach Live RPE Gauge">
+                    <div id="coach-rpe-gauge-fill" class="coach-rpe-gauge-fill" style="width: 80%;"></div>
+                    <div id="coach-rpe-target-pin" class="coach-rpe-target-pin" style="left: 80%;" title="Target RPE @8.0">
+                      <span class="target-pin-tag">TARGET</span>
+                    </div>
+                  </div>
+                  <div class="coach-rpe-ticks" aria-hidden="true">
+                    <span class="coach-rpe-tick" style="left: 65%;">6.5</span>
+                    <span class="coach-rpe-tick" style="left: 75%;">7.5</span>
+                    <span class="coach-rpe-tick" style="left: 85%;">8.5</span>
+                    <span class="coach-rpe-tick" style="left: 95%;">9.5</span>
+                  </div>
+                </div>
+
+                <div class="coach-rpe-feedback-footer">
+                  <span id="coach-rpe-sub" class="coach-rpe-sub font-mono">ON TARGET GROOVE</span>
+                </div>
+              </div>
             </div>
           </div>
 

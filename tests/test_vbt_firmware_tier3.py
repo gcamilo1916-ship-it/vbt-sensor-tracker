@@ -303,6 +303,32 @@ class TestVBTFirmwareTier3Interactions(unittest.TestCase):
         self.assertEqual(tracker.currentState, "IDLE", "State must reset to IDLE")
         self.assertGreater(tracker.concentric_lockout_until, 1.0, "Refractory lockout must be engaged")
 
+    def test_p11_horizontal_deviation_eccentric_concentric_turnaround(self):
+        """P11: Horizontal sway during eccentric and concentric preserves displacement & arc length across turnaround while clamping velocity."""
+        tracker = RobustVBTTracker(initial_baseline=9.81)
+        tracker.filter.init_from_gravity(0.0, 0.0, 9.81)
+        dt = 0.01
+        descent = make_bell_profile(1.0, 0.50, is_downward=True)
+        ascent = make_bell_profile(0.9, 0.60, is_downward=False)
+        t = 0.0
+        for i, (a_vert, g_rot) in enumerate(descent):
+            ax_sway = 0.8 * math.sin(2.0 * math.pi * (i / len(descent)))
+            tracker.step(t, ax_sway, 0.0, 9.81 + a_vert, g_rot, 0.0, 0.0, dt)
+            t += dt
+        ecc_arc = tracker.horiz_arc_length
+        self.assertGreater(ecc_arc, 0.005, "Eccentric sway must accumulate non-zero horiz_arc_length")
+        for i, (a_vert, g_rot) in enumerate(ascent):
+            ax_sway = 1.2 * math.sin(2.0 * math.pi * (i / len(ascent)))
+            tracker.step(t, ax_sway, 0.0, 9.81 + a_vert, g_rot, 0.0, 0.0, dt)
+            t += dt
+        for _ in range(40):
+            tracker.step(t, 0.0, 0.0, 9.81, 0.0, 0.0, 0.0, dt)
+            t += dt
+        self.assertEqual(len(tracker.reps), 1)
+        rep = tracker.reps[0]
+        self.assertGreater(rep["max_horiz_dev_cm"], 0.5)
+        self.assertLess(rep["path_efficiency_pct"], 100.0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -412,6 +412,23 @@ class VBTCppSourceAnalyzer:
 
         return (has_service and has_data and has_cmd), "All 3 BLE UUIDs verified"
 
+    def verify_horizontal_deviation_kinematics(self):
+        """Verifies Earth-horizontal acceleration projection, ZUPT-clamped integration, and BLE DEV payload."""
+        has_ax_h = bool(re.search(r"ax_h\s*=\s*lin_ax\s*-\s*\(a_vert\s*\*\s*gx_body\)", self.content))
+        has_ay_h = bool(re.search(r"ay_h\s*=\s*lin_ay\s*-\s*\(a_vert\s*\*\s*gy_body\)", self.content))
+        has_az_h = bool(re.search(r"az_h\s*=\s*lin_az\s*-\s*\(a_vert\s*\*\s*gz_body\)", self.content))
+        has_horiz_constants = (
+            ("HORIZ_ALPHA" in self.content) and
+            ("HORIZ_ACCEL_DEADBAND" in self.content) and
+            ("HORIZ_VEL_DECAY" in self.content) and
+            ("HORIZ_POS_DECAY" in self.content)
+        )
+        has_dev_vars = ("max_horiz_dev_cm" in self.content) and ("path_efficiency_pct" in self.content)
+        has_mtu_128 = bool(re.search(r"BLEDevice::setMTU\s*\(\s*128\s*\)", self.content))
+        has_dev_payload = bool(re.search(r"\|\s*DEV:\s*%\.1fcm", self.content))
+        ok = has_ax_h and has_ay_h and has_az_h and has_horiz_constants and has_dev_vars and has_mtu_128 and has_dev_payload
+        return ok, "Horizontal deviation kinematics and BLE DEV payload verified"
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 6. DECLARATIVE REGRESSION CASE SCHEMA & VALIDATOR

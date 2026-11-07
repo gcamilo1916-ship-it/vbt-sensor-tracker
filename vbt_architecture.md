@@ -20,10 +20,10 @@
 
 ### Eros to App (Telemetry/Results)
 Triggered when a repetition is completed (end of `CONCENTRIC` phase).
-- **Format:** String payload, pipe-delimited (`|`)
-- **Structure:** `[Lift Name] | [Mean Velocity] m/s | RPE: [Estimated RPE]`
-- **Example:** `Deadlift | 0.45 m/s | RPE: 8.5`
-- **Length limit:** Max 64 bytes (MTU set to 64 on Eros)
+- **Format:** String payload, pipe-delimited (`|`), backward-compatible 4-segment structure (parsers accept `>= 3` segments and treat the 4th `DEV:` segment as optional).
+- **Structure:** `[Lift Name] | [Mean Velocity] m/s | RPE: [Estimated RPE] | DEV: [Max Horizontal Deviation]cm`
+- **Example:** `Deadlift | 0.45 m/s | RPE: 8.5 | DEV: 1.8cm`
+- **Length limit:** Max 128 bytes (`BLEDevice::setMTU(128)` on Eros)
 
 ### App to Eros (Commands)
 Sent when a user selects a different lift profile from the frontend UI.
@@ -38,6 +38,7 @@ Sent when a user selects a different lift profile from the frontend UI.
 - **Orientation Fusion:** 6-axis attitude filter running deterministically at `dt = 0.01s`.
 - **Orientation Tracking:** Quaternion $\mathbf{q} = (q_0, q_1, q_2, q_3)$ continuously tracks Eros attitude in 3D space with dynamic acceleration rejection ($|\mathbf{a}| - g < 2.5 m/s^2$).
 - **Gravity Projection:** Derives the gravity reaction unit vector $\hat{\mathbf{g}}$ in body frame, isolates linear acceleration $\mathbf{a}_{lin} = \mathbf{a}_{meas} - G_{base}\hat{\mathbf{g}}$, and projects along the true Earth vertical axis: $a_{vert} = \mathbf{a}_{lin} \cdot \hat{\mathbf{g}}$.
+- **Earth-Horizontal Plane Projection & Leaky Double Integration:** Computes the 3D horizontal linear acceleration vector orthogonal to the gravity unit vector ($\mathbf{a}_h = \mathbf{a}_{lin} - (a_{vert} \cdot \hat{\mathbf{g}})$), applies EMA low-pass filtering ($\alpha = 0.35$), a $0.12\text{ m/s}^2$ noise deadband, leaky velocity decay (`HORIZ_VEL_DECAY = 0.96`), and leaky position centering (`HORIZ_POS_DECAY = 0.992`). At the `ECCENTRIC -> CONCENTRIC` turnaround, horizontal velocity (`vx_h, vy_h, vz_h`) is zero-clamped while preserving `dx_h, dy_h, dz_h`, `horiz_arc_length`, and `max_horiz_dev_cm` relative to the initial repetition plumb line.
 - **Vibration & Tilt Immunity:** Eliminates false upward velocity caused by non-linear Euclidean magnitude rectification; lateral shudder and bar tilt do not leak into vertical velocity.
 
 ### 3.2 Dual-Signal Moving Variance ZUPT Detector
@@ -73,6 +74,8 @@ The bar tracking follows an unbreakable Finite State Machine with timeouts:
 - **`gravity_baseline` (float)**: Ambient 1G baseline continuously adapted during stationary periods.
 - **`gyro_bias_x/y/z` (float)**: 3-axis gyro zero-rate offsets continuously adapted during stationary periods.
 - **`filtered_accel` (float)**: Low-pass filtered vertical acceleration (`ALPHA = 0.40`).
+- **`vx_h, vy_h, vz_h` & `dx_h, dy_h, dz_h` (float)**: 3D Earth-horizontal velocity and displacement vectors integrated during active strokes.
+- **`horiz_arc_length`, `max_horiz_dev_cm`, `path_efficiency_pct` (float)**: Accumulated horizontal path arc length, peak plumb-line deviation in `cm` (`[0, 50]`), and vertical path efficiency percentage (`[0, 100]`).
 - **`state_start_time` (unsigned long)**: Timestamp capturing the entry into current FSM state for duration tracking and timeout protection.
 
 ### Lift Profiles
@@ -112,6 +115,8 @@ The application implements a strict 3-tier nested hierarchy:
 - **Specular Highlights & Depth**: `inset 0 1px 0 0 rgba(255, 255, 255, 0.16)` paired with soft neon drop shadows.
 - **Physics Bar Path & Apex Bloom**: Dynamically binds CSS variable `--rep-duration` to \((0.5 / \text{velocity}) \times 2\), synchronizing the vertical orb travel and triggering an apex bloom at movement zenith.
 
-### Data Portability
-- **CSV Export**: Clean tabular export formatted for sports science, biomechanics coaching, and spreadsheet analysis.
+### Data Portability & Realtime Sync Bridge (`ErosSyncBus`)
+- **CSV Export**: Clean tabular export formatted for sports science, biomechanics coaching, and spreadsheet analysis (including `Rest (s)` and deviation telemetry).
 - **JSON Export**: Full nested hierarchy dump for backups and developer imports.
+- **Hybrid Offline-First Sync (`sync-bus.js`)**: Bridges Athlete View (`#view-athlete`) and Coach View (`#view-coach`) via `CustomEvent`, `BroadcastChannel`, `localStorage`, and the Base44 `SquadSession` WebSocket Actor. Validates and passes through `deviationCm`, `maxDeviationCm`, `pathEfficiencyPct`, and `trajectoryPoints` (`[{ t, y, dx, v }]`) on `rep:recorded` and `set:completed`.
+- **Coach 3-Pane Widescreen Cockpit (`coach.css`, `coach-portal.js`)**: On viewports `>= 1150px` (`max-width: 1680px`), arranges `#coach-live-panel` into a 3-column ChatGPT Matte Obsidian cockpit (`300px Left Squad Rail` | `Flexible Center Arena with Barbell Deviation Replay Stage & Live RPE Pill` | `360px Right Prescriptive Console`, with `.coach-sets-history-card` docked full-width below).

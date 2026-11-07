@@ -294,11 +294,17 @@ class VBTMathOracle:
         try:
             vel = float(vel_match.group(1))
             rpe = float(rpe_match.group(1))
-            return {
+            result = {
                 "lift": lift,
                 "velocity": vel,
                 "rpe": rpe
             }
+            for extra in parts[3:]:
+                if re.match(r'^DEV\s*:', extra, re.IGNORECASE):
+                    dev_match = re.search(r'([+-]?[\d.]+)', extra)
+                    if dev_match:
+                        result["deviationCm"] = max(0.0, float(dev_match.group(1)))
+            return result
         except ValueError:
             return None
 

@@ -6,6 +6,7 @@ struct LiftRep: Identifiable {
     let liftName: String
     let velocity: Double
     let rpe: Double
+    var deviationCm: Double? = nil
     let timestamp = Date()
 }
 
@@ -19,6 +20,7 @@ class BluetoothManager: NSObject, ObservableObject {
     @Published var isConnected = false
     @Published var currentVelocity: Double = 0.0
     @Published var currentRPE: Double = 0.0
+    @Published var currentDeviationCm: Double = 0.0
     @Published var currentLift: String = "Deadlift"
     
     @Published var isTrackingSet = false
@@ -65,9 +67,9 @@ class BluetoothManager: NSObject, ObservableObject {
     }
     
     private func handleIncomingData(_ stringValue: String) {
-        // Format: "Deadlift | 0.45 m/s | RPE: 8.5"
+        // Format: "Deadlift | 0.45 m/s | RPE: 8.5" or "Deadlift | 0.45 m/s | RPE: 8.5 | DEV: 2.4cm"
         let parts = stringValue.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-        guard parts.count == 3 else { return }
+        guard parts.count >= 3 else { return }
         
         let lift = parts[0]
         
@@ -85,12 +87,16 @@ class BluetoothManager: NSObject, ObservableObject {
         guard let velocity = extractNumber(from: parts[1], pattern: velPattern),
               let rpe = extractNumber(from: parts[2], pattern: rpePattern) else { return }
         
-        let rep = LiftRep(liftName: lift, velocity: velocity, rpe: rpe)
+        let deviationCm: Double? = parts.count >= 4 ? extractNumber(from: parts[3], pattern: "([\\d.]+)") : nil
+        let rep = LiftRep(liftName: lift, velocity: velocity, rpe: rpe, deviationCm: deviationCm)
         
         DispatchQueue.main.async {
             self.currentLift = lift
             self.currentVelocity = velocity
             self.currentRPE = rpe
+            if let dev = deviationCm {
+                self.currentDeviationCm = dev
+            }
             
             if self.isTrackingSet {
                 self.setReps.append(rep)

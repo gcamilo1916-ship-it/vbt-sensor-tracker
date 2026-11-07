@@ -158,6 +158,18 @@ class RobustVBTTracker:
         self.filtered_accel = 0.0
         self.rep_displacement = 0.0
         self.peak_velocity = 0.0
+        self.vx_h = 0.0
+        self.vy_h = 0.0
+        self.vz_h = 0.0
+        self.dx_h = 0.0
+        self.dy_h = 0.0
+        self.dz_h = 0.0
+        self.filt_ax_h = 0.0
+        self.filt_ay_h = 0.0
+        self.filt_az_h = 0.0
+        self.horiz_arc_length = 0.0
+        self.max_horiz_dev_cm = 0.0
+        self.path_efficiency_pct = 100.0
         self.currentState = "IDLE"
         self.reps = []
         self.state_start_time = 0.0
@@ -252,10 +264,18 @@ class RobustVBTTracker:
         lin_ay = ay - self.gravity_baseline * gy_body
         lin_az = az - self.gravity_baseline * gz_body
         a_vert = lin_ax * gx_body + lin_ay * gy_body + lin_az * gz_body
+        ax_h = lin_ax - (a_vert * gx_body)
+        ay_h = lin_ay - (a_vert * gy_body)
+        az_h = lin_az - (a_vert * gz_body)
 
         # Physics Integration & Contextual ZUPT
         ALPHA = 0.40
+        HORIZ_VEL_DECAY = 0.96
+        HORIZ_POS_DECAY = 0.992
         if self.currentState == "IDLE":
+            self.vx_h = self.vy_h = self.vz_h = 0.0
+            self.dx_h = self.dy_h = self.dz_h = 0.0
+            self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
             if self.is_stationary:
                 self.velocity = 0.0
                 self.filtered_accel = 0.0
@@ -267,18 +287,68 @@ class RobustVBTTracker:
             if self.is_stationary and abs(self.velocity) < 0.10 and abs(a_vert) < 0.20:
                 self.velocity = 0.0
                 self.filtered_accel = 0.0
+                self.vx_h = self.vy_h = self.vz_h = 0.0
+                self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+                self.dx_h *= 0.90
+                self.dy_h *= 0.90
+                self.dz_h *= 0.90
                 self.motionless_in_eccentric_ms += int(dt * 1000)
             else:
                 self.motionless_in_eccentric_ms = 0
                 self.filtered_accel = ALPHA * a_vert + (1.0 - ALPHA) * self.filtered_accel
                 self.velocity += self.filtered_accel * dt
+                if self.is_stationary:
+                    self.vx_h = self.vy_h = self.vz_h = 0.0
+                    self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+                    self.dx_h *= 0.90
+                    self.dy_h *= 0.90
+                    self.dz_h *= 0.90
+                else:
+                    self.filt_ax_h = ALPHA * ax_h + (1.0 - ALPHA) * self.filt_ax_h
+                    self.filt_ay_h = ALPHA * ay_h + (1.0 - ALPHA) * self.filt_ay_h
+                    self.filt_az_h = ALPHA * az_h + (1.0 - ALPHA) * self.filt_az_h
+                    self.vx_h = (self.vx_h + self.filt_ax_h * dt) * HORIZ_VEL_DECAY
+                    self.vy_h = (self.vy_h + self.filt_ay_h * dt) * HORIZ_VEL_DECAY
+                    self.vz_h = (self.vz_h + self.filt_az_h * dt) * HORIZ_VEL_DECAY
+                    self.dx_h = (self.dx_h * HORIZ_POS_DECAY) + self.vx_h * dt
+                    self.dy_h = (self.dy_h * HORIZ_POS_DECAY) + self.vy_h * dt
+                    self.dz_h = (self.dz_h * HORIZ_POS_DECAY) + self.vz_h * dt
+                    v_horiz = math.sqrt(self.vx_h**2 + self.vy_h**2 + self.vz_h**2)
+                    self.horiz_arc_length += v_horiz * dt
+                    cur_dev_cm = min(50.0, max(0.0, math.sqrt(self.dx_h**2 + self.dy_h**2 + self.dz_h**2) * 100.0))
+                    if cur_dev_cm > self.max_horiz_dev_cm:
+                        self.max_horiz_dev_cm = cur_dev_cm
         else: # CONCENTRIC
             if self.is_stationary and self.rep_displacement < 0.12 and abs(a_vert) < 0.20 and (t - self.state_start_time) > 0.25:
                 self.velocity = 0.0
                 self.filtered_accel = 0.0
+                self.vx_h = self.vy_h = self.vz_h = 0.0
+                self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+                self.dx_h = self.dy_h = self.dz_h = 0.0
             else:
                 self.filtered_accel = ALPHA * a_vert + (1.0 - ALPHA) * self.filtered_accel
                 self.velocity += self.filtered_accel * dt
+                if self.is_stationary:
+                    self.vx_h = self.vy_h = self.vz_h = 0.0
+                    self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+                    self.dx_h *= 0.90
+                    self.dy_h *= 0.90
+                    self.dz_h *= 0.90
+                else:
+                    self.filt_ax_h = ALPHA * ax_h + (1.0 - ALPHA) * self.filt_ax_h
+                    self.filt_ay_h = ALPHA * ay_h + (1.0 - ALPHA) * self.filt_ay_h
+                    self.filt_az_h = ALPHA * az_h + (1.0 - ALPHA) * self.filt_az_h
+                    self.vx_h = (self.vx_h + self.filt_ax_h * dt) * HORIZ_VEL_DECAY
+                    self.vy_h = (self.vy_h + self.filt_ay_h * dt) * HORIZ_VEL_DECAY
+                    self.vz_h = (self.vz_h + self.filt_az_h * dt) * HORIZ_VEL_DECAY
+                    self.dx_h = (self.dx_h * HORIZ_POS_DECAY) + self.vx_h * dt
+                    self.dy_h = (self.dy_h * HORIZ_POS_DECAY) + self.vy_h * dt
+                    self.dz_h = (self.dz_h * HORIZ_POS_DECAY) + self.vz_h * dt
+                    v_horiz = math.sqrt(self.vx_h**2 + self.vy_h**2 + self.vz_h**2)
+                    self.horiz_arc_length += v_horiz * dt
+                    cur_dev_cm = min(50.0, max(0.0, math.sqrt(self.dx_h**2 + self.dy_h**2 + self.dz_h**2) * 100.0))
+                    if cur_dev_cm > self.max_horiz_dev_cm:
+                        self.max_horiz_dev_cm = cur_dev_cm
                 if self.velocity > 0.0:
                     self.rep_displacement += self.velocity * dt
                     if self.velocity > self.peak_velocity:
@@ -292,6 +362,12 @@ class RobustVBTTracker:
             self.velocity = 0.0
             self.filtered_accel = 0.0
             self.rep_displacement = 0.0
+            self.vx_h = self.vy_h = self.vz_h = 0.0
+            self.dx_h = self.dy_h = self.dz_h = 0.0
+            self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+            self.horiz_arc_length = 0.0
+            self.max_horiz_dev_cm = 0.0
+            self.path_efficiency_pct = 100.0
             self.concentric_lockout_until = t + 0.25
             self.currentState = "IDLE"
 
@@ -303,6 +379,12 @@ class RobustVBTTracker:
                 self.currentState = "ECCENTRIC"
                 self.state_start_time = t
                 self.motionless_in_eccentric_ms = 0
+                self.vx_h = self.vy_h = self.vz_h = 0.0
+                self.dx_h = self.dy_h = self.dz_h = 0.0
+                self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+                self.horiz_arc_length = 0.0
+                self.max_horiz_dev_cm = 0.0
+                self.path_efficiency_pct = 100.0
             elif self.velocity > 0.12 and t >= self.concentric_lockout_until:
                 self.currentState = "CONCENTRIC"
                 self.state_start_time = t
@@ -311,6 +393,12 @@ class RobustVBTTracker:
                 self.low_velocity_concentric_count = 0
                 self.stationary_count = 0
                 self.is_stationary = False
+                self.vx_h = self.vy_h = self.vz_h = 0.0
+                self.dx_h = self.dy_h = self.dz_h = 0.0
+                self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+                self.horiz_arc_length = 0.0
+                self.max_horiz_dev_cm = 0.0
+                self.path_efficiency_pct = 100.0
 
         elif self.currentState == "ECCENTRIC":
             # Inflection point -> concentric
@@ -322,10 +410,18 @@ class RobustVBTTracker:
                 self.low_velocity_concentric_count = 0
                 self.stationary_count = 0
                 self.is_stationary = False
+                self.vx_h = self.vy_h = self.vz_h = 0.0
+                self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
             elif state_duration > 8.0 or self.motionless_in_eccentric_ms > 3500:
                 self.currentState = "IDLE"
                 self.velocity = 0.0
                 self.filtered_accel = 0.0
+                self.vx_h = self.vy_h = self.vz_h = 0.0
+                self.dx_h = self.dy_h = self.dz_h = 0.0
+                self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+                self.horiz_arc_length = 0.0
+                self.max_horiz_dev_cm = 0.0
+                self.path_efficiency_pct = 100.0
 
         elif self.currentState == "CONCENTRIC":
             is_explosive = (self.peak_velocity >= 0.55)
@@ -342,10 +438,26 @@ class RobustVBTTracker:
                 rep_dur = state_duration
                 if self.rep_displacement >= min_disp and rep_dur >= min_dur and self.peak_velocity >= 0.15:
                     mcv = self.rep_displacement / rep_dur
-                    self.reps.append({"mcv": mcv, "disp": self.rep_displacement, "dur": rep_dur, "t": t})
+                    max_dev_m = self.max_horiz_dev_cm * 0.01
+                    total_path_m = math.sqrt(self.rep_displacement**2 + max_dev_m**2) + (0.25 * self.horiz_arc_length)
+                    self.path_efficiency_pct = min(100.0, max(0.0, (self.rep_displacement / total_path_m) * 100.0)) if total_path_m > 1e-4 else 100.0
+                    self.reps.append({
+                        "mcv": mcv,
+                        "disp": self.rep_displacement,
+                        "dur": rep_dur,
+                        "t": t,
+                        "max_horiz_dev_cm": self.max_horiz_dev_cm,
+                        "path_efficiency_pct": self.path_efficiency_pct
+                    })
                 self.velocity = 0.0
                 self.filtered_accel = 0.0
                 self.rep_displacement = 0.0
+                self.vx_h = self.vy_h = self.vz_h = 0.0
+                self.dx_h = self.dy_h = self.dz_h = 0.0
+                self.filt_ax_h = self.filt_ay_h = self.filt_az_h = 0.0
+                self.horiz_arc_length = 0.0
+                self.max_horiz_dev_cm = 0.0
+                self.path_efficiency_pct = 100.0
                 refractory = 0.14 if is_explosive else 0.25
                 if not is_abort_motionless: self.concentric_lockout_until = t + refractory
                 self.currentState = "IDLE"

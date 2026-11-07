@@ -362,6 +362,77 @@ body.portal-coach #view-coach {
   }
 }
 
+#coach-live-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* ── Antigravity 2.0 Widescreen 3-Column Cockpit (Requirement R3) ── */
+@media (min-width: 1150px) {
+  body.portal-coach .app-container {
+    max-width: 1680px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 56px;
+  }
+
+  body.portal-coach #coach-live-panel {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr) 360px;
+    grid-template-rows: auto auto;
+    gap: 16px;
+    align-items: start;
+    width: 100%;
+  }
+
+  /* Left Rail: Squad Overview & Roster */
+  body.portal-coach #coach-live-panel #coach-squad-overview {
+    grid-column: 1;
+    grid-row: 1;
+    height: 100%;
+  }
+
+  body.portal-coach #coach-squad-overview .coach-overview-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  body.portal-coach #coach-squad-overview .coach-roster-filters {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 4px;
+  }
+
+  body.portal-coach #coach-squad-overview .coach-squad-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Center Arena: Active Set Telemetry */
+  body.portal-coach #coach-live-panel #coach-active-set-card {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  /* Right Inspector: Prescriptive Console */
+  body.portal-coach #coach-live-panel #coach-feedback-console {
+    grid-column: 3;
+    grid-row: 1;
+    height: 100%;
+  }
+
+  /* Bottom Full-Width Dock: Sets Performance History Table */
+  body.portal-coach #coach-live-panel .coach-sets-history-card {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+}
+
 /* ── 1. Squad Ribbon & Athlete Selector ── */
 .coach-squad-ribbon {
   display: flex;
@@ -2111,5 +2182,407 @@ body.portal-coach #view-coach {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--coach-text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* COACH FOCAL TELEMETRY CENTER (Requirement R2)                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+.coach-focal-telemetry-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+@media (min-width: 680px) {
+  .coach-focal-telemetry-split {
+    grid-template-columns: 1.35fr 1fr;
+  }
+}
+
+.coach-focal-card {
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--coach-shadow-card);
+}
+
+.coach-focal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.coach-focal-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coach-focal-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--coach-text-secondary);
+  text-transform: uppercase;
+}
+
+.coach-focal-sub {
+  font-size: 11px;
+  color: var(--coach-text-muted);
+}
+
+.coach-pill-btn {
+  background: var(--coach-bg-surface-active);
+  border: 1px solid var(--coach-border-subtle);
+  color: var(--coach-text-primary);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.coach-pill-btn:hover {
+  background: var(--coach-bg-surface-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 2D Bar Path Canvas Stage */
+.coach-barpath-stage {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  background: #0d0d0d;
+  border-radius: var(--coach-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.coach-barpath-canvas {
+  display: block;
+  width: 280px;
+  height: 210px;
+  max-width: 100%;
+}
+
+.coach-barpath-overlay-hud {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.corridor-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.corridor-zero {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+}
+
+/* Bar Path Replay Controls */
+.coach-barpath-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.coach-barpath-ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coach-ctrl-btn {
+  background: var(--coach-bg-surface-active);
+  border: 1px solid var(--coach-border-subtle);
+  color: var(--coach-text-primary);
+  padding: 5px 10px;
+  border-radius: var(--coach-radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.coach-ctrl-btn:hover {
+  background: var(--coach-bg-surface-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.coach-ctrl-btn.active {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: #00E5FF;
+  color: #00E5FF;
+}
+
+.coach-barpath-rep-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.coach-barpath-rep-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.coach-barpath-rep-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--coach-border-subtle);
+  color: var(--coach-text-secondary);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-mono);
+}
+
+.coach-barpath-rep-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--coach-text-primary);
+}
+
+.coach-barpath-rep-pill.active {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: #00E5FF;
+  color: #00E5FF;
+}
+
+.coach-barpath-scrubber-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.coach-barpath-scrubber {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  accent-color: #00E5FF;
+  background: #2f2f2f;
+  cursor: pointer;
+}
+
+/* Right Focal Card: RPE Hero Content */
+.coach-rpe-hero-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 250px;
+  gap: 14px;
+}
+
+.coach-rpe-readout-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.coach-rpe-number-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.coach-live-rpe {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--coach-text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.coach-rpe-max {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--coach-text-muted);
+}
+
+.coach-rir-pill {
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  color: #00E5FF;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.coach-tier-badge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tier-optimal {
+  background: rgba(0, 255, 102, 0.12);
+  color: #00FF66;
+  border: 1px solid rgba(0, 255, 102, 0.25);
+}
+
+.tier-heavy {
+  background: rgba(255, 184, 0, 0.12);
+  color: #FFB800;
+  border: 1px solid rgba(255, 184, 0, 0.25);
+}
+
+.tier-limit {
+  background: rgba(255, 59, 48, 0.12);
+  color: #FF3B30;
+  border: 1px solid rgba(255, 59, 48, 0.25);
+}
+
+.coach-rpe-gauge-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.coach-rpe-gauge-track {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  background: #171717;
+  border-radius: 5px;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.coach-rpe-gauge-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #00FF66 0%, #00E5FF 60%, #FFB800 85%, #FF3B30 100%);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.coach-rpe-target-pin {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  z-index: 2;
+  transition: left 0.3s ease;
+}
+
+.target-pin-tag {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.05em;
+  background: #000000;
+  padding: 1px 4px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.coach-rpe-ticks {
+  position: relative;
+  width: 100%;
+  height: 14px;
+}
+
+.coach-rpe-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--coach-text-muted);
+}
+
+.coach-rpe-feedback-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.coach-rpe-sub {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00FF66;
+  letter-spacing: 0.04em;
+}
+
+/* History Table Replay Action */
+.coach-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coach-replay-set-btn {
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  color: #00E5FF;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.coach-replay-set-btn:hover {
+  background: rgba(0, 229, 255, 0.22);
+  border-color: #00E5FF;
+}
+
+.coach-rep-stream-pill {
+  cursor: pointer;
+  user-select: none;
+}
+
+.coach-rep-stream-pill:hover {
+  border-color: rgba(0, 229, 255, 0.4);
+}
+
+.coach-rep-stream-pill.active {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: #00E5FF;
 }
 

@@ -11,6 +11,8 @@ __pycache__/
 env/
 venv/
 node_modules/
+base44/.app.jsonc
+base44/.types/
 
 # IDE & OS files
 .vscode/

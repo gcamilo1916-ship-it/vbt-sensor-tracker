@@ -1,0 +1,8 @@
+{
+  "name": "Eros VBT",
+  "description": "Eros Velocity-Based Training Realtime Platform",
+  "visibility": "private",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
+  "actorsDir": "./actors"
+}

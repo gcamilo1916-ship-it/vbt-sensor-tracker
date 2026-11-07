@@ -1,0 +1,71 @@
+{
+  "name": "CoachDirective",
+  "description": "Persisted coach load prescriptions, target rest adjustments, and tactical cues",
+  "type": "object",
+  "properties": {
+    "directive_id": {
+      "type": "string",
+      "description": "Unique identifier for the directive"
+    },
+    "pairing_code": {
+      "type": "string",
+      "description": "Pairing code linking coach to squad session"
+    },
+    "athlete_id": {
+      "type": "string",
+      "description": "Target athlete identifier"
+    },
+    "coach_name": {
+      "type": "string",
+      "description": "Name or handle of coach issuing the directive"
+    },
+    "directive_type": {
+      "type": "string",
+      "enum": [
+        "load_override",
+        "cue",
+        "rest_target"
+      ],
+      "description": "Classification of the directive"
+    },
+    "delta_kg": {
+      "type": "number",
+      "description": "Suggested weight adjustment in kilograms"
+    },
+    "prescribed_weight_kg": {
+      "type": "number",
+      "description": "Target prescribed weight in kilograms"
+    },
+    "target_rest_seconds": {
+      "type": "integer",
+      "description": "Prescribed target inter-set rest duration in seconds"
+    },
+    "cue_text": {
+      "type": "string",
+      "description": "Tactical cue text message"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "auto_accepted",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "Current status of the directive"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when directive was created"
+    }
+  },
+  "required": [
+    "directive_id",
+    "pairing_code",
+    "athlete_id",
+    "directive_type"
+  ]
+}

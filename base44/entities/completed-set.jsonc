@@ -1,0 +1,88 @@
+{
+  "name": "CompletedSet",
+  "description": "Persisted Velocity-Based Training completed set telemetry and 2D deviation metrics",
+  "type": "object",
+  "properties": {
+    "set_id": {
+      "type": "string",
+      "description": "Unique identifier for the set"
+    },
+    "pairing_code": {
+      "type": "string",
+      "description": "Pairing code linking athlete to coach squad session"
+    },
+    "athlete_id": {
+      "type": "string",
+      "description": "Unique identifier for the athlete"
+    },
+    "athlete_name": {
+      "type": "string",
+      "description": "Display name of the athlete"
+    },
+    "set_number": {
+      "type": "integer",
+      "description": "Sequence number of the set in the workout"
+    },
+    "lift": {
+      "type": "string",
+      "description": "Exercise lift name (e.g. Squat, Bench, Deadlift)"
+    },
+    "weight": {
+      "type": "number",
+      "description": "Weight lifted in kilograms"
+    },
+    "avg_velocity": {
+      "type": "number",
+      "description": "Average mean concentric velocity across the set in m/s"
+    },
+    "max_velocity": {
+      "type": "number",
+      "description": "Peak concentric velocity across the set in m/s"
+    },
+    "velocity_loss": {
+      "type": "number",
+      "description": "Calculated velocity loss percentage"
+    },
+    "avg_rpe": {
+      "type": "number",
+      "description": "Average calculated or athlete-reported RPE"
+    },
+    "target_rpe": {
+      "type": "number",
+      "description": "Target RPE prescribed for this set"
+    },
+    "rest_seconds": {
+      "type": "integer",
+      "description": "Inter-set rest duration elapsed in seconds"
+    },
+    "max_deviation_cm": {
+      "type": "number",
+      "description": "Peak horizontal deviation from plumb line in centimeters"
+    },
+    "path_efficiency_pct": {
+      "type": "number",
+      "description": "Barbell trajectory path efficiency score percentage"
+    },
+    "reps_json": {
+      "type": "string",
+      "description": "JSON serialized rep-by-rep metrics"
+    },
+    "trajectory_points_json": {
+      "type": "string",
+      "description": "JSON serialized 2D barbell vertical deviation trajectory points"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the set was completed"
+    }
+  },
+  "required": [
+    "set_id",
+    "pairing_code",
+    "athlete_id",
+    "set_number",
+    "lift",
+    "weight"
+  ]
+}

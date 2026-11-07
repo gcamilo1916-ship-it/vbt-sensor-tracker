@@ -383,6 +383,61 @@ class TestVBTFirmwareTier2Boundaries(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(test_dir, "test_vbt_firmware_tier1.py")))
         self.assertTrue(os.path.exists(os.path.join(test_dir, "test_vbt_firmware_tier2.py")))
 
+    def test_b24_01_horizontal_deviation_zupt_clamping_and_bounds(self):
+        """B24: Verify stationary/turnaround ZUPT prevents quadratic horizontal drift and bounds max_horiz_dev_cm in [0, 50]."""
+        tracker = RobustVBTTracker(initial_baseline=9.81)
+        tracker.filter.init_from_gravity(0.0, 0.0, 9.81)
+        dt = 0.01
+        descent = make_bell_profile(1.0, 0.45, is_downward=True)
+        for i, (a_vert, g_rot) in enumerate(descent):
+            tracker.step(i * dt, 0.0, 0.0, 9.81 + a_vert, g_rot, 0.0, 0.0, dt)
+        # 2.5s bottom pause with small constant thermal bias on X should remain clamped
+        start_t = len(descent) * dt
+        for i in range(250):
+            tracker.step(start_t + i * dt, 0.01, 0.0, 9.81, 0.0, 0.0, 0.0, dt)
+        self.assertEqual(tracker.vx_h, 0.0, "Horizontal velocity must be zero-clamped during stationary bottom pause")
+        self.assertLessEqual(tracker.max_horiz_dev_cm, 50.0)
+
+    def test_b24_02_slow_eccentric_grinder_with_tilt_and_vibration_drift_bound(self):
+        """B24.2: 5s slow eccentric grinder with 5-deg tilt + non-zero vibration (var_a > 0.040) bounds drift and captures concentric hip-shift."""
+        tilt_rad = math.radians(5.0)
+        gx0 = math.sin(tilt_rad) * 9.81
+        gz0 = math.cos(tilt_rad) * 9.81
+        tracker = RobustVBTTracker(initial_baseline=9.81)
+        tracker.filter.init_from_gravity(gx0, 0.0, gz0)
+        dt = 0.01
+        t = 0.0
+
+        # 5.0s slow eccentric descent with continuous high-frequency bar vibration (amplitude 0.30 m/s^2 -> var_a = 0.045 > 0.040)
+        descent = make_bell_profile(5.0, 0.55, is_downward=True)
+        for i, (a_vert, _) in enumerate(descent):
+            vib = 0.30 if (i % 2 == 0) else -0.30
+            ax = (9.81 + a_vert) * math.sin(tilt_rad) + vib * math.cos(tilt_rad) + 0.05
+            az = (9.81 + a_vert) * math.cos(tilt_rad) - vib * math.sin(tilt_rad)
+            tracker.step(t, ax, 0.0, az, 0.0, 0.0, 0.0, dt)
+            t += dt
+
+        # Verify vibration kept is_stationary False yet high-pass decay bounded eccentric drift well below 5.0 cm
+        self.assertFalse(tracker.is_stationary, "Continuous vibration above 0.040 var_a threshold must prevent ZUPT lock")
+        ecc_dev_cm = tracker.max_horiz_dev_cm
+        self.assertLess(ecc_dev_cm, 5.0, "High-pass decay must prevent quadratic horizontal drift during 5s non-stationary eccentric")
+
+        # Concentric ascent with genuine lateral hip-shift impulse
+        ascent = make_bell_profile(1.2, 0.58, is_downward=False)
+        for i, (a_vert, _) in enumerate(ascent):
+            hip_shift_ay = 2.2 * math.sin(2.0 * math.pi * (i / len(ascent)))
+            ax = (9.81 + a_vert) * math.sin(tilt_rad)
+            az = (9.81 + a_vert) * math.cos(tilt_rad)
+            tracker.step(t, ax, hip_shift_ay, az, 0.0, 0.0, 0.0, dt)
+            t += dt
+        for _ in range(45):
+            tracker.step(t, gx0, 0.0, gz0, 0.0, 0.0, 0.0, dt)
+            t += dt
+
+        self.assertEqual(len(tracker.reps), 1)
+        self.assertGreater(tracker.reps[0]["max_horiz_dev_cm"], ecc_dev_cm + 1.5, "Concentric hip-shift must be captured above eccentric baseline")
+        self.assertLessEqual(tracker.reps[0]["max_horiz_dev_cm"], 50.0)
+
 
 if __name__ == "__main__":
     unittest.main()
