@@ -958,6 +958,9 @@
       elements.pairingCodeDisplay.textContent = currentPairingCode;
     }
     updatePairingTtlDisplay();
+    if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('eros:coach_pairing_code', { detail: { code: currentPairingCode } }));
+    }
     return currentPairingCode;
   }
 

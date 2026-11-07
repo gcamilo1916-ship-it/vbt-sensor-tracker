@@ -1,8 +1,12 @@
 {
   "name": "Eros VBT",
   "description": "Eros Velocity-Based Training Realtime Platform",
-  "visibility": "private",
+  "visibility": "public",
   "entitiesDir": "./entities",
   "functionsDir": "./functions",
-  "actorsDir": "./actors"
+  "actorsDir": "./actors",
+  "site": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "./dist"
+  }
 }
