@@ -1,142 +1,145 @@
-# Testing Infrastructure — Eros VBT (Apple visionOS Spatial Glass)
+# Testing Infrastructure — Eros Interactive Switcher Variants & Synthetic Telemetry
 
-## 1. Overview & Methodology
+## 1. Overview & Test Philosophy
 
-The automated test suite for Eros VBT provides comprehensive, requirement-driven, opaque-box verification across the application's visual overhaul, typography, interaction design, and backend invariant preservation.
+The testing infrastructure for Eros interactive switcher variants and synthetic telemetry provides comprehensive, opaque-box, requirement-driven verification derived directly from `ORIGINAL_REQUEST.md` and `PROJECT.md`.
 
-Testing is structured strictly around a **4-Tier Methodology**:
-- **Tier 1: Feature Coverage (>=5 test cases per feature across all 16 features from `PROJECT.md`)**
-- **Tier 2: Boundary, Negative & Adversarial Cases (>=5 test cases per feature across all 16 features)**
-- **Tier 3: Cross-Feature Combinations & Pairwise Interactions (multi-feature state transitions, theme syncing, telemetry rendering)**
-- **Tier 4: Real-World Application Workload Scenarios (5x5 strength training, endurance workloads, Eros reconnects, persistence & export)**
-- **Browser Live Smoke & CDP Interception (Headless Chrome remote debugging on port 9444)**
-
-Total test cases implemented: **187 automated tests**.
+### Core Testing Tenets:
+1. **Opaque-Box Requirement Derivation**: Tests validate system behavior, biomechanical kinematics, acoustic frequency sweeps, and visual transformations against specifications rather than implementation artifacts.
+2. **Deterministic Mathematical Oracles**: Expected values for velocity decay, dynamic color interpolation, transform scaling, and Web Audio envelopes are derived from canonical physics and biomechanics formulas rather than hardcoded snapshots.
+3. **Strict Physical Device Abstraction**: All tests execute in a pure headless software environment without physical equipment connections. In accordance with project guardrails, zero prohibited device terms are introduced anywhere in test files, code, or documentation; the system is referenced exclusively as `Eros`.
+4. **Progressive Testability & Independence**: Each test case sets up its own isolated environment, asserts invariants deterministically, and cleans up after itself without cross-test state leakage.
 
 ---
 
-## 2. Environment & Zero-Dependency Execution
+## 2. 4-Tier Testing Methodology & Feature Inventory
 
-The test suite runs with **zero npm / Node.js dependencies**, executing entirely on Python 3.15 using standard libraries:
-- `unittest` for hierarchical test discovery and assertion reporting.
-- `urllib.request` / `json` for Chrome DevTools Protocol (CDP) session management.
-- `subprocess` for headless browser process orchestration.
-- `re` for strict CSS token, AST bracket balancing, and DOM contract validation.
-- `math` for exact biomechanical formula verification.
+The test suite is structured around a rigorous 4-Tier hierarchical methodology:
+- **Tier 1 (Feature Coverage in Isolation)**: Verifies each visual, acoustic, and interactive feature independently.
+- **Tier 2 (Boundary & Corner Cases)**: Exercises minimum velocity thresholds (MVT), explosive velocities, maximum RPE grinds, extreme plumb line deviations, rapid rep cycling, and missing audio contexts.
+- **Tier 3 (Cross-Feature Combinations)**: Evaluates pairwise interactions between lift movements, RPE tiers, deviation corridors, and switcher exploration variants A–D.
+- **Tier 4 (Real-World Application Scenarios)**: Simulates complete multi-rep training sets with progressive fatigue accumulation, sticking point deceleration, and end-to-end user workflows.
 
-### System Prerequisites
-- **Python**: 3.15+ (`python --version`)
-- **Headless Browser**: Google Chrome (`C:\Program Files\Google\Chrome\Application\chrome.exe`)
-- **Host OS**: Windows 11
+### Feature Inventory & Tier Coverage Mapping
 
----
-
-## 3. Directory Layout
-
-All testing code is isolated inside `C:\Users\gcami\Documents\VBTanti\tests/`:
-
-```
-C:\Users\gcami\Documents\VBTanti\tests/
-├── __init__.py                 # Test package initialization
-├── conftest_base.py            # Base fixtures, CSS/HTML parsers, math oracles, and CDP controller
-├── test_tier1_features.py      # Tier 1: 80 Feature Coverage tests (Features 1–16)
-├── test_tier2_boundaries.py    # Tier 2: 80 Boundary, Negative & Edge tests (Features 1–16)
-├── test_tier3_pairwise.py      # Tier 3: 16 Cross-Feature Pairwise Interaction tests
-├── test_tier4_workload.py      # Tier 4: 8 Real-World Training & Telemetry Workloads
-├── test_browser_headless.py    # Headless Chrome DevTools integration & visual smoke
-└── run_all_e2e_tests.py        # Unified CLI test runner with tier/milestone filters
-```
+| # | Feature from PROJECT.md | Scope | Tier 1 (Isolation) | Tier 2 (Boundaries) | Tier 3 (Cross-Combos) | Tier 4 (Workloads) | Total Tests |
+|---|-------------------------|-------|:------------------:|:-------------------:|:---------------------:|:------------------:|:-----------:|
+| 1 | Real-Time Vertical Stroke & Phase Kinematics | Squat, Bench, Deadlift displacement curves | 3 tests (1.1–1.3) | 2 tests (2.9, 2.12) | 3 tests (3.1–3.3) | 3 tests (4.1–4.3) | 11 |
+| 2 | Horizontal Plumb-Line Deviation Tracking | 0.0cm plumb line, optimal/warning corridors | 1 test (1.4) | 3 tests (2.3–2.5) | 3 tests (3.1, 3.4, 3.5) | 2 tests (4.1, 4.2) | 9 |
+| 3 | White-to-Lift Color Interpolation | Smooth transition (#FFFFFF -> Lift Color) | 3 tests (1.5–1.7) | 2 tests (2.1, 2.2) | 2 tests (3.4, 3.6) | 2 tests (4.2, 4.3) | 9 |
+| 4 | Difficulty-Scaled Visual Completion Pop | Transform scale S_pop in [1.0, 2.5] | 1 test (1.8) | 2 tests (2.1, 2.6) | 2 tests (3.4, 3.8) | 2 tests (4.1, 4.3) | 7 |
+| 5 | Pure Web Audio API Pop & Chime Synthesis | Frequency down-sweep + D5 chime + 55Hz sub | 4 tests (1.9–1.12) | 2 tests (2.6, 2.8) | 2 tests (3.8, 3.9) | 2 tests (4.1, 4.3) | 10 |
+| 6 | Stage Micro-Switcher Pill UI | Variant cycling [VAR: A -> B -> C -> D -> A] | 1 test (1.13) | 1 test (2.10) | 1 test (3.7) | 1 test (4.5) | 4 |
+| 7 | Collapsible Spatial Glass Switcher Sheet | Modal sheet open/close lifecycle | 1 test (1.14) | 1 test (2.10) | 1 test (3.10) | 1 test (4.5) | 4 |
+| 8 | Variant A Implementation | Kinetic Dot + Difficulty Transition + Pop | 1 test (1.5) | 1 test (2.10) | 1 test (3.4) | 1 test (4.3) | 4 |
+| 9 | Variant B Implementation | Fluid Velocity Energy Ribbon | 1 test (1.13) | 1 test (2.2) | 2 tests (3.1, 3.6) | 1 test (4.5) | 5 |
+| 10 | Variant C Implementation | Concentric Ripple Waves anchored to plumb line | 1 test (1.13) | 1 test (2.3) | 2 tests (3.2, 3.9) | 1 test (4.5) | 5 |
+| 11 | Variant D Implementation | Spatial Ghost Path + Velocity Breakdown Vectors | 1 test (1.13) | 1 test (2.4) | 2 tests (3.3, 3.5) | 1 test (4.4) | 5 |
+| 12 | URL Deep-Linking & State Persistence | ?variant=A\|B\|C\|D query param & storage | 1 test (1.16) | 1 test (2.10) | 2 tests (3.9, 3.10) | 1 test (4.5) | 5 |
+| 13 | Design Tokens & Terminology Compliance | visionOS glass tokens, zero forbidden terms | 2 tests (1.17, 1.18) | 1 test (2.9) | 1 test (3.8) | 1 test (4.6) | 5 |
+| 14 | Synthetic Telemetry Test Harness | Deterministic 40-pt curves & set fatigue | 1 test (1.1) | 2 tests (2.7, 2.11) | 2 tests (3.1, 3.8) | 2 tests (4.1, 4.4) | 7 |
+| 15 | E2E Regression & Integrity Verification | Full lifecycle verification & regression baseline | 1 test (1.15) | 2 tests (2.7, 2.8) | 2 tests (3.7, 3.10) | 2 tests (4.5, 4.6) | 7 |
+| **TOTAL** | **Comprehensive Suite Coverage** | **4-Tier Suite Execution** | **18 Tests** | **12 Tests** | **10 Tests** | **6 Tests** | **46 Tests** |
 
 ---
 
-## 4. Test Commands & CLI Runner
+## 3. Test Architecture & Components
 
-The test suite includes a unified runner (`tests/run_all_e2e_tests.py`) supporting flexible filtering by Tier or Milestone, verbose logging, and structured JSON reporting.
+The testing system is implemented across two coordinated modules in `tests/`:
+1. `tests/synthetic_telemetry_harness.js`: The underlying simulation engine, mathematical oracles, and mock infrastructure.
+2. `tests/test_interactive_switcher_variants.js`: The executable 46-test E2E assertion suite.
 
-### 4.1 Run the Full Test Suite
-```powershell
-python tests/run_all_e2e_tests.py
+```
+c:\Users\gcami\Documents\VBTanti\
+├── tests/
+│   ├── synthetic_telemetry_harness.js      # Simulation engine, mocks & mathematical oracles
+│   └── test_interactive_switcher_variants.js # 4-Tier comprehensive E2E test runner
+├── TEST_INFRA.md                          # Testing architecture documentation (this file)
+└── TEST_READY.md                          # Test readiness report & coverage declaration
 ```
 
-### 4.2 Run with JSON Execution Report
-```powershell
-python tests/run_all_e2e_tests.py --json-report tests/report.json
-```
+### 3.1 Deterministic Biomechanical Trajectory Generator
+- Generates 40-point normalized kinematic trajectories ($p \in [0.0, 1.0]$) modeling authentic barbell biomechanics:
+  - **Squat**: Anterior hole lean at depth ($0.8(1-p)^2$), mid-ascent knee travel flare ($1.8\sin(\pi p)(1-0.4p)$), returning to plumb line at lockout.
+  - **Bench Press (McLaughlin J-curve)**: Sternum touch flaring rearward toward glenohumeral joint ($-3.2\sin(\pi p^{0.75})(1-0.2p)$) before vertical lockout.
+  - **Deadlift**: Backward bar sweep into shins and thighs ($-0.9\sin(\pi(1-p)) + 2.0\sin(2\pi p)p$) clearing patellae into hip lockout.
+- Calculates sticking point velocity depression near mid-ascent ($p \approx 0.40 - 0.65$):
+  $$v_{peak} = \max(v_{mean} \times 1.35, v_{mean} + 0.15)$$
+  $$v_{stick} = \max(0.12, v_{mean} \times (1.0 - 0.45 \times (rpe / 10)))$$
 
-### 4.3 Filter by Milestone
-```powershell
-# Milestone 1: Surfaces, Specular Refraction & CSS Syntax
-python tests/run_all_e2e_tests.py --milestone M1
+### 3.2 Headless Canvas 2D Mock Context
+- Provides a comprehensive in-memory Canvas 2D rendering mock recording all graphical calls into an inspectable timeline (`ctx.operations`).
+- Supports gradients (`createLinearGradient`, `createRadialGradient`, `addColorStop`), paths (`beginPath`, `moveTo`, `lineTo`, `arc`, `ellipse`), styling (`fillStyle`, `strokeStyle`, `lineWidth`, `lineDash`, `shadowBlur`), and state saving (`save`, `restore`).
+- Provides inspection utilities: `findOperations()`, `getArcs()`, `getFills()`, `getStrokes()`, and `clearOperations()`.
 
-# Milestone 2: Apple Typography & Pill Buttons
-python tests/run_all_e2e_tests.py --milestone M2
+### 3.3 Headless Web Audio API Mock
+- Completely intercepts the Web Audio API graph without physical audio device dependencies:
+  - Tracks all created `OscillatorNode` and `GainNode` instances.
+  - Logs scheduled parameter events: `setValueAtTime`, `exponentialRampToValueAtTime`, and `linearRampToValueAtTime`.
+  - Inspector helpers verify:
+    * `hasFrequencySweep(startFreq, endFreq)`: checks for the 35ms downward pop transient sweep ($280 \to 80$ Hz).
+    * `hasHarmonicChime(expectedBaseFreq)`: checks for the crystalline D5 (587.33 Hz) harmonic tone.
+    * `hasSubBassThump(freq = 55)`: asserts presence of low-frequency sine resonance for heavy lifts ($RPE \ge 8.5$).
 
-# Milestone 3: Interactive Dropdown & Unclipping
-python tests/run_all_e2e_tests.py --milestone M3
+### 3.4 Headless DOM Environment
+- Lightweight in-memory DOM simulation modeling `.bar-path-stage`, `#bar-path-canvas`, `#btn-variant-switcher`, `#variant-switcher-sheet`, `#btn-variant-audition-rep`, and HUD telemetry readouts.
+- Full event listener registration and synchronous dispatch (`addEventListener`, `dispatchEvent`, `click()`).
+- Emulates browser APIs: `window.location`, `window.localStorage`, and `requestAnimationFrame`.
 
-# Milestone 4: Ambient Mesh Glow & 60fps Animations
-python tests/run_all_e2e_tests.py --milestone M4
+### 3.5 Authoritative Mathematical Oracles
+- **Difficulty Metric**:
+  $$D = \text{clamp}\left(0.0, 1.0, 0.65 \times \frac{RPE - 6.0}{4.0} + 0.35 \times \frac{\max(0, v_{peak} - v)}{v_{peak} - v_{mvt}}\right)$$
+- **Color Interpolation**:
+  $$\mathbf{C}(D) = (1 - D) \cdot \mathbf{C}_{white} + D \cdot \mathbf{C}_{lift}$$
+  - Deadlift: `#FF3B30` $(255, 59, 48)$
+  - Squat: `#00FF66` $(0, 255, 102)$
+  - Bench: `#00E5FF` $(0, 229, 255)$
+- **Visual Pop Transform Scale**:
+  $$S_{pop} = 1.0 + 1.5 \times \left(\frac{RPE - 6.0}{4.0}\right) \in [1.0, 2.5]$$
+- **Corridor Boundaries**:
+  $X_{canvas} = 110 + dx \times 18$ px. Optimal corridor: $|dx| \le 2.0$ cm. Warning corridor: $2.0 < |dx| \le 4.0$ cm. Alert corridor: $|dx| > 4.0$ cm.
 
-# Milestone 5: Backend GATT, BLE & Analytics Preservation
-python tests/run_all_e2e_tests.py --milestone M5
-
-# Milestone 6: Design QA, Browser Smoke & Visual Regression
-python tests/run_all_e2e_tests.py --milestone M6
-```
-
-### 4.4 Filter by Tier
-```powershell
-python tests/run_all_e2e_tests.py --tier 1       # Run all 80 Tier 1 tests
-python tests/run_all_e2e_tests.py --tier 2       # Run all 80 Tier 2 tests
-python tests/run_all_e2e_tests.py --tier 3       # Run all 16 Tier 3 tests
-python tests/run_all_e2e_tests.py --tier 4       # Run all 8 Tier 4 workloads
-python tests/run_all_e2e_tests.py --tier browser # Run Headless Chrome CDP tests
-```
-
-### 4.5 Standard unittest Execution
-```powershell
-python -m unittest discover -s tests -p "test_*.py"
-```
+### 3.6 Static Guardrail Scanners
+- Scans all web application and test files for zero occurrences of prohibited device terms.
+- Scans all `<button>` elements for zero emoji characters or symbol glyphs.
 
 ---
 
-## 5. Authoritative Output Derivation & Mathematical Oracle
+## 4. Test Execution Guide
 
-All test assertions derive expected values from authoritative ground truth defined in `PROJECT.md`, `ORIGINAL_REQUEST.md`, and `vbt_architecture.md`:
+### Primary Test Runner (Comprehensive 4-Tier Suite)
+```powershell
+Set-Location "c:\Users\gcami\Documents\VBTanti"
+node tests/test_interactive_switcher_variants.js
+```
+*Expected Output*: `46 / 46 Passed (100%)` with zero errors.
 
-### 5.1 Analytics Formulas (`VBTMathOracle`)
-- **Average Velocity**: $\text{avgVel} = \text{round}\left(\frac{\sum v_i}{N}, 2\right)$
-- **Peak Velocity**: $\text{maxVel} = \text{round}(\max(V), 2)$
-- **Minimum Velocity**: $\text{minVel} = \text{round}(\min(V), 2)$
-- **Average RPE**: $\text{avgRpe} = \text{round}\left(\frac{\sum r_i}{N}, 1\right)$
-- **Velocity Loss Percentage**: $\text{lossPct} = \text{round}\left(\max\left(0, \frac{\text{maxVel} - v_{\text{last}}}{\text{maxVel}} \times 100\right), 1\right)$
-- **SVG Stroke Dashoffset**: $\text{Circumference} = 2 \pi (90) = 565.48$, $\text{offset} = 565.48 - (565.48 \times \min(\max(\frac{\text{avgVel}}{1.0}, 0), 1))$
-- **Rep Physics Duration**: $\text{duration} = \text{clamp}\left(0.5, \left(\frac{0.5}{\max(v, 0.1)}\right) \times 2, 5.0\right)$
-- **Apex Bloom Timing**:
-  - Deadlift: $\text{delay} = \frac{\text{duration} \times 1000}{2}$ (zenith midpoint)
-  - Squat / Bench: $\text{delay} = \text{duration} \times 1000 \times 0.95$ (top lockout)
+### Existing Test Suite Regression Checks
+```powershell
+Set-Location "c:\Users\gcami\Documents\VBTanti"
 
----
+# 1. Athlete View Overhaul Verification (R1 - R4)
+node tests/test_athlete_view_r1_r4.js
+# Expected: 24 / 24 assertions passed (100%)
 
-## 6. Feature Coverage Matrix (16 Features)
+# 2. Athlete View DOM & Replay Engine Challenge Harness
+node tests/test_athlete_dom_replay_challenger.js
+# Expected: 25 / 25 assertions passed (100% OK)
+```
 
-| Feature ID | Description | Milestone | Tier 1 Tests | Tier 2 Tests | Tier 3/4 Coverage |
-|---|---|---|---|---|---|
-| F1 | Ultra-translucent glass panels | M1 | `test_f01_01`..`05` (5) | `test_b01_01`..`05` (5) | `test_p01`, `test_p06`, `test_p13` |
-| F2 | Top-down specular light refraction | M1 | `test_f02_01`..`05` (5) | `test_b02_01`..`05` (5) | `test_p13` |
-| F3 | CSS syntax cleanup | M1 | `test_f03_01`..`05` (5) | `test_b03_01`..`05` (5) | `test_p13` |
-| F4 | Refined "Eros" brand styling | M2 | `test_f04_01`..`05` (5) | `test_b04_01`..`05` (5) | `test_p14` |
-| F5 | Action button emoji purge | M2 | `test_f05_01`..`05` (5) | `test_b05_01`..`05` (5) | `test_p11` |
-| F6 | VisionOS pill capsule buttons | M2 | `test_f06_01`..`05` (5) | `test_b06_01`..`05` (5) | `test_p05`, `test_p07`, `test_p10` |
-| F7 | Monospace / tabular figures | M2 | `test_f07_01`..`05` (5) | `test_b07_01`..`05` (5) | `test_p03`, `test_p04`, `test_p14` |
-| F8 | Unclipped lift dropdown | M3 | `test_f08_01`..`05` (5) | `test_b08_01`..`05` (5) | `test_p02`, `test_p06` |
-| F9 | Dropdown interactivity & a11y | M3 | `test_f09_01`..`05` (5) | `test_b09_01`..`05` (5) | `test_p01`, `test_p02`, `test_p15` |
-| F10 | Ambient mesh glow blobs | M4 | `test_f10_01`..`05` (5) | `test_b10_01`..`05` (5) | `test_p01`, `test_p06` |
-| F11 | 60fps animations & apex bloom | M4 | `test_f11_01`..`05` (5) | `test_b11_01`..`05` (5) | `test_p01`, `test_p04`, `test_p09` |
-| F12 | Backend GATT & BLE preservation | M5 | `test_f12_01`..`05` (5) | `test_b12_01`..`05` (5) | `test_p02`, `test_p03`, `test_p10`, `test_w03`, `test_w08` |
-| F13 | Data hierarchy & schema | M5 | `test_f13_01`..`05` (5) | `test_b13_01`..`05` (5) | `test_p03`, `test_p04`, `test_p07`, `test_p11`, `test_p12`, `test_w01`..`w07` |
-| F14 | DOM binding contracts (38 IDs) | M5 | `test_f14_01`..`05` (5) | `test_b14_01`..`05` (5) | `test_p05`, `test_p07`, `test_p08`, `test_p10`, `test_p15` |
-| F15 | E2E Testing Suite (Tiers 1-4) | E2E | `test_f15_01`..`05` (5) | `test_b15_01`..`05` (5) | Self-verification |
-| F16 | Design QA & Visual Regression | M6 | `test_f16_01`..`05` (5) | `test_b16_01`..`05` (5) | `test_chrome_01`..`03` |
-
-Total test cases: **80 (Tier 1) + 80 (Tier 2) + 16 (Tier 3) + 8 (Tier 4) + 3 (Browser) = 187 tests**.
+### Terminology Compliance Independent Verification
+```powershell
+Set-Location "c:\Users\gcami\Documents\VBTanti"
+node -e "
+const h = require('./tests/synthetic_telemetry_harness.js');
+const files = [
+  'index.html', 'style.css', 'athlete-fx.css', 'athlete-fx.js', 'app.js',
+  'coach-portal.js', 'sync-bus.js', 'coach.css', 'coach-cue-hud.css', 'coach-cue-hud.js',
+  'tests/synthetic_telemetry_harness.js', 'tests/test_interactive_switcher_variants.js'
+];
+const v = h.scanForbiddenTerms(files);
+if (v.length === 0) console.log('Zero prohibited terms verified across all web and test files.');
+else { console.error('Violations found:', v); process.exit(1); }
+"
+```
+*Expected Output*: `Zero prohibited terms verified across all web and test files.`

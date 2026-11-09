@@ -33,6 +33,28 @@
   will-change: transform, box-shadow;
 }
 
+/* ── Repetition Completion Pop FX (Requirement R2) ── */
+@keyframes repCompletionPop {
+  0% {
+    transform: scale3d(1, 1, 1);
+    box-shadow: 0 0 0 0 rgba(var(--pop-accent-rgb, 0, 255, 102), 0.70);
+  }
+  30% {
+    transform: scale3d(var(--pop-scale, 1.35), var(--pop-scale, 1.35), 1);
+    box-shadow: 0 0 40px 10px rgba(var(--pop-accent-rgb, 0, 255, 102), 0.55),
+                inset 0 0 16px 2px rgba(255, 255, 255, 0.40);
+  }
+  100% {
+    transform: scale3d(1, 1, 1);
+    box-shadow: 0 0 0 0 rgba(var(--pop-accent-rgb, 0, 255, 102), 0);
+  }
+}
+
+.rep-pop-bloom {
+  animation: repCompletionPop 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, box-shadow;
+}
+
 /* ── 2. Velocity Tier Micro-Particles & Glow Burst ── */
 .set-celebration-overlay {
   position: absolute;

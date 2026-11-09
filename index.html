@@ -6,6 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#08080C" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://esm.sh https://*.base44.app wss://*.base44.app https://base44.app; img-src 'self' data: blob:; media-src 'self' data: blob:;" />
   <title>Eros</title>
   
   <!-- Typography -->
@@ -188,12 +189,16 @@
             
             <!-- 2D Sagittal Bar Path & Deviation Stage (R1) -->
             <div class="bar-path-stage" aria-label="Bar Path Trajectory Visualizer">
-              <!-- Top Stage HUD Overlay: Mode Toggle Pill & Live Metrics -->
+              <!-- Top Stage HUD Overlay: Mode Toggle Pill, Variant Switcher & Live Metrics -->
               <div class="barpath-hud-top">
                 <button type="button" class="barpath-mode-pill font-mono" id="btn-barpath-mode" aria-label="Toggle Bar Path Mode">
                   <span class="mode-opt active" id="barpath-mode-path">PATH</span>
                   <span class="mode-sep">/</span>
                   <span class="mode-opt" id="barpath-mode-vel">VEL</span>
+                </button>
+                <button type="button" class="barpath-variant-pill font-mono" id="btn-variant-switcher" aria-label="Switch Animation Variant" aria-haspopup="dialog" aria-expanded="false">
+                  <span class="variant-label">VAR:</span>
+                  <span class="variant-current" id="barpath-active-variant">A</span>
                 </button>
                 <div class="barpath-hud-metrics font-mono" id="barpath-hud-metrics">
                   <span class="hud-metric-dev" id="barpath-hud-dev">0.0 cm</span>
@@ -203,6 +208,47 @@
 
               <!-- Main GPU-Accelerated 2D Canvas -->
               <canvas id="bar-path-canvas" class="bar-path-canvas" width="220" height="210" aria-label="Barbell Vertical Deviation Canvas"></canvas>
+
+              <!-- Collapsible Spatial Glass Variant Switcher Sheet (R3) -->
+              <div class="variant-switcher-sheet" id="variant-switcher-sheet" role="dialog" aria-modal="true" aria-label="Repetition Animation Prototype Switcher" style="display: none;">
+                <div class="variant-sheet-header">
+                  <span class="variant-sheet-title font-mono">ANIMATION VARIANTS</span>
+                  <button type="button" class="variant-sheet-close font-mono" id="btn-variant-sheet-close" aria-label="Close Variant Switcher">DONE</button>
+                </div>
+                <div class="variant-cards-grid" role="radiogroup" aria-label="Select Animation Variant">
+                  <div class="variant-card active" data-variant="A" role="radio" aria-checked="true" tabindex="0">
+                    <div class="variant-card-header font-mono">
+                      <span class="variant-badge">VAR A</span>
+                      <span class="variant-name">Kinetic Dot</span>
+                    </div>
+                    <p class="variant-desc">Primary Concept: Specular white dot deviates from plumb line, shifts dynamically into lift color under fatigue, and bursts into a difficulty-scaled pop.</p>
+                  </div>
+                  <div class="variant-card" data-variant="B" role="radio" aria-checked="false" tabindex="0">
+                    <div class="variant-card-header font-mono">
+                      <span class="variant-badge">VAR B</span>
+                      <span class="variant-name">Energy Ribbon</span>
+                    </div>
+                    <p class="variant-desc">Fluid velocity ribbon constricts thickness from 8px to 2.5px during sticking points with fatigue-pulsing aura wake.</p>
+                  </div>
+                  <div class="variant-card" data-variant="C" role="radio" aria-checked="false" tabindex="0">
+                    <div class="variant-card-header font-mono">
+                      <span class="variant-badge">VAR C</span>
+                      <span class="variant-name">Ripple Wave</span>
+                    </div>
+                    <p class="variant-desc">Concentric elliptical pulse rings emitted towards the 0.0cm plumb line, clustering in sticking regions with acoustic implosion.</p>
+                  </div>
+                  <div class="variant-card" data-variant="D" role="radio" aria-checked="false" tabindex="0">
+                    <div class="variant-card-header font-mono">
+                      <span class="variant-badge">VAR D</span>
+                      <span class="variant-name">Spatial Vectors</span>
+                    </div>
+                    <p class="variant-desc">Avionics-grade orthogonal velocity vectors (v_vert, v_h) comparing live bar speed against Rep 1 baseline ghost.</p>
+                  </div>
+                </div>
+                <div class="variant-sheet-actions">
+                  <button type="button" class="btn-variant-audition font-mono" id="btn-variant-audition-rep" aria-label="Audition Simulated Repetition">AUDITION REP</button>
+                </div>
+              </div>
 
               <!-- Backward Compatibility Elements: Preserved for test suite assertions & non-blocking execution -->
               <div class="path-guide-ticks" aria-hidden="true" style="opacity: 0; pointer-events: none; position: absolute; width: 1px; height: 1px;">

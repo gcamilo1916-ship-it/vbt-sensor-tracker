@@ -44,6 +44,17 @@
   const CROCKFORD_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
   const BONDS_STORAGE_KEY = 'eros_coach_bonds_v1';
 
+  // ── XSS Sanitization Defense ──
+  function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // Genuine Active Session Athlete bound to ath_01 (No fake personas)
   function createSessionAthlete(name = 'Active Athlete', rack = 'Rack 01') {
     return {
@@ -1024,7 +1035,7 @@
   function syncAthleteSelectOptions() {
     if (!elements.athleteSelect) return;
     elements.athleteSelect.innerHTML = SQUAD_ATHLETES.map(a =>
-      `<option value="${a.id}" ${currentAthlete && a.id === currentAthlete.id ? 'selected' : ''}>${a.name} (${a.rack})</option>`
+      `<option value="${escapeHtml(a.id)}" ${currentAthlete && a.id === currentAthlete.id ? 'selected' : ''}>${escapeHtml(a.name)} (${escapeHtml(a.rack)})</option>`
     ).join('');
   }
 
@@ -1165,14 +1176,14 @@
         elements.bondPendingList.innerHTML = '<div class="coach-empty-stream-msg">No pending pairing requests.</div>';
       } else {
         elements.bondPendingList.innerHTML = pendingBondRequests.map(req => `
-          <div class="coach-bond-item" data-req-id="${req.id}">
+          <div class="coach-bond-item" data-req-id="${escapeHtml(req.id)}">
             <div class="coach-bond-item-info">
-              <span class="coach-bond-item-name">${req.name} (${req.weightClass})</span>
-              <span class="coach-bond-item-meta font-mono">Code: ${req.codeEntered} • ${req.rack}</span>
+              <span class="coach-bond-item-name">${escapeHtml(req.name)} (${escapeHtml(req.weightClass)})</span>
+              <span class="coach-bond-item-meta font-mono">Code: ${escapeHtml(req.codeEntered)} • ${escapeHtml(req.rack)}</span>
             </div>
             <div class="coach-pairing-actions">
-              <button type="button" class="coach-sm-btn" data-decline-req="${req.id}">Decline</button>
-              <button type="button" class="coach-sm-btn accent" data-approve-req="${req.id}">Approve Bond</button>
+              <button type="button" class="coach-sm-btn" data-decline-req="${escapeHtml(req.id)}">Decline</button>
+              <button type="button" class="coach-sm-btn accent" data-approve-req="${escapeHtml(req.id)}">Approve Bond</button>
             </div>
           </div>
         `).join('');
@@ -1188,13 +1199,13 @@
 
     if (elements.bondedRosterList) {
       elements.bondedRosterList.innerHTML = SQUAD_ATHLETES.map(ath => `
-        <div class="coach-bond-item" data-bonded-id="${ath.id}">
+        <div class="coach-bond-item" data-bonded-id="${escapeHtml(ath.id)}">
           <div class="coach-bond-item-info">
-            <span class="coach-bond-item-name">${ath.name} (${ath.rack})</span>
+            <span class="coach-bond-item-name">${escapeHtml(ath.name)} (${escapeHtml(ath.rack)})</span>
             <span class="coach-bond-item-meta font-mono">ACTIVE BOND • Live &amp; History Permitted</span>
           </div>
           <div class="coach-pairing-actions">
-            <button type="button" class="coach-sm-btn danger" data-revoke-id="${ath.id}">Revoke</button>
+            <button type="button" class="coach-sm-btn danger" data-revoke-id="${escapeHtml(ath.id)}">Revoke</button>
           </div>
         </div>
       `).join('');
@@ -1301,7 +1312,7 @@
     });
 
     if (filtered.length === 0) {
-      elements.squadGrid.innerHTML = `<div class="coach-empty-stream-msg">No bonded athletes match filter "${activeRosterFilter}".</div>`;
+      elements.squadGrid.innerHTML = `<div class="coach-empty-stream-msg">No bonded athletes match filter "${escapeHtml(activeRosterFilter)}".</div>`;
       return;
     }
 
@@ -1324,16 +1335,16 @@
       const vlBarClass = vl >= 20 ? 'cutoff' : (vl >= 15 ? 'warning' : '');
 
       return `
-        <div class="coach-squad-athlete-card ${isSelected ? 'selected' : ''}" data-squad-athlete-id="${ath.id}" role="button" tabindex="0" aria-label="Supervise ${ath.name} on ${ath.rack}">
+        <div class="coach-squad-athlete-card ${isSelected ? 'selected' : ''}" data-squad-athlete-id="${escapeHtml(ath.id)}" role="button" tabindex="0" aria-label="Supervise ${escapeHtml(ath.name)} on ${escapeHtml(ath.rack)}">
           <div class="coach-squad-card-hdr">
             <div>
-              <div class="coach-squad-card-name">${ath.name}</div>
-              <div class="coach-squad-card-rack">${ath.rack} • ${ath.weightClass || '-93 kg'}</div>
+              <div class="coach-squad-card-name">${escapeHtml(ath.name)}</div>
+              <div class="coach-squad-card-rack">${escapeHtml(ath.rack)} • ${escapeHtml(ath.weightClass || '-93 kg')}</div>
             </div>
             <span class="coach-squad-status-pill ${statusClass}">${statusLabel}</span>
           </div>
           <div class="coach-squad-card-hdr">
-            <span class="coach-lift-badge ${liftBadgeClass}">${ath.currentLift.toUpperCase()}</span>
+            <span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(ath.currentLift.toUpperCase())}</span>
             <span class="coach-stat-label font-mono">${(ath.currentLoadKg || 180).toFixed(1)} kg</span>
           </div>
           <div class="coach-squad-card-metrics">
@@ -1353,7 +1364,7 @@
             </div>
           </div>
           <div class="coach-squad-card-actions">
-            <button type="button" class="coach-squad-action-btn focus-btn" data-action="focus" data-athlete-id="${ath.id}" aria-label="Focus ${ath.name}">Focus</button>
+            <button type="button" class="coach-squad-action-btn focus-btn" data-action="focus" data-athlete-id="${escapeHtml(ath.id)}" aria-label="Focus ${escapeHtml(ath.name)}">Focus</button>
           </div>
         </div>
       `;
@@ -1916,10 +1927,10 @@
     }
 
     elements.prevWorkoutsList.innerHTML = filtered.slice(0, 12).map(w => `
-      <div class="coach-prev-workout-item" data-workout-date="${w.date}" role="button" tabindex="0" aria-label="Inspect workout ${w.name} on ${w.date}">
+      <div class="coach-prev-workout-item" data-workout-date="${escapeHtml(w.date)}" role="button" tabindex="0" aria-label="Inspect workout ${escapeHtml(w.name)} on ${escapeHtml(w.date)}">
         <div class="coach-prev-workout-left">
-          <span class="coach-inspector-date font-mono">${w.date}</span>
-          <span class="coach-prev-workout-name">${w.name}</span>
+          <span class="coach-inspector-date font-mono">${escapeHtml(w.date)}</span>
+          <span class="coach-prev-workout-name">${escapeHtml(w.name)}</span>
         </div>
         <div class="coach-prev-workout-right">
           <span>${w.totalSets} Sets with Eros</span>
@@ -2406,9 +2417,9 @@
         : '-';
 
       rowsHtml += `
-        <tr class="coach-history-row ${isExpanded ? 'expanded' : ''}" data-set-id="${setId}">
+        <tr class="coach-history-row ${isExpanded ? 'expanded' : ''}" data-set-id="${escapeHtml(setId)}">
           <td class="font-mono">Set ${set.setNumber}</td>
-          <td><span class="coach-lift-badge lift-${liftLower}">${lift.toUpperCase()}</span></td>
+          <td><span class="coach-lift-badge lift-${escapeHtml(liftLower)}">${escapeHtml(lift.toUpperCase())}</span></td>
           <td class="font-mono">${(set.weight || 0).toFixed(1)} kg</td>
           <td class="font-mono">${set.reps ? set.reps.length : 0}</td>
           <td class="font-mono">${(set.avgVelocity || 0).toFixed(2)} m/s</td>
@@ -2418,8 +2429,8 @@
           <td class="font-mono">@${(set.avgRpe || 8.0).toFixed(1)}</td>
           <td>
             <div class="coach-table-actions">
-              <button type="button" class="coach-replay-set-btn" data-action="replay" data-set-id="${setId}" aria-label="Replay set ${set.setNumber}">REPLAY</button>
-              <button type="button" class="coach-expand-btn" data-toggle-id="${setId}" aria-label="Toggle details for set ${set.setNumber}">
+              <button type="button" class="coach-replay-set-btn" data-action="replay" data-set-id="${escapeHtml(setId)}" aria-label="Replay set ${set.setNumber}">REPLAY</button>
+              <button type="button" class="coach-expand-btn" data-toggle-id="${escapeHtml(setId)}" aria-label="Toggle details for set ${set.setNumber}">
                 ${isExpanded ? 'Hide Reps' : 'View Reps'}
               </button>
             </div>

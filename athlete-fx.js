@@ -669,7 +669,12 @@
     showCoachDirectiveModal,
     dismissCoachDirectiveModal,
     dismissSummaryBanner,
-    getElapsedRestSeconds
+    getElapsedRestSeconds,
+    animateRepetitionStroke(options) {
+      if (typeof global !== 'undefined' && typeof global.animateRepetitionStroke === 'function') {
+        return global.animateRepetitionStroke(options);
+      }
+    }
   };
 
   // Expose directly to global/window context for seamless inter-module use
@@ -680,6 +685,11 @@
     global.getVelocityZone = getVelocityZone;
     global.dismissSummaryBanner = dismissSummaryBanner;
     global.getElapsedRestSeconds = getElapsedRestSeconds;
+    if (typeof global.animateRepetitionStroke !== 'function') {
+      global.animateRepetitionStroke = function(options) {
+        return AthleteFX.animateRepetitionStroke(options);
+      };
+    }
   }
 
   if (typeof module !== 'undefined' && module.exports) {

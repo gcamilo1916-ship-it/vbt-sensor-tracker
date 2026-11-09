@@ -486,6 +486,80 @@ const SoundFX = (() => {
       playTone(highFreq, 'triangle', 0.20, 0.28, 0.05);
     },
 
+    // Requirement R2: Difficulty-Scaled Repetition Completion Pop & Pure Web Audio Synthesis
+    playRepPopChime(velocity = 0.5, rpe = 7.5, lift = 'Squat') {
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const triggerChime = () => {
+          const now = ctx.currentTime;
+          const numRpe = Math.max(6.0, Math.min(10.0, Number(rpe) || 7.5));
+          const diff = (numRpe - 6.0) / 4.0; // 0.0 (easy) to 1.0 (grind)
+          const vel = Math.max(0.1, Number(velocity) || 0.45);
+
+          // Stage 1: Acoustic Pop Impulse Transient (Frequency sweep 280 -> 80 Hz in 35ms)
+          const popOsc = ctx.createOscillator();
+          const popGain = ctx.createGain();
+          popOsc.type = 'sine';
+          popOsc.frequency.setValueAtTime(280 - diff * 80, now);
+          popOsc.frequency.exponentialRampToValueAtTime(80, now + 0.035);
+          popGain.gain.setValueAtTime(0.35 + diff * 0.25, now);
+          popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.040);
+          popOsc.connect(popGain);
+          popGain.connect(ctx.destination);
+          popOsc.start(now);
+          popOsc.stop(now + 0.045);
+
+          // Stage 2: Crystalline D5 Harmonic Chime
+          const baseFreq = 587.33; // D5
+          const highFreq = Math.min(1350, baseFreq * (1 + vel * 0.45));
+          const chimeOsc1 = ctx.createOscillator();
+          const chimeOsc2 = ctx.createOscillator();
+          const chimeGain = ctx.createGain();
+
+          chimeOsc1.type = 'sine';
+          chimeOsc2.type = 'triangle';
+          chimeOsc1.frequency.setValueAtTime(baseFreq, now + 0.020);
+          chimeOsc2.frequency.setValueAtTime(highFreq, now + 0.025);
+
+          const chimeDuration = 0.22 + diff * 0.25; // 220ms up to 470ms
+          chimeGain.gain.setValueAtTime(0.22, now + 0.020);
+          chimeGain.gain.exponentialRampToValueAtTime(0.001, now + chimeDuration);
+
+          chimeOsc1.connect(chimeGain);
+          chimeOsc2.connect(chimeGain);
+          chimeGain.connect(ctx.destination);
+          chimeOsc1.start(now + 0.020);
+          chimeOsc2.start(now + 0.025);
+          chimeOsc1.stop(now + chimeDuration + 0.01);
+          chimeOsc2.stop(now + chimeDuration + 0.01);
+
+          // Stage 3: Sub-Bass Effort Resonance (For RPE >= 8.5)
+          if (numRpe >= 8.5) {
+            const subOsc = ctx.createOscillator();
+            const subGain = ctx.createGain();
+            subOsc.type = 'sine';
+            subOsc.frequency.setValueAtTime(55, now + 0.010);
+            subGain.gain.setValueAtTime(0.32 * diff, now + 0.010);
+            subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.20);
+            subOsc.connect(subGain);
+            subGain.connect(ctx.destination);
+            subOsc.start(now + 0.010);
+            subOsc.stop(now + 0.22);
+          }
+        };
+
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(triggerChime).catch(() => {});
+        } else {
+          triggerChime();
+        }
+      } catch (e) {
+        // Fallback silent
+      }
+    },
+
     // Target RPE reached warning alert (resonant ascending triad)
     playTargetReached() {
       playTone(740.0, 'triangle', 0.14, 0.32, 0);
@@ -856,11 +930,13 @@ function startWorkoutSession() {
   startSessionTimer(session.startTime);
 
   // Update UI
-  btnWorkoutText.textContent = 'END WORKOUT';
-  btnWorkoutMaster.classList.add('session-active');
-  sessionPulse.classList.add('active');
-  sessionStatusText.textContent = 'ACTIVE WORKOUT';
-  sessionStatusText.classList.add('active');
+  if (btnWorkoutText) btnWorkoutText.textContent = 'END WORKOUT';
+  if (btnWorkoutMaster) btnWorkoutMaster.classList.add('session-active');
+  if (sessionPulse) sessionPulse.classList.add('active');
+  if (sessionStatusText) {
+    sessionStatusText.textContent = 'ACTIVE WORKOUT';
+    sessionStatusText.classList.add('active');
+  }
 
   persistStorage();
   updateHistoryStats();
@@ -900,12 +976,14 @@ function endWorkoutSession() {
   }
 
   // Reset UI
-  btnWorkoutText.textContent = 'START WORKOUT';
-  btnWorkoutMaster.classList.remove('session-active');
-  sessionPulse.classList.remove('active');
-  sessionStatusText.textContent = 'NO ACTIVE WORKOUT';
-  sessionStatusText.classList.remove('active');
-  sessionTimerDisp.textContent = '00:00:00';
+  if (btnWorkoutText) btnWorkoutText.textContent = 'START WORKOUT';
+  if (btnWorkoutMaster) btnWorkoutMaster.classList.remove('session-active');
+  if (sessionPulse) sessionPulse.classList.remove('active');
+  if (sessionStatusText) {
+    sessionStatusText.textContent = 'NO ACTIVE WORKOUT';
+    sessionStatusText.classList.remove('active');
+  }
+  if (sessionTimerDisp) sessionTimerDisp.textContent = '00:00:00';
 
   updateLiveMiniHud();
   updateSetUI(null);
@@ -917,15 +995,17 @@ function endWorkoutSession() {
 /**
  * Toggles master workout session state
  */
-btnWorkoutMaster.addEventListener('click', () => {
-  if (activeWorkout) {
-    if (confirm('Are you sure you want to end this workout session?')) {
-      endWorkoutSession();
+if (btnWorkoutMaster) {
+  btnWorkoutMaster.addEventListener('click', () => {
+    if (activeWorkout) {
+      if (confirm('Are you sure you want to end this workout session?')) {
+        endWorkoutSession();
+      }
+    } else {
+      startWorkoutSession();
     }
-  } else {
-    startWorkoutSession();
-  }
-});
+  });
+}
 
 function startSessionTimer(startTimestamp) {
   stopSessionTimer();
@@ -1367,6 +1447,7 @@ function recordRepetition({ lift, velocity, rpe, deviationCm = null, trajectoryP
   }
 
   // Play rep chime and trigger light haptic pulse
+  SoundFX.playRepPopChime(velocity, rpe, activeSet ? activeSet.exercise : currentLift);
   SoundFX.playRepChime(velocity, rpe);
   HapticsFX.vibrate([35]);
 
@@ -1846,6 +1927,10 @@ function stopReplay() {
     cancelAnimationFrame(replayAnimId);
     replayAnimId = null;
   }
+  if (activeStrokeAnimId) {
+    cancelAnimationFrame(activeStrokeAnimId);
+    activeStrokeAnimId = null;
+  }
   const replayText = document.getElementById('barpath-replay-text');
   if (replayText) replayText.textContent = 'REPLAY';
 }
@@ -1866,6 +1951,545 @@ function toggleBarPathMode() {
   const scrubber = document.getElementById('barpath-scrubber');
   const progress = scrubber ? (parseFloat(scrubber.value) || 100) / 100 : 1.0;
   renderBarPathStage(currentReplayRepIdx, progress);
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* ANIMATION CONTROLLER & PROTOTYPE SWITCHER (Requirements R1, R2, R3) */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+let activeAnimationVariant = 'A';
+let activeStrokeAnimId = null;
+
+function getActiveAnimationVariant() {
+  return activeAnimationVariant;
+}
+
+function setAnimationVariant(variant) {
+  const norm = String(variant || 'A').toUpperCase();
+  if (['A', 'B', 'C', 'D'].includes(norm)) {
+    activeAnimationVariant = norm;
+  } else {
+    activeAnimationVariant = 'A';
+  }
+
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('eros_animation_variant', activeAnimationVariant);
+    }
+  } catch (e) {}
+
+  if (typeof window !== 'undefined') {
+    window.activeAnimationVariant = activeAnimationVariant;
+  }
+
+  // Update UI pill and switcher sheet cards
+  const pillVal = document.getElementById('barpath-active-variant');
+  if (pillVal) pillVal.textContent = activeAnimationVariant;
+
+  if (typeof document !== 'undefined') {
+    const cards = document.querySelectorAll('.variant-card');
+    cards.forEach(card => {
+      const isTarget = card.getAttribute('data-variant') === activeAnimationVariant;
+      if (isTarget) {
+        card.classList.add('active');
+        card.setAttribute('aria-checked', 'true');
+      } else {
+        card.classList.remove('active');
+        card.setAttribute('aria-checked', 'false');
+      }
+    });
+  }
+
+  // Re-render stage if reps exist and not actively animating
+  if (!activeStrokeAnimId && typeof renderBarPathStage === 'function') {
+    renderBarPathStage(currentReplayRepIdx, 1.0);
+  }
+
+  return activeAnimationVariant;
+}
+
+function openVariantSheet() {
+  const sheet = document.getElementById('variant-switcher-sheet');
+  const btn = document.getElementById('btn-variant-switcher');
+  if (sheet) {
+    sheet.style.display = 'flex';
+  }
+  if (btn) {
+    btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function closeVariantSheet() {
+  const sheet = document.getElementById('variant-switcher-sheet');
+  const btn = document.getElementById('btn-variant-switcher');
+  if (sheet) {
+    sheet.style.display = 'none';
+  }
+  if (btn) {
+    btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function toggleVariantSheet() {
+  const sheet = document.getElementById('variant-switcher-sheet');
+  if (sheet && sheet.style.display !== 'none') {
+    closeVariantSheet();
+  } else {
+    openVariantSheet();
+  }
+}
+
+/**
+ * Biomechanical horizontal raw deviation formulas dx(p) in cm.
+ * Normalized ROM progress p in [0.0, 1.0].
+ */
+function getBiomechanicalRawDeviation(liftName, p) {
+  const l = String(liftName || 'Squat').toLowerCase();
+  const clampedP = Math.max(0, Math.min(1, p));
+  if (l.includes('bench')) {
+    // McLaughlin J-curve: touches sternum, flares backward towards shoulders (-dx), presses to vertical
+    return 1.6 * Math.pow(1 - clampedP, 2) - 3.2 * Math.sin(Math.PI * Math.pow(clampedP, 0.75)) * (1 - 0.2 * clampedP);
+  } else if (l.includes('dead')) {
+    // Deadlift: sweeps bar backwards into shins/thighs clearing knees, stabilizing at hip lockout
+    return -0.9 * Math.sin(Math.PI * (1 - clampedP)) + 2.0 * Math.sin(2 * Math.PI * clampedP) * clampedP;
+  }
+  // Squat: anterior lean in the hole at low p, knee travel during mid-ascent, returning to plumb line
+  return 0.8 * Math.pow(1 - clampedP, 2) + 1.8 * Math.sin(Math.PI * clampedP) * (1 - 0.4 * clampedP);
+}
+
+/**
+ * Requirement R1: Unified Deviation & RPE Animated Kinematic Controller
+ * window.animateRepetitionStroke({ lift, velocity, rpe, deviationCm, variant, onComplete })
+ */
+function animateRepetitionStroke(options = {}) {
+  const lift = options.lift || currentLift || 'Squat';
+  const velocity = (typeof options.velocity === 'number') ? options.velocity : 0.45;
+  const rpe = (typeof options.rpe === 'number') ? options.rpe : 8.0;
+  const deviationCm = (typeof options.deviationCm === 'number') ? options.deviationCm : 1.8;
+  const variant = (options.variant || activeAnimationVariant || 'A').toUpperCase();
+  const onComplete = (typeof options.onComplete === 'function') ? options.onComplete : null;
+
+  if (activeStrokeAnimId) {
+    cancelAnimationFrame(activeStrokeAnimId);
+    activeStrokeAnimId = null;
+  }
+
+  const canvas = document.getElementById('bar-path-canvas');
+  if (!canvas || !canvas.getContext) {
+    if (onComplete) onComplete();
+    return;
+  }
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width || 220;
+  const h = canvas.height || 210;
+
+  const centerX = w / 2; // 110 px (0.0 cm plumb line)
+  const scaleX = 18;     // 18 px per cm
+  const topY = 25;       // Lockout
+  const botY = 185;      // Hole / Floor
+  const travelY = botY - topY; // 160 px
+
+  const effLift = (lift ? String(lift) : 'Squat').toLowerCase();
+  const isDeadlift = effLift.includes('dead');
+  const isBench = effLift.includes('bench');
+  const liftType = isDeadlift ? 'Deadlift' : (isBench ? 'Bench' : 'Squat');
+
+  const LIFT_COLORS = {
+    Deadlift: { r: 255, g: 59, b: 48, hex: '#FF3B30', textHex: '#FF857D' },
+    Squat:    { r: 0,   g: 255, b: 102, hex: '#00FF66', textHex: '#66FFA3' },
+    Bench:    { r: 0,   g: 229, b: 255, hex: '#00E5FF', textHex: '#70F0FF' }
+  };
+  const targetColor = LIFT_COLORS[liftType] || LIFT_COLORS.Squat;
+
+  // Repetition duration scaled to velocity: T in [0.8, 3.5] seconds
+  const totalDurationMs = Math.max(800, Math.min(3500, ((0.5 / Math.max(velocity, 0.1)) * 2) * 1000));
+  const startTime = performance.now();
+
+  // Biomechanical deviation scaling factor
+  const rawMax = isBench ? 2.5 : (isDeadlift ? 1.8 : 1.6);
+  const devScale = deviationCm > 0 ? (deviationCm / rawMax) : (0.8 + 0.6 * (rpe / 10) + 0.5 * Math.max(0, 0.5 - velocity));
+
+  // Velocity profile parameters
+  const vPeak = Math.max(velocity * 1.35, velocity + 0.15);
+  const vStick = Math.max(0.12, velocity * (1.0 - 0.45 * (rpe / 10)));
+
+  // Trajectory history for continuous trail/ribbon rendering
+  const initY = isDeadlift ? botY : topY;
+  const historyPoints = [{ x: centerX, y: initY, dx: 0, v: velocity, diff: 0, rgb: 'rgb(255, 255, 255)' }];
+
+  function drawBaseCorridors() {
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#080A10';
+    ctx.fillRect(0, 0, w, h);
+
+    // Optimal corridor (+-2.0cm)
+    ctx.fillStyle = 'rgba(0, 255, 102, 0.04)';
+    ctx.fillRect(centerX - 2 * scaleX, topY, 4 * scaleX, travelY);
+    ctx.strokeStyle = 'rgba(0, 255, 102, 0.25)';
+    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(centerX - 2 * scaleX, topY); ctx.lineTo(centerX - 2 * scaleX, botY);
+    ctx.moveTo(centerX + 2 * scaleX, topY); ctx.lineTo(centerX + 2 * scaleX, botY);
+    ctx.stroke();
+
+    // Warning corridor (+-4.0cm)
+    ctx.strokeStyle = 'rgba(255, 184, 0, 0.20)';
+    ctx.beginPath();
+    ctx.moveTo(centerX - 4 * scaleX, topY); ctx.lineTo(centerX - 4 * scaleX, botY);
+    ctx.moveTo(centerX + 4 * scaleX, topY); ctx.lineTo(centerX + 4 * scaleX, botY);
+    ctx.stroke();
+
+    // 0.0 cm Plumb Line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.40)';
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(centerX, topY);
+    ctx.lineTo(centerX, botY);
+    ctx.stroke();
+
+    // Axis Labels
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('0.0', centerX, botY + 14);
+    ctx.fillText('-2', centerX - 2 * scaleX, botY + 14);
+    ctx.fillText('+2', centerX + 2 * scaleX, botY + 14);
+  }
+
+  function frame(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(1.0, elapsed / totalDurationMs);
+
+    let yDot, romProgress, isConcentricPhase;
+
+    if (isDeadlift) {
+      // Deadlift: starts at floor (botY), pulls upward to lockout (topY) in concentric, then returns in eccentric
+      if (progress <= 0.55) {
+        isConcentricPhase = true;
+        const pCon = progress / 0.55; // 0.0 to 1.0
+        romProgress = pCon;
+        yDot = botY - pCon * travelY;
+      } else {
+        isConcentricPhase = false;
+        const pEcc = (progress - 0.55) / 0.45; // 0.0 to 1.0
+        romProgress = 1.0 - pEcc;
+        yDot = topY + pEcc * travelY;
+      }
+    } else {
+      // Squat & Bench: start at lockout (topY), descend in eccentric to hole (botY), ascend in concentric to lockout (topY)
+      if (progress <= 0.50) {
+        isConcentricPhase = false;
+        const pEcc = progress / 0.50; // 0.0 to 1.0
+        romProgress = pEcc;
+        yDot = topY + pEcc * travelY;
+      } else {
+        isConcentricPhase = true;
+        const pCon = (progress - 0.50) / 0.50; // 0.0 to 1.0
+        romProgress = pCon;
+        yDot = botY - pCon * travelY;
+      }
+    }
+
+    // Instantaneous horizontal deviation
+    const dxRaw = getBiomechanicalRawDeviation(liftType, romProgress);
+    const dxCm = dxRaw * devScale;
+    const xDot = Math.max(8, Math.min(w - 8, centerX + dxCm * scaleX));
+
+    // Instantaneous velocity calculation with sticking point
+    let instVel;
+    if (isConcentricPhase) {
+      // Velocity reaches lowest near mid-ascent sticking region (p ~ 0.50)
+      const stickDist = Math.abs(romProgress - 0.50);
+      const stickWeight = Math.max(0, 1.0 - stickDist * 2.5);
+      instVel = vPeak - stickWeight * (vPeak - vStick);
+    } else {
+      instVel = velocity * 0.85;
+    }
+
+    // Dynamic difficulty calculation D in [0.0, 1.0]
+    // Starts at 0.0 (pure specular white), transitions into lift color as difficulty increases
+    let difficulty = 0.0;
+    if (isConcentricPhase) {
+      const rpeFactor = Math.max(0, Math.min(1, (rpe - 6.0) / 4.0));
+      const velDropFactor = Math.max(0, Math.min(1, (vPeak - instVel) / Math.max(0.1, vPeak - 0.15)));
+      // Increases through concentric drive towards sticking point & lockout
+      difficulty = Math.max(0, Math.min(1, (0.60 * rpeFactor + 0.40 * velDropFactor) * Math.min(1, romProgress * 1.6)));
+    } else {
+      // Eccentric phase has minimal difficulty color shift (stays predominantly white)
+      difficulty = 0.10 * Math.max(0, Math.min(1, (rpe - 6.0) / 4.0)) * romProgress;
+    }
+
+    // Smooth color interpolation: rgb(255,255,255) -> targetColor
+    const curR = Math.round(255 + difficulty * (targetColor.r - 255));
+    const curG = Math.round(255 + difficulty * (targetColor.g - 255));
+    const curB = Math.round(255 + difficulty * (targetColor.b - 255));
+    const dotRgb = `rgb(${curR}, ${curG}, ${curB})`;
+
+    historyPoints.push({ x: xDot, y: yDot, dx: dxCm, v: instVel, diff: difficulty, rgb: dotRgb });
+
+    // Update Stage HUD live values
+    const devEl = document.getElementById('barpath-hud-dev');
+    const effEl = document.getElementById('barpath-hud-eff');
+    if (devEl) devEl.textContent = `${dxCm >= 0 ? '+' : ''}${dxCm.toFixed(1)} cm`;
+    if (effEl) effEl.textContent = `${Math.round(Math.max(70, 100 - Math.abs(dxCm) * 5))}%`;
+
+    // Render Base
+    drawBaseCorridors();
+
+    // Render Selected Variant
+    if (variant === 'B') {
+      // ── Variant B: Fluid Velocity Energy Ribbon ──
+      ctx.save();
+      for (let i = 1; i < historyPoints.length; i++) {
+        const p1 = historyPoints[i - 1];
+        const p2 = historyPoints[i];
+        const normV = Math.max(0, Math.min(1, p2.v / vPeak));
+        const ribbonWidth = 2.5 + 5.5 * normV; // 8px down to 2.5px during grind
+
+        // Fatigue aura pulse frequency (1.2Hz at RPE 6 to 4.0Hz at RPE 10)
+        const pulseFreq = 1.2 + 2.8 * Math.max(0, (rpe - 6.0) / 4.0);
+        const pulse = 0.70 + 0.30 * Math.sin((elapsed / 1000) * pulseFreq * 2 * Math.PI);
+
+        ctx.lineWidth = ribbonWidth;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = p2.rgb;
+        ctx.shadowBlur = 12 * pulse * (p2.diff + 0.3);
+        ctx.shadowColor = targetColor.hex;
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Lead puck
+      ctx.fillStyle = dotRgb;
+      ctx.beginPath();
+      ctx.arc(xDot, yDot, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+    } else if (variant === 'C') {
+      // ── Variant C: Concentric Ripple Waves ──
+      // Plumb connector hairline
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.setLineDash([2, 2]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(centerX, yDot);
+      ctx.lineTo(xDot, yDot);
+      ctx.stroke();
+      ctx.restore();
+
+      // Concentric elliptical waves expanding towards plumb line
+      const waveCount = 3;
+      for (let wIdx = 0; wIdx < waveCount; wIdx++) {
+        const waveOffset = (elapsed * 0.003 + wIdx * 0.33) % 1.0;
+        const waveR = 8 + waveOffset * 22;
+        const alpha = (1.0 - waveOffset) * (0.35 + 0.45 * difficulty);
+        ctx.save();
+        ctx.strokeStyle = `rgba(${curR}, ${curG}, ${curB}, ${alpha.toFixed(3)})`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.ellipse(xDot, yDot, waveR, waveR * 0.65, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Center dot
+      ctx.fillStyle = dotRgb;
+      ctx.beginPath();
+      ctx.arc(xDot, yDot, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+    } else if (variant === 'D') {
+      // ── Variant D: Spatial Ghost Vectors ──
+      // Ghost baseline plumb reference
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.20)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(centerX, topY);
+      ctx.lineTo(centerX, botY);
+      ctx.stroke();
+      ctx.restore();
+
+      // Orthogonal Velocity Breakdown Vectors from (xDot, yDot)
+      const vVertLen = Math.max(10, Math.min(36, instVel * 30));
+      const vHorizLen = Math.max(4, Math.min(30, Math.abs(dxCm) * 6));
+      const horizDir = dxCm >= 0 ? 1 : -1;
+
+      // Vertical ascent vector (upward)
+      ctx.save();
+      ctx.strokeStyle = '#00FF66';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(xDot, yDot);
+      ctx.lineTo(xDot, yDot - vVertLen);
+      ctx.stroke();
+      // Arrowhead
+      ctx.fillStyle = '#00FF66';
+      ctx.beginPath();
+      ctx.moveTo(xDot, yDot - vVertLen - 3);
+      ctx.lineTo(xDot - 3, yDot - vVertLen + 2);
+      ctx.lineTo(xDot + 3, yDot - vVertLen + 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Horizontal deviation vector
+      ctx.save();
+      ctx.strokeStyle = targetColor.hex;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(xDot, yDot);
+      ctx.lineTo(xDot + horizDir * vHorizLen, yDot);
+      ctx.stroke();
+      // Arrowhead
+      ctx.fillStyle = targetColor.hex;
+      ctx.beginPath();
+      ctx.moveTo(xDot + horizDir * (vHorizLen + 3), yDot);
+      ctx.lineTo(xDot + horizDir * (vHorizLen - 2), yDot - 3);
+      ctx.lineTo(xDot + horizDir * (vHorizLen - 2), yDot + 3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Puck Core
+      ctx.fillStyle = dotRgb;
+      ctx.beginPath();
+      ctx.arc(xDot, yDot, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+    } else {
+      // ── Variant A (Primary Concept): Kinetic Dot + Dynamic Difficulty Color Transition ──
+      // Connector hairline to plumb line
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.setLineDash([2, 2]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(centerX, yDot);
+      ctx.lineTo(xDot, yDot);
+      ctx.stroke();
+      ctx.restore();
+
+      // Ghost trail of previous path points
+      if (historyPoints.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(historyPoints[0].x, historyPoints[0].y);
+        for (let i = 1; i < historyPoints.length; i++) {
+          ctx.lineTo(historyPoints[i].x, historyPoints[i].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Outer specular halo
+      const haloRadius = 8 + 8 * difficulty;
+      const haloAlpha = 0.35 + 0.30 * difficulty;
+      ctx.save();
+      ctx.fillStyle = `rgba(${curR}, ${curG}, ${curB}, ${haloAlpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(xDot, yDot, haloRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Specular dot core
+      ctx.save();
+      ctx.fillStyle = dotRgb;
+      ctx.beginPath();
+      ctx.arc(xDot, yDot, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    if (progress < 1.0) {
+      activeStrokeAnimId = requestAnimationFrame(frame);
+    } else {
+      activeStrokeAnimId = null;
+      // ── Requirement R2: Repetition Completion Pop & Pure Web Audio Synthesis ──
+      const popScale = 1.0 + 1.5 * ((Math.max(6.0, Math.min(10.0, rpe)) - 6.0) / 4.0); // 1.0 to 2.5
+      triggerCompletionPop(ctx, w, h, xDot, yDot, popScale, targetColor, velocity, rpe, liftType, onComplete);
+    }
+  }
+
+  function triggerCompletionPop(ctx, w, h, x, y, scale, colorObj, vel, repRpe, liftName, cb) {
+    // 1. Synthesize Web Audio Pop Chime
+    SoundFX.playRepPopChime(vel, repRpe, liftName);
+
+    // 2. CSS Bloom on stage
+    const stage = document.querySelector('.bar-path-stage');
+    if (stage) {
+      stage.style.setProperty('--pop-scale', scale.toFixed(2));
+      stage.style.setProperty('--pop-accent-rgb', `${colorObj.r}, ${colorObj.g}, ${colorObj.b}`);
+      stage.classList.remove('rep-pop-bloom');
+      void stage.offsetWidth;
+      stage.classList.add('rep-pop-bloom');
+      setTimeout(() => stage.classList.remove('rep-pop-bloom'), 400);
+    }
+
+    // 3. Optional sparks for high exertion (RPE >= 8.5)
+    if (repRpe >= 8.5 && window.AthleteFX && typeof window.AthleteFX.emitCelebrationSparks === 'function') {
+      try {
+        AthleteFX.emitCelebrationSparks('power', 5, stage);
+      } catch (e) {}
+    }
+
+    // 4. Canvas-native radial shockwave expansion animation
+    const shockwaveDuration = 260;
+    const shockStart = performance.now();
+    const maxRadius = 14 * scale;
+
+    function popFrame(popNow) {
+      const popElapsed = popNow - shockStart;
+      const popProg = Math.min(1.0, popElapsed / shockwaveDuration);
+
+      drawBaseCorridors();
+
+      // Expanding radial shockwave ring
+      const currentR = 6 + (maxRadius - 6) * popProg;
+      const ringAlpha = (1.0 - popProg) * 0.85;
+
+      ctx.save();
+      ctx.strokeStyle = `rgba(${colorObj.r}, ${colorObj.g}, ${colorObj.b}, ${ringAlpha.toFixed(3)})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x, y, currentR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Locked out puck core with specular bloom
+      ctx.fillStyle = colorObj.hex;
+      ctx.shadowBlur = 12 * (1.0 - popProg);
+      ctx.shadowColor = colorObj.hex;
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      if (popProg < 1.0) {
+        requestAnimationFrame(popFrame);
+      } else {
+        // Redraw static stage
+        if (typeof renderBarPathStage === 'function') {
+          renderBarPathStage(currentReplayRepIdx, 1.0);
+        }
+        if (cb) cb();
+      }
+    }
+
+    requestAnimationFrame(popFrame);
+  }
+
+  activeStrokeAnimId = requestAnimationFrame(frame);
 }
 
 function initBarPathControls() { if (initBarPathControls._initialized) return; initBarPathControls._initialized = true;
@@ -1891,6 +2515,82 @@ function initBarPathControls() { if (initBarPathControls._initialized) return; i
       const progress = (parseFloat(e.target.value) || 0) / 100.0;
       renderBarPathStage(currentReplayRepIdx, progress);
     });
+  }
+
+  // Variant Switcher Pill and Sheet Handlers (R3)
+  const variantBtn = document.getElementById('btn-variant-switcher');
+  if (variantBtn) {
+    let pressTimer = null;
+    let didLongPress = false;
+
+    const startPress = () => {
+      didLongPress = false;
+      pressTimer = setTimeout(() => {
+        didLongPress = true;
+        toggleVariantSheet();
+      }, 350);
+    };
+
+    const cancelPress = () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    };
+
+    variantBtn.addEventListener('pointerdown', startPress);
+    variantBtn.addEventListener('pointerup', cancelPress);
+    variantBtn.addEventListener('pointerleave', cancelPress);
+
+    variantBtn.addEventListener('click', () => {
+      if (didLongPress) {
+        didLongPress = false;
+        return;
+      }
+      // Quick click: cycle variant A -> B -> C -> D -> A
+      const variants = ['A', 'B', 'C', 'D'];
+      const nextIdx = (variants.indexOf(activeAnimationVariant) + 1) % variants.length;
+      setAnimationVariant(variants[nextIdx]);
+    });
+  }
+
+  const closeSheetBtn = document.getElementById('btn-variant-sheet-close');
+  if (closeSheetBtn) {
+    closeSheetBtn.addEventListener('click', closeVariantSheet);
+  }
+
+  const auditionBtn = document.getElementById('btn-variant-audition-rep');
+  if (auditionBtn) {
+    auditionBtn.addEventListener('click', () => {
+      animateRepetitionStroke({
+        lift: currentLift || 'Squat',
+        velocity: 0.42,
+        rpe: 8.5,
+        deviationCm: 1.8,
+        variant: activeAnimationVariant
+      });
+    });
+  }
+
+  const variantCards = document.querySelectorAll('.variant-card');
+  variantCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const v = card.getAttribute('data-variant');
+      if (v) setAnimationVariant(v);
+    });
+  });
+
+  // URL deep-linking: ?variant=A|B|C|D
+  if (typeof window !== 'undefined' && window.location && window.location.search) {
+    try {
+      const urlVar = new URLSearchParams(window.location.search).get('variant');
+      if (urlVar && /^[A-D]$/i.test(urlVar)) {
+        setAnimationVariant(urlVar.toUpperCase());
+      } else {
+        const saved = localStorage.getItem('eros_animation_variant');
+        if (saved) setAnimationVariant(saved);
+      }
+    } catch (e) {}
   }
 }
 
@@ -2636,6 +3336,18 @@ function updateLiveDisplay({ lift, velocity, rpe }, fromRepStream = false) {
     }
   };
   requestAnimationFrame(checkApexBloom);
+
+  // Trigger real-time animated repetition stroke on the stage
+  if (typeof animateRepetitionStroke === 'function') {
+    const dev = (typeof arguments[0] === 'object' && typeof arguments[0].deviationCm === 'number') ? arguments[0].deviationCm : 1.8;
+    animateRepetitionStroke({
+      lift: lift || currentLift,
+      velocity: velocity,
+      rpe: rpe,
+      deviationCm: dev,
+      variant: activeAnimationVariant
+    });
+  }
 }
 
 /**
@@ -4046,7 +4758,15 @@ if (typeof window !== 'undefined') {
   window.renderBarPathStage = renderBarPathStage;
   window.toggleBarPathMode = toggleBarPathMode;
   window.startReplay = startReplay;
-  window.stopReplay = stopReplay; initBarPathControls();
+  window.stopReplay = stopReplay;
+  window.animateRepetitionStroke = animateRepetitionStroke;
+  window.setAnimationVariant = setAnimationVariant;
+  window.getActiveAnimationVariant = getActiveAnimationVariant;
+  window.openVariantSheet = openVariantSheet;
+  window.closeVariantSheet = closeVariantSheet;
+  window.toggleVariantSheet = toggleVariantSheet;
+  window.activeAnimationVariant = activeAnimationVariant;
+  initBarPathControls();
 }
 
 // ── Kickoff Execution on DOM Ready ──

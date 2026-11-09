@@ -1879,6 +1879,181 @@ html, body {
   opacity: 0.4;
 }
 
+/* Prototype Switcher Micro-Pill (Requirement R3) */
+.barpath-variant-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.6));
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.barpath-variant-pill:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.30);
+}
+
+.barpath-variant-pill .variant-label {
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 8.5px;
+}
+
+.barpath-variant-pill .variant-current {
+  color: #FFFFFF;
+  text-shadow: 0 0 8px var(--current-accent, #00FF66);
+}
+
+/* Collapsible Spatial Glass Variant Switcher Sheet (Requirement R3) */
+.variant-switcher-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(8, 10, 16, 0.94);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  overflow-y: auto;
+  animation: variantSheetIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes variantSheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.variant-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.variant-sheet-title {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.variant-sheet-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #FFFFFF;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.variant-sheet-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.variant-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+  margin: 6px 0;
+}
+
+.variant-card {
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.variant-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.variant-card.active {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: var(--current-accent, #00FF66);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb, 0, 255, 102), 0.28);
+}
+
+.variant-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.variant-badge {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--current-accent, #00FF66);
+}
+
+.variant-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.variant-desc {
+  font-size: 8.5px;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.variant-sheet-actions {
+  padding-top: 4px;
+}
+
+.btn-variant-audition {
+  width: 100%;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-variant-audition:hover {
+  background: var(--current-accent, #00FF66);
+  color: #050508;
+  border-color: var(--current-accent, #00FF66);
+  box-shadow: 0 0 14px rgba(var(--accent-rgb, 0, 255, 102), 0.45);
+}
+
 .barpath-hud-metrics {
   display: flex;
   align-items: center;
