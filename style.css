@@ -4903,13 +4903,9 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   pointer-events: none !important;
 }
 
-/* Surface 1: Panels, Headers, Navigation, Drawers & Ribbon */
-.glass-header,
-.app-header,
+/* Surface 1: Panels, Navigation, Drawers & Ribbon */
 .workout-session-bar,
 .session-bar,
-.bottom-glass-nav,
-.controls-panel,
 .athlete-coach-status-banner,
 .athlete-settings-card,
 .modal-glass-content,
@@ -4921,23 +4917,104 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   -webkit-backdrop-filter: none !important;
 }
 
+/* Header: Seamless Canvas Void Integration (Zero Dark Boxed Rectangles) */
+.glass-header,
+.app-header,
+.header-top-row {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Header Lift Selector (SBD Button) Removed */
+.header-lift-selector {
+  display: none !important;
+}
+
+/* Kilogram Selection Tabs: Clean Standalone Obsidian Black Pills Without Outer Rectangles */
+.controls-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 4px 0 !important;
+}
+
+.set-weight-module {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+  margin: 4px 0 14px 0 !important;
+}
+
+.weight-control-wrapper,
+#live-weight-control,
+#workout-weight-control {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 999px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.weight-control-wrapper:hover,
+#live-weight-control:hover,
+#workout-weight-control:hover {
+  background: #282828 !important;
+  border-color: #383838 !important;
+}
+
+.weight-stepper-btn {
+  background: #2f2f2f !important;
+  border: 1px solid #383838 !important;
+  color: #ececec !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+}
+
+.weight-stepper-btn:hover {
+  background: #383838 !important;
+  border-color: #484848 !important;
+}
+
+.weight-stepper-btn:active {
+  background: #1f1f1f !important;
+}
+
+.set-weight-input {
+  background: transparent !important;
+  border: none !important;
+  color: #ececec !important;
+}
+
+.weight-unit {
+  color: #b4b4b4 !important;
+}
+
 /* Surface 2: Elevated Telemetry Cards, Stages, Modules, History Cards */
 .glass-card,
 .telemetry-card,
 .bento-card,
 .hero-velocity-focus,
 #rpe-hero-card,
-.integrated-rpe-tracker,
 .bar-path-stage,
 .workout-summary-card,
 .active-set-reps-feed,
 .workout-sets-table,
 .history-summary-card,
 .collapsible-session-card,
+.session-card,
+.session-history-card,
 .live-dots-card,
 .target-rpe-module,
-.weight-control-wrapper,
-.exercise-dropdown,
 .discovered-card,
 .stat-tile,
 .set-history-row,
@@ -4949,6 +5026,34 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   -webkit-backdrop-filter: none !important;
 }
 
+/* Main RPE Pill: Remove Horizontal Blob & Track, Preserving Vertical Deviation Stage */
+.rpe-gauge-container {
+  display: none !important;
+}
+
+.integrated-rpe-tracker {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  padding: 14px 18px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.rpe-hero-number {
+  font-size: clamp(38px, 9vw, 48px) !important;
+  font-weight: 900 !important;
+  color: #ececec !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+}
+
+.rpe-baseline-sub {
+  color: #71717a !important;
+  font-size: 10px !important;
+}
+
 /* Surface 2 -> Surface 3 Buttons: Crisp Matte Obsidian */
 .btn-glass-primary,
 .btn-glass-secondary,
@@ -4957,13 +5062,12 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
 .btn-weight-pill,
 .stepper-btn,
 .custom-select-trigger,
-.nav-tab.active,
-.header-lift-btn,
 .header-rest-ticker,
 .coach-rest-pill,
 .target-chip,
 .btn-barpath-action,
-.btn-variant-audition {
+.btn-variant-audition,
+.btn-action-glass {
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
   color: #ececec !important;
@@ -4979,11 +5083,11 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
 .btn-weight-pill:hover,
 .stepper-btn:hover,
 .custom-select-trigger:hover,
-.header-lift-btn:hover,
 .coach-rest-pill:hover,
 .target-chip:hover,
 .btn-barpath-action:hover,
-.btn-variant-audition:hover {
+.btn-variant-audition:hover,
+.btn-action-glass:hover {
   background: #2a2a2a !important;
   border-color: #383838 !important;
   color: #ffffff !important;
@@ -4993,9 +5097,9 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
 .btn-glass-secondary:active,
 .btn-glass-set:active,
 .btn-complete-set:active,
-.header-lift-btn:active,
 .coach-rest-pill:active,
-.target-chip:active {
+.target-chip:active,
+.btn-action-glass:active {
   background: #2f2f2f !important;
 }
 
@@ -5043,24 +5147,274 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   color: #71717a !important;
 }
 
-/* Bottom Navigation Bar Specifics */
+/* Shortened Bottom Navigation Pills */
 .bottom-glass-nav {
+  min-height: 38px !important;
+  height: 38px !important;
+  padding: 2px !important;
   border-radius: 999px !important;
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.70) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .nav-tab {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 2px 8px !important;
   border-radius: 999px !important;
+  font-size: 10px !important;
+  gap: 2px !important;
+}
+
+.nav-tab .nav-icon {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+.nav-tab .nav-label {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1 !important;
+}
+
+.nav-indicator-pill {
+  top: 2px !important;
+  bottom: 2px !important;
+  left: 2px !important;
+  border-radius: 999px !important;
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 .nav-tab:not(.active) {
   background: transparent !important;
   border-color: transparent !important;
+  color: #71717a !important;
 }
 
 .nav-tab.active {
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
   color: #ececec !important;
+}
+
+/* History Tab & Workout Logs: Complete Matte Obsidian Styling */
+.session-card,
+.session-history-card,
+.collapsible-session-card {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: hidden !important;
+  margin-bottom: 12px !important;
+}
+
+.session-card-header {
+  background: #212121 !important;
+  border-bottom: 1px solid #2f2f2f !important;
+  padding: 14px 16px !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.session-card-header:hover {
+  background: #282828 !important;
+}
+
+.session-card-title {
+  color: #ececec !important;
+  font-weight: 800 !important;
+}
+
+.session-card-meta {
+  color: #71717a !important;
+}
+
+.session-stat-chip .stat-chip-val {
+  color: #ececec !important;
+  font-weight: 800 !important;
+}
+
+.session-stat-chip .stat-chip-lbl {
+  color: #71717a !important;
+}
+
+.session-toggle-chevron {
+  color: #71717a !important;
+}
+
+.session-card-body {
+  background: #171717 !important;
+  border-top: 1px solid #2f2f2f !important;
+  padding: 12px 14px !important;
+  gap: 10px !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.session-set-item {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.session-set-tag {
+  color: #ececec !important;
+  font-weight: 800 !important;
+}
+
+.session-set-stats {
+  color: #b4b4b4 !important;
+}
+
+.set-stat-vol {
+  color: #ececec !important;
+}
+
+.set-stat-vel {
+  color: var(--current-accent, #00FF66) !important;
+}
+
+.history-rep-pill {
+  background: #2f2f2f !important;
+  border: 1px solid #383838 !important;
+  border-radius: 6px !important;
+  color: #ececec !important;
+  box-shadow: none !important;
+  padding: 3px 8px !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.history-rep-pill:hover {
+  background: #383838 !important;
+  border-color: #484848 !important;
+}
+
+.rep-pr-badge {
+  background: rgba(255, 215, 0, 0.15) !important;
+  border: 1px solid rgba(255, 215, 0, 0.40) !important;
+  color: #FFD700 !important;
+  text-shadow: none !important;
+}
+
+/* Workout Tab: Sets Table & Rows */
+.workout-sets-table {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 6px 0 !important;
+  gap: 8px !important;
+}
+
+.workout-set-row {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.40) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 10px 14px !important;
+  transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+.workout-set-row:hover {
+  background: #262626 !important;
+  border-color: #383838 !important;
+}
+
+.workout-set-row.is-active-set {
+  background: #262626 !important;
+  border-color: rgba(var(--accent-rgb, 0, 255, 102), 0.60) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.10), 0 0 12px rgba(var(--accent-rgb, 0, 255, 102), 0.20) !important;
+}
+
+.workout-set-num {
+  color: #ececec !important;
+  font-weight: 800 !important;
+}
+
+.workout-set-reps {
+  color: #b4b4b4 !important;
+}
+
+.workout-set-metric-val {
+  color: #ececec !important;
+  font-weight: 800 !important;
+}
+
+.workout-set-metric-lbl {
+  color: #71717a !important;
+}
+
+/* Active Set Reps Feed */
+.rep-item-card,
+.rep-row-item {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.40) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #ececec !important;
+}
+
+.rep-row-item:hover {
+  background: #262626 !important;
+  border-color: #383838 !important;
+}
+
+.rep-row-item.is-pr {
+  border-color: rgba(255, 215, 0, 0.50) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 0 12px rgba(255, 215, 0, 0.25) !important;
+}
+
+.stat-card.glass-card {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.set-hero-panel {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 16px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.history-summary-card,
+.pr-card {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.pr-lift-item {
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 10px !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Dedicated Complete Set Button Alignment */
