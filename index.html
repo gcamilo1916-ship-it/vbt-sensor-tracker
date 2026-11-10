@@ -43,6 +43,13 @@
           <span class="brand-title">Eros</span>
         </div>
 
+        <!-- Quick Lift Selector: S (Squat), B (Bench), D (Deadlift) -->
+        <div class="header-lift-selector" id="header-lift-selector" role="radiogroup" aria-label="Quick Lift Selector">
+          <button type="button" class="header-lift-btn" data-lift="Squat" id="btn-header-lift-sq" role="radio" aria-checked="false" aria-label="Select Squat">S</button>
+          <button type="button" class="header-lift-btn" data-lift="Bench" id="btn-header-lift-bp" role="radio" aria-checked="false" aria-label="Select Bench">B</button>
+          <button type="button" class="header-lift-btn active" data-lift="Deadlift" id="btn-header-lift-dl" role="radio" aria-checked="true" aria-label="Select Deadlift">D</button>
+        </div>
+
         <!-- Segmented Mode Switcher: Athlete vs Coach Portal -->
         <div class="view-mode-toggle" id="view-mode-toggle" role="radiogroup" aria-label="Portal View Mode">
           <button type="button" class="mode-toggle-btn active" id="btn-mode-athlete" data-mode="athlete" role="radio" aria-checked="true" aria-label="Athlete View">
@@ -64,6 +71,10 @@
         </div>
 
         <div class="header-actions">
+          <div class="header-rest-ticker font-mono" id="header-rest-ticker" style="display: none;" aria-label="Inter-Set Rest Timer">
+            <span class="rest-ticker-label">REST</span>
+            <span class="rest-ticker-time" id="header-rest-time">00:00</span>
+          </div>
           <div id="status-badge" class="glass-pill status-disconnected" role="button" tabindex="0" aria-label="Eros Connection">
             <span class="status-dot"></span>
             <span class="status-label">Disconnected</span>
@@ -139,6 +150,9 @@
             <!-- Set Trigger Button -->
             <button id="btn-set-toggle" class="btn-glass-set">
               <span id="btn-set-text">START SET</span>
+            </button>
+            <button type="button" id="btn-complete-set" class="btn-complete-set font-mono" style="display: none;" aria-label="Complete Active Set">
+              <span>COMPLETE SET</span>
             </button>
           </div>
 

@@ -1129,6 +1129,11 @@ function startNewSet(lift = currentLift) {
   btnSetText.textContent = 'END SET';
   btnSetToggle.classList.add('set-active');
   btnSetToggle.classList.add('recording');
+  btnSetToggle.style.display = 'none';
+  const btnCompleteSetEl = document.getElementById('btn-complete-set');
+  if (btnCompleteSetEl) btnCompleteSetEl.style.display = 'inline-flex';
+  const headerTickerEl = document.getElementById('header-rest-ticker');
+  if (headerTickerEl) headerTickerEl.style.display = 'none';
   if (controlsPanel) {
     controlsPanel.classList.add('set-active-compact');
   }
@@ -1220,6 +1225,10 @@ function endActiveSet() {
     const timeStr = formatRestDuration(currentRestElapsedSeconds);
     const restEl = document.getElementById('summary-rest-time');
     if (restEl) restEl.textContent = timeStr;
+    const headerTicker = document.getElementById('header-rest-ticker');
+    const headerTime = document.getElementById('header-rest-time');
+    if (headerTime) headerTime.textContent = timeStr;
+    if (headerTicker) headerTicker.style.display = 'inline-flex';
   };
   updateRestDisplay();
   interSetRestInterval = setInterval(updateRestDisplay, 1000);
@@ -1239,6 +1248,9 @@ function endActiveSet() {
   btnSetText.textContent = 'START SET';
   btnSetToggle.classList.remove('set-active');
   btnSetToggle.classList.remove('recording');
+  btnSetToggle.style.display = '';
+  const btnCompleteSetClose = document.getElementById('btn-complete-set');
+  if (btnCompleteSetClose) btnCompleteSetClose.style.display = 'none';
   if (controlsPanel) {
     controlsPanel.classList.remove('set-active-compact');
   }
@@ -1268,6 +1280,17 @@ btnSetToggle.addEventListener('click', () => {
     startNewSet(currentLift);
   }
 });
+
+const btnCompleteSetBtn = document.getElementById('btn-complete-set');
+if (btnCompleteSetBtn) {
+  btnCompleteSetBtn.addEventListener('click', () => {
+    if (activeSet) {
+      SoundFX.playSetEnd();
+      HapticsFX.vibrate([40]);
+      endActiveSet();
+    }
+  });
+}
 
 /**
  * Synthesizes deterministic 2D trajectory curve points and deviation metrics
@@ -1542,8 +1565,8 @@ function renderBarPathStage(repIndex = 0, scrubProgress = 1.0) {
 
   ctx.clearRect(0, 0, w, h);
 
-  // Background subtle fill
-  ctx.fillStyle = '#080A10';
+  // Background subtle fill (Matte Obsidian Surface 2)
+  ctx.fillStyle = '#212121';
   ctx.fillRect(0, 0, w, h);
 
   const reps = (activeSet && Array.isArray(activeSet.reps)) ? activeSet.reps : [];
@@ -2119,7 +2142,7 @@ function animateRepetitionStroke(options = {}) {
 
   function drawBaseCorridors() {
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#080A10';
+    ctx.fillStyle = '#212121';
     ctx.fillRect(0, 0, w, h);
 
     // Optimal corridor (+-2.0cm)
@@ -2149,13 +2172,26 @@ function animateRepetitionStroke(options = {}) {
     ctx.lineTo(centerX, botY);
     ctx.stroke();
 
-    // Axis Labels
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.font = '8px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('0.0', centerX, botY + 14);
-    ctx.fillText('-2', centerX - 2 * scaleX, botY + 14);
-    ctx.fillText('+2', centerX + 2 * scaleX, botY + 14);
+    // Dimmed ghost line of previous rep / baseline for consistency comparison (Decision 6)
+    const ghostPts = (typeof window !== 'undefined' && window._lastRepTrajectory) ||
+      (typeof activeSet !== 'undefined' && activeSet && activeSet.reps && activeSet.reps.length > 0 && activeSet.reps[0].trajectoryPoints);
+    if (ghostPts && ghostPts.length > 1) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      const firstX = ghostPts[0].x !== undefined ? ghostPts[0].x : (centerX + (ghostPts[0].dx || 0) * scaleX);
+      const firstY = ghostPts[0].y !== undefined ? ghostPts[0].y : (topY + (ghostPts[0].rom !== undefined ? ghostPts[0].rom : 0) * travelY);
+      ctx.moveTo(firstX, firstY);
+      for (let i = 1; i < ghostPts.length; i++) {
+        const ptX = ghostPts[i].x !== undefined ? ghostPts[i].x : (centerX + (ghostPts[i].dx || 0) * scaleX);
+        const ptY = ghostPts[i].y !== undefined ? ghostPts[i].y : (topY + (ghostPts[i].rom !== undefined ? ghostPts[i].rom : 0) * travelY);
+        ctx.lineTo(ptX, ptY);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   function frame(now) {
@@ -2208,17 +2244,30 @@ function animateRepetitionStroke(options = {}) {
       instVel = velocity * 0.85;
     }
 
-    // Dynamic difficulty calculation D in [0.0, 1.0]
-    // Starts at 0.0 (pure specular white), transitions into lift color as difficulty increases
+    // Turnaround inflection flash detection (Decision 9)
+    const isTurnaround = isDeadlift ? (progress > 0.02 && progress < 0.08) : (Math.abs(progress - 0.50) < 0.035);
+
+    // Dynamic difficulty calculation D in [0.0, 1.0] based on cumulative fatigue (Decisions 10, 11, 12)
     let difficulty = 0.0;
-    if (isConcentricPhase) {
+    if (elapsed === 0) {
+      difficulty = 0.0;
+    } else if (isConcentricPhase) {
       const rpeFactor = Math.max(0, Math.min(1, (rpe - 6.0) / 4.0));
       const velDropFactor = Math.max(0, Math.min(1, (vPeak - instVel) / Math.max(0.1, vPeak - 0.15)));
-      // Increases through concentric drive towards sticking point & lockout
-      difficulty = Math.max(0, Math.min(1, (0.60 * rpeFactor + 0.40 * velDropFactor) * Math.min(1, romProgress * 1.6)));
+      const setRepsCount = (typeof activeSet !== 'undefined' && activeSet && activeSet.reps) ? activeSet.reps.length : 0;
+      const setVelLoss = (typeof activeSet !== 'undefined' && activeSet && typeof activeSet.velocityLossPct === 'number') ? activeSet.velocityLossPct : 0;
+      const fatigueFactor = Math.max(rpeFactor, Math.min(1, setVelLoss / 25.0 + setRepsCount * 0.06));
+
+      if (rpe <= 6.5 && fatigueFactor < 0.20) {
+        // Fast/easy rep (Decision 12): Stays mostly white, showing a hint of color at lockout
+        difficulty = 0.05 + 0.18 * Math.pow(romProgress, 2);
+      } else {
+        // Fatigued rep (Decisions 10, 11): Begins color change immediately, ramping up deeply
+        difficulty = Math.max(0, Math.min(1, (0.55 * fatigueFactor + 0.45 * velDropFactor) * Math.min(1, 0.40 + romProgress * 1.2)));
+      }
     } else {
-      // Eccentric phase has minimal difficulty color shift (stays predominantly white)
-      difficulty = 0.10 * Math.max(0, Math.min(1, (rpe - 6.0) / 4.0)) * romProgress;
+      // Eccentric phase
+      difficulty = 0.05 * Math.max(0, Math.min(1, (rpe - 6.0) / 4.0)) * romProgress;
     }
 
     // Smooth color interpolation: rgb(255,255,255) -> targetColor
@@ -2378,17 +2427,29 @@ function animateRepetitionStroke(options = {}) {
       ctx.stroke();
       ctx.restore();
 
-      // Ghost trail of previous path points
+      // Persistent trailing path line behind the dot (Decision 5 & 6)
       if (historyPoints.length > 1) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 2.0;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.beginPath();
         ctx.moveTo(historyPoints[0].x, historyPoints[0].y);
         for (let i = 1; i < historyPoints.length; i++) {
           ctx.lineTo(historyPoints[i].x, historyPoints[i].y);
         }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Turnaround inflection flash on dot (Decision 9)
+      if (isTurnaround) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.90)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(xDot, yDot, 12, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
@@ -2455,7 +2516,7 @@ function animateRepetitionStroke(options = {}) {
 
       drawBaseCorridors();
 
-      // Expanding radial shockwave ring
+      // Expanding radial shockwave ring outline (Decision 13)
       const currentR = 6 + (maxRadius - 6) * popProg;
       const ringAlpha = (1.0 - popProg) * 0.85;
 
@@ -2465,6 +2526,17 @@ function animateRepetitionStroke(options = {}) {
       ctx.beginPath();
       ctx.arc(x, y, currentR, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Distinct visual tiers (Decision 14): Secondary concentric ring for heavy/max effort
+      if (repRpe >= 8.5) {
+        const outerR = 6 + (maxRadius * 1.25 - 6) * popProg;
+        const outerAlpha = (1.0 - popProg) * 0.55;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${outerAlpha.toFixed(3)})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x, y, outerR, 0, Math.PI * 2);
+        ctx.stroke();
+      }
 
       // Locked out puck core with specular bloom
       ctx.fillStyle = colorObj.hex;
@@ -2478,6 +2550,9 @@ function animateRepetitionStroke(options = {}) {
       if (popProg < 1.0) {
         requestAnimationFrame(popFrame);
       } else {
+        if (typeof window !== 'undefined') {
+          window._lastRepTrajectory = [...historyPoints];
+        }
         // Redraw static stage
         if (typeof renderBarPathStage === 'function') {
           renderBarPathStage(currentReplayRepIdx, 1.0);
@@ -3111,6 +3186,18 @@ customOptions.forEach(opt => {
   opt.addEventListener('click', handleSelect);
 });
 
+// Top Header Quick Lift Buttons (S / B / D)
+document.querySelectorAll('.header-lift-btn').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const val = btn.getAttribute('data-lift');
+    if (val) {
+      applyLiftTheme(val);
+      await sendLiftCommand(val);
+    }
+  });
+});
+
 /**
  * Updates active lift theme and movement denomination.
  * If a set is currently active under a different lift, automatically ends & saves
@@ -3130,6 +3217,16 @@ function applyLiftTheme(liftName) {
   customOptions.forEach(o => o.classList.remove('selected'));
   const targetOpt = Array.from(customOptions).find(o => sameLift(o.getAttribute('data-value'), nextLift));
   if (targetOpt) targetOpt.classList.add('selected');
+
+  // Sync top header lift buttons
+  const headerBtns = document.querySelectorAll('.header-lift-btn');
+  if (headerBtns && headerBtns.length > 0) {
+    headerBtns.forEach(btn => {
+      const isTarget = sameLift(btn.getAttribute('data-lift'), nextLift);
+      btn.classList.toggle('active', isTarget);
+      btn.setAttribute('aria-checked', isTarget ? 'true' : 'false');
+    });
+  }
 
   // Update MVT baseline subtext
   const baseline = LIFT_BASELINES[nextLift.toLowerCase()] || LIFT_BASELINES.deadlift;
