@@ -5008,7 +5008,6 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
 .bar-path-stage,
 .workout-summary-card,
 .active-set-reps-feed,
-.workout-sets-table,
 .history-summary-card,
 .collapsible-session-card,
 .session-card,
@@ -5024,6 +5023,28 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+/* Transparent containers: Never inherit solid card backgrounds */
+.controls-panel,
+.glass-card.controls-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 4px 0 !important;
+}
+
+.workout-sets-table,
+.glass-card.workout-sets-table {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 6px 0 !important;
+  gap: 8px !important;
 }
 
 /* Main RPE Pill: Remove Horizontal Blob & Track, Preserving Vertical Deviation Stage */
