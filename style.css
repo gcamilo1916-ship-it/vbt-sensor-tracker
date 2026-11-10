@@ -4882,3 +4882,192 @@ html, body {
   color: #00e5ff;
   box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
 }
+
+
+/* =============================================================================
+   UNIFIED MATTE OBSIDIAN ARCHITECTURE (Athlete & Coach Full Frontend)
+   Pure 4-Surface Hierarchy: #0d0d0d / #171717 / #212121 / #2f2f2f
+   Deprecates visionOS translucent glass across all athlete views.
+   ============================================================================= */
+
+html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
+  background-color: #0d0d0d !important;
+  color: #ececec !important;
+}
+
+.ambient-glow-mesh,
+.ambient-glow-mesh * {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Surface 1: Panels, Headers, Navigation, Drawers & Ribbon */
+.glass-header,
+.app-header,
+.workout-session-bar,
+.session-bar,
+.bottom-glass-nav,
+.controls-panel,
+.athlete-coach-status-banner,
+.athlete-settings-card,
+.modal-glass-content,
+.variant-switcher-sheet {
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Surface 2: Elevated Telemetry Cards, Stages, Modules, History Cards */
+.glass-card,
+.telemetry-card,
+.bento-card,
+.hero-velocity-focus,
+#rpe-hero-card,
+.integrated-rpe-tracker,
+.bar-path-stage,
+.workout-summary-card,
+.active-set-reps-feed,
+.workout-sets-table,
+.history-summary-card,
+.collapsible-session-card,
+.live-dots-card,
+.target-rpe-module,
+.weight-control-wrapper,
+.exercise-dropdown,
+.discovered-card,
+.stat-tile,
+.set-history-row,
+.rep-item {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Surface 2 -> Surface 3 Buttons: Crisp Matte Obsidian */
+.btn-glass-primary,
+.btn-glass-secondary,
+.btn-glass-set,
+.btn-complete-set,
+.btn-weight-pill,
+.stepper-btn,
+.custom-select-trigger,
+.nav-tab.active,
+.header-lift-btn,
+.header-rest-ticker,
+.coach-rest-pill,
+.target-chip,
+.btn-barpath-action,
+.btn-variant-audition {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  color: #ececec !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.btn-glass-primary:hover,
+.btn-glass-secondary:hover,
+.btn-glass-set:hover,
+.btn-complete-set:hover,
+.btn-weight-pill:hover,
+.stepper-btn:hover,
+.custom-select-trigger:hover,
+.header-lift-btn:hover,
+.coach-rest-pill:hover,
+.target-chip:hover,
+.btn-barpath-action:hover,
+.btn-variant-audition:hover {
+  background: #2a2a2a !important;
+  border-color: #383838 !important;
+  color: #ffffff !important;
+}
+
+.btn-glass-primary:active,
+.btn-glass-secondary:active,
+.btn-glass-set:active,
+.btn-complete-set:active,
+.header-lift-btn:active,
+.coach-rest-pill:active,
+.target-chip:active {
+  background: #2f2f2f !important;
+}
+
+/* Inputs and Dropdown Menus */
+.custom-options,
+.weight-input,
+.athlete-settings-input,
+input[type="text"],
+input[type="number"],
+textarea {
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  color: #ececec !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.custom-option {
+  color: #ececec !important;
+  background: transparent !important;
+}
+
+.custom-option:hover,
+.custom-option.active {
+  background: #262626 !important;
+  color: #ffffff !important;
+}
+
+.custom-option.selected {
+  background: #2a2a2a !important;
+  color: var(--current-lift-text) !important;
+}
+
+/* High-Contrast Matte Typography */
+body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
+  color: #ececec !important;
+}
+
+.metric-label, .subtext, .secondary-text, .unit-label, .target-label {
+  color: #b4b4b4 !important;
+}
+
+.caption, .timestamp, .help-text, .muted-text, .nav-tab:not(.active) {
+  color: #71717a !important;
+}
+
+/* Bottom Navigation Bar Specifics */
+.bottom-glass-nav {
+  border-radius: 999px !important;
+}
+
+.nav-tab {
+  border-radius: 999px !important;
+}
+
+.nav-tab:not(.active) {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.nav-tab.active {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  color: #ececec !important;
+}
+
+/* Dedicated Complete Set Button Alignment */
+.controls-panel.set-active-compact #btn-set-toggle {
+  display: none !important;
+}
+
+.controls-panel.set-active-compact #btn-complete-set {
+  display: inline-flex !important;
+}
