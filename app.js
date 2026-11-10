@@ -1571,8 +1571,52 @@ function renderBarPathStage(repIndex = 0, scrubProgress = 1.0) {
 
   const reps = (activeSet && Array.isArray(activeSet.reps)) ? activeSet.reps : [];
   if (reps.length === 0) {
-    // Empty state
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    const centerX = w / 2;
+    const scaleX = 18;
+    const topY = 25;
+    const botY = 185;
+    const travelY = botY - topY;
+
+    // Optimal corridor (+-2.0cm)
+    ctx.fillStyle = 'rgba(0, 255, 102, 0.04)';
+    ctx.fillRect(centerX - 2 * scaleX, topY, 4 * scaleX, travelY);
+
+    ctx.strokeStyle = 'rgba(0, 255, 102, 0.25)';
+    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(centerX - 2 * scaleX, topY); ctx.lineTo(centerX - 2 * scaleX, botY);
+    ctx.moveTo(centerX + 2 * scaleX, topY); ctx.lineTo(centerX + 2 * scaleX, botY);
+    ctx.stroke();
+
+    // Warning corridor (+-4.0cm)
+    ctx.strokeStyle = 'rgba(255, 184, 0, 0.20)';
+    ctx.beginPath();
+    ctx.moveTo(centerX - 4 * scaleX, topY); ctx.lineTo(centerX - 4 * scaleX, botY);
+    ctx.moveTo(centerX + 4 * scaleX, topY); ctx.lineTo(centerX + 4 * scaleX, botY);
+    ctx.stroke();
+
+    // 0.0 cm Plumb Line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.40)';
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(centerX, topY);
+    ctx.lineTo(centerX, botY);
+    ctx.stroke();
+
+    // Resting dot at starting position
+    const effLift = (typeof currentLift !== 'undefined' && currentLift ? String(currentLift) : 'Squat').toLowerCase();
+    const isDeadlift = effLift.includes('dead');
+    const restY = isDeadlift ? botY : topY;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(centerX, restY, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Empty state text
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.font = '10px -apple-system, BlinkMacSystemFont, monospace';
     ctx.textAlign = 'center';
     ctx.fillText('WAITING FOR REP 1...', w / 2, h / 2);
