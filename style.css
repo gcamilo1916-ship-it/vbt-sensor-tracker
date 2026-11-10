@@ -1955,25 +1955,28 @@ html, body {
 
 .bar-path-stage {
   position: relative;
-  width: 220px;
-  height: 210px;
+  width: 250px;
+  height: 238px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   border-radius: 14px;
-  background: #212121;
-  border: 1px solid #2f2f2f;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
   touch-action: none;
 }
 
 .bar-path-canvas {
-  width: 220px;
-  height: 210px;
+  width: 100%;
+  height: 100%;
+  max-width: 250px;
+  max-height: 238px;
+  aspect-ratio: 220 / 210;
+  object-fit: contain;
   display: block;
-  border-radius: 12px;
 }
 
 /* Top Stage HUD Overlay */
@@ -4555,9 +4558,9 @@ html, body {
     width: auto;
   }
   .bar-path-stage {
-    flex: 0 0 clamp(160px, 48vw, 220px);
-    width: clamp(160px, 48vw, 220px);
-    height: 200px;
+    flex: 0 0 clamp(180px, 52vw, 240px);
+    width: clamp(180px, 52vw, 240px);
+    height: clamp(200px, 54vw, 230px);
   }
   .bar-path-canvas {
     width: 100%;
@@ -5005,7 +5008,6 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
 .bento-card,
 .hero-velocity-focus,
 #rpe-hero-card,
-.bar-path-stage,
 .workout-summary-card,
 .active-set-reps-feed,
 .history-summary-card,
@@ -5023,6 +5025,47 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+/* Vertical Power Path Deviation Animation: Integrated into Main Hero Pill (Not a Separate Pill) */
+.bar-path-stage {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  flex: 0 0 260px !important;
+  width: 260px !important;
+  height: 248px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.bar-path-stage::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -10px !important;
+  border-radius: 20px !important;
+  background: radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb), 0.14) 0%, transparent 72%) !important;
+  filter: blur(14px) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+.bar-path-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 260px !important;
+  max-height: 248px !important;
+  aspect-ratio: 220 / 210 !important;
+  object-fit: contain !important;
+  display: block !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 /* Transparent containers: Never inherit solid card backgrounds */
@@ -5052,27 +5095,59 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   display: none !important;
 }
 
+/* Main RPE Pill: Sleek Compact Secondary Hero Companion with Coach Cockpit Gradient */
 .integrated-rpe-tracker {
-  background: #212121 !important;
-  border: 1px solid #2f2f2f !important;
-  border-radius: 14px !important;
-  padding: 14px 18px !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  background: #1c1c1c !important;
+  border: 1px solid #2d2d2d !important;
+  border-radius: 12px !important;
+  padding: 7px 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  gap: 5px !important;
+  position: relative !important;
+}
+
+.integrated-rpe-tracker::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00FF66 0%, #00E5FF 60%, #FFB800 85%, #FF3B30 100%);
+  opacity: 0.85;
+  margin-top: 3px;
 }
 
 .rpe-hero-number {
-  font-size: clamp(38px, 9vw, 48px) !important;
+  font-size: clamp(25px, 5.8vw, 30px) !important;
   font-weight: 900 !important;
   color: #ececec !important;
-  letter-spacing: -0.04em !important;
+  letter-spacing: -0.03em !important;
   line-height: 1 !important;
+}
+
+.rpe-hero-denom {
+  font-size: 13px !important;
+  opacity: 0.65;
+}
+
+.rpe-rir-pill {
+  font-size: 10px !important;
+  padding: 3px 8px !important;
+}
+
+.rpe-tier-badge {
+  font-size: 9.5px !important;
+  padding: 2px 7px !important;
 }
 
 .rpe-baseline-sub {
   color: #71717a !important;
-  font-size: 10px !important;
+  font-size: 9.5px !important;
+  text-align: left !important;
+  align-self: flex-start !important;
+  margin-top: 2px !important;
 }
 
 /* Surface 2 -> Surface 3 Buttons: Crisp Matte Obsidian */
@@ -5168,7 +5243,7 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   color: #71717a !important;
 }
 
-/* Bottom Navigation Bar: Original Size Restored with Butter-Smooth Ghost-Free Sliding */
+/* Bottom Navigation Bar: Lift-Aware Color Aura & Butter-Smooth Ghost-Free Sliding */
 .bottom-glass-nav {
   position: fixed !important;
   bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
@@ -5184,8 +5259,8 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   padding: 6px !important;
   border-radius: 999px !important;
   background: #171717 !important;
-  border: 1px solid #2f2f2f !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 20px 48px rgba(0, 0, 0, 0.80) !important;
+  border: 1px solid rgba(var(--accent-rgb), 0.32) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 20px 48px rgba(0, 0, 0, 0.80), 0 0 20px rgba(var(--accent-rgb), 0.16) !important;
   min-height: 56px !important;
   height: 56px !important;
   backdrop-filter: none !important;
@@ -5193,6 +5268,7 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   -webkit-backface-visibility: hidden !important;
   backface-visibility: hidden !important;
   will-change: transform !important;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease !important;
 }
 
 .nav-tab {
@@ -5217,6 +5293,7 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
 .nav-tab .nav-icon {
   width: 18px !important;
   height: 18px !important;
+  transition: stroke 0.25s ease, filter 0.25s ease !important;
 }
 
 .nav-tab .nav-label {
@@ -5226,7 +5303,7 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   line-height: 1 !important;
 }
 
-/* Single smooth sliding indicator: zero duplicate tab backgrounds to eliminate ghosting */
+/* Sliding indicator with dynamic lift-colored background aura matching movement selected */
 .nav-indicator-pill {
   position: absolute !important;
   top: 6px !important;
@@ -5234,14 +5311,50 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   left: 6px !important;
   width: calc((100% - 12px) / 3) !important;
   border-radius: 999px !important;
-  background: #212121 !important;
-  border: 1px solid #2f2f2f !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.28) 0%, rgba(24, 24, 24, 0.96) 100%) !important;
+  border: 1px solid rgba(var(--accent-rgb), 0.65) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 0 22px rgba(var(--accent-rgb), 0.45), 0 2px 8px rgba(0, 0, 0, 0.55) !important;
   pointer-events: none !important;
   z-index: 1 !important;
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease !important;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+}
+
+.nav-indicator-pill::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -6px -4px !important;
+  border-radius: 999px !important;
+  background: radial-gradient(ellipse at center, rgba(var(--accent-rgb), 0.55) 0%, rgba(var(--accent-rgb), 0.16) 55%, transparent 80%) !important;
+  filter: blur(8px) !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+  transition: background 0.35s ease, opacity 0.35s ease !important;
+}
+
+body.theme-squat .nav-indicator-pill {
+  border-color: rgba(0, 255, 102, 0.70) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 0 24px rgba(0, 255, 102, 0.50), 0 2px 8px rgba(0, 0, 0, 0.55) !important;
+}
+body.theme-squat .nav-indicator-pill::before {
+  background: radial-gradient(ellipse at center, rgba(0, 255, 102, 0.55) 0%, rgba(0, 255, 102, 0.16) 55%, transparent 80%) !important;
+}
+
+body.theme-bench .nav-indicator-pill {
+  border-color: rgba(0, 229, 255, 0.70) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 0 24px rgba(0, 229, 255, 0.50), 0 2px 8px rgba(0, 0, 0, 0.55) !important;
+}
+body.theme-bench .nav-indicator-pill::before {
+  background: radial-gradient(ellipse at center, rgba(0, 229, 255, 0.55) 0%, rgba(0, 229, 255, 0.16) 55%, transparent 80%) !important;
+}
+
+body.theme-deadlift .nav-indicator-pill {
+  border-color: rgba(255, 59, 48, 0.70) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 0 24px rgba(255, 59, 48, 0.50), 0 2px 8px rgba(0, 0, 0, 0.55) !important;
+}
+body.theme-deadlift .nav-indicator-pill::before {
+  background: radial-gradient(ellipse at center, rgba(255, 59, 48, 0.55) 0%, rgba(255, 59, 48, 0.16) 55%, transparent 80%) !important;
 }
 
 .bottom-glass-nav[data-active="live"] .nav-indicator-pill {
@@ -5267,7 +5380,148 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  color: #ececec !important;
+  color: var(--current-accent) !important;
+  text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5) !important;
+}
+
+.nav-tab.active .nav-icon {
+  stroke: var(--current-accent) !important;
+  filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.6)) !important;
+}
+
+/* ── Hero Main Feature: Coach Cockpit Gradient Cues & Vibrant Lift Auras ── */
+#rpe-hero-card {
+  position: relative !important;
+  border-color: rgba(var(--accent-rgb), 0.38) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 0 28px rgba(var(--accent-rgb), 0.14), 0 10px 28px rgba(0, 0, 0, 0.55) !important;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+#rpe-hero-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #00FF66 0%, #00E5FF 55%, #FFB800 82%, #FF3B30 100%);
+  border-radius: 24px 24px 0 0;
+  opacity: 0.95;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Coach Cockpit Spectrum Gradient on Athlete RPE Gauge Fill */
+#rpe-gauge-fill,
+.rpe-gauge-fill {
+  background: linear-gradient(90deg, #00FF66 0%, #00E5FF 60%, #FFB800 85%, #FF3B30 100%) !important;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.50) !important;
+}
+
+/* Dynamic Exertion Tier Illumination */
+#rpe-hero-card.tier-warmup #live-rpe { color: #00FF66 !important; text-shadow: 0 0 14px rgba(0, 255, 102, 0.45) !important; }
+#rpe-hero-card.tier-target #live-rpe { color: #00E5FF !important; text-shadow: 0 0 14px rgba(0, 229, 255, 0.45) !important; }
+#rpe-hero-card.tier-heavy #live-rpe { color: #FFB800 !important; text-shadow: 0 0 14px rgba(255, 184, 0, 0.45) !important; }
+#rpe-hero-card.tier-max #live-rpe { color: #FF3B30 !important; text-shadow: 0 0 14px rgba(255, 59, 48, 0.55) !important; }
+
+#rpe-hero-card.tier-warmup #rpe-tier-badge {
+  background: rgba(0, 255, 102, 0.15) !important;
+  color: #00FF66 !important;
+  border: 1px solid rgba(0, 255, 102, 0.45) !important;
+  box-shadow: 0 0 10px rgba(0, 255, 102, 0.25) !important;
+}
+#rpe-hero-card.tier-target #rpe-tier-badge {
+  background: rgba(0, 229, 255, 0.15) !important;
+  color: #00E5FF !important;
+  border: 1px solid rgba(0, 229, 255, 0.45) !important;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.25) !important;
+}
+#rpe-hero-card.tier-heavy #rpe-tier-badge {
+  background: rgba(255, 184, 0, 0.15) !important;
+  color: #FFB800 !important;
+  border: 1px solid rgba(255, 184, 0, 0.45) !important;
+  box-shadow: 0 0 10px rgba(255, 184, 0, 0.25) !important;
+}
+#rpe-hero-card.tier-max #rpe-tier-badge {
+  background: rgba(255, 59, 48, 0.15) !important;
+  color: #FF3B30 !important;
+  border: 1px solid rgba(255, 59, 48, 0.45) !important;
+  box-shadow: 0 0 10px rgba(255, 59, 48, 0.25) !important;
+}
+
+#rpe-hero-card.tier-warmup #live-rir-pill { color: #66FFA3 !important; border-color: rgba(0, 255, 102, 0.35) !important; background: rgba(0, 255, 102, 0.08) !important; }
+#rpe-hero-card.tier-target #live-rir-pill { color: #70F0FF !important; border-color: rgba(0, 229, 255, 0.35) !important; background: rgba(0, 229, 255, 0.08) !important; }
+#rpe-hero-card.tier-heavy #live-rir-pill { color: #FFE082 !important; border-color: rgba(255, 184, 0, 0.35) !important; background: rgba(255, 184, 0, 0.08) !important; }
+#rpe-hero-card.tier-max #live-rir-pill { color: #FF857D !important; border-color: rgba(255, 59, 48, 0.35) !important; background: rgba(255, 59, 48, 0.10) !important; }
+
+/* Velocity numbers in hero focus */
+.hero-velocity-focus .metric-left .metric-number {
+  color: var(--current-accent, #ececec) !important;
+  text-shadow: 0 0 16px rgba(var(--accent-rgb), 0.35) !important;
+}
+.hero-velocity-focus .metric-right .metric-number {
+  color: #00E5FF !important;
+  text-shadow: 0 0 16px rgba(0, 229, 255, 0.35) !important;
+}
+
+/* Quick lift buttons in header */
+.header-lift-btn {
+  transition: all 0.25s ease !important;
+}
+.header-lift-btn[data-lift="Squat"]:hover {
+  border-color: rgba(0, 255, 102, 0.50) !important;
+  color: #00FF66 !important;
+}
+.header-lift-btn.active[data-lift="Squat"] {
+  background: rgba(0, 255, 102, 0.18) !important;
+  border-color: rgba(0, 255, 102, 0.80) !important;
+  color: #00FF66 !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.20), 0 0 16px rgba(0, 255, 102, 0.50) !important;
+}
+.header-lift-btn[data-lift="Bench"]:hover {
+  border-color: rgba(0, 229, 255, 0.50) !important;
+  color: #00E5FF !important;
+}
+.header-lift-btn.active[data-lift="Bench"] {
+  background: rgba(0, 229, 255, 0.18) !important;
+  border-color: rgba(0, 229, 255, 0.80) !important;
+  color: #00E5FF !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.20), 0 0 16px rgba(0, 229, 255, 0.50) !important;
+}
+.header-lift-btn[data-lift="Deadlift"]:hover {
+  border-color: rgba(255, 59, 48, 0.50) !important;
+  color: #FF3B30 !important;
+}
+.header-lift-btn.active[data-lift="Deadlift"] {
+  background: rgba(255, 59, 48, 0.18) !important;
+  border-color: rgba(255, 59, 48, 0.80) !important;
+  color: #FF3B30 !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.20), 0 0 16px rgba(255, 59, 48, 0.50) !important;
+}
+
+/* Active target chips with dynamic lift color */
+.target-chip.active {
+  background: rgba(var(--accent-rgb), 0.25) !important;
+  border-color: rgba(var(--accent-rgb), 0.70) !important;
+  color: #FFFFFF !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.20), 0 0 14px rgba(var(--accent-rgb), 0.45) !important;
+}
+
+/* Action set buttons with vibrant hover & active lift glows */
+.btn-glass-set:hover {
+  border-color: rgba(var(--accent-rgb), 0.55) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15), 0 0 16px rgba(var(--accent-rgb), 0.30) !important;
+}
+.btn-complete-set {
+  background: #212121 !important;
+  border: 1px solid rgba(var(--accent-rgb), 0.65) !important;
+  color: var(--current-accent) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15), 0 0 18px rgba(var(--accent-rgb), 0.35) !important;
+}
+.btn-complete-set:hover {
+  background: rgba(var(--accent-rgb), 0.15) !important;
+  border-color: var(--current-accent) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.20), 0 0 24px rgba(var(--accent-rgb), 0.50) !important;
 }
 
 /* Three Bottom Pills Inside Live Page: Compact, Small Low-Profile Pills */

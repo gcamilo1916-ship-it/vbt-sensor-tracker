@@ -1565,8 +1565,8 @@ function renderBarPathStage(repIndex = 0, scrubProgress = 1.0) {
 
   ctx.clearRect(0, 0, w, h);
 
-  // Background subtle fill (Matte Obsidian Surface 2)
-  ctx.fillStyle = '#212121';
+  // Transparent background for seamless hero pill integration
+  ctx.fillStyle = 'rgba(0, 0, 0, 0)';
   ctx.fillRect(0, 0, w, h);
 
   const reps = (activeSet && Array.isArray(activeSet.reps)) ? activeSet.reps : [];
@@ -2186,13 +2186,13 @@ function animateRepetitionStroke(options = {}) {
 
   function drawBaseCorridors() {
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#212121';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0)';
     ctx.fillRect(0, 0, w, h);
 
     // Optimal corridor (+-2.0cm)
-    ctx.fillStyle = 'rgba(0, 255, 102, 0.04)';
+    ctx.fillStyle = 'rgba(0, 255, 102, 0.05)';
     ctx.fillRect(centerX - 2 * scaleX, topY, 4 * scaleX, travelY);
-    ctx.strokeStyle = 'rgba(0, 255, 102, 0.25)';
+    ctx.strokeStyle = 'rgba(0, 255, 102, 0.28)';
     ctx.setLineDash([3, 3]);
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -2201,14 +2201,23 @@ function animateRepetitionStroke(options = {}) {
     ctx.stroke();
 
     // Warning corridor (+-4.0cm)
-    ctx.strokeStyle = 'rgba(255, 184, 0, 0.20)';
+    ctx.strokeStyle = 'rgba(255, 184, 0, 0.22)';
     ctx.beginPath();
     ctx.moveTo(centerX - 4 * scaleX, topY); ctx.lineTo(centerX - 4 * scaleX, botY);
     ctx.moveTo(centerX + 4 * scaleX, topY); ctx.lineTo(centerX + 4 * scaleX, botY);
     ctx.stroke();
 
+    // Lockout & Turnaround Target Guidelines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.20)';
+    ctx.setLineDash([2, 3]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(centerX - 3 * scaleX, topY); ctx.lineTo(centerX + 3 * scaleX, topY);
+    ctx.moveTo(centerX - 3 * scaleX, botY); ctx.lineTo(centerX + 3 * scaleX, botY);
+    ctx.stroke();
+
     // 0.0 cm Plumb Line
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.40)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.setLineDash([]);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -2471,11 +2480,11 @@ function animateRepetitionStroke(options = {}) {
       ctx.stroke();
       ctx.restore();
 
-      // Persistent trailing path line behind the dot (Decision 5 & 6)
+      // Persistent trailing path line behind the dot with dynamic exertion tint (Decision 5 & 6)
       if (historyPoints.length > 1) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = `rgba(${curR}, ${curG}, ${curB}, 0.70)`;
+        ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
@@ -2490,17 +2499,23 @@ function animateRepetitionStroke(options = {}) {
       // Turnaround inflection flash on dot (Decision 9)
       if (isTurnaround) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.90)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(xDot, yDot, 12, 0, Math.PI * 2);
+        ctx.arc(xDot, yDot, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        // Secondary kinetic expansion ring
+        ctx.strokeStyle = `rgba(${curR}, ${curG}, ${curB}, 0.50)`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(xDot, yDot, 20, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
 
       // Outer specular halo
-      const haloRadius = 8 + 8 * difficulty;
-      const haloAlpha = 0.35 + 0.30 * difficulty;
+      const haloRadius = 10 + 10 * difficulty;
+      const haloAlpha = 0.40 + 0.32 * difficulty;
       ctx.save();
       ctx.fillStyle = `rgba(${curR}, ${curG}, ${curB}, ${haloAlpha.toFixed(3)})`;
       ctx.beginPath();
@@ -2508,7 +2523,7 @@ function animateRepetitionStroke(options = {}) {
       ctx.fill();
       ctx.restore();
 
-      // Specular dot core
+      // Specular dot core (MUST be the final fill operation)
       ctx.save();
       ctx.fillStyle = dotRgb;
       ctx.beginPath();
