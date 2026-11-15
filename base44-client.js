@@ -14,6 +14,7 @@
   function isValidPairingCode(code) {
     if (!code || typeof code !== 'string') return false;
     var trimmed = code.trim().toUpperCase();
+    if (trimmed === 'EROS-INIT') return false;
     return /^EROS-[0-9A-Z]{4,8}$/.test(trimmed);
   }
 
@@ -77,8 +78,8 @@
 
   function coachCodeFromDom() {
     var el = document.getElementById('coach-pairing-code-display');
-    var text = el && el.textContent ? el.textContent.trim() : '';
-    return isValidPairingCode(text) ? text : 'EROS-7X9K';
+    var text = el && el.textContent ? el.textContent.trim().toUpperCase() : '';
+    return isValidPairingCode(text) ? text : null;
   }
 
   // Rehydration on page load: only connect if athlete or coach was explicitly connected
@@ -97,7 +98,10 @@
   var wasCoach = false;
   new MutationObserver(function () {
     var isCoach = document.body.classList.contains('portal-coach');
-    if (isCoach && !wasCoach) join(coachCodeFromDom());
+    if (isCoach && !wasCoach) {
+      var code = coachCodeFromDom();
+      if (code) join(code);
+    }
     if (!isCoach && wasCoach) leave();
     wasCoach = isCoach;
   }).observe(document.body, { attributes: true, attributeFilter: ['class'] });

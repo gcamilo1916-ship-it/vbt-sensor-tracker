@@ -36,6 +36,13 @@
   --coach-radius-pill: 9999px;
   --coach-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.45);
   --coach-shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.7);
+
+  /* Orbital Dark Obsidian Neumorphism Elevation Tokens */
+  --neu-out: -6px -6px 14px rgba(255, 255, 255, 0.035), 8px 8px 18px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --neu-out-sm: -4px -4px 10px rgba(255, 255, 255, 0.03), 5px 5px 12px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --neu-in: inset -3px -3px 7px rgba(255, 255, 255, 0.035), inset 4px 4px 9px rgba(0, 0, 0, 0.78);
+  --neu-in-sm: inset -2px -2px 5px rgba(255, 255, 255, 0.03), inset 3px 3px 6px rgba(0, 0, 0, 0.72);
+  --neu-bloom: -10px -10px 24px rgba(255, 255, 255, 0.05), 12px 12px 28px rgba(0, 0, 0, 0.78);
 }
 
 /* ── Mode Switcher in Header (.header-top-row) ── */
@@ -243,14 +250,45 @@ body.portal-coach #view-coach {
 }
 
 /* ── Staggered Entrance Animations for Coach Dashboard ── */
-.coach-portal-container > * {
+.coach-main > * {
   animation: coachCardEntrance 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.coach-portal-container > *:nth-child(1) { animation-delay: 0.02s; }
-.coach-portal-container > *:nth-child(2) { animation-delay: 0.05s; }
-.coach-portal-container > *:nth-child(3) { animation-delay: 0.09s; }
-.coach-portal-container > *:nth-child(4) { animation-delay: 0.13s; }
-.coach-portal-container > *:nth-child(5) { animation-delay: 0.17s; }
+.coach-main > *:nth-child(1) { animation-delay: 0.02s; }
+.coach-main > *:nth-child(2) { animation-delay: 0.05s; }
+.coach-main > *:nth-child(3) { animation-delay: 0.09s; }
+.coach-main > *:nth-child(4) { animation-delay: 0.13s; }
+.coach-main > *:nth-child(5) { animation-delay: 0.17s; }
+
+/* ── Dark Obsidian Neumorphism Utility Classes ── */
+.neu-raised {
+  box-shadow: var(--neu-out);
+}
+.neu-raised-sm {
+  box-shadow: var(--neu-out-sm);
+}
+.neu-inset {
+  box-shadow: var(--neu-in);
+}
+.neu-inset-sm {
+  box-shadow: var(--neu-in-sm);
+}
+.neu-btn {
+  box-shadow: var(--neu-out-sm);
+  transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.neu-btn:hover,
+.coach-load-pill:hover,
+.coach-rest-pill:hover,
+.coach-cue-chip:hover,
+.coach-filter-pill:hover,
+.coach-pill-btn:hover,
+.coach-bento-card:hover {
+  box-shadow: var(--neu-bloom);
+}
+.neu-btn:active {
+  box-shadow: var(--neu-in-sm);
+  transform: scale(0.96);
+}
 
 @keyframes coachCardEntrance {
   from {
@@ -263,16 +301,20 @@ body.portal-coach #view-coach {
   }
 }
 
-/* Tactile button press animations */
+/* Tactile button press animations & neumorphic inset inversion */
 .coach-load-pill:active,
 .coach-rest-pill:active,
 .coach-cue-chip:active,
 .coach-subnav-btn:active,
 .coach-bond-trigger-btn:active,
 .coach-action-btn:active,
-.coach-sm-btn:active {
-  transform: scale(0.95);
-  transition: transform 0.1s ease;
+.coach-sm-btn:active,
+.coach-filter-pill:active,
+.coach-sidebar-link:active,
+.coach-bottom-nav-btn:active {
+  transform: scale(0.96);
+  box-shadow: var(--neu-in-sm);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 /* Pulse glow on feedback status update */
@@ -444,7 +486,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
   padding: 12px 18px;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-out);
 }
 
 .coach-squad-left {
@@ -534,6 +576,17 @@ body.portal-coach #view-coach {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-md);
+  padding: 6px 12px;
+  box-shadow: var(--neu-in-sm);
+}
+
+.coach-stat-readiness-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .coach-stat-label {
@@ -565,7 +618,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
   padding: 18px;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-out);
 }
 
 .coach-monitor-header {
@@ -652,7 +705,8 @@ body.portal-coach #view-coach {
   border-radius: var(--coach-radius-md);
   padding: 14px;
   gap: 8px;
-  transition: border-color 0.15s ease;
+  box-shadow: var(--neu-in-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .coach-metric-card:hover {
@@ -807,7 +861,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
   padding: 18px;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-out);
 }
 
 .coach-console-header {
@@ -866,6 +920,7 @@ body.portal-coach #view-coach {
   font-size: 12px;
   font-weight: 700;
   color: var(--coach-text-primary);
+  box-shadow: var(--neu-out-sm);
   cursor: pointer;
   outline: none;
   transition: all 0.15s ease;
@@ -880,6 +935,7 @@ body.portal-coach #view-coach {
 
 .coach-load-pill:active {
   background: var(--coach-bg-surface-active);
+  box-shadow: var(--neu-in-sm);
   transform: translateY(0);
 }
 
@@ -895,6 +951,45 @@ body.portal-coach #view-coach {
 
 .coach-load-pill.pill-keep {
   color: var(--coach-text-secondary);
+}
+
+/* Inter-Set Rest Target Pills */
+.coach-rest-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.coach-rest-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-pill);
+  padding: 6px 13px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--coach-text-secondary);
+  box-shadow: var(--neu-out-sm);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.coach-rest-pill:hover {
+  background: var(--coach-bg-surface-hover);
+  color: var(--coach-text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.coach-rest-pill.active {
+  background: rgba(16, 163, 127, 0.16);
+  color: var(--coach-text-primary);
+  border-color: rgba(16, 163, 127, 0.45);
+  box-shadow: var(--neu-in-sm);
 }
 
 /* Quick Cue Chips */
@@ -913,6 +1008,7 @@ body.portal-coach #view-coach {
   font-size: 12px;
   font-weight: 500;
   color: var(--coach-text-primary);
+  box-shadow: var(--neu-out-sm);
   cursor: pointer;
   outline: none;
   transition: all 0.15s ease;
@@ -927,6 +1023,7 @@ body.portal-coach #view-coach {
 
 .coach-cue-chip:active {
   background: var(--coach-bg-surface-active);
+  box-shadow: var(--neu-in-sm);
 }
 
 /* Custom Cue Input */
@@ -993,7 +1090,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
   padding: 18px;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-out);
 }
 
 .coach-history-header {
@@ -1189,7 +1286,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
   padding: 8px 14px;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-out);
 }
 
 .coach-subnav-tabs {
@@ -1495,7 +1592,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
   padding: 16px 18px;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-out);
 }
 
 .coach-overview-top-row {
@@ -1534,6 +1631,7 @@ body.portal-coach #view-coach {
   font-size: 11px;
   font-weight: 600;
   color: var(--coach-text-secondary);
+  box-shadow: var(--neu-out-sm);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -1547,6 +1645,7 @@ body.portal-coach #view-coach {
   background: rgba(16, 163, 127, 0.16);
   color: var(--coach-text-primary);
   border-color: rgba(16, 163, 127, 0.45);
+  box-shadow: var(--neu-in-sm);
 }
 
 .coach-squad-grid {
@@ -1748,7 +1847,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
   padding: 15px;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-out);
 }
 
 .coach-bento-top {
@@ -1925,7 +2024,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
   padding: 18px;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-out);
 }
 
 .coach-calendar-header {
@@ -2212,7 +2311,7 @@ body.portal-coach #view-coach {
   gap: 12px;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--coach-shadow-card);
+  box-shadow: var(--neu-in-sm);
 }
 
 .coach-focal-header {
@@ -2585,4 +2684,606 @@ body.portal-coach #view-coach {
   background: rgba(0, 229, 255, 0.15);
   border-color: #00E5FF;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   11. ORBITAL 3-SHELL NAVIGATION, MOTION SYSTEM & PROGRESS RING
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.coach-shell {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.coach-main {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Desktop Sidebar Shell */
+.coach-sidebar {
+  display: none;
+  background: var(--coach-bg-surface-1);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: 20px;
+  padding: 18px 14px;
+  box-shadow: var(--neu-out);
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 14px;
+  transition: width 0.22s ease, padding 0.22s ease;
+}
+
+.coach-sidebar-header,
+.coach-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 4px 10px;
+  border-bottom: 1px solid var(--coach-border-subtle);
+  color: var(--coach-accent-teal);
+}
+
+.coach-sidebar-emblem {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--coach-accent-teal);
+  flex-shrink: 0;
+}
+
+.coach-sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: var(--coach-text-primary);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.coach-sidebar-wordmark {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--coach-text-primary);
+  line-height: 1.1;
+}
+
+.coach-sidebar-sublabel {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--coach-text-muted);
+  line-height: 1.1;
+}
+
+.coach-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.coach-sidebar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.coach-sidebar-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--coach-text-muted);
+  padding: 0 8px 2px;
+}
+
+.coach-sidebar-link,
+.coach-sidebar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: 12px;
+  padding: 9px 12px;
+  color: var(--coach-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.coach-sidebar-link:hover,
+.coach-sidebar-toggle:hover {
+  background: var(--coach-bg-surface-hover);
+  color: var(--coach-text-primary);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.coach-sidebar-link.nav-active,
+.coach-bottom-nav-btn.nav-active {
+  background: rgba(16, 163, 127, 0.16);
+  border-color: rgba(16, 163, 127, 0.45);
+  color: var(--coach-text-primary);
+  box-shadow: var(--neu-in-sm);
+}
+
+.coach-sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Embossed Live Rest / Squad Ticker inside Desktop Sidebar */
+.coach-sidebar-ticker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 4px;
+  box-shadow: var(--neu-in);
+}
+
+.coach-sidebar-ticker-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.coach-sidebar-ticker-meta,
+.coach-sidebar-ticker-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--coach-text-muted);
+}
+
+.coach-sidebar-rest-state,
+.coach-sidebar-ticker-state {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--coach-accent-teal);
+  text-transform: uppercase;
+}
+
+.coach-sidebar-rest-time,
+.coach-sidebar-ticker-time {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--coach-text-primary);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.coach-sidebar-ticker-counts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--coach-text-secondary);
+}
+
+.coach-sidebar-toggle {
+  margin-top: auto;
+  color: var(--coach-text-secondary);
+  box-shadow: var(--neu-out-sm);
+}
+
+.coach-sidebar--collapsed .coach-sidebar-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* Tablet & Mobile Bottom Navigation Shells */
+.coach-tablet-nav,
+.coach-mobile-nav {
+  display: none;
+  position: fixed;
+  z-index: 900;
+  background: var(--coach-bg-surface-1);
+  border: 1px solid var(--coach-border-subtle);
+  box-shadow: var(--neu-bloom);
+}
+
+.coach-bottom-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: 12px;
+  padding: 8px 12px;
+  color: var(--coach-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.coach-bottom-nav-btn:hover {
+  color: var(--coach-text-primary);
+  background: var(--coach-bg-surface-hover);
+}
+
+/* Desktop Breakpoint (>= 1024px) */
+@media (min-width: 1024px) {
+  .coach-shell {
+    flex-direction: row;
+    gap: 24px;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  #coach-sidebar,
+  .coach-sidebar {
+    display: flex;
+    width: 240px;
+    border-radius: 20px;
+    padding: 18px 14px;
+    position: sticky;
+    top: 16px;
+  }
+
+  #coach-sidebar.coach-sidebar--collapsed {
+    width: 64px;
+    padding: 14px 8px;
+    align-items: center;
+  }
+
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-brand-text,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-group-label,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-link span,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-toggle span,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-toggle-label,
+  #coach-sidebar.coach-sidebar--collapsed #coach-sidebar-ticker {
+    display: none;
+  }
+
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-header,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-brand {
+    justify-content: center;
+    padding: 2px 0 10px;
+  }
+
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-link,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-toggle {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .coach-main {
+    flex: 1;
+    min-width: 0;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  #coach-tablet-nav,
+  #coach-mobile-nav {
+    display: none !important;
+  }
+}
+
+/* Compact Desktop Fit Safety when Sidebar is Expanded alongside 3-Column Live Cockpit */
+@media (min-width: 1150px) and (max-width: 1440px) {
+  body.portal-coach #coach-live-panel {
+    grid-template-columns: 248px minmax(0, 1fr) 304px;
+    gap: 14px;
+  }
+}
+
+/* Tablet Breakpoint (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  #coach-sidebar,
+  #coach-mobile-nav {
+    display: none !important;
+  }
+
+  body.portal-coach #coach-tablet-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    border-radius: 18px;
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+  }
+
+  .coach-main {
+    padding-bottom: 100px;
+  }
+}
+
+/* Mobile Breakpoint (< 768px) */
+@media (max-width: 767px) {
+  #coach-sidebar,
+  #coach-tablet-nav {
+    display: none !important;
+  }
+
+  body.portal-coach #coach-mobile-nav {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 6px;
+    border-radius: 16px;
+    max-width: calc(100vw - 20px);
+  }
+
+  #coach-mobile-nav .coach-bottom-nav-btn {
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 4px;
+    font-size: 9px;
+    min-width: 0;
+  }
+
+  .coach-main {
+    padding-bottom: 100px;
+  }
+}
+
+/* ── Ambient Cursor Glow & Intro Choreography ── */
+#coach-cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 179, 245, 0.07) 0%, rgba(201, 179, 245, 0.025) 38%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transform: translate3d(-9999px, -9999px, 0);
+  will-change: transform, opacity;
+  transition: opacity 0.25s ease;
+}
+
+body.portal-coach #coach-cursor-glow {
+  opacity: 1;
+}
+
+#coach-intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: var(--coach-bg-canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.45s ease;
+  pointer-events: auto;
+}
+
+#coach-intro-overlay.is-fading,
+#coach-intro-overlay[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+#coach-intro-overlay.is-fading {
+  opacity: 0;
+}
+
+.coach-intro-wordmark,
+.coach-intro-text {
+  font-size: clamp(34px, 6vw, 48px);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--coach-text-primary);
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.coach-intro-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: coachIntroLetterIn 0.36s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes coachIntroLetterIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.coach-fade-up {
+  animation: coachFadeUp 0.35s ease-out both;
+  animation-delay: var(--stagger-delay, 0s);
+}
+
+@keyframes coachFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.coach-progress-ring {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.coach-progress-ring svg {
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.coach-progress-ring circle.coach-ring-arc {
+  transition: stroke-dashoffset 0.55s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.25s ease;
+}
+
+.coach-nav-highlight {
+  outline: 1px solid var(--coach-accent-teal);
+  box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.26), var(--neu-bloom) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   12. SMART OVERFLOW PROTECTION & CUSTOMIZABLE RADIAL FLOATING ACTION MENU
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.smart-overflow-protected,
+#coach-bond-modal .coach-bond-card,
+#coach-directive-modal .coach-directive-card,
+#coach-cue-hud {
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  box-sizing: border-box;
+}
+
+#coach-bond-modal .coach-bond-card,
+#coach-directive-modal .coach-directive-card,
+.eros-radial-customizer-modal {
+  overflow-y: auto;
+}
+
+.eros-radial-fab[data-radial-open="true"] .eros-radial-fab-trigger {
+  border-color: var(--coach-accent-teal);
+  color: var(--coach-accent-teal);
+}
+
+.eros-radial-fab[data-radial-open="true"] .eros-radial-plus-icon {
+  transform: rotate(45deg);
+}
+
+.eros-radial-fab[data-radial-open="true"] .eros-radial-items {
+  pointer-events: auto;
+}
+
+.eros-radial-fab[data-radial-open="true"] .eros-radial-item {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) translate3d(var(--radial-x, 0px), var(--radial-y, 0px), 0) scale(1);
+}
+
+.eros-radial-item.is-customize-item {
+  border-color: rgba(0, 229, 255, 0.35);
+  color: var(--coach-accent-cyan);
+}
+
+.eros-radial-customizer-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--coach-text-secondary);
+  line-height: 1.4;
+}
+
+.eros-radial-customizer-dismiss {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  color: var(--coach-text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.eros-radial-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eros-radial-option-text strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--coach-text-primary);
+}
+
+.eros-radial-option-text small {
+  font-size: 11px;
+  color: var(--coach-text-secondary);
+}
+
+.eros-radial-customizer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--coach-border-subtle);
+  padding-top: 10px;
+}
+
+.eros-radial-customizer-footer #btn-radial-customizer-close {
+  width: auto;
+  flex: 1;
+  background: var(--coach-accent-teal);
+  color: #ffffff;
+  border-color: rgba(16, 163, 127, 0.55);
+}
+
+.eros-radial-customizer-footer #btn-radial-customizer-close:hover {
+  background: #0e8c6d;
+  color: #ffffff;
+}
+
 

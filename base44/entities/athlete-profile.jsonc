@@ -1,0 +1,76 @@
+{
+  "name": "AthleteProfile",
+  "description": "Persisted athlete training metadata, personal records, and estimated 1RM snapshots",
+  "type": "object",
+  "properties": {
+    "athlete_id": {
+      "type": "string",
+      "description": "Unique identifier for the athlete"
+    },
+    "athlete_name": {
+      "type": "string",
+      "description": "Display name of the athlete"
+    },
+    "rack_id": {
+      "type": "string",
+      "description": "Assigned rack or platform identifier (e.g. Rack 01)"
+    },
+    "weight_class": {
+      "type": "string",
+      "description": "Competition weight class division (e.g. 83kg, 93kg)"
+    },
+    "bodyweight_kg": {
+      "type": "number",
+      "description": "Current athlete bodyweight in kilograms"
+    },
+    "gender": {
+      "type": "string",
+      "description": "Athlete competition division category"
+    },
+    "comp_squat_kg": {
+      "type": "number",
+      "description": "Competition squat personal record in kilograms"
+    },
+    "comp_bench_kg": {
+      "type": "number",
+      "description": "Competition bench press personal record in kilograms"
+    },
+    "comp_deadlift_kg": {
+      "type": "number",
+      "description": "Competition deadlift personal record in kilograms"
+    },
+    "gym_squat_kg": {
+      "type": "number",
+      "description": "Gym squat personal record in kilograms"
+    },
+    "gym_bench_kg": {
+      "type": "number",
+      "description": "Gym bench press personal record in kilograms"
+    },
+    "gym_deadlift_kg": {
+      "type": "number",
+      "description": "Gym deadlift personal record in kilograms"
+    },
+    "e1rm_squat_kg": {
+      "type": "number",
+      "description": "Estimated 1RM for squat in kilograms"
+    },
+    "e1rm_bench_kg": {
+      "type": "number",
+      "description": "Estimated 1RM for bench press in kilograms"
+    },
+    "e1rm_deadlift_kg": {
+      "type": "number",
+      "description": "Estimated 1RM for deadlift in kilograms"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the athlete profile was last updated"
+    }
+  },
+  "required": [
+    "athlete_id",
+    "athlete_name"
+  ]
+}

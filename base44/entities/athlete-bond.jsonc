@@ -1,0 +1,58 @@
+{
+  "name": "AthleteBond",
+  "description": "Verifiable dual-consent coach-athlete pairing relationships and access status",
+  "type": "object",
+  "properties": {
+    "bond_id": {
+      "type": "string",
+      "description": "Unique identifier for the coach-athlete pairing bond"
+    },
+    "pairing_code": {
+      "type": "string",
+      "description": "Pairing code linking athlete and coach session"
+    },
+    "athlete_id": {
+      "type": "string",
+      "description": "Unique identifier for the bonded athlete"
+    },
+    "athlete_name": {
+      "type": "string",
+      "description": "Display name of the athlete"
+    },
+    "rack_id": {
+      "type": "string",
+      "description": "Assigned rack or platform identifier for the athlete"
+    },
+    "coach_id": {
+      "type": "string",
+      "description": "Unique identifier for the bonded coach"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "revoked"
+      ],
+      "default": "pending",
+      "description": "Dual-consent lifecycle status of the pairing bond"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when a pending pairing request expires"
+    },
+    "bonded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the dual-consent bond became active"
+    }
+  },
+  "required": [
+    "bond_id",
+    "pairing_code",
+    "athlete_id",
+    "coach_id",
+    "status"
+  ]
+}

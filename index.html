@@ -340,6 +340,16 @@
                   <span class="rpe-tick" style="left: 95%;" data-rpe="9.5"><span class="tick-label">9.5</span></span>
                 </div>
 
+                <!-- Active Trail Pin (Leading Edge Focal Point with Live RPE Value at Stake) -->
+                <div class="rpe-trail-pin" id="rpe-trail-pin" style="left: 0%;">
+                  <div class="rpe-trail-pin-glow"></div>
+                  <div class="rpe-trail-pin-head"></div>
+                  <span class="rpe-trail-pin-badge font-mono" id="rpe-trail-pin-val">0.0</span>
+                </div>
+
+                <!-- Particle Emitter for Continuum Blurred Sparks -->
+                <div class="rpe-particles-emitter" id="rpe-particles-emitter" aria-hidden="true"></div>
+
                 <div class="rpe-target-pin" id="rpe-target-pin" title="Optimal Strength Target RPE 8.0" style="left: 80%;">
                   <span class="target-tick"></span>
                   <span class="target-text">TARGET 8.0</span>
@@ -749,9 +759,126 @@
 
     </main>
 
-    <!-- Dedicated Coach View Portal (ChatGPT-Inspired Dark UI) -->
+    <!-- Dedicated Coach View Portal (Orbital Dark Obsidian Neumorphism) -->
     <section id="view-coach" class="coach-portal-container" style="display: none;" aria-label="Coach Control Center">
-      
+
+      <!-- Ambient Cursor Radial Glow (Pointer Fine Devices) -->
+      <div id="coach-cursor-glow" class="coach-cursor-glow" aria-hidden="true"></div>
+
+      <!-- Session-Once Orbital Intro Wordmark Overlay -->
+      <div id="coach-intro-overlay" class="coach-intro-overlay" style="display: none;" aria-hidden="true">
+        <div id="coach-intro-wordmark" class="coach-intro-wordmark coach-intro-text"></div>
+      </div>
+
+      <!-- 3-Shell Responsive Coach Workspace -->
+      <div class="coach-shell" id="coach-shell">
+
+        <!-- Shell 1: Desktop Collapsible Sidebar (>= 1024px) -->
+        <aside id="coach-sidebar" class="coach-sidebar neu-raised" aria-label="Coach Workspace Navigation">
+          <div class="coach-sidebar-brand">
+            <div class="coach-sidebar-emblem neu-inset-sm" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 3v3M12 18v3M3 12h3M18 12h3"></path>
+              </svg>
+            </div>
+            <div class="coach-sidebar-brand-text">
+              <span class="coach-sidebar-wordmark">EROS COACH</span>
+              <span class="coach-sidebar-sublabel font-mono">COMMAND COCKPIT</span>
+            </div>
+          </div>
+
+          <div class="coach-sidebar-nav">
+            <div class="coach-sidebar-group">
+              <div class="coach-sidebar-group-label">COACHING</div>
+              <button type="button" class="coach-sidebar-link nav-active neu-inset-sm" data-coach-nav="live" aria-current="page">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                <span>Live Cockpit</span>
+              </button>
+              <button type="button" class="coach-sidebar-link" data-coach-nav="roster">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>Squad Roster</span>
+              </button>
+              <button type="button" class="coach-sidebar-link" data-coach-nav="prescriptions">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="4" y1="21" x2="4" y2="14"></line>
+                  <line x1="4" y1="10" x2="4" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12" y2="3"></line>
+                  <line x1="20" y1="21" x2="20" y2="16"></line>
+                  <line x1="20" y1="12" x2="20" y2="3"></line>
+                  <line x1="1" y1="14" x2="7" y2="14"></line>
+                  <line x1="9" y1="8" x2="15" y2="8"></line>
+                  <line x1="17" y1="16" x2="23" y2="16"></line>
+                </svg>
+                <span>Prescriptions</span>
+              </button>
+              <button type="button" class="coach-sidebar-link" data-coach-nav="history">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>History</span>
+              </button>
+            </div>
+
+            <div class="coach-sidebar-group">
+              <div class="coach-sidebar-group-label">MANAGEMENT</div>
+              <button type="button" class="coach-sidebar-link" data-coach-nav="bonds">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                <span>Athlete Bonds</span>
+              </button>
+              <button type="button" class="coach-sidebar-link" data-coach-nav="sync">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M23 4v6h-6"></path>
+                  <path d="M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+                  <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+                </svg>
+                <span>Sync &amp; Health</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="coach-sidebar-footer">
+            <!-- Embossed Live Rest / Session Ticker Widget -->
+            <div id="coach-sidebar-ticker" class="coach-sidebar-ticker neu-inset" aria-live="polite">
+              <div class="coach-sidebar-ticker-top">
+                <span class="coach-sidebar-ticker-meta font-mono">REST TICKER</span>
+                <span id="coach-sidebar-rest-state" class="coach-sidebar-rest-state font-mono">READY</span>
+              </div>
+              <div id="coach-sidebar-rest-time" class="coach-sidebar-rest-time font-mono">00:00</div>
+              <div class="coach-sidebar-ticker-counts coach-sidebar-ticker-meta font-mono">
+                <span id="coach-sidebar-active-count">0 ACTIVE</span>
+                <span id="coach-sidebar-resting-count">1 REST</span>
+              </div>
+            </div>
+
+            <button type="button" id="coach-sidebar-toggle" class="coach-sidebar-toggle neu-raised-sm" aria-expanded="true" aria-label="Toggle Coach Sidebar">
+              <svg class="coach-sidebar-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              <span class="coach-sidebar-toggle-label">Collapse</span>
+            </button>
+          </div>
+        </aside>
+
+        <!-- Main Coach Content Column -->
+        <div class="coach-main" id="coach-main">
+
       <!-- Orientation Advisory Banner -->
       <div id="coach-orientation-banner" class="coach-orientation-banner" role="status" aria-live="polite">
         <div class="coach-orientation-content">
@@ -762,11 +889,17 @@
           </svg>
           <span class="coach-orientation-text">Coach Panel is better used in landscape mode or Large Screens</span>
         </div>
-        <button type="button" id="btn-dismiss-orientation" class="coach-orientation-dismiss" aria-label="Dismiss orientation advisory">×</button>
+        <button type="button" id="btn-dismiss-orientation" class="coach-orientation-dismiss" aria-label="Dismiss orientation advisory">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span class="sr-only">Dismiss</span>
+        </button>
       </div>
 
       <!-- Component 1: Squad Ribbon & Athlete Selector -->
-      <div class="coach-squad-ribbon">
+      <div class="coach-squad-ribbon neu-raised coach-fade-up" style="--stagger-delay: 0.02s;">
         <div class="coach-squad-left">
           <div class="coach-athlete-selector-group">
             <label for="coach-athlete-select" class="coach-selector-label">ATHLETE:</label>
@@ -778,7 +911,7 @@
             <span class="coach-status-dot"></span>
             <span id="coach-session-status-text">SESSION READY</span>
           </div>
-          <button type="button" id="btn-coach-bond-open" class="coach-bond-trigger-btn" aria-label="Link or Manage Bonded Athletes">
+          <button type="button" id="btn-coach-bond-open" class="coach-bond-trigger-btn neu-btn" aria-label="Link or Manage Bonded Athletes">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
@@ -788,9 +921,14 @@
           </button>
         </div>
         <div class="coach-squad-stats">
-          <div class="coach-stat-chip">
-            <span class="coach-stat-label">Daily Readiness</span>
-            <span id="coach-readiness-val" class="coach-stat-value optimal">94% [OPTIMAL]</span>
+          <div class="coach-stat-chip coach-stat-chip-readiness neu-raised-sm">
+            <div class="coach-stat-readiness-wrap">
+              <div id="coach-readiness-ring" class="coach-progress-ring" aria-hidden="true"></div>
+              <div class="coach-stat-text-col">
+                <span class="coach-stat-label">Daily Readiness</span>
+                <span id="coach-readiness-val" class="coach-stat-value optimal">94% [OPTIMAL]</span>
+              </div>
+            </div>
           </div>
           <div class="coach-stat-chip">
             <span class="coach-stat-label">Session Volume</span>
@@ -804,7 +942,7 @@
       </div>
 
       <!-- Coach Sub-Navigation Bar: Live Panel vs Athlete History Panel -->
-      <div class="coach-subnav-bar" id="coach-subnav-bar" role="tablist" aria-label="Coach Portal Sections">
+      <div class="coach-subnav-bar neu-raised coach-fade-up" id="coach-subnav-bar" style="--stagger-delay: 0.04s" role="tablist" aria-label="Coach Portal Sections">
         <div class="coach-subnav-tabs">
           <button type="button" id="btn-coach-panel-live" class="coach-subnav-btn active" data-panel="live" role="tab" aria-selected="true" aria-controls="coach-live-panel">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -830,7 +968,7 @@
 
       <!-- Manual Coach-Athlete Bonding Modal / Drawer (Requirement R2) -->
       <div id="coach-bond-modal" class="coach-bond-modal" role="dialog" aria-modal="true" aria-labelledby="coach-bond-modal-title" style="display: none;">
-        <div class="coach-bond-card">
+        <div class="coach-bond-card neu-raised smart-overflow-protected">
           <div class="coach-bond-header">
             <div class="coach-bond-title-wrap">
               <h3 id="coach-bond-modal-title" class="coach-bond-title">MANUAL COACH-ATHLETE BONDING</h3>
@@ -847,7 +985,7 @@
                 <span id="coach-pairing-ttl" class="coach-ttl-badge font-mono">TTL: 15:00</span>
               </div>
               <div class="coach-pairing-code-box">
-                <span id="coach-pairing-code-display" class="coach-pairing-code font-mono">EROS-7X9K</span>
+                <span id="coach-pairing-code-display" class="coach-pairing-code font-mono">EROS-INIT</span>
                 <div class="coach-pairing-actions">
                   <button type="button" id="btn-coach-copy-code" class="coach-sm-btn">Copy Code</button>
                   <button type="button" id="btn-coach-regen-code" class="coach-sm-btn">Regenerate</button>
@@ -915,7 +1053,7 @@
       <div id="coach-live-panel" class="coach-panel-section" role="tabpanel" aria-labelledby="btn-coach-panel-live">
 
         <!-- Live Squad Overview & Multi-Athlete Roster Grid -->
-        <div class="coach-squad-overview-card" id="coach-squad-overview">
+        <div class="coach-squad-overview-card neu-raised coach-fade-up" id="coach-squad-overview" style="--stagger-delay: 0.08s">
           <div class="coach-overview-top-row">
             <div class="coach-overview-title-group">
               <span class="coach-history-title">Live Squad Overview</span>
@@ -936,7 +1074,7 @@
         </div>
 
         <!-- Component 2: Active Set Live Monitor -->
-        <div class="coach-active-set-monitor" id="coach-active-set-card">
+        <div class="coach-active-set-monitor neu-raised coach-fade-up" id="coach-active-set-card" style="--stagger-delay: 0.12s">
           <div class="coach-monitor-header">
             <div class="coach-monitor-title-group">
               <span id="coach-active-lift-badge" class="coach-lift-badge lift-deadlift">MAIN DEADLIFT</span>
@@ -1100,7 +1238,7 @@
         </div>
 
         <!-- Component 3: Coach Prescriptive Feedback Console -->
-        <div class="coach-feedback-console" id="coach-feedback-console">
+        <div class="coach-feedback-console neu-raised coach-fade-up" id="coach-feedback-console" style="--stagger-delay: 0.16s">
           <div class="coach-console-header">
             <span class="coach-console-title">Coach Prescriptive Console</span>
             <span class="coach-console-status" id="coach-feedback-status">Ready</span>
@@ -1138,7 +1276,7 @@
               <button type="button" class="coach-cue-chip" data-cue="Drive hips!">Drive hips!</button>
               <button type="button" class="coach-cue-chip" data-cue="Squeeze lats before floor break">Squeeze lats</button>
               <button type="button" class="coach-cue-chip" data-cue="Stay tight in hole">Stay tight in hole</button>
-              <button type="button" class="coach-cue-chip" data-cue="Rack bar — fatigue cutoff reached">Rack bar — cutoff</button>
+              <button type="button" class="coach-cue-chip" data-cue="Rack bar - fatigue cutoff reached">Rack bar - cutoff</button>
               <button type="button" class="coach-cue-chip" data-cue="Take 3m rest before next attempt">Take 3m rest</button>
             </div>
           </div>
@@ -1160,7 +1298,7 @@
         </div>
 
         <!-- Component 4: Sets Performance History Table -->
-        <div class="coach-sets-history-card">
+        <div class="coach-sets-history-card neu-raised coach-fade-up" style="--stagger-delay: 0.20s">
           <div class="coach-history-header">
             <span class="coach-history-title">Sets Performance History</span>
             <span class="coach-stat-label font-mono" id="coach-sets-counter">0 Completed</span>
@@ -1201,7 +1339,7 @@
         <div class="coach-history-bento-quad" id="coach-history-bento-quad">
 
           <!-- Card 1: Current In-Competition Total -->
-          <div class="coach-bento-card" id="coach-comp-total-card">
+          <div class="coach-bento-card neu-raised coach-fade-up" id="coach-comp-total-card" style="--stagger-delay: 0.04s">
             <div class="coach-bento-top">
               <span class="coach-metric-label">IN-COMPETITION TOTAL</span>
               <button type="button" id="btn-coach-edit-comp" class="coach-inline-action-btn" aria-label="Edit Competition PRs">Edit</button>
@@ -1233,7 +1371,7 @@
           </div>
 
           <!-- Card 2: Current Gym Total (Dual Models: Absolute 1RM vs Load-Velocity e1RM) -->
-          <div class="coach-bento-card" id="coach-gym-total-card">
+          <div class="coach-bento-card neu-raised coach-fade-up" id="coach-gym-total-card" style="--stagger-delay: 0.08s">
             <div class="coach-bento-top">
               <span class="coach-metric-label">CURRENT GYM TOTAL</span>
               <div class="coach-model-switch" id="coach-gym-model-toggle" role="group" aria-label="Gym Total Calculation Model">
@@ -1249,7 +1387,7 @@
           </div>
 
           <!-- Card 3: Gym vs In-Comp Total Differential & Transfer Gap -->
-          <div class="coach-bento-card" id="coach-total-diff-card">
+          <div class="coach-bento-card neu-raised coach-fade-up" id="coach-total-diff-card" style="--stagger-delay: 0.12s">
             <div class="coach-bento-top">
               <span class="coach-metric-label">GYM VS COMP TRANSFER</span>
               <span id="coach-diff-badge" class="coach-transfer-badge optimal">OPTIMAL TRANSFER</span>
@@ -1262,7 +1400,7 @@
           </div>
 
           <!-- Card 4: Weekly Adherence Tracker ("x/7 workouts completed this week with Eros") -->
-          <div class="coach-bento-card" id="coach-weekly-adherence-card">
+          <div class="coach-bento-card neu-raised coach-fade-up" id="coach-weekly-adherence-card" style="--stagger-delay: 0.16s">
             <div class="coach-bento-top">
               <span class="coach-metric-label">WEEKLY EROS ADHERENCE</span>
               <span id="coach-weekly-ratio-badge" class="coach-adherence-pill font-mono">4/7 DAYS</span>
@@ -1279,7 +1417,7 @@
         </div>
 
         <!-- 2. Monthly Calendar View of Completed Workouts with Accessible Data -->
-        <div class="coach-monthly-calendar-card" id="coach-monthly-calendar-card">
+        <div class="coach-monthly-calendar-card neu-raised coach-fade-up" id="coach-monthly-calendar-card" style="--stagger-delay: 0.20s">
           <div class="coach-calendar-header">
             <div class="coach-cal-title-block">
               <span class="coach-history-title">Monthly Completed Workouts Calendar</span>
@@ -1347,7 +1485,7 @@
         </div>
 
         <!-- 3. Chronological Previous Workouts Feed -->
-        <div class="coach-sets-history-card" id="coach-previous-workouts-card">
+        <div class="coach-sets-history-card neu-raised coach-fade-up" id="coach-previous-workouts-card" style="--stagger-delay: 0.24s">
           <div class="coach-history-header">
             <div class="coach-overview-title-group">
               <span class="coach-history-title">Previous Workouts Logbook (Tracked with Eros)</span>
@@ -1367,6 +1505,104 @@
         </div>
 
       </div>
+      </div><!-- /#coach-main -->
+      </div><!-- /#coach-shell -->
+
+      <!-- Coach Tablet Bottom Navigation Bar (768px - 1023px) -->
+      <nav id="coach-tablet-nav" class="coach-tablet-nav neu-raised" aria-label="Coach Tablet Navigation">
+        <button type="button" class="coach-bottom-nav-btn nav-active neu-inset-sm" data-coach-nav="live">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <span>Live Cockpit</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="roster">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Squad Roster</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="prescriptions">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>Prescriptions</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="history">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>History</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="bonds">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span>Athlete Bonds</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="sync">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <polyline points="9 12 11 14 15 10"></polyline>
+          </svg>
+          <span>Sync</span>
+        </button>
+      </nav>
+
+      <!-- Coach Mobile Bottom Navigation Bar (< 768px) -->
+      <nav id="coach-mobile-nav" class="coach-mobile-nav neu-raised" aria-label="Coach Mobile Navigation">
+        <button type="button" class="coach-bottom-nav-btn nav-active neu-inset-sm" data-coach-nav="live">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          <span>Live</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="roster">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+          </svg>
+          <span>Roster</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="prescriptions">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>Cues</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="history">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>History</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="bonds">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span>Bonds</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="sync">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <polyline points="9 12 11 14 15 10"></polyline>
+          </svg>
+          <span>Sync</span>
+        </button>
+      </nav>
 
     </section>
 
@@ -1397,6 +1633,85 @@
         <span class="nav-label">HISTORY</span>
       </button>
     </nav>
+
+    <!-- Customizable Radial Floating Action Launcher (Athlete & Coach Unified Quick Actions) -->
+    <div id="eros-radial-fab" class="eros-radial-fab smart-overflow-protected" data-radial-open="false" data-quadrant="bottom-right">
+      <div id="eros-radial-items" class="eros-radial-items" role="menu" aria-label="Quick Actions" aria-hidden="true"></div>
+      <button type="button" id="eros-radial-fab-trigger" class="eros-radial-fab-trigger neu-raised-sm" aria-label="Toggle Quick Actions" aria-expanded="false" aria-controls="eros-radial-items" title="Quick Actions (Right-click or long-press to customize)">
+        <svg class="eros-radial-plus-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span class="sr-only">Actions</span>
+      </button>
+    </div>
+
+    <!-- Radial Action Menu Customizer Modal -->
+    <div id="eros-radial-customizer-modal" class="eros-radial-customizer-modal smart-overflow-protected" role="dialog" aria-modal="true" aria-labelledby="eros-radial-customizer-title" style="display: none;">
+      <div class="eros-radial-customizer-header">
+        <div>
+          <h3 id="eros-radial-customizer-title" class="eros-radial-customizer-title">CUSTOMIZE QUICK ACTIONS</h3>
+          <p class="eros-radial-customizer-sub">Select shortcuts for your floating radial launcher. Drag the button anywhere along screen edges.</p>
+        </div>
+        <button type="button" id="btn-radial-customizer-dismiss" class="eros-radial-customizer-dismiss neu-btn" aria-label="Dismiss Quick Actions Customizer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span class="sr-only">Close</span>
+        </button>
+      </div>
+
+      <div class="eros-radial-customizer-list" id="eros-radial-customizer-list">
+        <label class="eros-radial-customizer-option neu-inset-sm">
+          <span class="eros-radial-option-text">
+            <strong>Switch Mode</strong>
+            <small>Toggle between Athlete and Coach portals</small>
+          </span>
+          <input type="checkbox" class="eros-radial-check" data-radial-action-toggle="switch-mode" checked />
+        </label>
+        <label class="eros-radial-customizer-option neu-inset-sm">
+          <span class="eros-radial-option-text">
+            <strong>Toggle Set</strong>
+            <small>Start or end the active set from anywhere</small>
+          </span>
+          <input type="checkbox" class="eros-radial-check" data-radial-action-toggle="toggle-set" checked />
+        </label>
+        <label class="eros-radial-customizer-option neu-inset-sm">
+          <span class="eros-radial-option-text">
+            <strong>Link Athlete</strong>
+            <small>Open dual-consent Coach-Athlete bonding modal</small>
+          </span>
+          <input type="checkbox" class="eros-radial-check" data-radial-action-toggle="link-athlete" checked />
+        </label>
+        <label class="eros-radial-customizer-option neu-inset-sm">
+          <span class="eros-radial-option-text">
+            <strong>Replay Path</strong>
+            <small>Trigger 2D Bar Path kinematic set replay</small>
+          </span>
+          <input type="checkbox" class="eros-radial-check" data-radial-action-toggle="replay-path" checked />
+        </label>
+        <label class="eros-radial-customizer-option neu-inset-sm">
+          <span class="eros-radial-option-text">
+            <strong>Rest Timer</strong>
+            <small>Jump to inter-set rest &amp; prescription controls</small>
+          </span>
+          <input type="checkbox" class="eros-radial-check" data-radial-action-toggle="rest-timer" checked />
+        </label>
+        <label class="eros-radial-customizer-option neu-inset-sm">
+          <span class="eros-radial-option-text">
+            <strong>Quick Cue</strong>
+            <small>Send Drive hips tactical cue or open Customizer</small>
+          </span>
+          <input type="checkbox" class="eros-radial-check" data-radial-action-toggle="quick-cue" checked />
+        </label>
+      </div>
+
+      <div class="eros-radial-customizer-footer">
+        <button type="button" id="btn-radial-customizer-reset" class="coach-sm-btn neu-btn">Reset Defaults</button>
+        <button type="button" id="btn-radial-customizer-close" class="btn-coach-send neu-btn">Save Actions</button>
+      </div>
+    </div>
 
   </div>
 

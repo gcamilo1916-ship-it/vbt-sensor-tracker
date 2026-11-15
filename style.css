@@ -5090,33 +5090,150 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   gap: 8px !important;
 }
 
-/* Main RPE Pill: Remove Horizontal Blob & Track, Preserving Vertical Deviation Stage */
+/* Main RPE Pill: Integrated RPE Scanner with Dynamic Color Continuum */
 .rpe-gauge-container {
-  display: none !important;
+  display: block !important;
+  width: 100% !important;
+  padding: 8px 0 14px 0 !important;
+  position: relative !important;
+  overflow: visible !important;
 }
 
-/* Main RPE Pill: Sleek Compact Secondary Hero Companion with Coach Cockpit Gradient */
+.rpe-gauge-track {
+  display: block !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 8px !important;
+  background: #101010 !important;
+  border: 1px solid #282828 !important;
+  border-radius: 999px !important;
+  overflow: visible !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+#rpe-gauge-fill,
+.rpe-gauge-fill {
+  height: 100% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #00FF66 0%, #00E5FF 55%, #FFB800 82%, #FF3B30 100%) !important;
+  box-shadow: 0 0 12px var(--trail-glow, rgba(0, 255, 102, 0.45)) !important;
+  transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Active Trail Pin at Leading Edge with Live RPE Value at Stake */
+.rpe-trail-pin {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  left: 0% !important;
+  z-index: 5 !important;
+  pointer-events: none !important;
+  transition: left 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  will-change: left !important;
+}
+
+.rpe-trail-pin-head {
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  border: 2px solid var(--trail-color, #00FF66) !important;
+  box-shadow: 0 0 10px var(--trail-color, #00FF66), 0 0 20px var(--trail-color, #00FF66) !important;
+  transition: border-color 0.35s ease, box-shadow 0.35s ease !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.rpe-trail-pin-glow {
+  position: absolute !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle, var(--trail-color, #00FF66) 0%, transparent 70%) !important;
+  opacity: 0.65 !important;
+  filter: blur(4px) !important;
+  z-index: 1 !important;
+  animation: rpePinBreath 2s ease-in-out infinite !important;
+}
+
+@keyframes rpePinBreath {
+  0%, 100% { transform: scale(0.9); opacity: 0.5; }
+  50% { transform: scale(1.3); opacity: 0.85; }
+}
+
+.rpe-trail-pin-badge {
+  position: absolute !important;
+  bottom: calc(100% + 5px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: #0d0d0d !important;
+  border: 1px solid var(--trail-color, #00FF66) !important;
+  border-radius: 6px !important;
+  padding: 1px 6px !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  line-height: 1.3 !important;
+  color: var(--trail-color, #00FF66) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  transition: border-color 0.35s ease, color 0.35s ease !important;
+}
+
+/* Blurred Particle Emission along the Color Continuum */
+.rpe-particles-emitter {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  overflow: visible !important;
+  z-index: 4 !important;
+}
+
+.rpe-blurred-particle {
+  position: absolute !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+  opacity: 1 !important;
+  filter: blur(2.5px) !important;
+  will-change: transform, opacity !important;
+  animation: rpeParticleShoot 0.75s cubic-bezier(0.12, 0.8, 0.32, 1) forwards !important;
+}
+
+@keyframes rpeParticleShoot {
+  0% {
+    transform: translate(0, 0) scale(1.2);
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--p-dx, -20px), var(--p-dy, -15px)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Main RPE Pill: Sleek Secondary Hero Companion */
 .integrated-rpe-tracker {
   background: #1c1c1c !important;
   border: 1px solid #2d2d2d !important;
   border-radius: 12px !important;
-  padding: 7px 14px !important;
+  padding: 8px 14px !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  gap: 5px !important;
+  gap: 6px !important;
   position: relative !important;
 }
 
 .integrated-rpe-tracker::after {
-  content: "";
-  display: block;
-  width: 100%;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #00FF66 0%, #00E5FF 60%, #FFB800 85%, #FF3B30 100%);
-  opacity: 0.85;
-  margin-top: 3px;
+  display: none !important;
 }
 
 .rpe-hero-number {
@@ -5815,4 +5932,430 @@ body.theme-deadlift .nav-indicator-pill::before {
 
 .controls-panel.set-active-compact #btn-complete-set {
   display: inline-flex !important;
+}
+
+/* =============================================================================
+   DARK OBSIDIAN NEUMORPHIC TACTILE CONTROLS & RADIAL FLOATING ACTION MENU
+   Matte Obsidian Surface Hierarchy (#0d0d0d / #171717 / #212121 / #2f2f2f)
+   ============================================================================= */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.smart-overflow-protected {
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  box-sizing: border-box;
+}
+
+/* Tactile Buttons & Pills: Surface #212121 + 1px #2f2f2f Border + Paired Neumorphic Depth */
+.btn-primary,
+.btn-secondary,
+.lift-quick-btn,
+.view-mode-btn,
+#btn-set-toggle,
+#btn-complete-set,
+.rpe-pill,
+.btn-glass-primary,
+.btn-glass-secondary,
+.btn-glass-set,
+.btn-complete-set,
+.btn-action-glass,
+.btn-glass-connect,
+.btn-athlete-settings,
+.header-lift-btn,
+.target-chip,
+.rpe-rir-pill,
+.custom-select-trigger {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: -3px -3px 7px rgba(255, 255, 255, 0.035), 4px 4px 10px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+.nav-tab,
+.nav-tab:not(.active),
+.nav-tab.active {
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: -3px -3px 7px rgba(255, 255, 255, 0.035), 4px 4px 10px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, color 0.22s ease !important;
+}
+
+.mode-toggle-btn.active {
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  box-shadow: -3px -3px 7px rgba(255, 255, 255, 0.035), 4px 4px 10px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.lift-quick-btn:hover,
+.view-mode-btn:hover,
+#btn-set-toggle:hover,
+#btn-complete-set:hover,
+.rpe-pill:hover,
+.btn-glass-primary:hover,
+.btn-glass-secondary:hover,
+.btn-glass-set:hover,
+.btn-complete-set:hover,
+.btn-action-glass:hover,
+.btn-glass-connect:hover,
+.btn-athlete-settings:hover,
+.header-lift-btn:hover,
+.target-chip:hover,
+.custom-select-trigger:hover {
+  background: #2f2f2f !important;
+  border-color: #3a3a3a !important;
+  box-shadow: -4px -4px 9px rgba(255, 255, 255, 0.045), 5px 5px 12px rgba(0, 0, 0, 0.64), inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+}
+
+.btn-primary:active,
+.btn-primary.touch-active,
+.btn-secondary:active,
+.btn-secondary.touch-active,
+.lift-quick-btn:active,
+.lift-quick-btn.touch-active,
+.view-mode-btn:active,
+.view-mode-btn.touch-active,
+.nav-tab:active,
+.nav-tab.touch-active,
+#btn-set-toggle:active,
+#btn-set-toggle.touch-active,
+#btn-complete-set:active,
+#btn-complete-set.touch-active,
+.rpe-pill:active,
+.rpe-pill.touch-active,
+.btn-glass-primary:active,
+.btn-glass-primary.touch-active,
+.btn-glass-secondary:active,
+.btn-glass-secondary.touch-active,
+.btn-glass-set:active,
+.btn-glass-set.touch-active,
+.btn-complete-set:active,
+.btn-complete-set.touch-active,
+.btn-action-glass:active,
+.btn-action-glass.touch-active,
+.btn-glass-connect:active,
+.btn-glass-connect.touch-active,
+.btn-athlete-settings:active,
+.btn-athlete-settings.touch-active,
+.header-lift-btn:active,
+.header-lift-btn.touch-active,
+.mode-toggle-btn:active,
+.mode-toggle-btn.touch-active,
+.target-chip:active,
+.target-chip.touch-active,
+.rpe-rir-pill:active,
+.custom-select-trigger:active,
+.custom-select-trigger.touch-active {
+  box-shadow: inset -2px -2px 5px rgba(255, 255, 255, 0.03), inset 3px 3px 7px rgba(0, 0, 0, 0.72) !important;
+  transform: scale3d(0.97, 0.97, 1);
+}
+
+/* Preserve active-set compact mobile button toggling */
+.controls-panel.set-active-compact #btn-set-toggle {
+  display: none !important;
+}
+
+.controls-panel.set-active-compact #btn-complete-set {
+  display: inline-flex !important;
+}
+
+/* ── Radial Floating Action Menu ── */
+.eros-radial-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 88px;
+  z-index: 1200;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#eros-radial-fab-trigger,
+.eros-radial-fab-trigger {
+  position: relative;
+  z-index: 2;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 9999px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  box-shadow: -5px -5px 12px rgba(255, 255, 255, 0.04), 6px 6px 14px rgba(0, 0, 0, 0.68), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+#eros-radial-fab-trigger:hover,
+.eros-radial-fab-trigger:hover {
+  background: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  transform: scale(1.04);
+}
+
+#eros-radial-fab-trigger:active,
+.eros-radial-fab-trigger:active,
+.eros-radial-fab.is-dragging #eros-radial-fab-trigger {
+  cursor: grabbing;
+  box-shadow: inset -2px -2px 5px rgba(255, 255, 255, 0.03), inset 3px 3px 7px rgba(0, 0, 0, 0.72);
+  transform: scale(0.96);
+}
+
+.eros-radial-plus-icon {
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+#eros-radial-fab-trigger.is-open,
+.eros-radial-fab.is-open #eros-radial-fab-trigger,
+#eros-radial-fab-trigger[aria-expanded="true"] {
+  background: #171717;
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  box-shadow: inset -3px -3px 7px rgba(255, 255, 255, 0.03), inset 4px 4px 9px rgba(0, 0, 0, 0.78);
+}
+
+#eros-radial-fab-trigger.is-open .eros-radial-plus-icon,
+.eros-radial-fab.is-open .eros-radial-plus-icon,
+#eros-radial-fab-trigger[aria-expanded="true"] .eros-radial-plus-icon {
+  transform: rotate(45deg);
+}
+
+.eros-radial-items {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.eros-radial-fab.is-open .eros-radial-items,
+.eros-radial-items.is-open,
+.eros-radial-items[aria-hidden="false"] {
+  pointer-events: auto;
+}
+
+.eros-radial-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 9999px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: -3px -3px 7px rgba(255, 255, 255, 0.035), 4px 4px 10px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) translate3d(0px, 0px, 0) scale(0.42);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.eros-radial-fab.is-open .eros-radial-item,
+.eros-radial-items.is-open .eros-radial-item,
+.eros-radial-items[aria-hidden="false"] .eros-radial-item,
+.eros-radial-item.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) translate3d(var(--radial-x, 0px), var(--radial-y, 0px), 0) scale(1);
+}
+
+.eros-radial-fab.is-open .eros-radial-item:hover,
+.eros-radial-items.is-open .eros-radial-item:hover,
+.eros-radial-items[aria-hidden="false"] .eros-radial-item:hover,
+.eros-radial-item.is-open:hover {
+  background: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translate(-50%, -50%) translate3d(var(--radial-x, 0px), var(--radial-y, 0px), 0) scale(1.08);
+}
+
+.eros-radial-fab.is-open .eros-radial-item:active,
+.eros-radial-items.is-open .eros-radial-item:active,
+.eros-radial-items[aria-hidden="false"] .eros-radial-item:active,
+.eros-radial-item.is-open:active {
+  box-shadow: inset -2px -2px 5px rgba(255, 255, 255, 0.03), inset 3px 3px 7px rgba(0, 0, 0, 0.72);
+  transform: translate(-50%, -50%) translate3d(var(--radial-x, 0px), var(--radial-y, 0px), 0) scale(0.95);
+}
+
+.eros-radial-item svg {
+  width: 17px;
+  height: 17px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.eros-radial-item > span:not(.sr-only),
+.eros-radial-item-label {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #ececec;
+  white-space: nowrap;
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.65);
+}
+
+.eros-radial-fab[data-quadrant^="bottom"] .eros-radial-item > span:not(.sr-only),
+.eros-radial-fab[data-quadrant^="bottom"] .eros-radial-item-label {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+/* ── Radial Action Customizer Modal ── */
+.eros-radial-customizer-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(380px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  z-index: 1300;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  border-radius: 18px;
+  padding: 20px;
+  color: #ececec;
+  box-shadow: -6px -6px 14px rgba(255, 255, 255, 0.035), 8px 8px 20px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.eros-radial-customizer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #2f2f2f;
+}
+
+#eros-radial-customizer-title,
+.eros-radial-customizer-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #ececec;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.eros-radial-customizer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eros-radial-customizer-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 12px;
+  color: #ececec;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: -2px -2px 5px rgba(255, 255, 255, 0.03), 3px 3px 8px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.eros-radial-customizer-option:hover {
+  background: #2f2f2f;
+  border-color: #3a3a3a;
+}
+
+.eros-radial-customizer-option input[type="checkbox"] {
+  accent-color: #10a37f;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+#btn-radial-customizer-close {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: -3px -3px 7px rgba(255, 255, 255, 0.035), 4px 4px 10px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+#btn-radial-customizer-close:hover {
+  background: #2f2f2f;
+  color: #ffffff;
+}
+
+#btn-radial-customizer-close:active {
+  box-shadow: inset -2px -2px 5px rgba(255, 255, 255, 0.03), inset 3px 3px 7px rgba(0, 0, 0, 0.72);
+  transform: scale(0.98);
 }

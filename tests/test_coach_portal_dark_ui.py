@@ -395,6 +395,522 @@ class TestCoachPortalDarkUi(unittest.TestCase):
         )
         self.assertIn("ALL COACH PORTAL E2E TESTS PASSED (100% OK)", result.stdout)
 
+    def test_r6_orbital_dom_ids_and_button_integrity(self):
+        """R6: Verifies Orbital Dark Neumorphism & Radial FAB DOM IDs, ARIA semantics, CSP, clean buttons, and zero forbidden terms."""
+        required_ids = [
+            "coach-sidebar",
+            "coach-sidebar-toggle",
+            "coach-sidebar-ticker",
+            "coach-tablet-nav",
+            "coach-mobile-nav",
+            "coach-intro-overlay",
+            "coach-cursor-glow",
+            "coach-readiness-ring",
+            "coach-bond-modal",
+            "btn-coach-bond-open",
+            "coach-pairing-code-display",
+            "eros-radial-fab",
+            "eros-radial-fab-trigger",
+            "eros-radial-items",
+            "eros-radial-customizer-modal",
+            "btn-radial-customizer-close",
+        ]
+        for dom_id in required_ids:
+            self.assertTrue(
+                find_dom_id(self.html, dom_id),
+                f"Missing required Orbital/Radial DOM element #{dom_id} in index.html",
+            )
+
+        self.assertIn("smart-overflow-protected", self.html)
+        self.assertIn('http-equiv="Content-Security-Policy"', self.html)
+
+        # Accessibility attributes for Orbital sidebar toggle, Radial FAB & dialog modals
+        sidebar_toggle_tag = re.search(r'<button[^>]*id=["\']coach-sidebar-toggle["\'][^>]*>', self.html)
+        self.assertIsNotNone(sidebar_toggle_tag, "Missing #coach-sidebar-toggle button tag")
+        self.assertIn("aria-label=", sidebar_toggle_tag.group(0))
+        self.assertIn("aria-expanded=", sidebar_toggle_tag.group(0))
+
+        radial_trigger_tag = re.search(r'<button[^>]*id=["\']eros-radial-fab-trigger["\'][^>]*>', self.html)
+        self.assertIsNotNone(radial_trigger_tag, "Missing #eros-radial-fab-trigger button tag")
+        self.assertIn('aria-controls="eros-radial-items"', radial_trigger_tag.group(0))
+        self.assertIn("aria-expanded=", radial_trigger_tag.group(0))
+        self.assertIn("aria-label=", radial_trigger_tag.group(0))
+
+        radial_items_tag = re.search(r'<div[^>]*id=["\']eros-radial-items["\'][^>]*>', self.html)
+        self.assertIsNotNone(radial_items_tag, "Missing #eros-radial-items container")
+        self.assertIn('role="menu"', radial_items_tag.group(0))
+        self.assertIn('aria-hidden="true"', radial_items_tag.group(0))
+
+        # #btn-dismiss-orientation must use accessible SVG + text rather than raw x/+ glyphs or emojis
+        dismiss_match = re.search(
+            r'<button[^>]*id=["\']btn-dismiss-orientation["\'][^>]*>(.*?)</button>',
+            self.html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(dismiss_match, "Missing #btn-dismiss-orientation button")
+        self.assertIn("<svg", dismiss_match.group(1))
+        dismiss_text = re.sub(r"<[^>]+>", "", dismiss_match.group(1)).strip()
+        self.assertTrue(dismiss_text, "#btn-dismiss-orientation should provide screen-reader label text")
+        self.assertNotIn("×", dismiss_text)
+        self.assertEqual(find_emojis_in_text(dismiss_text), [])
+
+        # Inspect new Orbital/Coach/Radial sections for clean buttons (no emojis, no empty text, no single raw symbol glyphs)
+        coach_idx = self.html.find('id="view-coach"')
+        self.assertNotEqual(coach_idx, -1)
+        coach_and_radial_html = self.html[coach_idx:]
+        for btn_inner in re.findall(r"<button\b[^>]*>(.*?)</button>", coach_and_radial_html, re.DOTALL):
+            clean_txt = re.sub(r"<svg\b.*?</svg>", "", btn_inner, flags=re.DOTALL)
+            clean_txt = re.sub(r"<[^>]+>", " ", clean_txt)
+            clean_txt = re.sub(r"\s+", " ", clean_txt).strip()
+            self.assertEqual(find_emojis_in_text(btn_inner), [], f"Emoji found inside coach/radial button: {btn_inner!r}")
+            self.assertNotIn(clean_txt, {"+", "×", "✕", "✖", "−", "-"}, f"Raw glyph-only button found: {btn_inner!r}")
+
+        # Zero hardcoded legacy fallback room code & zero forbidden hardware terminology
+        base44_client_js = read_file("base44-client.js")
+        style_css = get_style_css()
+        athlete_profile_jsonc = read_file("base44/entities/athlete-profile.jsonc")
+        athlete_bond_jsonc = read_file("base44/entities/athlete-bond.jsonc")
+
+        for name, src in [
+            ("coach-portal.js", self.coach_js),
+            ("base44-client.js", base44_client_js),
+        ]:
+            self.assertNotIn("EROS-7X9K", src, f"Hardcoded default pairing code EROS-7X9K found in {name}")
+        pairing_display_match = re.search(
+            r'<[^>]*id=["\']coach-pairing-code-display["\'][^>]*>(.*?)</',
+            self.html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(pairing_display_match, "Missing #coach-pairing-code-display in index.html")
+        self.assertNotIn("EROS-7X9K", pairing_display_match.group(1))
+
+        forbidden_re = re.compile(r"\b(webble|100hz|esp32|esp32-c6|imu|madgwick|bluefy|sensor|sensors|hardware)\b", re.IGNORECASE)
+        for name, src in [
+            ("index.html", self.html),
+            ("style.css", style_css),
+            ("coach.css", self.coach_css),
+            ("coach-portal.js", self.coach_js),
+            ("base44-client.js", base44_client_js),
+            ("athlete-profile.jsonc", athlete_profile_jsonc),
+            ("athlete-bond.jsonc", athlete_bond_jsonc),
+        ]:
+            hits = forbidden_re.findall(src)
+            self.assertEqual(hits, [], f"Forbidden hardware term(s) {hits} found in {name}")
+
+    def test_r7_orbital_coach_css_neumorphism_and_breakpoints(self):
+        """R7: Verifies Dark Obsidian Neumorphic tokens, shells, collapse classes, overflow guard, and 1024px/768px breakpoints in coach.css."""
+        from .conftest_base import check_css_brace_balance
+
+        required_tokens_and_classes = [
+            "--neu-out",
+            "--neu-in",
+            ".neu-raised",
+            ".neu-inset",
+            ".coach-shell",
+            ".coach-sidebar--collapsed",
+            ".smart-overflow-protected",
+            "#coach-intro-overlay",
+            "#coach-cursor-glow",
+        ]
+        for token in required_tokens_and_classes:
+            self.assertIn(token, self.coach_css, f"Missing {token} in coach.css")
+
+        for hex_color in ("#0d0d0d", "#171717", "#212121", "#2f2f2f"):
+            self.assertIn(hex_color, self.coach_css.lower(), f"Missing Matte Obsidian token {hex_color} in coach.css")
+
+        self.assertIn("1024px", self.coach_css, "Missing 1024px desktop shell breakpoint in coach.css")
+        self.assertIn("768px", self.coach_css, "Missing 768px tablet/mobile shell breakpoint in coach.css")
+
+        balanced, open_c, close_c, brace_errs = check_css_brace_balance(self.coach_css)
+        self.assertTrue(balanced, f"coach.css brace balance check failed ({open_c}/{close_c}): {brace_errs}")
+
+    def test_r8_athlete_style_css_dark_obsidian_neumorphism_and_radial(self):
+        """R8: Verifies Athlete UI Dark Obsidian Neumorphic control shadows, mobile active-set compact guard, and Radial FAB CSS in style.css."""
+        from .conftest_base import check_css_brace_balance
+
+        style_css = get_style_css()
+        balanced, open_c, close_c, brace_errs = check_css_brace_balance(style_css)
+        self.assertTrue(balanced, f"style.css brace balance check failed ({open_c}/{close_c}): {brace_errs}")
+
+        # Verify tactile neumorphic box-shadow tokens & athlete controls exist in style.css
+        for token in (".eros-radial-fab", ".eros-radial-items", ".eros-radial-item", ".eros-radial-customizer-modal", ".smart-overflow-protected", ".controls-panel.set-active-compact"):
+            self.assertIn(token, style_css, f"Missing {token} in style.css")
+
+        # Confirm neumorphic control tail in style.css styles athlete controls with box-shadow
+        tail_idx = style_css.find(".btn-primary")
+        self.assertNotEqual(tail_idx, -1)
+        for selector in (".btn-primary", ".btn-secondary", ".lift-quick-btn", ".view-mode-btn", ".nav-tab", "#btn-set-toggle", "#btn-complete-set", ".rpe-pill"):
+            self.assertIn(selector, style_css, f"Missing athlete control selector {selector} in style.css")
+        self.assertRegex(
+            style_css,
+            r"(?s)\.lift-quick-btn[^{]*\{[^}]*box-shadow:",
+            "Expected tactile box-shadow styling on Athlete controls in style.css",
+        )
+
+    def test_r9_coach_portal_exports_clean_state_and_pairing_contracts(self):
+        """R9: Verifies CoachPortal exports, clean zero-mock roster, fresh pairing code, radial smart spacing, quick-cue fix, and ARIA tabindex gating."""
+        required_exports = [
+            "toggleCoachSidebar",
+            "navigateCoachSection",
+            "animateCountUp",
+            "renderProgressRing",
+            "computeSmartRadialAngles",
+            "applySmartOverflowProtection",
+            "initRadialActionMenu",
+            "toggleRadialActionMenu",
+            "getRadialActionsConfig",
+            "saveRadialActionsConfig",
+            "generatePairingCode",
+        ]
+        for symbol in required_exports:
+            self.assertIn(symbol, self.coach_js, f"Missing {symbol} in coach-portal.js")
+
+        for fake_name in ("Marcus Vance", "Elena Rostova", "Devon Carter", "Sofia Lindholm"):
+            self.assertNotIn(fake_name, self.coach_js, f"Fake athlete {fake_name} must not appear in coach-portal.js")
+            self.assertNotIn(fake_name, self.html, f"Fake athlete {fake_name} must not appear in index.html")
+
+        # Dual-consent bonding accessible from both Bonds navigation & Radial FAB
+        self.assertIn('data-coach-nav="bonds"', self.html)
+        self.assertIn("link-athlete", self.coach_js)
+
+        node_script = r"""
+const fs = require('fs');
+const vm = require('vm');
+const assert = require('assert');
+
+// 1. Verify runtime exports and behaviors on CoachPortal
+const cp = require('./coach-portal.js');
+const expectedExports = [
+  'toggleCoachSidebar',
+  'navigateCoachSection',
+  'animateCountUp',
+  'renderProgressRing',
+  'computeSmartRadialAngles',
+  'applySmartOverflowProtection',
+  'initRadialActionMenu',
+  'toggleRadialActionMenu',
+  'getRadialActionsConfig',
+  'saveRadialActionsConfig',
+  'generatePairingCode',
+  'getSquadAthletes',
+  'getPendingBondRequests'
+];
+for (const fn of expectedExports) {
+  assert.strictEqual(typeof cp[fn], 'function', `CoachPortal.${fn} must be a function`);
+}
+
+// Clean zero-mock initial state (no fake athletes; only empty array or blank session placeholder)
+const initialRoster = cp.getSquadAthletes();
+assert.ok(Array.isArray(initialRoster) && initialRoster.length <= 1, 'Initial roster must not contain multi-athlete mock data');
+for (const ath of initialRoster) {
+  assert.strictEqual(ath.id, 'ath_01');
+  assert.strictEqual(ath.name, 'Active Athlete');
+  assert.strictEqual(ath.volume, '0 kg');
+  assert.strictEqual(ath.compPrs.squat + ath.compPrs.bench + ath.compPrs.deadlift, 0);
+}
+assert.deepStrictEqual(cp.getPendingBondRequests(), [], 'Initial pending bonds must be empty');
+
+// Radial menu config defaults & persistence round-trip helper check
+const defaultActions = cp.getRadialActionsConfig();
+assert.ok(Array.isArray(defaultActions) && defaultActions.length >= 4);
+assert.strictEqual(typeof cp.toggleCoachSidebar, 'function');
+assert.strictEqual(typeof cp.navigateCoachSection, 'function');
+assert.strictEqual(typeof cp.animateCountUp, 'function');
+assert.strictEqual(typeof cp.saveRadialActionsConfig, 'function');
+assert.strictEqual(typeof cp.toggleRadialActionMenu, 'function');
+
+// Fresh Crockford Base32 pairing code & never EROS-7X9K or EROS-INIT
+const code1 = cp.generatePairingCode();
+const code2 = cp.generatePairingCode();
+assert.match(code1, /^EROS-[0-9A-HJKMNP-TV-Z]{4}$/, `Invalid pairing code: ${code1}`);
+assert.match(code2, /^EROS-[0-9A-HJKMNP-TV-Z]{4}$/, `Invalid pairing code: ${code2}`);
+assert.notStrictEqual(code1, 'EROS-7X9K');
+assert.notStrictEqual(code1, 'EROS-INIT');
+
+// Smart radial angles across all 4 corners + centered top/bottom on desktop & mobile: non-overlapping >= 42px & clamped
+const viewports = [[1440, 900], [390, 844]];
+for (const [vw, vh] of viewports) {
+  const anchors = [
+    [vw - 46, vh - 114],
+    [46, vh - 114],
+    [vw - 46, 46],
+    [46, 46],
+    [vw / 2, vh - 96],
+    [vw / 2, 46]
+  ];
+  for (const [ax, ay] of anchors) {
+    const pts = cp.computeSmartRadialAngles(ax, ay, vw, vh, 7, 92);
+    assert.strictEqual(pts.length, 7);
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y));
+      const cx = ax + p.x;
+      const cy = ay + p.y;
+      assert.ok(cx >= 26 && cx <= vw - 26, `x out of bounds (${cx}) at ${vw}x${vh} anchor (${ax},${ay})`);
+      assert.ok(cy >= 26 && cy <= vh - 82, `y out of bounds (${cy}) at ${vw}x${vh} anchor (${ax},${ay})`);
+      for (let j = i + 1; j < pts.length; j++) {
+        const q = pts[j];
+        const dist = Math.hypot((ax + q.x) - cx, (ay + q.y) - cy);
+        assert.ok(dist >= 42, `Radial items ${i} and ${j} overlap (${dist.toFixed(1)}px < 42px) at ${vw}x${vh} (${ax},${ay})`);
+      }
+    }
+  }
+}
+
+// applySmartOverflowProtection contract
+const classSet = new Set();
+const fakeEl = {
+  classList: { add: (c) => classSet.add(c), contains: (c) => classSet.has(c) },
+  style: {},
+  getBoundingClientRect: () => ({ left: -20, right: 980, top: 20, bottom: 500, width: 1000, height: 480 })
+};
+cp.applySmartOverflowProtection(fakeEl, 12);
+assert.ok(classSet.has('smart-overflow-protected'));
+assert.strictEqual(fakeEl.style.maxWidth, 'calc(100vw - 24px)');
+assert.strictEqual(fakeEl.style.maxHeight, 'calc(100vh - 24px)');
+assert.strictEqual(fakeEl.style.boxSizing, 'border-box');
+
+// renderProgressRing generates SVG markup
+const ringEl = { innerHTML: '', setAttribute: () => {} };
+cp.renderProgressRing(ringEl, 88, '#10a37f');
+assert.ok(ringEl.innerHTML.includes('<svg') && ringEl.innerHTML.includes('<circle'));
+
+// animateCountUp completes at exact target value
+const animEl = { textContent: '' };
+cp.animateCountUp(animEl, 6200, 0, (v) => `${Math.round(v).toLocaleString('en-US')} kg`);
+assert.strictEqual(animEl.textContent, '6,200 kg');
+
+// Full DOM-backed CoachPortal runtime verification (sidebar toggle, section nav, radial menu ARIA/tabindex & quick-cue emission)
+const storageMap = {};
+const mockClassList = () => {
+  const s = new Set();
+  return {
+    add: (...c) => c.forEach(x => s.add(x)),
+    remove: (...c) => c.forEach(x => s.delete(x)),
+    contains: (c) => s.has(c),
+    toggle: (c, force) => {
+      if (force === undefined) { if (s.has(c)) { s.delete(c); return false; } s.add(c); return true; }
+      if (force) { s.add(c); return true; } s.delete(c); return false;
+    }
+  };
+};
+function mkEl(id) {
+  return {
+    id,
+    style: {},
+    attrs: {},
+    classList: mockClassList(),
+    innerHTML: '',
+    textContent: '',
+    _listeners: {},
+    _children: [],
+    setAttribute(k, v) { this.attrs[k] = String(v); },
+    getAttribute(k) { return this.attrs[k] !== undefined ? this.attrs[k] : null; },
+    addEventListener(ev, fn) { (this._listeners[ev] = this._listeners[ev] || []).push(fn); },
+    querySelectorAll() { return this._children; },
+    querySelector() { return null; },
+    closest() { return null; },
+    getBoundingClientRect() { return { left: 1368, top: 760, right: 1420, bottom: 812, width: 52, height: 52 }; }
+  };
+}
+const domMap = {
+  'coach-sidebar': mkEl('coach-sidebar'),
+  'coach-sidebar-toggle': mkEl('coach-sidebar-toggle'),
+  'eros-radial-fab': mkEl('eros-radial-fab'),
+  'eros-radial-fab-trigger': mkEl('eros-radial-fab-trigger'),
+  'eros-radial-items': mkEl('eros-radial-items'),
+  'coach-cue-status': mkEl('coach-cue-status'),
+  'view-coach': mkEl('view-coach'),
+  'coach-pairing-code-display': mkEl('coach-pairing-code-display'),
+  'coach-overview-section': mkEl('coach-overview-section'),
+  'coach-history-card': mkEl('coach-history-card')
+};
+// Capture rendered radial item buttons with tabindex + click listener when renderRadialMenuItems writes innerHTML
+Object.defineProperty(domMap['eros-radial-items'], 'innerHTML', {
+  set(html) {
+    this._html = html;
+    const matches = Array.from(String(html).matchAll(/data-radial-action="([^"]+)"[^>]*tabindex="([^"]+)"/g));
+    this._children = matches.map(m => {
+      const btn = mkEl('');
+      btn.setAttribute('data-radial-action', m[1]);
+      btn.setAttribute('tabindex', m[2]);
+      return btn;
+    });
+  },
+  get() { return this._html || ''; }
+});
+const winEvents = [];
+const syncEvents = [];
+const vmWindow = {
+  innerWidth: 1440,
+  innerHeight: 900,
+  location: { search: '' },
+  ErosSyncBus: { emit: (ev, data) => syncEvents.push({ ev, data }) },
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  dispatchEvent: (ev) => winEvents.push(ev),
+  CustomEvent: class { constructor(type, opts) { this.type = type; this.detail = opts && opts.detail; } },
+  matchMedia: () => ({ matches: false, addEventListener: () => {} })
+};
+const vmDoc = {
+  body: { classList: mockClassList() },
+  getElementById: (id) => domMap[id] || null,
+  querySelectorAll: () => [],
+  querySelector: () => null,
+  addEventListener: () => {},
+  createElement: () => mkEl('')
+};
+const vmCtx = {
+  window: vmWindow,
+  document: vmDoc,
+  CustomEvent: vmWindow.CustomEvent,
+  localStorage: { getItem: (k) => (k in storageMap ? storageMap[k] : null), setItem: (k, v) => { storageMap[k] = String(v); }, removeItem: (k) => { delete storageMap[k]; } },
+  sessionStorage: { getItem: () => null, setItem: () => {} },
+  console,
+  setTimeout: (fn) => { return 0; },
+  clearTimeout: () => {},
+  setInterval: () => 0,
+  clearInterval: () => {},
+  requestAnimationFrame: (fn) => 0,
+  cancelAnimationFrame: () => {},
+  navigator: {},
+  performance: { now: () => 1000 },
+  module: { exports: {} },
+  exports: {}
+};
+vmCtx.window.document = vmDoc;
+vm.createContext(vmCtx);
+vm.runInContext(fs.readFileSync('coach-portal.js', 'utf8'), vmCtx);
+const cpDom = (vmCtx.module && vmCtx.module.exports) || vmCtx.window.CoachPortal;
+
+// toggleCoachSidebar
+const c1 = cpDom.toggleCoachSidebar(true);
+assert.strictEqual(c1, true);
+assert.ok(domMap['coach-sidebar'].classList.contains('coach-sidebar--collapsed'));
+assert.strictEqual(domMap['coach-sidebar-toggle'].getAttribute('aria-expanded'), 'false');
+const c2 = cpDom.toggleCoachSidebar(false);
+assert.strictEqual(c2, false);
+assert.ok(!domMap['coach-sidebar'].classList.contains('coach-sidebar--collapsed'));
+
+// navigateCoachSection
+cpDom.navigateCoachSection('history');
+
+// saveRadialActionsConfig & toggleRadialActionMenu ARIA + tabindex gating
+cpDom.saveRadialActionsConfig(['quick-cue', 'link-athlete']);
+assert.strictEqual(JSON.stringify(cpDom.getRadialActionsConfig()), JSON.stringify(['quick-cue', 'link-athlete']));
+cpDom.toggleRadialActionMenu(true);
+assert.strictEqual(domMap['eros-radial-items'].getAttribute('aria-hidden'), 'false');
+assert.ok(domMap['eros-radial-items']._children.length >= 2);
+for (const btn of domMap['eros-radial-items']._children) {
+  assert.strictEqual(btn.getAttribute('tabindex'), '0');
+}
+cpDom.toggleRadialActionMenu(false);
+assert.strictEqual(domMap['eros-radial-items'].getAttribute('aria-hidden'), 'true');
+for (const btn of domMap['eros-radial-items']._children) {
+  assert.strictEqual(btn.getAttribute('tabindex'), '-1');
+}
+
+// Re-open & invoke quick-cue click handler -> must emit coach:cue ('Drive hips!') with ZERO coach:load_override
+cpDom.toggleRadialActionMenu(true);
+const cueBtn = domMap['eros-radial-items']._children.find(b => b.getAttribute('data-radial-action') === 'quick-cue');
+assert.ok(cueBtn && cueBtn._listeners.click && cueBtn._listeners.click.length > 0);
+winEvents.length = 0;
+syncEvents.length = 0;
+cueBtn._listeners.click[0]({ stopPropagation: () => {} });
+const cueEvs = winEvents.filter(e => e.type === 'eros:coach_cue');
+const ovrEvs = winEvents.filter(e => e.type === 'eros:coach_load_override');
+assert.strictEqual(cueEvs.length, 1, 'quick-cue must emit eros:coach_cue');
+assert.strictEqual(cueEvs[0].detail.text, 'Drive hips!');
+assert.strictEqual(ovrEvs.length, 0, 'quick-cue must NOT emit eros:coach_load_override');
+assert.strictEqual(syncEvents.filter(s => s.ev === 'coach:cue').length, 1);
+assert.strictEqual(syncEvents.filter(s => s.ev === 'coach:load_override').length, 0);
+
+// Base44Client checks via vm context (no EROS-INIT accepted, no default room join on EROS-INIT DOM placeholder)
+const emittedEvents = [];
+const mockBodyClasses = new Set();
+let observerCb = null;
+const mockWindow = {
+  addEventListener: () => {},
+  dispatchEvent: (ev) => emittedEvents.push(ev),
+  CustomEvent: class { constructor(type, opts) { this.type = type; this.detail = opts && opts.detail; } },
+  ErosSyncBus: { connectCloud: () => false, disconnectCloud: () => {}, emit: () => {} }
+};
+let mockDomCode = 'EROS-INIT';
+let domReads = 0;
+const mockDocument = {
+  body: { classList: { contains: (c) => mockBodyClasses.has(c) } },
+  getElementById: (id) => {
+    if (id === 'coach-pairing-code-display') { domReads++; return { textContent: mockDomCode }; }
+    return null;
+  },
+  querySelectorAll: () => []
+};
+const b44Src = fs.readFileSync('base44-client.js', 'utf8');
+const b44Ctx = {
+  window: mockWindow,
+  document: mockDocument,
+  localStorage: { getItem: () => null, setItem: () => {} },
+  MutationObserver: class { constructor(cb) { observerCb = cb; } observe() {} disconnect() {} },
+  console,
+  setTimeout,
+  clearTimeout,
+  module: { exports: {} },
+  exports: {}
+};
+vm.createContext(b44Ctx);
+vm.runInContext(b44Src, b44Ctx);
+const b44 = b44Ctx.window.ErosCloud;
+assert.ok(b44 && typeof b44.isValidPairingCode === 'function', 'ErosCloud.isValidPairingCode must be exposed');
+assert.strictEqual(b44.isValidPairingCode('EROS-INIT'), false, 'EROS-INIT must be rejected');
+assert.strictEqual(b44.isValidPairingCode('EROS-2A3B'), true, 'Format helper validates Crockford pattern');
+assert.strictEqual(b44.isValidPairingCode(code1), true, 'Generated Crockford Base32 pairing code must pass');
+// Simulate switching to Coach mode while DOM still has EROS-INIT -> MutationObserver must read DOM and NOT crash or connect
+mockBodyClasses.add('portal-coach');
+if (observerCb) observerCb();
+assert.ok(domReads >= 1, 'MutationObserver must inspect #coach-pairing-code-display on entering Coach mode');
+
+b44.join('EROS-INIT').then((joinedInit) => {
+  assert.strictEqual(joinedInit, false, 'ErosCloud.join must reject EROS-INIT');
+  console.log('NODE_COACH_ORBITAL_CONTRACTS_OK');
+});
+"""
+        result = subprocess.run(
+            ["node", "-e", node_script],
+            cwd=ROOT_DIR,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"Node behavioral verification failed ({result.returncode}):\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}",
+        )
+        self.assertIn("NODE_COACH_ORBITAL_CONTRACTS_OK", result.stdout)
+
+    def test_r10_base44_bonding_and_profile_schemas(self):
+        """R10: Verifies AthleteProfile and AthleteBond Base44 entity JSONC schemas & dual-consent status enum."""
+        import json
+
+        profile_raw = re.sub(r"^\s*//.*$", "", read_file("base44/entities/athlete-profile.jsonc"), flags=re.MULTILINE)
+        bond_raw = re.sub(r"^\s*//.*$", "", read_file("base44/entities/athlete-bond.jsonc"), flags=re.MULTILINE)
+
+        profile = json.loads(profile_raw)
+        bond = json.loads(bond_raw)
+
+        self.assertEqual(profile.get("name"), "AthleteProfile")
+        for req in ("athlete_id", "athlete_name"):
+            self.assertIn(req, profile.get("required", []))
+        for field in ("comp_squat_kg", "gym_squat_kg", "e1rm_squat_kg", "updated_at"):
+            self.assertIn(field, profile.get("properties", {}))
+
+        self.assertEqual(bond.get("name"), "AthleteBond")
+        for req in ("bond_id", "pairing_code", "athlete_id", "coach_id", "status"):
+            self.assertIn(req, bond.get("required", []))
+        self.assertEqual(
+            bond.get("properties", {}).get("status", {}).get("enum"),
+            ["pending", "active", "revoked"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

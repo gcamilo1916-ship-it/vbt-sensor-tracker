@@ -30,10 +30,22 @@
   let pairingTtlTimer = null;
   let restTickerTimer = null;
   let pairingSecondsRemaining = 900;
-  let currentPairingCode = 'EROS-7X9K';
+  let currentPairingCode = '';
   let lastProcessedRepKey = '';
   let lastProcessedSetId = '';
   let lastCompletedSetId = '';
+
+  // Orbital Motion & Radial Menu State
+  let cursorGlowBound = false;
+  let cursorGlowRaf = null;
+  let cursorTargetX = -9999;
+  let cursorTargetY = -9999;
+  let cursorCurrentX = -9999;
+  let cursorCurrentY = -9999;
+  let isRadialOpen = false;
+  let radialInitialized = false;
+  let radialSuppressNextClick = false;
+  let navHighlightTimer = null;
 
   // Calendar State (Defaults to October 2026 or current date)
   const nowDate = new Date();
@@ -43,6 +55,18 @@
 
   const CROCKFORD_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
   const BONDS_STORAGE_KEY = 'eros_coach_bonds_v1';
+  const SIDEBAR_COLLAPSED_KEY = 'eros_coach_sidebar_collapsed_v1';
+  const INTRO_SEEN_KEY = 'eros_coach_intro_seen';
+  const RADIAL_CONFIG_KEY = 'eros_radial_fab_config_v1';
+  const RADIAL_POS_KEY = 'eros_radial_fab_pos_v1';
+  const DEFAULT_RADIAL_ACTIONS = [
+    'switch-mode',
+    'toggle-set',
+    'link-athlete',
+    'replay-path',
+    'rest-timer',
+    'quick-cue'
+  ];
 
   // ── XSS Sanitization Defense ──
   function escapeHtml(str) {
@@ -447,7 +471,25 @@
       // Previous Workouts Feed
       prevWorkoutsCount: document.getElementById('coach-previous-workouts-count'),
       historyLiftFilters: document.getElementById('coach-history-lift-filters'),
-      prevWorkoutsList: document.getElementById('coach-previous-workouts-list')
+      prevWorkoutsList: document.getElementById('coach-previous-workouts-list'),
+
+      // Orbital Navigation, Motion & Radial Launcher
+      coachShell: document.getElementById('coach-shell'),
+      coachSidebar: document.getElementById('coach-sidebar'),
+      coachSidebarToggle: document.getElementById('coach-sidebar-toggle'),
+      coachNavButtons: typeof document.querySelectorAll === 'function' ? document.querySelectorAll('[data-coach-nav]') : [],
+      sidebarRestTime: document.getElementById('coach-sidebar-rest-time'),
+      sidebarRestState: document.getElementById('coach-sidebar-rest-state'),
+      sidebarActiveCount: document.getElementById('coach-sidebar-active-count'),
+      sidebarRestingCount: document.getElementById('coach-sidebar-resting-count'),
+      readinessRing: document.getElementById('coach-readiness-ring'),
+      introOverlay: document.getElementById('coach-intro-overlay'),
+      cursorGlow: document.getElementById('coach-cursor-glow'),
+      squadOverview: document.getElementById('coach-squad-overview'),
+      radialFab: document.getElementById('eros-radial-fab'),
+      radialItems: document.getElementById('eros-radial-items'),
+      radialTrigger: document.getElementById('eros-radial-fab-trigger'),
+      radialCustomizerModal: document.getElementById('eros-radial-customizer-modal')
     };
   }
 
@@ -575,6 +617,7 @@
   function init() {
     queryElements();
     loadPersistedBonds();
+    generatePairingCode();
 
     try {
       if (typeof localStorage !== 'undefined') {
@@ -707,6 +750,53 @@
 
     // Subscribe to Event Bus
     bindSyncBusEvents();
+
+    // Orbital Sidebar Toggle & Nav Links
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1') {
+        toggleCoachSidebar(true);
+      }
+    } catch (_) {}
+
+    if (elements.coachSidebarToggle && !elements.coachSidebarToggle._coachBound) {
+      elements.coachSidebarToggle.addEventListener('click', () => {
+        toggleCoachSidebar();
+      });
+      elements.coachSidebarToggle._coachBound = true;
+    }
+
+    if (elements.coachNavButtons && typeof elements.coachNavButtons.forEach === 'function') {
+      elements.coachNavButtons.forEach(btn => {
+        if (btn && !btn._coachNavBound) {
+          btn.addEventListener('click', () => {
+            const targetSection = btn.getAttribute('data-coach-nav') || 'live';
+            navigateCoachSection(targetSection);
+          });
+          btn._coachNavBound = true;
+        }
+      });
+    }
+
+    // Ambient Cursor Glow, Radial Action Menu & Viewport Resize Safety
+    initCoachCursorGlow();
+    initRadialActionMenu();
+
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function' && !window._coachViewportSafetyBound) {
+      window.addEventListener('resize', () => {
+        if (elements.bondModal && elements.bondModal.style && elements.bondModal.style.display === 'block') {
+          const bondCard = elements.bondModal.querySelector ? elements.bondModal.querySelector('.coach-bond-card') : null;
+          if (bondCard) applySmartOverflowProtection(bondCard, 12);
+        }
+        if (elements.radialCustomizerModal && elements.radialCustomizerModal.style && elements.radialCustomizerModal.style.display !== 'none') {
+          applySmartOverflowProtection(elements.radialCustomizerModal, 12);
+        }
+        if (elements.radialFab) {
+          clampRadialFabToViewport(elements.radialFab);
+          if (isRadialOpen) positionRadialItems();
+        }
+      }, { passive: true });
+      window._coachViewportSafetyBound = true;
+    }
 
     // Window storage listener for cross-tab sync
     if (typeof window !== 'undefined' && !window._coachStorageBound) {
@@ -845,7 +935,11 @@
           }
         });
       }
+      updateCoachSidebarTicker();
     }, 1000);
+    if (restTickerTimer && typeof restTickerTimer.unref === 'function') {
+      restTickerTimer.unref();
+    }
   }
 
   function stopRestTicker() {
@@ -888,10 +982,15 @@
         elements.viewCoach.style.display = 'flex';
       }
       showCoachOrientationAdvisory();
+      runCoachIntroOverlay();
+      startCoachCursorGlowLoop();
       startRestTicker();
       renderFullCoachDashboard();
+      updateCoachSidebarTicker();
+      renderRadialMenuItems();
     } else {
       stopRestTicker();
+      stopCoachCursorGlowLoop();
       document.body.classList.remove('portal-coach');
       if (elements.btnModeAthlete) {
         elements.btnModeAthlete.classList.add('active');
@@ -904,6 +1003,7 @@
       if (elements.viewCoach) {
         elements.viewCoach.style.display = 'none';
       }
+      renderRadialMenuItems();
     }
   }
 
@@ -930,6 +1030,7 @@
       }
       if (elements.panelLive) elements.panelLive.style.display = 'none';
       if (elements.panelHistory) elements.panelHistory.style.display = 'flex';
+      updateCoachNavActiveState('history');
       renderAthleteHistoryPanel();
     } else {
       if (elements.btnPanelLive) {
@@ -942,6 +1043,7 @@
       }
       if (elements.panelHistory) elements.panelHistory.style.display = 'none';
       if (elements.panelLive) elements.panelLive.style.display = 'flex';
+      updateCoachNavActiveState('live');
       renderSquadOverview();
       renderActiveSetFromState();
       renderSetsHistoryTable();
@@ -969,7 +1071,7 @@
       elements.pairingCodeDisplay.textContent = currentPairingCode;
     }
     updatePairingTtlDisplay();
-    if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
       window.dispatchEvent(new CustomEvent('eros:coach_pairing_code', { detail: { code: currentPairingCode } }));
     }
     return currentPairingCode;
@@ -985,7 +1087,10 @@
   function openBondModal() {
     if (!elements.bondModal) queryElements();
     if (!elements.bondModal) return;
+    if (!currentPairingCode) generatePairingCode();
     elements.bondModal.style.display = 'block';
+    const bondCard = elements.bondModal.querySelector ? elements.bondModal.querySelector('.coach-bond-card') : null;
+    if (bondCard) applySmartOverflowProtection(bondCard, 12);
     renderBondModalLists();
 
     if (pairingTtlTimer) clearInterval(pairingTtlTimer);
@@ -997,6 +1102,9 @@
         generatePairingCode();
       }
     }, 1000);
+    if (pairingTtlTimer && typeof pairingTtlTimer.unref === 'function') {
+      pairingTtlTimer.unref();
+    }
   }
 
   function closeBondModal() {
@@ -1300,6 +1408,7 @@
     if (elements.kpiSummaryPill) {
       elements.kpiSummaryPill.textContent = `${SQUAD_ATHLETES.length} Connected • ${liftingCount} Lifting • ${alertCount} Fatigue Alerts`;
     }
+    updateCoachSidebarTicker();
 
     if (SQUAD_ATHLETES.length === 0) {
       elements.squadGrid.innerHTML = '<div class="coach-empty-stream-msg">No bonded athletes connected.</div>';
@@ -1629,7 +1738,7 @@
     const dots = computeDotsScore(totals.compTotal, currentAthlete.bodyweightKg, currentAthlete.gender);
 
     if (elements.compTotalVal) {
-      elements.compTotalVal.textContent = `${totals.compTotal.toFixed(1)} kg`;
+      animateCountUp(elements.compTotalVal, totals.compTotal, 450, (v) => `${Number(v).toFixed(1)} kg`);
     }
     if (elements.compBreakdown) {
       elements.compBreakdown.textContent = `SQ: ${totals.compSq.toFixed(1)} | BP: ${totals.compBp.toFixed(1)} | DL: ${totals.compDl.toFixed(1)} kg`;
@@ -1642,7 +1751,7 @@
     if (elements.editCompDl) elements.editCompDl.value = totals.compDl.toFixed(1);
 
     if (elements.gymTotalVal) {
-      elements.gymTotalVal.textContent = `${totals.activeGymTotal.toFixed(1)} kg`;
+      animateCountUp(elements.gymTotalVal, totals.activeGymTotal, 450, (v) => `${Number(v).toFixed(1)} kg`);
     }
     if (elements.gymBreakdown) {
       elements.gymBreakdown.textContent = `SQ: ${totals.gymSq.toFixed(1)} | BP: ${totals.gymBp.toFixed(1)} | DL: ${totals.gymDl.toFixed(1)} kg`;
@@ -1894,7 +2003,7 @@
       return `
         <tr>
           <td class="font-mono">Set ${s.setNumber || (idx + 1)}</td>
-          <td><span class="coach-lift-badge ${liftBadgeClass}">${s.lift.toUpperCase()}</span></td>
+          <td><span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(String(s.lift || 'Deadlift').toUpperCase())}</span></td>
           <td class="font-mono">${(Number(s.weight) || 0).toFixed(1)} kg</td>
           <td class="font-mono">${s.repsCount || 3}</td>
           <td class="font-mono text-cyan">${(Number(s.avgVelocity) || 0).toFixed(2)} m/s</td>
@@ -2248,9 +2357,65 @@
 
   function updateSquadRibbon() {
     if (!elements.readinessVal) queryElements();
-    if (elements.readinessVal) elements.readinessVal.textContent = currentAthlete.readiness;
-    if (elements.volumeVal) elements.volumeVal.textContent = currentAthlete.volume;
-    if (elements.e1rmVal) elements.e1rmVal.textContent = currentAthlete.e1rm;
+
+    const readinessRaw = String((currentAthlete && currentAthlete.readiness) || '100% [OPTIMAL]');
+    const readinessMatch = readinessRaw.match(/(\d+(?:\.\d+)?)\s*%/);
+    const readinessPct = readinessMatch ? Math.max(0, Math.min(100, parseFloat(readinessMatch[1]))) : 100;
+    const readinessSuffix = readinessMatch ? readinessRaw.slice(readinessMatch.index + readinessMatch[0].length) : '';
+
+    if (elements.readinessVal) {
+      if (readinessMatch) {
+        animateCountUp(elements.readinessVal, readinessPct, 450, (v) => `${Math.round(v)}%${readinessSuffix}`);
+      } else {
+        elements.readinessVal.textContent = readinessRaw;
+      }
+    }
+
+    if (elements.readinessRing) {
+      const ringColor = readinessPct >= 85 ? '#10a37f' : (readinessPct >= 65 ? '#f59e0b' : '#ff3b30');
+      renderProgressRing(elements.readinessRing, readinessPct, ringColor);
+    }
+
+    const volumeRaw = String((currentAthlete && currentAthlete.volume) || '0 kg');
+    const volumeHasCommas = /\d,\d{3}/.test(volumeRaw);
+    const volumeNormalized = volumeRaw.replace(/,/g, '');
+    const volumeMatch = volumeNormalized.match(/(-?\d+(?:\.\d+)?)/);
+    if (elements.volumeVal) {
+      if (volumeMatch) {
+        const volNum = parseFloat(volumeMatch[1]);
+        const volHasDecimals = /\./.test(volumeMatch[1]);
+        const volUnit = volumeNormalized.slice(volumeMatch.index + volumeMatch[0].length);
+        animateCountUp(elements.volumeVal, volNum, 450, (v) => {
+          const n = Number(v);
+          let numStr;
+          if (volumeHasCommas) {
+            numStr = volHasDecimals
+              ? n.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+              : Math.round(n).toLocaleString('en-US');
+          } else {
+            numStr = volHasDecimals ? n.toFixed(1) : String(Math.round(n));
+          }
+          return `${numStr}${volUnit}`;
+        });
+      } else {
+        elements.volumeVal.textContent = volumeRaw;
+      }
+    }
+
+    const e1rmRaw = String((currentAthlete && currentAthlete.e1rm) || '—');
+    const e1rmNormalized = e1rmRaw.replace(/,/g, '');
+    const e1rmMatch = e1rmNormalized.match(/(-?\d+(?:\.\d+)?)/);
+    if (elements.e1rmVal) {
+      if (e1rmMatch) {
+        const e1rmNum = parseFloat(e1rmMatch[1]);
+        const e1rmUnit = e1rmNormalized.slice(e1rmMatch.index + e1rmMatch[0].length);
+        animateCountUp(elements.e1rmVal, e1rmNum, 450, (v) => `${Number(v).toFixed(1)}${e1rmUnit}`);
+      } else {
+        elements.e1rmVal.textContent = e1rmRaw;
+      }
+    }
+
+    updateCoachSidebarTicker();
 
     const safeSet = getSafeActiveSet();
     if (safeSet) {
@@ -2440,7 +2605,7 @@
 
       if (isExpanded && set.reps && set.reps.length > 0) {
         rowsHtml += `
-          <tr class="coach-expanded-drawer-row" id="drawer-${setId}">
+          <tr class="coach-expanded-drawer-row" id="drawer-${escapeHtml(setId)}">
             <td colspan="10">
               <div class="coach-rep-drawer-inner">
                 <table class="coach-rep-subtable">
@@ -3267,12 +3432,1057 @@
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ORBITAL SIDEBAR, MOTION CHOREOGRAPHY & RADIAL LAUNCHER
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  function updateCoachNavActiveState(section) {
+    const activeSec = String(section || 'live');
+    const btns = (elements.coachNavButtons && typeof elements.coachNavButtons.forEach === 'function')
+      ? elements.coachNavButtons
+      : (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function'
+          ? document.querySelectorAll('[data-coach-nav]')
+          : []);
+    if (!btns || typeof btns.forEach !== 'function') return;
+    btns.forEach(btn => {
+      if (!btn || !btn.classList) return;
+      const sec = btn.getAttribute('data-coach-nav');
+      if (sec === activeSec) {
+        btn.classList.add('nav-active');
+        btn.classList.add('neu-inset-sm');
+      } else {
+        btn.classList.remove('nav-active');
+        btn.classList.remove('neu-inset-sm');
+      }
+    });
+  }
+
+  function highlightCoachSectionElement(el) {
+    if (!el) return;
+    if (typeof el.scrollIntoView === 'function') {
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+    }
+    if (el.classList) {
+      el.classList.add('coach-nav-highlight');
+      if (navHighlightTimer) clearTimeout(navHighlightTimer);
+      navHighlightTimer = setTimeout(() => {
+        if (el.classList) el.classList.remove('coach-nav-highlight');
+      }, 1300);
+    }
+  }
+
+  function toggleCoachSidebar(forceCollapsed) {
+    if (!elements.coachSidebar) queryElements();
+    const sidebar = elements.coachSidebar;
+    const toggleBtn = elements.coachSidebarToggle;
+    const currentlyCollapsed = Boolean(sidebar && sidebar.classList && sidebar.classList.contains('coach-sidebar--collapsed'));
+    const nextCollapsed = (typeof forceCollapsed === 'boolean') ? forceCollapsed : !currentlyCollapsed;
+
+    if (sidebar && sidebar.classList) {
+      if (nextCollapsed) {
+        sidebar.classList.add('coach-sidebar--collapsed');
+      } else {
+        sidebar.classList.remove('coach-sidebar--collapsed');
+      }
+    }
+    if (toggleBtn && typeof toggleBtn.setAttribute === 'function') {
+      toggleBtn.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true');
+    }
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, nextCollapsed ? '1' : '0');
+      }
+    } catch (_) {}
+    return nextCollapsed;
+  }
+
+  function navigateCoachSection(section) {
+    const sec = String(section || 'live');
+    if (!elements.panelLive) queryElements();
+
+    if (sec === 'history') {
+      switchCoachPanel('history');
+      updateCoachNavActiveState('history');
+      return 'history';
+    }
+
+    if (sec === 'bonds') {
+      openBondModal();
+      updateCoachNavActiveState('bonds');
+      return 'bonds';
+    }
+
+    switchCoachPanel('live');
+    updateCoachNavActiveState(sec);
+
+    if (sec === 'live') {
+      if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      }
+    } else if (sec === 'roster') {
+      const rosterEl = elements.squadOverview || (typeof document !== 'undefined' ? document.getElementById('coach-squad-overview') : null);
+      highlightCoachSectionElement(rosterEl);
+    } else if (sec === 'prescriptions') {
+      const consoleEl = elements.feedbackConsole || (typeof document !== 'undefined' ? document.getElementById('coach-feedback-console') : null);
+      highlightCoachSectionElement(consoleEl);
+    } else if (sec === 'sync') {
+      const syncEl = elements.cloudSyncPill || (typeof document !== 'undefined' ? document.getElementById('coach-cloud-sync-pill') : null);
+      highlightCoachSectionElement(syncEl);
+      showFeedbackMessage('Eros Cloud Sync verified: active session telemetry online.');
+    }
+
+    return sec;
+  }
+
+  function updateCoachSidebarTicker() {
+    if (!elements.sidebarRestTime && typeof document !== 'undefined') {
+      queryElements();
+    }
+    const activeAthletes = SQUAD_ATHLETES.filter(a => a.status === 'lifting');
+    const restingAthletes = SQUAD_ATHLETES.filter(a => a.status === 'resting');
+    const primaryRestTarget = (currentAthlete && currentAthlete.status === 'resting')
+      ? currentAthlete
+      : (restingAthletes[0] || currentAthlete || null);
+    const restSecs = primaryRestTarget ? Math.max(0, Number(primaryRestTarget.restSeconds) || 0) : 0;
+    const minsStr = String(Math.floor(restSecs / 60)).padStart(2, '0');
+    const secsStr = String(restSecs % 60).padStart(2, '0');
+
+    if (elements.sidebarRestTime) {
+      elements.sidebarRestTime.textContent = `${minsStr}:${secsStr}`;
+    }
+    if (elements.sidebarRestState) {
+      if (currentAthlete && currentAthlete.status === 'lifting') {
+        elements.sidebarRestState.textContent = 'LIFTING';
+      } else if (restingAthletes.length > 0) {
+        elements.sidebarRestState.textContent = 'RESTING';
+      } else if (activeAthletes.length > 0) {
+        elements.sidebarRestState.textContent = 'ACTIVE';
+      } else {
+        elements.sidebarRestState.textContent = 'READY';
+      }
+    }
+    if (elements.sidebarActiveCount) {
+      elements.sidebarActiveCount.textContent = `${activeAthletes.length} Active`;
+    }
+    if (elements.sidebarRestingCount) {
+      elements.sidebarRestingCount.textContent = `${restingAthletes.length} Resting`;
+    }
+  }
+
+  function runCoachIntroOverlay() {
+    let alreadySeen = false;
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        alreadySeen = sessionStorage.getItem(INTRO_SEEN_KEY) === '1';
+      }
+    } catch (_) {}
+    if (alreadySeen) return false;
+
+    const overlay = elements.introOverlay || (typeof document !== 'undefined' ? document.getElementById('coach-intro-overlay') : null);
+    if (!overlay) return false;
+
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(INTRO_SEEN_KEY, '1');
+      }
+    } catch (_) {}
+
+    const textWrap = overlay.querySelector
+      ? (overlay.querySelector('.coach-intro-wordmark') || overlay.querySelector('.coach-intro-text'))
+      : null;
+    if (textWrap && typeof document !== 'undefined' && typeof document.createElement === 'function') {
+      textWrap.innerHTML = '';
+      const brandStr = 'Eros Coach.';
+      for (let i = 0; i < brandStr.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'coach-intro-letter';
+        span.textContent = brandStr[i] === ' ' ? '\u00A0' : brandStr[i];
+        span.style.animationDelay = `${(i * 0.05).toFixed(2)}s`;
+        textWrap.appendChild(span);
+      }
+    }
+
+    if (overlay.classList) overlay.classList.remove('is-fading');
+    if (typeof overlay.setAttribute === 'function') overlay.setAttribute('aria-hidden', 'false');
+    if (overlay.style) overlay.style.display = 'flex';
+
+    setTimeout(() => {
+      if (overlay.classList) overlay.classList.add('is-fading');
+      if (typeof overlay.setAttribute === 'function') overlay.setAttribute('aria-hidden', 'true');
+      setTimeout(() => {
+        if (overlay.style) overlay.style.display = 'none';
+      }, 450);
+    }, 1450);
+    return true;
+  }
+
+  function stopCoachCursorGlowLoop() {
+    if (cursorGlowRaf && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(cursorGlowRaf);
+    }
+    cursorGlowRaf = null;
+  }
+
+  function startCoachCursorGlowLoop() {
+    if (typeof window === 'undefined' || typeof requestAnimationFrame !== 'function') return;
+    if (typeof window.matchMedia === 'function') {
+      try {
+        if (!window.matchMedia('(pointer: fine)').matches) return;
+      } catch (_) {}
+    }
+    const glow = elements.cursorGlow || (typeof document !== 'undefined' ? document.getElementById('coach-cursor-glow') : null);
+    if (!glow) return;
+    if (cursorGlowRaf) return;
+
+    function tickGlow() {
+      const coachActive = typeof document !== 'undefined' && document.body && document.body.classList && document.body.classList.contains('portal-coach');
+      if (!coachActive) {
+        cursorGlowRaf = null;
+        return;
+      }
+      if (cursorTargetX > -5000 && cursorTargetY > -5000) {
+        if (cursorCurrentX < -5000) {
+          cursorCurrentX = cursorTargetX;
+          cursorCurrentY = cursorTargetY;
+        } else {
+          cursorCurrentX += (cursorTargetX - cursorCurrentX) * 0.04;
+          cursorCurrentY += (cursorTargetY - cursorCurrentY) * 0.04;
+        }
+        if (glow.style) {
+          glow.style.transform = `translate3d(${(cursorCurrentX - 300).toFixed(1)}px, ${(cursorCurrentY - 300).toFixed(1)}px, 0)`;
+        }
+      }
+      cursorGlowRaf = requestAnimationFrame(tickGlow);
+    }
+
+    cursorGlowRaf = requestAnimationFrame(tickGlow);
+  }
+
+  function initCoachCursorGlow() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (typeof window.matchMedia === 'function') {
+      try {
+        if (!window.matchMedia('(pointer: fine)').matches) return;
+      } catch (_) {}
+    }
+    if (!cursorGlowBound && typeof document.addEventListener === 'function') {
+      document.addEventListener('mousemove', (e) => {
+        if (!e) return;
+        cursorTargetX = e.clientX;
+        cursorTargetY = e.clientY;
+        if (document.body && document.body.classList && document.body.classList.contains('portal-coach') && !cursorGlowRaf) {
+          startCoachCursorGlowLoop();
+        }
+      }, { passive: true });
+      cursorGlowBound = true;
+    }
+    if (document.body && document.body.classList && document.body.classList.contains('portal-coach')) {
+      startCoachCursorGlowLoop();
+    }
+  }
+
+  function animateCountUp(el, target, duration, formatter) {
+    if (!el) return;
+    const fmt = typeof formatter === 'function' ? formatter : (v) => String(Math.round(v));
+    const dur = (typeof duration === 'number' && isFinite(duration)) ? duration : 600;
+    const numTarget = Number(target);
+
+    if (!isFinite(numTarget)) {
+      el.textContent = fmt(target);
+      return;
+    }
+
+    if (el._countUpRaf && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(el._countUpRaf);
+      el._countUpRaf = null;
+    }
+
+    const prevTarget = (typeof el._countUpLastTarget === 'number' && isFinite(el._countUpLastTarget))
+      ? el._countUpLastTarget
+      : 0;
+    el._countUpLastTarget = numTarget;
+
+    if (
+      dur <= 0 ||
+      prevTarget === numTarget ||
+      typeof requestAnimationFrame !== 'function' ||
+      typeof performance === 'undefined' ||
+      typeof performance.now !== 'function'
+    ) {
+      el.textContent = fmt(numTarget);
+      return;
+    }
+
+    const startVal = prevTarget;
+    const delta = numTarget - startVal;
+    const startTime = performance.now();
+
+    function stepCountUp(now) {
+      const elapsed = Math.max(0, now - startTime);
+      const p = Math.min(1, elapsed / dur);
+      const ease = 1 - Math.pow(1 - p, 3);
+      const currentVal = startVal + delta * ease;
+      el.textContent = fmt(p >= 1 ? numTarget : currentVal);
+      if (p < 1) {
+        el._countUpRaf = requestAnimationFrame(stepCountUp);
+      } else {
+        el._countUpRaf = null;
+      }
+    }
+
+    el.textContent = fmt(startVal);
+    el._countUpRaf = requestAnimationFrame(stepCountUp);
+  }
+
+  function renderProgressRing(container, pct, color) {
+    if (!container) return;
+    const clampedPct = Math.max(0, Math.min(100, Number(pct) || 0));
+    const safeColor = (typeof color === 'string' && /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|var\(--[a-zA-Z0-9-]+\)|[a-zA-Z]+)$/.test(color.trim()))
+      ? color.trim()
+      : '#10a37f';
+    const radius = 14;
+    const circumference = 2 * Math.PI * radius;
+    const dashOffset = circumference * (1 - clampedPct / 100);
+
+    container.innerHTML = `<svg width="34" height="34" viewBox="0 0 36 36" aria-hidden="true">`
+      + `<circle cx="18" cy="18" r="${radius}" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="3"></circle>`
+      + `<circle class="coach-ring-arc" cx="18" cy="18" r="${radius}" fill="none" stroke="${escapeHtml(safeColor)}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${dashOffset.toFixed(2)}"></circle>`
+      + `</svg>`;
+  }
+
+  function computeSmartRadialAngles(anchorX, anchorY, viewportW, viewportH, itemCount, radius) {
+    const count = Math.max(0, Math.floor(Number(itemCount) || 0));
+    if (count === 0) return [];
+
+    const vw = Math.max(240, Number(viewportW) || 1024);
+    const vh = Math.max(240, Number(viewportH) || 768);
+    const ax = Math.max(0, Math.min(vw, Number(anchorX) || (vw - 46)));
+    const ay = Math.max(0, Math.min(vh, Number(anchorY) || (vh - 114)));
+    const baseRadius = (typeof radius === 'number' && isFinite(radius) && radius > 0) ? radius : 92;
+
+    const isLeft = ax < vw / 2;
+    const isTop = ay < vh / 2;
+    const quadrant = `${isTop ? 'top' : 'bottom'}-${isLeft ? 'left' : 'right'}`;
+
+    const margin = 12;
+    const bottomSafe = 84;
+    const padX = margin + 16;
+    const padTop = margin + 16;
+    const minY = Math.min(padTop, vh - margin);
+    const maxY = Math.max(minY, vh - bottomSafe);
+    const minX = Math.min(padX, vw - margin);
+    const maxX = Math.max(minX, vw - padX);
+
+    // Choose strictly-inward corner or centered-edge sweep so slots never pile on blocked edges
+    let startAngleDeg;
+    let endAngleDeg;
+    const centeredHorizontal = Math.abs(ax - vw / 2) < baseRadius * 0.45 && (ay < padTop + 56 || ay > vh - padTop - 96);
+
+    if (centeredHorizontal) {
+      startAngleDeg = isTop ? 15 : -165;
+      endAngleDeg = isTop ? 165 : -15;
+    } else if (!isLeft && !isTop) {
+      // bottom-right -> strictly inward left (-180) to up (-90)
+      startAngleDeg = -180;
+      endAngleDeg = -90;
+    } else if (isLeft && !isTop) {
+      // bottom-left -> strictly inward up (-90) to right (0)
+      startAngleDeg = -90;
+      endAngleDeg = 0;
+    } else if (!isLeft && isTop) {
+      // top-right -> strictly inward down (90) to left (180)
+      startAngleDeg = 90;
+      endAngleDeg = 180;
+    } else {
+      // top-left -> strictly inward right (0) to down (90)
+      startAngleDeg = 0;
+      endAngleDeg = 90;
+    }
+
+    const sweepDeg = Math.abs(endAngleDeg - startAngleDeg);
+    const minItemSpacing = 50;
+    const minAnchorClearance = 56;
+    let effectiveRadius = baseRadius;
+    if (count > 1) {
+      const halfStepRad = ((sweepDeg / (count - 1)) * Math.PI) / 360;
+      const sinHalf = Math.sin(halfStepRad);
+      if (sinHalf > 0.01) {
+        const neededR = Math.ceil((minItemSpacing / 2) / sinHalf);
+        const maxFitR = Math.max(baseRadius, Math.min(vw - margin * 2 - 42, vh - bottomSafe - margin, 220));
+        effectiveRadius = Math.min(maxFitR, Math.max(baseRadius, neededR));
+      }
+    }
+
+    const pts = [];
+    for (let i = 0; i < count; i++) {
+      const t = count === 1 ? 0.5 : i / (count - 1);
+      const angleDeg = startAngleDeg + (endAngleDeg - startAngleDeg) * t;
+      const angleRad = (angleDeg * Math.PI) / 180;
+      pts.push({
+        dx: Math.cos(angleRad) * effectiveRadius,
+        dy: Math.sin(angleRad) * effectiveRadius,
+        angleDeg,
+        angleRad
+      });
+    }
+
+    const clampDeltaX = (d) => Math.max(minX - ax, Math.min(maxX - ax, d));
+    const clampDeltaY = (d) => Math.max(minY - ay, Math.min(maxY - ay, d));
+
+    pts.forEach(p => {
+      p.dx = clampDeltaX(p.dx);
+      p.dy = clampDeltaY(p.dy);
+    });
+
+    // Relaxation loop guarantees >= 48px separation between buttons and >= 54px from FAB center even when clamped
+    const minCenterDist = 48;
+    const inwardX = vw / 2 - ax;
+    const inwardY = vh / 2 - ay;
+    const inwardLen = Math.hypot(inwardX, inwardY) || 1;
+    const inDirX = inwardX / inwardLen;
+    const inDirY = inwardY / inwardLen;
+
+    for (let iter = 0; iter < 18; iter++) {
+      let moved = false;
+
+      // Push any slot too close to the FAB trigger outward toward screen center
+      for (let i = 0; i < count; i++) {
+        const p = pts[i];
+        const distAnchor = Math.hypot(p.dx, p.dy);
+        if (distAnchor < minAnchorClearance) {
+          const ux = distAnchor > 0.5 ? p.dx / distAnchor : inDirX;
+          const uy = distAnchor > 0.5 ? p.dy / distAnchor : inDirY;
+          const push = minAnchorClearance - distAnchor + 1;
+          p.dx = clampDeltaX(p.dx + ux * push);
+          p.dy = clampDeltaY(p.dy + uy * push);
+          moved = true;
+        }
+      }
+
+      // Pairwise center separation
+      for (let i = 0; i < count; i++) {
+        for (let j = i + 1; j < count; j++) {
+          const a = pts[i];
+          const b = pts[j];
+          const vx = b.dx - a.dx;
+          const vy = b.dy - a.dy;
+          const dist = Math.hypot(vx, vy);
+          if (dist < minCenterDist) {
+            const overlap = (minCenterDist - dist) * 0.52 + 0.5;
+            let ux;
+            let uy;
+            if (dist > 0.5) {
+              ux = vx / dist;
+              uy = vy / dist;
+            } else {
+              ux = -inDirY;
+              uy = inDirX;
+            }
+            a.dx = clampDeltaX(a.dx - ux * overlap);
+            a.dy = clampDeltaY(a.dy - uy * overlap);
+            b.dx = clampDeltaX(b.dx + ux * overlap);
+            b.dy = clampDeltaY(b.dy + uy * overlap);
+            moved = true;
+          }
+        }
+      }
+
+      if (!moved) break;
+    }
+
+    return pts.map(p => {
+      const fx = Math.round(clampDeltaX(p.dx));
+      const fy = Math.round(clampDeltaY(p.dy));
+      const finalRad = Math.atan2(fy, fx);
+      const finalDeg = (finalRad * 180) / Math.PI;
+      return {
+        angleDeg: Number(finalDeg.toFixed(2)),
+        angleRad: Number(finalRad.toFixed(4)),
+        x: fx,
+        y: fy,
+        quadrant
+      };
+    });
+  }
+
+  function applySmartOverflowProtection(el, margin) {
+    if (!el) return null;
+    const safeMargin = (typeof margin === 'number' && isFinite(margin) && margin >= 0) ? margin : 12;
+    if (el.classList) el.classList.add('smart-overflow-protected');
+
+    const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1024;
+    const vh = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 768;
+
+    if (el.style) {
+      el.style.maxWidth = `calc(100vw - ${safeMargin * 2}px)`;
+      el.style.maxHeight = `calc(100vh - ${safeMargin * 2}px)`;
+      el.style.boxSizing = 'border-box';
+    }
+
+    let adjusted = false;
+    if (typeof el.getBoundingClientRect === 'function' && el.style) {
+      try {
+        const rect = el.getBoundingClientRect();
+        if (rect && rect.width > 0 && rect.height > 0) {
+          let shiftX = 0;
+          let shiftY = 0;
+          if (rect.left < safeMargin) shiftX = safeMargin - rect.left;
+          else if (rect.right > vw - safeMargin) shiftX = (vw - safeMargin) - rect.right;
+          if (rect.top < safeMargin) shiftY = safeMargin - rect.top;
+          else if (rect.bottom > vh - safeMargin) shiftY = (vh - safeMargin) - rect.bottom;
+
+          if (Math.abs(shiftX) > 0.5 || Math.abs(shiftY) > 0.5) {
+            let computedPos = '';
+            if (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function') {
+              try { computedPos = window.getComputedStyle(el).position || ''; } catch (_) {}
+            }
+            const currentPos = el.style.position || computedPos;
+            if (currentPos === 'fixed' || currentPos === 'absolute') {
+              el.style.transform = 'none';
+              el.style.left = `${Math.max(safeMargin, Math.min(vw - rect.width - safeMargin, rect.left + shiftX))}px`;
+              el.style.top = `${Math.max(safeMargin, Math.min(vh - rect.height - safeMargin, rect.top + shiftY))}px`;
+              el.style.right = 'auto';
+              el.style.bottom = 'auto';
+            }
+            adjusted = true;
+          }
+        }
+      } catch (_) {}
+    }
+
+    return { protected: true, adjusted };
+  }
+
+  function getRadialActionSvg(iconKey) {
+    const common = 'width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+    if (iconKey === 'switch') {
+      return `<svg ${common}><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>`;
+    }
+    if (iconKey === 'play') {
+      return `<svg ${common}><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>`;
+    }
+    if (iconKey === 'link') {
+      return `<svg ${common}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+    }
+    if (iconKey === 'replay') {
+      return `<svg ${common}><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>`;
+    }
+    if (iconKey === 'clock') {
+      return `<svg ${common}><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>`;
+    }
+    if (iconKey === 'cue') {
+      return `<svg ${common}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+    }
+    return `<svg ${common}><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+  }
+
+  function getRadialActionCatalog() {
+    return [
+      { id: 'switch-mode', label: isCoachMode ? 'Athlete' : 'Switch Mode', icon: 'switch' },
+      { id: 'toggle-set', label: 'Toggle Set', icon: 'play' },
+      { id: 'link-athlete', label: 'Link Athlete', icon: 'link' },
+      { id: 'replay-path', label: 'Replay Path', icon: 'replay' },
+      { id: 'rest-timer', label: 'Rest Timer', icon: 'clock' },
+      { id: 'quick-cue', label: 'Quick Cue', icon: 'cue' }
+    ];
+  }
+
+  function getRadialActionsConfig() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem(RADIAL_CONFIG_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const validIds = parsed.filter(id => DEFAULT_RADIAL_ACTIONS.includes(id));
+            return validIds;
+          }
+        }
+      }
+    } catch (_) {}
+    return DEFAULT_RADIAL_ACTIONS.slice();
+  }
+
+  function saveRadialActionsConfig(actionIds) {
+    const cleanIds = Array.isArray(actionIds)
+      ? Array.from(new Set(actionIds.filter(id => DEFAULT_RADIAL_ACTIONS.includes(id))))
+      : DEFAULT_RADIAL_ACTIONS.slice();
+
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(RADIAL_CONFIG_KEY, JSON.stringify(cleanIds));
+      }
+    } catch (_) {}
+
+    syncRadialCustomizerCheckboxes(cleanIds);
+    renderRadialMenuItems();
+    return cleanIds;
+  }
+
+  function syncRadialCustomizerCheckboxes(enabledIds) {
+    if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+    const activeSet = new Set(Array.isArray(enabledIds) ? enabledIds : getRadialActionsConfig());
+    const checks = document.querySelectorAll('[data-radial-action-toggle]');
+    if (checks && typeof checks.forEach === 'function') {
+      checks.forEach(cb => {
+        const id = cb.getAttribute('data-radial-action-toggle');
+        cb.checked = activeSet.has(id);
+      });
+    }
+  }
+
+  function openRadialCustomizer() {
+    const modal = elements.radialCustomizerModal || (typeof document !== 'undefined' ? document.getElementById('eros-radial-customizer-modal') : null);
+    if (!modal) return;
+    toggleRadialActionMenu(false);
+    syncRadialCustomizerCheckboxes(getRadialActionsConfig());
+    if (modal.style) modal.style.display = 'flex';
+    applySmartOverflowProtection(modal, 12);
+  }
+
+  function closeRadialCustomizer() {
+    const modal = elements.radialCustomizerModal || (typeof document !== 'undefined' ? document.getElementById('eros-radial-customizer-modal') : null);
+    if (!modal) return;
+    if (modal.style) modal.style.display = 'none';
+  }
+
+  function executeRadialAction(actionId) {
+    toggleRadialActionMenu(false);
+
+    if (actionId === '__customize__') {
+      openRadialCustomizer();
+      return;
+    }
+
+    if (actionId === 'switch-mode') {
+      revealCoachOption();
+      switchMode(isCoachMode ? 'athlete' : 'coach');
+      return;
+    }
+
+    if (actionId === 'toggle-set') {
+      if (isCoachMode) {
+        switchMode('athlete');
+      }
+      if (typeof document !== 'undefined') {
+        const completeBtn = document.getElementById('btn-complete-set');
+        const toggleBtn = document.getElementById('btn-set-toggle');
+        const controlsPanel = completeBtn && completeBtn.closest ? completeBtn.closest('.controls-panel') : null;
+        const completeVisible = completeBtn && ((controlsPanel && controlsPanel.classList && controlsPanel.classList.contains('set-active-compact')) || (completeBtn.style && completeBtn.style.display !== 'none'));
+        if (completeVisible && typeof completeBtn.click === 'function') {
+          completeBtn.click();
+        } else if (toggleBtn && typeof toggleBtn.click === 'function') {
+          toggleBtn.click();
+        }
+      }
+      return;
+    }
+
+    if (actionId === 'link-athlete') {
+      if (!isCoachMode) {
+        revealCoachOption();
+        switchMode('coach');
+      }
+      updateCoachNavActiveState('bonds');
+      openBondModal();
+      return;
+    }
+
+    if (actionId === 'replay-path') {
+      if (!isCoachMode) {
+        revealCoachOption();
+        switchMode('coach');
+      }
+      navigateCoachSection('live');
+      toggleCoachReplay();
+      return;
+    }
+
+    if (actionId === 'rest-timer') {
+      if (isCoachMode) {
+        navigateCoachSection('prescriptions');
+        const restBlock = typeof document !== 'undefined' ? document.getElementById('coach-rest-target-block') : null;
+        if (restBlock) highlightCoachSectionElement(restBlock);
+      } else if (typeof document !== 'undefined') {
+        const settingsBtn = document.getElementById('btn-athlete-settings');
+        const ticker = document.getElementById('header-rest-ticker');
+        if (ticker && typeof ticker.scrollIntoView === 'function') {
+          try { ticker.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+        } else if (settingsBtn && typeof settingsBtn.click === 'function') {
+          settingsBtn.click();
+        }
+      }
+      return;
+    }
+
+    if (actionId === 'quick-cue') {
+      if (!isCoachMode) {
+        revealCoachOption();
+        switchMode('coach');
+      }
+      sendCoachPrescription('Drive hips!', 0, getSafeWorkingWeight());
+    }
+  }
+
+  function positionRadialItems() {
+    const fab = elements.radialFab || (typeof document !== 'undefined' ? document.getElementById('eros-radial-fab') : null);
+    const itemsContainer = elements.radialItems || (typeof document !== 'undefined' ? document.getElementById('eros-radial-items') : null);
+    if (!fab || !itemsContainer) return [];
+
+    const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1024;
+    const vh = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 768;
+    let anchorX = vw - 46;
+    let anchorY = vh - 114;
+
+    if (typeof fab.getBoundingClientRect === 'function') {
+      try {
+        const rect = fab.getBoundingClientRect();
+        if (rect && rect.width > 0 && rect.height > 0) {
+          anchorX = rect.left + rect.width / 2;
+          anchorY = rect.top + rect.height / 2;
+        }
+      } catch (_) {}
+    }
+
+    const itemNodes = itemsContainer.querySelectorAll ? itemsContainer.querySelectorAll('.eros-radial-item') : [];
+    const count = itemNodes.length || 0;
+    const coords = computeSmartRadialAngles(anchorX, anchorY, vw, vh, count, 92);
+
+    if (coords.length > 0 && typeof fab.setAttribute === 'function') {
+      fab.setAttribute('data-quadrant', coords[0].quadrant);
+    }
+
+    for (let i = 0; i < count; i++) {
+      const node = itemNodes[i];
+      const slot = coords[i];
+      if (node && node.style && slot && typeof node.style.setProperty === 'function') {
+        node.style.setProperty('--radial-x', `${slot.x}px`);
+        node.style.setProperty('--radial-y', `${slot.y}px`);
+      }
+    }
+    return coords;
+  }
+
+  function renderRadialMenuItems() {
+    const itemsContainer = elements.radialItems || (typeof document !== 'undefined' ? document.getElementById('eros-radial-items') : null);
+    if (!itemsContainer) return;
+
+    const enabledIds = getRadialActionsConfig();
+    const catalog = getRadialActionCatalog();
+    const enabledActions = catalog.filter(a => enabledIds.includes(a.id));
+    enabledActions.push({ id: '__customize__', label: 'Customize', icon: 'sliders', isCustomize: true });
+
+    const itemTabIndex = isRadialOpen ? '0' : '-1';
+    itemsContainer.innerHTML = enabledActions.map(action => (
+      `<button type="button" class="eros-radial-item${action.isCustomize ? ' is-customize-item' : ''}" data-radial-action="${escapeHtml(action.id)}" role="menuitem" tabindex="${itemTabIndex}" aria-label="${escapeHtml(action.label)}" title="${escapeHtml(action.label)}">`
+      + getRadialActionSvg(action.icon)
+      + `<span class="eros-radial-item-label">${escapeHtml(action.label)}</span>`
+      + `</button>`
+    )).join('');
+
+    if (itemsContainer.querySelectorAll) {
+      const renderedBtns = itemsContainer.querySelectorAll('[data-radial-action]');
+      if (renderedBtns && typeof renderedBtns.forEach === 'function') {
+        renderedBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+            const actId = btn.getAttribute('data-radial-action');
+            executeRadialAction(actId);
+          });
+        });
+      }
+    }
+
+    positionRadialItems();
+  }
+
+  function clampRadialFabToViewport(fab) {
+    if (!fab || !fab.style) return;
+    if (!fab.style.left || !fab.style.top || fab.style.left === 'auto' || fab.style.top === 'auto') return;
+    const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1024;
+    const vh = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 768;
+    const pad = 12;
+    const size = 52;
+    const curL = parseFloat(fab.style.left) || (vw - size - 20);
+    const curT = parseFloat(fab.style.top) || (vh - size - 88);
+    const clampedL = Math.max(pad, Math.min(vw - size - pad, curL));
+    const clampedT = Math.max(pad, Math.min(vh - size - pad, curT));
+    fab.style.left = `${Math.round(clampedL)}px`;
+    fab.style.top = `${Math.round(clampedT)}px`;
+    fab.style.right = 'auto';
+    fab.style.bottom = 'auto';
+  }
+
+  function toggleRadialActionMenu(forceOpen) {
+    const fab = elements.radialFab || (typeof document !== 'undefined' ? document.getElementById('eros-radial-fab') : null);
+    const items = elements.radialItems || (typeof document !== 'undefined' ? document.getElementById('eros-radial-items') : null);
+    const trigger = elements.radialTrigger || (typeof document !== 'undefined' ? document.getElementById('eros-radial-fab-trigger') : null);
+
+    isRadialOpen = (typeof forceOpen === 'boolean') ? forceOpen : !isRadialOpen;
+
+    if (isRadialOpen) {
+      renderRadialMenuItems();
+      positionRadialItems();
+    }
+
+    if (fab) {
+      if (typeof fab.setAttribute === 'function') {
+        fab.setAttribute('data-radial-open', isRadialOpen ? 'true' : 'false');
+      }
+      if (fab.classList) {
+        if (isRadialOpen) fab.classList.add('is-open');
+        else fab.classList.remove('is-open');
+      }
+    }
+    if (items) {
+      if (typeof items.setAttribute === 'function') {
+        items.setAttribute('aria-hidden', isRadialOpen ? 'false' : 'true');
+      }
+      if (items.classList) {
+        if (isRadialOpen) items.classList.add('is-open');
+        else items.classList.remove('is-open');
+      }
+      if (items.querySelectorAll) {
+        const radialBtns = items.querySelectorAll('.eros-radial-item');
+        if (radialBtns && typeof radialBtns.forEach === 'function') {
+          radialBtns.forEach(btn => {
+            if (btn && typeof btn.setAttribute === 'function') {
+              btn.setAttribute('tabindex', isRadialOpen ? '0' : '-1');
+            }
+          });
+        }
+      }
+    }
+    if (trigger) {
+      if (typeof trigger.setAttribute === 'function') {
+        trigger.setAttribute('aria-expanded', isRadialOpen ? 'true' : 'false');
+      }
+      if (trigger.classList) {
+        if (isRadialOpen) trigger.classList.add('is-open');
+        else trigger.classList.remove('is-open');
+      }
+    }
+
+    return isRadialOpen;
+  }
+
+  function initRadialActionMenu() {
+    if (!elements.radialFab && typeof document !== 'undefined') queryElements();
+    const fab = elements.radialFab;
+    const trigger = elements.radialTrigger;
+    const modal = elements.radialCustomizerModal;
+
+    if (!fab || !trigger) return false;
+    if (radialInitialized) return true;
+    radialInitialized = true;
+
+    // Restore persisted dragged position if available
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const posRaw = localStorage.getItem(RADIAL_POS_KEY);
+        if (posRaw) {
+          const parsedPos = JSON.parse(posRaw);
+          if (parsedPos && typeof parsedPos.left === 'number' && typeof parsedPos.top === 'number' && fab.style) {
+            fab.style.left = `${parsedPos.left}px`;
+            fab.style.top = `${parsedPos.top}px`;
+            fab.style.right = 'auto';
+            fab.style.bottom = 'auto';
+            clampRadialFabToViewport(fab);
+          }
+        }
+      }
+    } catch (_) {}
+
+    renderRadialMenuItems();
+
+    // Pointer Drag & Long-Press Support
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let origLeft = 0;
+    let origTop = 0;
+    let pointerActive = false;
+    let isDragging = false;
+    let longPressTimer = null;
+
+    if (!trigger._radialBound) {
+      trigger.addEventListener('click', (e) => {
+        if (radialSuppressNextClick) {
+          radialSuppressNextClick = false;
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          return;
+        }
+        toggleRadialActionMenu();
+      });
+
+      trigger.addEventListener('contextmenu', (e) => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        openRadialCustomizer();
+      });
+
+      trigger.addEventListener('pointerdown', (e) => {
+        if (!e || (typeof e.button === 'number' && e.button !== 0)) return;
+        pointerActive = true;
+        isDragging = false;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1024;
+        const vh = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 768;
+        if (typeof fab.getBoundingClientRect === 'function') {
+          const rect = fab.getBoundingClientRect();
+          origLeft = rect ? rect.left : (vw - 72);
+          origTop = rect ? rect.top : (vh - 140);
+        } else {
+          origLeft = vw - 72;
+          origTop = vh - 140;
+        }
+
+        if (longPressTimer) clearTimeout(longPressTimer);
+        longPressTimer = setTimeout(() => {
+          longPressTimer = null;
+          if (!isDragging) {
+            radialSuppressNextClick = true;
+            openRadialCustomizer();
+            setTimeout(() => { radialSuppressNextClick = false; }, 120);
+          }
+        }, 550);
+
+        if (typeof trigger.setPointerCapture === 'function' && e.pointerId != null) {
+          try { trigger.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+      });
+
+      trigger.addEventListener('pointermove', (e) => {
+        if (!pointerActive || !e) return;
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        if (!isDragging && Math.hypot(dx, dy) > 6) {
+          isDragging = true;
+          if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+          }
+          if (fab.classList) fab.classList.add('is-dragging');
+        }
+        if (isDragging && fab.style) {
+          const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1024;
+          const vh = (typeof window !== 'undefined' && window.innerHeight) ? window.innerHeight : 768;
+          const nextL = Math.max(12, Math.min(vw - 64, origLeft + dx));
+          const nextT = Math.max(12, Math.min(vh - 64, origTop + dy));
+          fab.style.left = `${Math.round(nextL)}px`;
+          fab.style.top = `${Math.round(nextT)}px`;
+          fab.style.right = 'auto';
+          fab.style.bottom = 'auto';
+          if (isRadialOpen) positionRadialItems();
+        }
+      });
+
+      const finishPointer = () => {
+        if (!pointerActive) return;
+        pointerActive = false;
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        if (fab.classList) fab.classList.remove('is-dragging');
+        if (isDragging) {
+          isDragging = false;
+          radialSuppressNextClick = true;
+          setTimeout(() => { radialSuppressNextClick = false; }, 120);
+          clampRadialFabToViewport(fab);
+          if (isRadialOpen) positionRadialItems();
+          try {
+            if (typeof localStorage !== 'undefined' && fab.style) {
+              localStorage.setItem(RADIAL_POS_KEY, JSON.stringify({
+                left: parseFloat(fab.style.left) || 0,
+                top: parseFloat(fab.style.top) || 0
+              }));
+            }
+          } catch (_) {}
+        }
+      };
+
+      trigger.addEventListener('pointerup', finishPointer);
+      trigger.addEventListener('pointercancel', finishPointer);
+      trigger._radialBound = true;
+    }
+
+    // Customizer Checkboxes & Buttons
+    if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+      const toggles = document.querySelectorAll('[data-radial-action-toggle]');
+      if (toggles && typeof toggles.forEach === 'function') {
+        toggles.forEach(cb => {
+          if (!cb._radialToggleBound) {
+            cb.addEventListener('change', () => {
+              const selected = [];
+              toggles.forEach(item => {
+                if (item.checked) selected.push(item.getAttribute('data-radial-action-toggle'));
+              });
+              saveRadialActionsConfig(selected);
+            });
+            cb._radialToggleBound = true;
+          }
+        });
+      }
+    }
+
+    if (typeof document !== 'undefined') {
+      const btnClose = document.getElementById('btn-radial-customizer-close');
+      const btnDismiss = document.getElementById('btn-radial-customizer-dismiss');
+      const btnReset = document.getElementById('btn-radial-customizer-reset');
+
+      if (btnClose && !btnClose._radialBound) {
+        btnClose.addEventListener('click', closeRadialCustomizer);
+        btnClose._radialBound = true;
+      }
+      if (btnDismiss && !btnDismiss._radialBound) {
+        btnDismiss.addEventListener('click', closeRadialCustomizer);
+        btnDismiss._radialBound = true;
+      }
+      if (btnReset && !btnReset._radialBound) {
+        btnReset.addEventListener('click', () => {
+          saveRadialActionsConfig(DEFAULT_RADIAL_ACTIONS.slice());
+        });
+        btnReset._radialBound = true;
+      }
+
+      if (!document._radialOutsideBound) {
+        document.addEventListener('click', (e) => {
+          if (isRadialOpen && fab && e && e.target && typeof fab.contains === 'function' && !fab.contains(e.target)) {
+            toggleRadialActionMenu(false);
+          }
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e && e.key === 'Escape') {
+            if (modal && modal.style && modal.style.display !== 'none') {
+              closeRadialCustomizer();
+            } else if (isRadialOpen) {
+              toggleRadialActionMenu(false);
+            }
+          }
+        });
+        document._radialOutsideBound = true;
+      }
+    }
+
+    return true;
+  }
+
   // Public Interface
   return {
     init,
     initCoachPortal: init,
     switchMode,
     switchCoachPanel,
+    toggleCoachSidebar,
+    navigateCoachSection,
+    animateCountUp,
+    renderProgressRing,
+    computeSmartRadialAngles,
+    applySmartOverflowProtection,
+    initRadialActionMenu,
+    toggleRadialActionMenu,
+    getRadialActionsConfig,
+    saveRadialActionsConfig,
     renderFullCoachDashboard,
     renderAthleteHistoryPanel,
     renderMonthlyCalendar,
