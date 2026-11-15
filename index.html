@@ -421,6 +421,90 @@
       <!-- ═══════════════════════════════════════════════ -->
       <section id="tab-set" class="tab-section" aria-label="Workout">
 
+        <!-- Athlete Preparation Hub (Coach-authored plan, live synced) -->
+        <div id="athlete-prep-hub" class="athlete-prep-hub" aria-label="Preparation Hub">
+          <div id="athlete-prep-header-card" class="glass-card athlete-prep-header-card">
+            <div class="athlete-prep-header-top">
+              <div class="athlete-prep-title-group">
+                <span class="athlete-prep-eyebrow font-mono">PREPARATION</span>
+                <span id="athlete-prep-plan-title" class="athlete-prep-plan-title">No active plan</span>
+              </div>
+              <span id="athlete-prep-sync-badge" class="athlete-prep-sync-badge font-mono">LOCAL</span>
+            </div>
+            <div class="athlete-prep-pill-row">
+              <span id="athlete-prep-phase-badge" class="athlete-prep-pill font-mono">PHASE &mdash;</span>
+              <span id="athlete-prep-week-pill" class="athlete-prep-pill font-mono">WEEK &mdash;</span>
+              <span id="athlete-meet-countdown-pill" class="athlete-prep-pill font-mono">NO MEET DATE</span>
+            </div>
+          </div>
+
+          <div id="athlete-prep-week-strip" class="athlete-prep-week-strip" role="group" aria-label="Weekly Schedule">
+            <button type="button" class="athlete-week-day-pill" data-day="Mon" data-day-index="0" aria-pressed="false">
+              <span class="athlete-week-day-name">Mon</span>
+              <span class="athlete-week-day-date font-mono">&mdash;</span>
+            </button>
+            <button type="button" class="athlete-week-day-pill" data-day="Tue" data-day-index="1" aria-pressed="false">
+              <span class="athlete-week-day-name">Tue</span>
+              <span class="athlete-week-day-date font-mono">&mdash;</span>
+            </button>
+            <button type="button" class="athlete-week-day-pill" data-day="Wed" data-day-index="2" aria-pressed="false">
+              <span class="athlete-week-day-name">Wed</span>
+              <span class="athlete-week-day-date font-mono">&mdash;</span>
+            </button>
+            <button type="button" class="athlete-week-day-pill" data-day="Thu" data-day-index="3" aria-pressed="false">
+              <span class="athlete-week-day-name">Thu</span>
+              <span class="athlete-week-day-date font-mono">&mdash;</span>
+            </button>
+            <button type="button" class="athlete-week-day-pill" data-day="Fri" data-day-index="4" aria-pressed="false">
+              <span class="athlete-week-day-name">Fri</span>
+              <span class="athlete-week-day-date font-mono">&mdash;</span>
+            </button>
+            <button type="button" class="athlete-week-day-pill" data-day="Sat" data-day-index="5" aria-pressed="false">
+              <span class="athlete-week-day-name">Sat</span>
+              <span class="athlete-week-day-date font-mono">&mdash;</span>
+            </button>
+            <button type="button" class="athlete-week-day-pill" data-day="Sun" data-day-index="6" aria-pressed="false">
+              <span class="athlete-week-day-name">Sun</span>
+              <span class="athlete-week-day-date font-mono">&mdash;</span>
+            </button>
+          </div>
+
+          <div id="athlete-prep-notes-row" class="athlete-prep-notes-row">
+            <div class="glass-card athlete-prep-note-card">
+              <span class="athlete-prep-note-label font-mono">COACH SESSION NOTES</span>
+              <p id="athlete-prep-workout-notes" class="athlete-prep-note-body">No session notes for this day.</p>
+            </div>
+            <div class="glass-card athlete-prep-note-card">
+              <span class="athlete-prep-note-label font-mono">DIETARY NOTES</span>
+              <p id="athlete-prep-dietary-notes" class="athlete-prep-note-body">No dietary notes for this day.</p>
+            </div>
+          </div>
+
+          <div class="glass-card athlete-prep-slots-card">
+            <div class="athlete-prep-slots-header">
+              <span class="athlete-prep-note-label font-mono">PRESCRIBED SESSION</span>
+            </div>
+            <div id="athlete-prep-slots-list" class="athlete-prep-slots-list">
+              <p class="athlete-prep-empty">No prescribed exercises for this day.</p>
+              <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout">START PLANNED WORKOUT</button>
+            </div>
+          </div>
+
+          <div id="athlete-plan-vs-actual-card" class="glass-card athlete-plan-vs-actual-card">
+            <div class="athlete-prep-slots-header">
+              <span class="athlete-prep-note-label font-mono">PLANNED VS ACTUAL</span>
+            </div>
+            <div id="athlete-plan-vs-actual-body" class="athlete-plan-vs-actual-body">
+              <p class="athlete-prep-empty">Planned and actual sets appear here side by side.</p>
+            </div>
+          </div>
+
+          <div id="athlete-prep-feedback-bar" class="athlete-prep-feedback-bar">
+            <input type="text" id="athlete-prep-feedback-input" class="athlete-prep-feedback-input" maxlength="280" placeholder="Session feedback for your coach" aria-label="Session feedback for your coach" autocomplete="off">
+            <button type="button" id="btn-send-prep-feedback" class="btn-send-prep-feedback">SEND</button>
+          </div>
+        </div>
+
         <!-- Workout Summary -->
         <div class="glass-card workout-summary-card" id="workout-summary-card">
           <div class="workout-summary-header">
@@ -559,6 +643,87 @@
             </svg>
             <span>SETTINGS</span>
           </button>
+        </div>
+
+        <!-- Athlete Biometrics & Experience Dossier -->
+        <div id="athlete-biometrics-card" class="glass-card athlete-biometrics-card">
+          <div class="athlete-bio-header">
+            <span class="athlete-bio-title font-mono">ATHLETE DOSSIER</span>
+            <span id="bio-save-status" class="bio-save-status font-mono" aria-live="polite"></span>
+          </div>
+          <div class="athlete-bio-grid">
+            <label class="athlete-bio-field" for="bio-age-input">
+              <span class="athlete-bio-label font-mono">AGE</span>
+              <input type="number" id="bio-age-input" class="athlete-bio-input" min="10" max="100" step="1" inputmode="numeric" placeholder="Years">
+            </label>
+            <label class="athlete-bio-field" for="bio-bw-input">
+              <span class="athlete-bio-label font-mono">BODYWEIGHT (KG)</span>
+              <input type="number" id="bio-bw-input" class="athlete-bio-input" min="30" max="300" step="0.1" inputmode="decimal" placeholder="kg">
+            </label>
+            <label class="athlete-bio-field" for="bio-weight-class-select">
+              <span class="athlete-bio-label font-mono">TARGET CLASS</span>
+              <select id="bio-weight-class-select" class="athlete-bio-input">
+                <option value="">Not set</option>
+                <option value="47">47</option>
+                <option value="52">52</option>
+                <option value="53">53</option>
+                <option value="57">57</option>
+                <option value="59">59</option>
+                <option value="63">63</option>
+                <option value="66">66</option>
+                <option value="69">69</option>
+                <option value="74">74</option>
+                <option value="76">76</option>
+                <option value="83">83</option>
+                <option value="84">84</option>
+                <option value="84+">84+</option>
+                <option value="93">93</option>
+                <option value="105">105</option>
+                <option value="120">120</option>
+                <option value="120+">120+</option>
+              </select>
+            </label>
+            <label class="athlete-bio-field" for="bio-training-age-input">
+              <span class="athlete-bio-label font-mono">TRAINING AGE (YRS)</span>
+              <input type="number" id="bio-training-age-input" class="athlete-bio-input" min="0" max="80" step="0.5" inputmode="decimal" placeholder="Years">
+            </label>
+            <label class="athlete-bio-field" for="bio-exp-tier-select">
+              <span class="athlete-bio-label font-mono">EXPERIENCE TIER</span>
+              <select id="bio-exp-tier-select" class="athlete-bio-input">
+                <option value="Novice">Novice</option>
+                <option value="Regional">Regional</option>
+                <option value="National">National</option>
+                <option value="International">International</option>
+              </select>
+            </label>
+            <label class="athlete-bio-field" for="bio-meets-count-input">
+              <span class="athlete-bio-label font-mono">MEETS COMPLETED</span>
+              <input type="number" id="bio-meets-count-input" class="athlete-bio-input" min="0" max="500" step="1" inputmode="numeric" placeholder="0">
+            </label>
+            <label class="athlete-bio-field athlete-bio-field-wide" for="bio-federation-input">
+              <span class="athlete-bio-label font-mono">FEDERATION</span>
+              <input type="text" id="bio-federation-input" class="athlete-bio-input" maxlength="48" placeholder="e.g., IPF, national federation" autocomplete="off">
+            </label>
+          </div>
+          <div class="athlete-bio-days">
+            <span class="athlete-bio-label font-mono">AVAILABLE TRAINING DAYS</span>
+            <div id="bio-available-days-group" class="bio-available-days-group" role="group" aria-label="Available training days">
+              <button type="button" class="bio-day-pill" data-day="Mon" aria-pressed="false">Mon</button>
+              <button type="button" class="bio-day-pill" data-day="Tue" aria-pressed="false">Tue</button>
+              <button type="button" class="bio-day-pill" data-day="Wed" aria-pressed="false">Wed</button>
+              <button type="button" class="bio-day-pill" data-day="Thu" aria-pressed="false">Thu</button>
+              <button type="button" class="bio-day-pill" data-day="Fri" aria-pressed="false">Fri</button>
+              <button type="button" class="bio-day-pill" data-day="Sat" aria-pressed="false">Sat</button>
+              <button type="button" class="bio-day-pill" data-day="Sun" aria-pressed="false">Sun</button>
+            </div>
+          </div>
+          <label class="athlete-bio-field athlete-bio-field-notes" for="bio-duties-notes-input">
+            <span class="athlete-bio-label font-mono">DUTIES AND INJURY NOTES</span>
+            <textarea id="bio-duties-notes-input" class="athlete-bio-input athlete-bio-textarea" rows="3" maxlength="500" placeholder="Work schedule, injuries, constraints your coach should factor in"></textarea>
+          </label>
+          <div class="athlete-bio-actions">
+            <button type="button" id="btn-save-biometrics" class="btn-save-biometrics">SAVE DOSSIER</button>
+          </div>
         </div>
 
         <!-- Lifetime Analytics Bar -->
@@ -833,6 +998,14 @@
 
             <div class="coach-sidebar-group">
               <div class="coach-sidebar-group-label">MANAGEMENT</div>
+              <button type="button" class="coach-sidebar-link" data-coach-nav="preparation">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <polyline points="9 14 11 16 15 12"></polyline>
+                  </svg>
+                <span>Preparation</span>
+              </button>
               <button type="button" class="coach-sidebar-link" data-coach-nav="bonds">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -960,6 +1133,14 @@
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
             <span>ATHLETE HISTORY PANEL</span>
+          </button>
+          <button type="button" id="btn-coach-panel-preparation" class="coach-subnav-btn" data-panel="preparation" role="tab" aria-selected="false" aria-controls="coach-preparation-panel">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <polyline points="9 14 11 16 15 12"></polyline>
+            </svg>
+            <span>PREPARATION</span>
           </button>
         </div>
         <div class="coach-sync-architecture-pill" id="coach-cloud-sync-pill" title="Client-side ErosSyncBus active. Cloud PostgreSQL schema ready for deployment upon backend approval.">
@@ -1511,6 +1692,236 @@
         </div>
 
       </div>
+        <!-- ═══ Coach Preparation Panel (0 to 12 month planner) ═══ -->
+        <section id="coach-preparation-panel" class="coach-prep-section coach-panel-section" role="tabpanel" aria-labelledby="btn-coach-panel-preparation" style="display: none;">
+
+          <!-- Factoring Strip -->
+          <div id="coach-prep-factoring-strip" class="coach-prep-factoring-strip neu-raised">
+            <div class="coach-prep-factoring-top">
+              <label class="coach-prep-field coach-prep-field-athlete" for="coach-prep-athlete-select">
+                <span class="coach-prep-label font-mono">ATHLETE</span>
+                <select id="coach-prep-athlete-select" class="coach-prep-input">
+                  <option value="">No connected athlete</option>
+                </select>
+              </label>
+              <div id="coach-prep-factoring-badges" class="coach-prep-factoring-badges" aria-label="Athlete factors"></div>
+            </div>
+            <div id="coach-prep-factoring-alerts" class="coach-prep-factoring-alerts" aria-live="polite"></div>
+          </div>
+
+          <!-- Plan Header -->
+          <div id="coach-prep-plan-header" class="coach-prep-plan-header neu-raised">
+            <div class="coach-prep-header-grid">
+              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-title-input">
+                <span class="coach-prep-label font-mono">PLAN TITLE</span>
+                <input type="text" id="coach-prep-title-input" class="coach-prep-input" maxlength="80" placeholder="e.g., National meet build" autocomplete="off">
+              </label>
+              <label class="coach-prep-field" for="coach-prep-months-select">
+                <span class="coach-prep-label font-mono">HORIZON</span>
+                <select id="coach-prep-months-select" class="coach-prep-input">
+                  <option value="0">0 months</option>
+                  <option value="1">1 month</option>
+                  <option value="2">2 months</option>
+                  <option value="3" selected>3 months</option>
+                  <option value="4">4 months</option>
+                  <option value="5">5 months</option>
+                  <option value="6">6 months</option>
+                  <option value="7">7 months</option>
+                  <option value="8">8 months</option>
+                  <option value="9">9 months</option>
+                  <option value="10">10 months</option>
+                  <option value="11">11 months</option>
+                  <option value="12">12 months</option>
+                </select>
+              </label>
+              <label class="coach-prep-field" for="coach-prep-start-date">
+                <span class="coach-prep-label font-mono">START DATE</span>
+                <input type="date" id="coach-prep-start-date" class="coach-prep-input">
+              </label>
+              <label class="coach-prep-field" for="coach-prep-meet-date">
+                <span class="coach-prep-label font-mono">MEET DATE</span>
+                <input type="date" id="coach-prep-meet-date" class="coach-prep-input">
+              </label>
+              <div class="coach-prep-field coach-prep-countdown-field">
+                <span class="coach-prep-label font-mono">COUNTDOWN</span>
+                <span id="coach-prep-meet-countdown" class="coach-prep-countdown font-mono">NO MEET DATE</span>
+              </div>
+            </div>
+            <div class="coach-prep-target-row">
+              <label class="coach-prep-field" for="coach-prep-1rm-squat">
+                <span class="coach-prep-label font-mono">SQUAT 1RM (KG)</span>
+                <input type="number" id="coach-prep-1rm-squat" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="kg" inputmode="decimal">
+              </label>
+              <label class="coach-prep-field" for="coach-prep-1rm-bench">
+                <span class="coach-prep-label font-mono">BENCH 1RM (KG)</span>
+                <input type="number" id="coach-prep-1rm-bench" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="kg" inputmode="decimal">
+              </label>
+              <label class="coach-prep-field" for="coach-prep-1rm-deadlift">
+                <span class="coach-prep-label font-mono">DEADLIFT 1RM (KG)</span>
+                <input type="number" id="coach-prep-1rm-deadlift" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="kg" inputmode="decimal">
+              </label>
+              <button type="button" id="btn-coach-publish-prep" class="coach-prep-btn coach-prep-btn-primary">PUBLISH PLAN</button>
+            </div>
+          </div>
+
+          <!-- Macro Timeline & Quick Tools -->
+          <div id="coach-prep-macro-card" class="coach-prep-macro-card neu-raised">
+            <div class="coach-prep-section-head">
+              <span class="coach-prep-section-title">Macro Timeline</span>
+              <div class="coach-prep-quick-tools">
+                <select id="coach-prep-template-select" class="coach-prep-input coach-prep-template-select" aria-label="Plan template">
+                  <option value="">Select template</option>
+                </select>
+                <button type="button" id="btn-coach-apply-template" class="coach-prep-btn">APPLY TEMPLATE</button>
+                <button type="button" id="btn-coach-deload-week" class="coach-prep-btn">DELOAD WEEK</button>
+                <button type="button" id="btn-coach-clone-week" class="coach-prep-btn">CLONE WEEK</button>
+              </div>
+            </div>
+            <div id="coach-prep-weeks-track" class="coach-prep-weeks-track" role="listbox" aria-label="Plan weeks"></div>
+          </div>
+
+          <!-- Daily Session & Exercise Picker -->
+          <div id="coach-prep-session-card" class="coach-prep-session-card neu-raised">
+            <div class="coach-prep-section-head">
+              <span class="coach-prep-section-title">Daily Session</span>
+            </div>
+            <div id="coach-prep-day-tabs" class="coach-prep-day-tabs" role="tablist" aria-label="Session day"></div>
+            <div class="coach-prep-session-meta">
+              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-session-title">
+                <span class="coach-prep-label font-mono">SESSION TITLE</span>
+                <input type="text" id="coach-prep-session-title" class="coach-prep-input" maxlength="80" placeholder="e.g., Heavy squat and bench" autocomplete="off">
+              </label>
+              <label class="coach-prep-field" for="coach-prep-phase-select">
+                <span class="coach-prep-label font-mono">PHASE</span>
+                <select id="coach-prep-phase-select" class="coach-prep-input">
+                  <option value="Hypertrophy">Hypertrophy</option>
+                  <option value="Accumulation">Accumulation</option>
+                  <option value="Strength">Strength</option>
+                  <option value="Intensification">Intensification</option>
+                  <option value="Peaking">Peaking</option>
+                  <option value="Taper">Taper</option>
+                  <option value="Deload">Deload</option>
+                  <option value="Test">Test</option>
+                </select>
+              </label>
+              <label class="coach-prep-toggle" for="coach-prep-deload-toggle">
+                <input type="checkbox" id="coach-prep-deload-toggle">
+                <span class="coach-prep-label font-mono">DELOAD DAY</span>
+              </label>
+            </div>
+
+            <div class="coach-prep-picker-row">
+              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-exercise-search">
+                <span class="coach-prep-label font-mono">EXERCISE SEARCH</span>
+                <input type="search" id="coach-prep-exercise-search" class="coach-prep-input" placeholder="Filter exercises" autocomplete="off">
+              </label>
+              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-exercise-select">
+                <span class="coach-prep-label font-mono">EXERCISE</span>
+                <select id="coach-prep-exercise-select" class="coach-prep-input"></select>
+              </label>
+              <button type="button" id="btn-coach-custom-exercise" class="coach-prep-btn">CUSTOM EXERCISE</button>
+            </div>
+
+            <div class="coach-prep-slot-builder">
+              <div class="coach-prep-slot-group" id="coach-prep-top-set-group">
+                <span class="coach-prep-slot-tag font-mono">SET X &middot; TOP SET</span>
+                <div class="coach-prep-slot-inputs">
+              <label class="coach-prep-field" for="coach-slot-top-sets">
+                <span class="coach-prep-label font-mono">SETS</span>
+                <input type="number" id="coach-slot-top-sets" class="coach-prep-input" min="1" max="10" step="1" placeholder="1" inputmode="decimal">
+              </label>
+              <label class="coach-prep-field" for="coach-slot-top-reps">
+                <span class="coach-prep-label font-mono">REPS</span>
+                <input type="number" id="coach-slot-top-reps" class="coach-prep-input" min="1" max="30" step="1" placeholder="3" inputmode="decimal">
+              </label>
+              <label class="coach-prep-field" for="coach-slot-top-rpe">
+                <span class="coach-prep-label font-mono">RPE</span>
+                <input type="number" id="coach-slot-top-rpe" class="coach-prep-input" min="5" max="10" step="0.5" placeholder="8" inputmode="decimal">
+              </label>
+              <label class="coach-prep-field" for="coach-slot-top-load">
+                <span class="coach-prep-label font-mono">LOAD (KG)</span>
+                <input type="number" id="coach-slot-top-load" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="auto" inputmode="decimal">
+              </label>
+                  <div class="coach-prep-field">
+                    <span class="coach-prep-label font-mono">TARGET VELOCITY</span>
+                    <span id="coach-slot-top-vel-preview" class="coach-prep-vel-preview font-mono">&mdash;</span>
+                  </div>
+                </div>
+              </div>
+              <div class="coach-prep-slot-group" id="coach-prep-backoff-group">
+                <span class="coach-prep-slot-tag font-mono">SET Y &middot; BACKOFF</span>
+                <div class="coach-prep-slot-inputs">
+              <label class="coach-prep-field" for="coach-slot-backoff-sets">
+                <span class="coach-prep-label font-mono">SETS</span>
+                <input type="number" id="coach-slot-backoff-sets" class="coach-prep-input" min="0" max="10" step="1" placeholder="3" inputmode="decimal">
+              </label>
+              <label class="coach-prep-field" for="coach-slot-backoff-reps">
+                <span class="coach-prep-label font-mono">REPS</span>
+                <input type="number" id="coach-slot-backoff-reps" class="coach-prep-input" min="1" max="30" step="1" placeholder="5" inputmode="decimal">
+              </label>
+              <label class="coach-prep-field" for="coach-slot-backoff-rpe">
+                <span class="coach-prep-label font-mono">RPE</span>
+                <input type="number" id="coach-slot-backoff-rpe" class="coach-prep-input" min="5" max="10" step="0.5" placeholder="7" inputmode="decimal">
+              </label>
+              <label class="coach-prep-field" for="coach-slot-backoff-drop">
+                <span class="coach-prep-label font-mono">DROP (%)</span>
+                <input type="number" id="coach-slot-backoff-drop" class="coach-prep-input" min="0" max="50" step="0.5" placeholder="8" inputmode="decimal">
+              </label>
+                  <div class="coach-prep-field">
+                    <span class="coach-prep-label font-mono">TARGET VELOCITY</span>
+                    <span id="coach-slot-backoff-vel-preview" class="coach-prep-vel-preview font-mono">&mdash;</span>
+                  </div>
+                </div>
+              </div>
+              <div class="coach-prep-slot-actions">
+                <button type="button" id="btn-coach-add-slot" class="coach-prep-btn coach-prep-btn-primary">ADD EXERCISE</button>
+              </div>
+            </div>
+
+            <div class="coach-prep-slots-table-wrap">
+              <table class="coach-prep-slots-table">
+                <thead>
+                  <tr>
+                    <th>Exercise</th>
+                    <th>Set X</th>
+                    <th>Set Y</th>
+                    <th>Load</th>
+                    <th>Target Velocity</th>
+                    <th><span class="sr-only">Remove</span></th>
+                  </tr>
+                </thead>
+                <tbody id="coach-prep-slots-body"></tbody>
+              </table>
+            </div>
+
+            <div class="coach-prep-notes-grid">
+              <label class="coach-prep-field" for="coach-prep-workout-notes">
+                <span class="coach-prep-label font-mono">SESSION NOTES</span>
+                <textarea id="coach-prep-workout-notes" class="coach-prep-input coach-prep-textarea" rows="3" maxlength="600" placeholder="Cues and intent for this session"></textarea>
+              </label>
+              <label class="coach-prep-field" for="coach-prep-dietary-notes">
+                <span class="coach-prep-label font-mono">DIETARY NOTES</span>
+                <textarea id="coach-prep-dietary-notes" class="coach-prep-input coach-prep-textarea" rows="3" maxlength="600" placeholder="Fueling and hydration for this day"></textarea>
+              </label>
+            </div>
+            <div class="coach-prep-session-actions">
+              <button type="button" id="btn-coach-save-session" class="coach-prep-btn coach-prep-btn-primary">SAVE SESSION</button>
+            </div>
+          </div>
+
+          <!-- Planned vs Actual Matrix -->
+          <div id="coach-prep-comparison-card" class="coach-prep-comparison-card neu-raised">
+            <div class="coach-prep-section-head">
+              <span class="coach-prep-section-title">Planned vs Actual</span>
+            </div>
+            <div id="coach-prep-comparison-body" class="coach-prep-comparison-body">
+              <p class="coach-prep-empty">Select an athlete and a session day to compare plan and execution.</p>
+            </div>
+            <div id="coach-prep-athlete-feedback-view" class="coach-prep-athlete-feedback-view" aria-live="polite"></div>
+          </div>
+
+        </section>
+
       </div><!-- /#coach-main -->
       </div><!-- /#coach-shell -->
 
@@ -1546,6 +1957,14 @@
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
           <span>History</span>
+        </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="preparation">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <polyline points="9 14 11 16 15 12"></polyline>
+            </svg>
+          <span>Prep</span>
         </button>
         <button type="button" class="coach-bottom-nav-btn" data-coach-nav="bonds">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1594,6 +2013,14 @@
           </svg>
           <span>History</span>
         </button>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="preparation">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <polyline points="9 14 11 16 15 12"></polyline>
+            </svg>
+          <span>Prep</span>
+        </button>
         <button type="button" class="coach-bottom-nav-btn" data-coach-nav="bonds">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -1612,31 +2039,45 @@
 
     </section>
 
+    <!-- Smart PR Auto-Suggest Pop-up -->
+    <div id="pr-confirm-hud" class="pr-confirm-hud" role="alertdialog" aria-labelledby="pr-confirm-summary" aria-live="polite" aria-hidden="true">
+      <div class="pr-confirm-copy">
+        <span class="pr-confirm-eyebrow font-mono">PERSONAL RECORD CANDIDATE</span>
+        <span id="pr-confirm-summary" class="pr-confirm-summary">New best detected.</span>
+        <div id="pr-confirm-metrics" class="pr-confirm-metrics font-mono"></div>
+      </div>
+      <div class="pr-confirm-actions">
+        <button type="button" id="btn-confirm-push-pr" class="pr-confirm-btn pr-confirm-btn-primary">PUSH PR</button>
+        <button type="button" id="btn-dismiss-push-pr" class="pr-confirm-btn pr-confirm-btn-ghost">DISMISS</button>
+      </div>
+    </div>
+
     <!-- Floating Glass OS Bottom Navigation Bar -->
     <nav class="bottom-glass-nav" data-active="live" aria-label="Main Navigation">
       <div class="nav-indicator-pill" id="nav-indicator-pill" aria-hidden="true"></div>
       <button class="nav-tab active" data-target="live" aria-label="Live Tracker Tab">
-        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="8"></circle>
-          <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
-        <span class="nav-label">LIVE</span>
+        <span class="nav-label sr-only">LIVE</span>
       </button>
-      <button class="nav-tab" data-target="set" aria-label="Workout Tab">
-        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="9"></circle>
-          <path d="M12 7v5l3 3"></path>
+      <button class="nav-tab" data-target="set" aria-label="Preparation Tab">
+        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+          <polyline points="8 15 11 18 16 13"></polyline>
         </svg>
-        <span class="nav-label">WORKOUT</span>
+        <span class="nav-label sr-only">PREP</span>
       </button>
-      <button class="nav-tab" data-target="history" aria-label="Workout History Tab">
-        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
+      <button class="nav-tab" data-target="history" aria-label="Athlete Profile Tab">
+        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <circle cx="12" cy="10" r="2.6"></circle>
+          <path d="M7.6 16.2a5 5 0 0 1 8.8 0"></path>
         </svg>
-        <span class="nav-label">HISTORY</span>
+        <span class="nav-label sr-only">PROFILE</span>
       </button>
     </nav>
 
@@ -1906,6 +2347,7 @@
 
   <!-- JavaScript Modules -->
   <script src="sync-bus.js"></script>
+<script src="prep-engine.js"></script>
   <script src="coach-portal.js"></script>
   <script src="athlete-fx.js"></script>
   <script src="coach-cue-hud.js"></script>

@@ -5558,8 +5558,11 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
 }
 
 .nav-tab .nav-icon {
-  width: 18px !important;
-  height: 18px !important;
+  width: 20px !important;
+  height: 20px !important;
+  flex: 0 0 20px !important;
+  display: block !important;
+  margin: 0 auto !important;
   transition: stroke 0.16s ease !important;
 }
 
@@ -5568,6 +5571,33 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   font-weight: 700 !important;
   letter-spacing: 0.5px !important;
   line-height: 1 !important;
+}
+
+/* Icon-only mini pills: the text label stays in the DOM for accessibility but is visually hidden */
+.bottom-glass-nav .nav-tab {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  padding: 6px !important;
+}
+
+.bottom-glass-nav .nav-tab .nav-label.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+
+.bottom-glass-nav .nav-tab:focus-visible {
+  outline: 2px solid rgba(var(--accent-rgb), 0.6);
+  outline-offset: 2px;
 }
 
 /* Sliding indicator neutralized so spaced mini pills render cleanly without overlap */
@@ -6692,6 +6722,995 @@ body.theme-deadlift .nav-indicator-pill::before {
   .nav-tab,
   [data-movable-pill],
   .pill-move-hint {
+    transition: none !important;
+  }
+}
+
+
+/* ==========================================================================
+   ATHLETE PREPARATION HUB (inside #tab-set)
+   Matte Obsidian cards on the 12px grid; every block fits a 390px viewport
+   ========================================================================== */
+#athlete-prep-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+#athlete-prep-hub > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#athlete-prep-hub .glass-card,
+#athlete-biometrics-card.glass-card {
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 16px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 12px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#athlete-prep-header-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.athlete-prep-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.athlete-prep-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.athlete-prep-eyebrow,
+.athlete-prep-note-label,
+.athlete-bio-label,
+.athlete-bio-title,
+.pr-confirm-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.athlete-prep-plan-title {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+
+.athlete-prep-sync-badge,
+.athlete-prep-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #b4b4b4;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.athlete-prep-sync-badge {
+  flex: 0 0 auto;
+}
+
+.athlete-prep-sync-badge.is-live {
+  color: #ececec;
+  border-color: rgba(var(--accent-rgb), 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 8px rgba(var(--accent-rgb), 0.14);
+}
+
+.athlete-prep-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Monday to Sunday schedule strip */
+#athlete-prep-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.athlete-week-day-pill {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 2px;
+  border-radius: 14px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #71717a;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.athlete-week-day-name {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.athlete-week-day-date {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #b4b4b4;
+}
+
+.athlete-week-day-pill.has-workout::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.85);
+}
+
+.athlete-week-day-pill.is-today {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ececec;
+}
+
+.athlete-week-day-pill.is-complete {
+  color: #ececec;
+}
+
+.athlete-week-day-pill.is-complete::after {
+  background: #00ff66;
+}
+
+.athlete-week-day-pill.active,
+.athlete-week-day-pill[aria-pressed="true"] {
+  background: #212121;
+  color: #ececec;
+  border-color: rgba(var(--accent-rgb), 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 8px rgba(var(--accent-rgb), 0.14);
+}
+
+.athlete-week-day-pill:focus-visible,
+.bio-day-pill:focus-visible,
+.athlete-slot-load-btn:focus-visible,
+.btn-start-planned-workout:focus-visible,
+.btn-send-prep-feedback:focus-visible,
+.btn-save-biometrics:focus-visible,
+.pr-confirm-btn:focus-visible,
+.push-pr-mini-btn:focus-visible {
+  outline: 2px solid rgba(var(--accent-rgb), 0.6);
+  outline-offset: 2px;
+}
+
+/* Coach session notes and dietary notes */
+#athlete-prep-notes-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.athlete-prep-note-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.athlete-prep-note-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #b4b4b4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.athlete-prep-note-body.has-content {
+  color: #ececec;
+}
+
+.athlete-prep-slots-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+#athlete-prep-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.athlete-prep-empty {
+  margin: 0;
+  padding: 8px 2px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #71717a;
+  text-align: left;
+}
+
+/* Exercise prescription cards: Top Set plus Backoff */
+.athlete-slot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.40);
+  min-width: 0;
+  box-sizing: border-box;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.athlete-slot-card.is-active {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 10px rgba(var(--accent-rgb), 0.14);
+}
+
+.athlete-slot-card.is-done {
+  border-color: rgba(0, 255, 102, 0.32);
+}
+
+.athlete-slot-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.athlete-slot-titles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.athlete-slot-name {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+
+.athlete-slot-status {
+  flex: 0 0 auto;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.athlete-slot-card.is-active .athlete-slot-status {
+  color: #ececec;
+}
+
+.athlete-slot-card.is-done .athlete-slot-status {
+  color: #00ff66;
+}
+
+.athlete-slot-sets {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.athlete-slot-set {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.athlete-slot-set-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.athlete-slot-set-main {
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+
+.athlete-slot-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.athlete-slot-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.athlete-slot-kpi .k {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.athlete-slot-kpi .v {
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+
+.athlete-slot-load-btn,
+.btn-start-planned-workout,
+.btn-send-prep-feedback,
+.btn-save-biometrics {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #212121;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #ececec;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+}
+
+.athlete-slot-load-btn:hover,
+.btn-send-prep-feedback:hover,
+.btn-save-biometrics:hover {
+  background: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-start-planned-workout {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 16px;
+  background: rgba(var(--accent-rgb), 0.14);
+  border: 1px solid rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.btn-start-planned-workout:hover {
+  background: rgba(var(--accent-rgb), 0.22);
+}
+
+.btn-start-planned-workout[disabled],
+.athlete-slot-load-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Planned versus actual comparison table */
+.athlete-plan-vs-actual-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.plan-actual-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #b4b4b4;
+}
+
+.plan-actual-summary strong {
+  font-weight: 800;
+  color: #ececec;
+}
+
+.plan-actual-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.plan-actual-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 10px;
+  border-radius: 12px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.plan-actual-row.plan-actual-head {
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.plan-actual-row[data-status="hit"] {
+  border-color: rgba(0, 255, 102, 0.28);
+}
+
+.plan-actual-row[data-status="short"] {
+  border-color: rgba(255, 149, 0, 0.34);
+}
+
+.plan-actual-row[data-status="over"] {
+  border-color: rgba(var(--accent-rgb), 0.34);
+}
+
+.plan-actual-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pa-name {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+
+.pa-status {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid #2f2f2f;
+  background: #171717;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.pa-status.hit {
+  color: #00ff66;
+  border-color: rgba(0, 255, 102, 0.34);
+}
+
+.pa-status.short {
+  color: #ff9500;
+  border-color: rgba(255, 149, 0, 0.38);
+}
+
+.pa-status.over {
+  color: #ececec;
+  border-color: rgba(var(--accent-rgb), 0.4);
+}
+
+.pa-line {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  color: #b4b4b4;
+  overflow-wrap: anywhere;
+}
+
+.pa-line.strong {
+  font-weight: 800;
+  color: #ececec;
+}
+
+.pa-line.muted {
+  color: #71717a;
+}
+
+/* Coach update notice shown inside the hub */
+.athlete-prep-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #171717;
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: #ececec;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+  transition: opacity 0.2s ease, max-height 0.2s ease;
+}
+
+.athlete-prep-notice.visible {
+  opacity: 1;
+  max-height: 40px;
+}
+
+/* Session feedback bar */
+#athlete-prep-feedback-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.athlete-prep-feedback-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: #ececec;
+  font-size: 14px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.athlete-prep-feedback-input::placeholder {
+  color: #71717a;
+}
+
+.athlete-prep-feedback-input:focus {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 8px rgba(var(--accent-rgb), 0.14);
+}
+
+.btn-send-prep-feedback {
+  flex: 0 0 auto;
+}
+
+/* ==========================================================================
+   ATHLETE BIOMETRICS AND EXPERIENCE DOSSIER (inside #tab-history)
+   ========================================================================== */
+#athlete-biometrics-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.athlete-bio-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bio-save-status {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #00ff66;
+  min-height: 12px;
+}
+
+.athlete-bio-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.athlete-bio-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.athlete-bio-field-wide,
+.athlete-bio-field-notes {
+  grid-column: 1 / -1;
+}
+
+.athlete-bio-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: #ececec;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+select.athlete-bio-input {
+  padding-right: 28px;
+  background-image: linear-gradient(45deg, transparent 50%, #71717a 50%), linear-gradient(135deg, #71717a 50%, transparent 50%);
+  background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.athlete-bio-input:focus {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 8px rgba(var(--accent-rgb), 0.14);
+}
+
+.athlete-bio-textarea {
+  min-height: 76px;
+  padding: 10px 12px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.athlete-bio-days {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bio-available-days-group {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.bio-day-pill {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: #71717a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+}
+
+.bio-day-pill.active,
+.bio-day-pill[aria-pressed="true"] {
+  background: #212121;
+  color: #ececec;
+  border-color: rgba(var(--accent-rgb), 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 8px rgba(var(--accent-rgb), 0.14);
+}
+
+.athlete-bio-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-save-biometrics {
+  width: 100%;
+}
+
+/* ==========================================================================
+   SMART PR CONFIRMATION HUD AND GOLDEN PR BADGE
+   ========================================================================== */
+#pr-confirm-hud {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  width: calc(100% - 24px);
+  max-width: 416px;
+  z-index: 950;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border-radius: 16px;
+  background: rgba(18, 18, 18, 0.96);
+  border: 1px solid rgba(255, 214, 10, 0.55);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.72), 0 0 10px rgba(255, 214, 10, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -12px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+}
+
+#pr-confirm-hud[aria-hidden="false"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0s;
+}
+
+.pr-confirm-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pr-confirm-eyebrow {
+  color: #FFD60A;
+}
+
+.pr-confirm-summary {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+
+.pr-confirm-metrics {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #b4b4b4;
+  overflow-wrap: anywhere;
+}
+
+.pr-confirm-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pr-confirm-btn {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.pr-confirm-btn-primary {
+  background: rgba(255, 214, 10, 0.14);
+  border: 1px solid rgba(255, 214, 10, 0.55);
+  box-shadow: 0 0 8px rgba(255, 214, 10, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #FFD60A;
+}
+
+.pr-confirm-btn-primary:hover {
+  background: rgba(255, 214, 10, 0.22);
+}
+
+.pr-confirm-btn-ghost {
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #b4b4b4;
+}
+
+.pr-confirm-btn-ghost:hover {
+  background: #2f2f2f;
+  color: #ececec;
+}
+
+.golden-pr-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 214, 10, 0.10);
+  border: 1px solid rgba(255, 214, 10, 0.55);
+  box-shadow: 0 0 8px rgba(255, 214, 10, 0.18);
+  color: #FFD60A;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.push-pr-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #171717;
+  border: 1px solid rgba(255, 214, 10, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #FFD60A;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.push-pr-mini-btn:hover {
+  background: rgba(255, 214, 10, 0.12);
+  border-color: rgba(255, 214, 10, 0.55);
+}
+
+.push-pr-mini-btn[disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.workout-set-row {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.workout-set-row-right {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.workout-set-row.is-pr-set {
+  border-color: rgba(255, 214, 10, 0.34) !important;
+}
+
+@media (min-width: 560px) {
+  #athlete-prep-notes-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .athlete-slot-sets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .athlete-bio-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .athlete-slot-kpis {
+    gap: 6px;
+  }
+
+  .plan-actual-row {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .athlete-prep-sync-badge,
+  .athlete-prep-pill {
+    padding: 0 8px;
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #pr-confirm-hud,
+  .athlete-prep-notice,
+  .athlete-week-day-pill,
+  .bio-day-pill,
+  .athlete-slot-card {
     transition: none !important;
   }
 }

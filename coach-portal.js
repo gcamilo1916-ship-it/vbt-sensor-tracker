@@ -21,7 +21,7 @@
 
   // ── Private State ──
   let isCoachMode = false;
-  let activeCoachPanel = 'live'; // 'live' | 'history'
+  let activeCoachPanel = 'live'; // 'live' | 'history' | 'preparation'
   let activeRosterFilter = 'all'; // 'all' | 'lifting' | 'resting' | 'idle'
   let activeHistoryLiftFilter = 'all';
   let gymTotalModel = 'abs'; // 'abs' | 'e1rm'
@@ -73,6 +73,42 @@
     'rest-timer',
     'quick-cue'
   ];
+
+  const PREP_DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const PREP_AUTOSAVE_DELAY_MS = 600;
+  const PREP_EVENT_BROADCAST_CAP = 40;
+  const PREP_LOCAL_DRAFT_KEY = 'eros_coach_prep_draft_v1';
+  const PREP_SLOT_INPUT_IDS = [
+    'coach-slot-top-sets', 'coach-slot-top-reps', 'coach-slot-top-rpe', 'coach-slot-top-load',
+    'coach-slot-backoff-sets', 'coach-slot-backoff-reps', 'coach-slot-backoff-rpe', 'coach-slot-backoff-drop',
+    'coach-prep-1rm-squat', 'coach-prep-1rm-bench', 'coach-prep-1rm-deadlift'
+  ];
+  const PREP_HEADER_INPUT_IDS = [
+    'coach-prep-title-input', 'coach-prep-months-select', 'coach-prep-start-date', 'coach-prep-meet-date',
+    'coach-prep-1rm-squat', 'coach-prep-1rm-bench', 'coach-prep-1rm-deadlift'
+  ];
+  const PREP_SESSION_INPUT_IDS = [
+    'coach-prep-session-title', 'coach-prep-phase-select', 'coach-prep-deload-toggle',
+    'coach-prep-workout-notes', 'coach-prep-dietary-notes'
+  ];
+
+  const prepState = {
+    bound: false,
+    athleteId: '',
+    loadedFor: '',
+    plan: null,
+    workouts: [],
+    weekIndex: 0,
+    dayIndex: 0,
+    draftSlots: [],
+    profiles: {},
+    feedbackByWorkout: {},
+    customExercises: [],
+    autosaveTimer: null
+  };
+
+  const goldenPr = { setIds: new Set(), dates: new Set() };
+  let remoteCompletedSets = [];
 
   // ── XSS Sanitization Defense ──
   function escapeHtml(str) {
@@ -368,8 +404,10 @@
       // Sub-Navigation & Bonding Modal
       btnPanelLive: document.getElementById('btn-coach-panel-live'),
       btnPanelHistory: document.getElementById('btn-coach-panel-history'),
+      btnPanelPreparation: document.getElementById('btn-coach-panel-preparation'),
       panelLive: document.getElementById('coach-live-panel'),
       panelHistory: document.getElementById('coach-athlete-history-panel'),
+      panelPreparation: document.getElementById('coach-preparation-panel'),
       btnBondOpen: document.getElementById('btn-coach-bond-open'),
       btnBondClose: document.getElementById('btn-coach-bond-close'),
       bondModal: document.getElementById('coach-bond-modal'),
@@ -502,25 +540,46 @@
 
   // ── Safe Helpers ──
   function getSafeActiveWorkout() {
+    let base = null;
     if (typeof window !== 'undefined' && window.activeWorkout) {
-      return window.activeWorkout;
-    }
-    if (typeof activeWorkout !== 'undefined' && activeWorkout) {
-      return activeWorkout;
-    }
-    if (typeof workouts !== 'undefined' && Array.isArray(workouts) && workouts.length > 0) {
-      return workouts[0];
-    }
-    try {
-      const stored = localStorage.getItem('vbt_workouts_v1');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed[0];
+      base = window.activeWorkout;
+    } else if (typeof activeWorkout !== 'undefined' && activeWorkout) {
+      base = activeWorkout;
+    } else if (typeof workouts !== 'undefined' && Array.isArray(workouts) && workouts.length > 0) {
+      base = workouts[0];
+    } else {
+      try {
+        const stored = localStorage.getItem('vbt_workouts_v1');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            base = parsed[0];
+          }
         }
+      } catch (_) {}
+    }
+
+    const activeAthId = currentAthlete ? currentAthlete.id : 'ath_01';
+    const matchingRemote = remoteCompletedSets.filter(s => (s.athleteId || 'ath_01') === activeAthId);
+    if (!base) {
+      if (matchingRemote.length === 0) return null;
+      return {
+        id: 'ws_remote_live',
+        startTime: matchingRemote[0].timestamp || Date.now(),
+        sets: matchingRemote.slice()
+      };
+    }
+
+    if (matchingRemote.length === 0) return base;
+    const baseSets = Array.isArray(base.sets) ? base.sets.slice() : [];
+    const seen = new Set(baseSets.map(s => s && s.setId).filter(Boolean));
+    matchingRemote.forEach(rs => {
+      if (rs && (!rs.setId || !seen.has(rs.setId))) {
+        baseSets.push(rs);
+        if (rs.setId) seen.add(rs.setId);
       }
-    } catch (_) {}
-    return null;
+    });
+    return { ...base, sets: baseSets };
   }
 
   function getSafeActiveSet() {
@@ -588,21 +647,79 @@
                 totalSets: setsArr.length,
                 avgVelocity: velCnt > 0 ? (velSum / velCnt) : 0,
                 sets: setsArr.map((s, sIdx) => ({
+                  setId: s.setId || '',
+                  plannedWorkoutId: s.plannedWorkoutId || s.planned_workout_id || '',
+                  plannedSlotId: s.plannedSlotId || s.planned_slot_id || '',
+                  isPr: Boolean(s.isPr || s.isPR || (s.setId && goldenPr.setIds.has(s.setId))),
+                  isPR: Boolean(s.isPr || s.isPR || (s.setId && goldenPr.setIds.has(s.setId))),
                   setNumber: s.setNumber || (sIdx + 1),
+                  rawLift: s.lift || w.lift || 'Deadlift',
                   lift: formatCanonicalLiftLabel(s.lift || w.lift || 'Deadlift'),
                   weight: Number(s.weight) || 0,
                   repsCount: Array.isArray(s.reps) ? s.reps.length : (Number(s.repsCount) || 0),
                   avgVelocity: Number(s.avgVelocity) || 0,
                   maxVelocity: Number(s.maxVelocity) || 0,
                   rom: Number(s.rom) || 0,
-                  velocityLossPct: Number(s.velocityLossPct) || 0,
-                  rpe: Number(s.avgRpe) || 0
+                  velocityLossPct: Number(s.velocityLossPct != null ? s.velocityLossPct : s.velocityLoss) || 0,
+                  velocityLoss: Number(s.velocityLossPct != null ? s.velocityLossPct : s.velocityLoss) || 0,
+                  rpe: Number(s.avgRpe != null ? s.avgRpe : s.rpe) || 0
                 }))
               });
             });
           }
         }
       } catch (_) {}
+    }
+
+    // 2. Merge remote completed sets pushed over ErosSyncBus / Base44 Cloud for cross-device sessions
+    const remoteForAthlete = remoteCompletedSets.filter(s => (s.athleteId || 'ath_01') === targetId);
+    if (remoteForAthlete.length > 0) {
+      const existingSetIds = new Set();
+      results.forEach(w => (w.sets || []).forEach(s => { if (s && s.setId) existingSetIds.add(s.setId); }));
+
+      remoteForAthlete.forEach((s, rIdx) => {
+        if (s.setId && existingSetIds.has(s.setId)) return;
+        const dObj = s.timestamp ? new Date(s.timestamp) : new Date();
+        const dStr = !isNaN(dObj.getTime()) ? formatIsoDate(dObj) : formatIsoDate(new Date());
+        let entry = results.find(w => w.date === dStr);
+        if (!entry) {
+          entry = {
+            id: `ws_remote_${dStr}`,
+            athleteId: targetId,
+            date: dStr,
+            name: formatCanonicalWorkoutName([s.lift || 'Deadlift']),
+            totalVolumeKg: 0,
+            totalSets: 0,
+            avgVelocity: 0,
+            sets: []
+          };
+          results.push(entry);
+        }
+        const repsLen = Array.isArray(s.reps) ? s.reps.length : (Number(s.repsCount) || 0);
+        entry.sets.push({
+          setId: s.setId || `remote_${rIdx}`,
+          plannedWorkoutId: s.plannedWorkoutId || '',
+          plannedSlotId: s.plannedSlotId || '',
+          isPr: Boolean(s.isPr || s.isPR || (s.setId && goldenPr.setIds.has(s.setId))),
+          isPR: Boolean(s.isPr || s.isPR || (s.setId && goldenPr.setIds.has(s.setId))),
+          setNumber: s.setNumber || (entry.sets.length + 1),
+          rawLift: s.lift || 'Deadlift',
+          lift: formatCanonicalLiftLabel(s.lift || 'Deadlift'),
+          weight: Number(s.weight) || 0,
+          repsCount: repsLen,
+          avgVelocity: Number(s.avgVelocity) || 0,
+          maxVelocity: Number(s.maxVelocity) || 0,
+          rom: Number(s.rom) || 0,
+          velocityLossPct: Number(s.velocityLossPct != null ? s.velocityLossPct : s.velocityLoss) || 0,
+          velocityLoss: Number(s.velocityLossPct != null ? s.velocityLossPct : s.velocityLoss) || 0,
+          rpe: Number(s.avgRpe != null ? s.avgRpe : s.rpe) || 0
+        });
+        entry.name = formatCanonicalWorkoutName(entry.sets.map(st => st.rawLift || st.lift));
+        entry.totalSets = entry.sets.length;
+        entry.totalVolumeKg = entry.sets.reduce((acc, st) => acc + ((Number(st.weight) || 0) * (Number(st.repsCount) || 0)), 0);
+        const velSets = entry.sets.filter(st => st.avgVelocity > 0);
+        entry.avgVelocity = velSets.length > 0 ? velSets.reduce((acc, st) => acc + st.avgVelocity, 0) / velSets.length : 0;
+      });
     }
 
     results.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
@@ -721,6 +838,11 @@
       elements.btnPanelHistory.addEventListener('click', () => switchCoachPanel('history'));
       elements.btnPanelHistory._coachBound = true;
     }
+    if (elements.btnPanelPreparation && !elements.btnPanelPreparation._coachBound) {
+      elements.btnPanelPreparation.addEventListener('click', () => switchCoachPanel('preparation'));
+      elements.btnPanelPreparation._coachBound = true;
+    }
+    initPreparationPanel();
 
     // Athlete Roster Dropdown
     if (elements.athleteSelect && !elements.athleteSelect._coachBound) {
@@ -807,7 +929,7 @@
     // Window storage listener for cross-tab sync
     if (typeof window !== 'undefined' && !window._coachStorageBound) {
       window.addEventListener('storage', (e) => {
-        if (e.key === 'vbt_workouts_v1' || e.key === 'vbt_pr_data_v1' || e.key === BONDS_STORAGE_KEY) {
+        if (e.key === 'vbt_workouts_v1' || e.key === 'vbt_pr_data_v1' || e.key === BONDS_STORAGE_KEY || e.key === 'eros_athlete_biometrics_v1' || e.key === 'eros_pushed_prs_v1') {
           if (isCoachMode) {
             renderFullCoachDashboard();
           }
@@ -837,7 +959,7 @@
     } catch (_) {}
 
     const savedPanel = readPersistedState(COACH_PANEL_KEY);
-    if (savedPanel === 'history' || savedPanel === 'live') {
+    if (savedPanel === 'history' || savedPanel === 'live' || savedPanel === 'preparation') {
       activeCoachPanel = savedPanel;
     }
     const savedSection = readPersistedState(COACH_SECTION_KEY);
@@ -845,8 +967,8 @@
     if (explicitQueryMode === 'coach') {
       revealCoachOption();
       switchMode('coach');
-      if (activeCoachPanel === 'history') {
-        switchCoachPanel('history', true);
+      if (activeCoachPanel === 'history' || activeCoachPanel === 'preparation') {
+        switchCoachPanel(activeCoachPanel, true);
       } else if (savedSection && savedSection !== 'bonds') {
         updateCoachNavActiveState(savedSection);
       }
@@ -857,8 +979,8 @@
       if (savedMode === 'coach') {
         revealCoachOption();
         switchMode('coach');
-        if (activeCoachPanel === 'history') {
-          switchCoachPanel('history', true);
+        if (activeCoachPanel === 'history' || activeCoachPanel === 'preparation') {
+          switchCoachPanel(activeCoachPanel, true);
         } else if (savedSection && savedSection !== 'bonds') {
           updateCoachNavActiveState(savedSection);
         }
@@ -1023,8 +1145,8 @@
       runCoachIntroOverlay();
       startCoachCursorGlowLoop();
       startRestTicker();
-      if (activeCoachPanel === 'history') {
-        switchCoachPanel('history', true);
+      if (activeCoachPanel === 'history' || activeCoachPanel === 'preparation') {
+        switchCoachPanel(activeCoachPanel, true);
       } else {
         renderFullCoachDashboard();
       }
@@ -1050,12 +1172,13 @@
     }
   }
 
-  // ── Sub-Navigation Switcher: Live Panel vs Athlete History Panel ──
+  // ── Sub-Navigation Switcher: Live Panel vs Athlete History vs Preparation ──
+  /** Switches the active Coach panel between live, history and preparation. */
   function switchCoachPanel(panelName, skipPersist) {
-    activeCoachPanel = (panelName === 'history') ? 'history' : 'live';
+    activeCoachPanel = (panelName === 'history' || panelName === 'preparation') ? panelName : 'live';
     if (!skipPersist) {
       writePersistedState(COACH_PANEL_KEY, activeCoachPanel);
-      writePersistedState(COACH_SECTION_KEY, activeCoachPanel === 'history' ? 'history' : 'live');
+      writePersistedState(COACH_SECTION_KEY, activeCoachPanel);
     }
     if (typeof SoundFX !== 'undefined') {
       if (typeof SoundFX.playCoachPanelSwitch === 'function') {
@@ -1066,30 +1189,29 @@
     }
     if (!elements.panelLive) queryElements();
 
+    const tabs = [
+      ['live', elements.btnPanelLive],
+      ['history', elements.btnPanelHistory],
+      ['preparation', elements.btnPanelPreparation]
+    ];
+    tabs.forEach(([key, btn]) => {
+      if (!btn) return;
+      const active = key === activeCoachPanel;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    if (elements.panelLive) elements.panelLive.style.display = activeCoachPanel === 'live' ? 'flex' : 'none';
+    if (elements.panelHistory) elements.panelHistory.style.display = activeCoachPanel === 'history' ? 'flex' : 'none';
+    setPrepPanelHidden(activeCoachPanel !== 'preparation');
+
     if (activeCoachPanel === 'history') {
-      if (elements.btnPanelHistory) {
-        elements.btnPanelHistory.classList.add('active');
-        elements.btnPanelHistory.setAttribute('aria-selected', 'true');
-      }
-      if (elements.btnPanelLive) {
-        elements.btnPanelLive.classList.remove('active');
-        elements.btnPanelLive.setAttribute('aria-selected', 'false');
-      }
-      if (elements.panelLive) elements.panelLive.style.display = 'none';
-      if (elements.panelHistory) elements.panelHistory.style.display = 'flex';
       updateCoachNavActiveState('history');
       renderAthleteHistoryPanel();
+    } else if (activeCoachPanel === 'preparation') {
+      updateCoachNavActiveState('preparation');
+      renderPreparationPanel();
     } else {
-      if (elements.btnPanelLive) {
-        elements.btnPanelLive.classList.add('active');
-        elements.btnPanelLive.setAttribute('aria-selected', 'true');
-      }
-      if (elements.btnPanelHistory) {
-        elements.btnPanelHistory.classList.remove('active');
-        elements.btnPanelHistory.setAttribute('aria-selected', 'false');
-      }
-      if (elements.panelHistory) elements.panelHistory.style.display = 'none';
-      if (elements.panelLive) elements.panelLive.style.display = 'flex';
       updateCoachNavActiveState('live');
       renderSquadOverview();
       renderActiveSetFromState();
@@ -2005,6 +2127,7 @@
       const hasWorkout = dayWorkouts.length > 0;
       const isSelected = (dateStr === selectedCalDateStr);
       const primaryWorkout = hasWorkout ? dayWorkouts[0] : null;
+      const dayHasPr = dayWorkouts.some(isWorkoutGoldenPr);
 
       let tagClass = '';
       if (primaryWorkout) {
@@ -2026,7 +2149,7 @@
              aria-label="${ariaDesc}">
           <span class="coach-cal-day-num">${day}</span>
           ${hasWorkout ? `
-            <span class="coach-cal-workout-tag ${tagClass}">${primaryWorkout.name}</span>
+            <span class="coach-cal-workout-tag ${tagClass}">${primaryWorkout.name}${dayHasPr ? goldenPrBadgeHtml(true) : ''}</span>
             <span class="coach-cal-day-meta">${(primaryWorkout.totalVolumeKg / 1000).toFixed(1)}t • ${primaryWorkout.totalSets}S</span>
           ` : `
             <span class="coach-cal-day-meta">Rest</span>
@@ -2093,11 +2216,12 @@
         ? 'lift-squat'
         : (/bench/i.test(s.lift) ? 'lift-bench' : 'lift-deadlift');
       const isCutoff = (s.velocityLossPct || 0) >= 20.0;
+      const setIsPr = isSetGoldenPr(s);
 
       return `
         <tr>
           <td class="font-mono">Set ${s.setNumber || (idx + 1)}</td>
-          <td><span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(String(s.lift || 'Deadlift').toUpperCase())}</span></td>
+          <td><span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(String(s.lift || 'Deadlift').toUpperCase())}</span>${setIsPr ? goldenPrBadgeHtml(false) : ''}</td>
           <td class="font-mono">${(Number(s.weight) || 0).toFixed(1)} kg</td>
           <td class="font-mono">${s.repsCount || 3}</td>
           <td class="font-mono text-cyan">${(Number(s.avgVelocity) || 0).toFixed(2)} m/s</td>
@@ -2133,7 +2257,7 @@
       <div class="coach-prev-workout-item" data-workout-date="${escapeHtml(w.date)}" role="button" tabindex="0" aria-label="Inspect workout ${escapeHtml(w.name)} on ${escapeHtml(w.date)}">
         <div class="coach-prev-workout-left">
           <span class="coach-inspector-date font-mono">${escapeHtml(w.date)}</span>
-          <span class="coach-prev-workout-name">${escapeHtml(w.name)}</span>
+          <span class="coach-prev-workout-name">${escapeHtml(w.name)}${isWorkoutGoldenPr(w) ? goldenPrBadgeHtml(false) : ''}</span>
         </div>
         <div class="coach-prev-workout-right">
           <span>${w.totalSets} Sets with Eros</span>
@@ -2168,6 +2292,9 @@
       bus.on('coach:load_response', handleLoadResponse);
       bus.on('athlete:connect', handleAthleteConnect);
       bus.on('coach:rest_target', handleCoachRestTarget);
+      bus.on('athlete:profile_updated', handleAthleteProfileUpdated);
+      bus.on('prep:athlete_feedback', handlePrepAthleteFeedback);
+      bus.on('workout:pr_pushed', handleWorkoutPrPushed);
       bus.on('workout:updated', () => {
         if (isCoachMode) renderFullCoachDashboard();
       });
@@ -2363,6 +2490,38 @@
 
     if (!elements.viewCoach) queryElements();
 
+    if (payload && typeof payload === 'object') {
+      const normalizedSet = {
+        setId: payload.setId || `set_remote_${Date.now()}`,
+        athleteId: payload.athleteId || (currentAthlete ? currentAthlete.id : 'ath_01'),
+        setNumber: Number(payload.setNumber) || (remoteCompletedSets.length + 1),
+        lift: payload.lift || 'Deadlift',
+        weight: Number(payload.weight) || 0,
+        reps: Array.isArray(payload.reps) ? payload.reps.slice() : [],
+        repsCount: Array.isArray(payload.reps) ? payload.reps.length : (Number(payload.repsCount) || 0),
+        avgVelocity: Number(payload.avgVelocity) || 0,
+        maxVelocity: Number(payload.maxVelocity) || 0,
+        velocityLossPct: Number(payload.velocityLoss != null ? payload.velocityLoss : payload.velocityLossPct) || 0,
+        velocityLoss: Number(payload.velocityLoss != null ? payload.velocityLoss : payload.velocityLossPct) || 0,
+        avgRpe: payload.avgRpe != null ? Number(payload.avgRpe) : (payload.rpe != null ? Number(payload.rpe) : 0),
+        restSeconds: typeof payload.restSeconds === 'number' ? payload.restSeconds : null,
+        plannedWorkoutId: payload.plannedWorkoutId || payload.planned_workout_id || '',
+        plannedSlotId: payload.plannedSlotId || payload.planned_slot_id || '',
+        isPr: Boolean(payload.isPr || payload.isPR),
+        isPR: Boolean(payload.isPr || payload.isPR),
+        timestamp: Number(payload.timestamp) || Date.now()
+      };
+      const existingIdx = remoteCompletedSets.findIndex(s => s.setId === normalizedSet.setId);
+      if (existingIdx >= 0) {
+        remoteCompletedSets[existingIdx] = normalizedSet;
+      } else {
+        remoteCompletedSets.push(normalizedSet);
+      }
+    }
+
+    if (payload && (payload.isPr || payload.isPR)) {
+      registerGoldenPr(payload);
+    }
     if (currentAthlete) {
       currentAthlete.status = 'resting';
       currentAthlete.restSeconds = 0;
@@ -2383,6 +2542,8 @@
     renderSquadOverview();
     if (activeCoachPanel === 'history') {
       renderAthleteHistoryPanel();
+    } else if (activeCoachPanel === 'preparation') {
+      renderPrepComparison();
     }
   }
 
@@ -2424,6 +2585,10 @@
     }
 
     renderSquadOverview();
+    if (activeCoachPanel === 'preparation') {
+      populatePrepAthleteSelect();
+      renderPrepFactoring();
+    }
     showFeedbackMessage(`Athlete connected: ${athleteName} (${rackId})`);
   }
 
@@ -2447,6 +2612,7 @@
     renderActiveSetFromState();
     renderSetsHistoryTable();
     renderAthleteHistoryPanel();
+    if (activeCoachPanel === 'preparation') renderPreparationPanel();
   }
 
   function updateSquadRibbon() {
@@ -2671,6 +2837,7 @@
       const liftLower = lift.toLowerCase();
       const isExpanded = expandedSetIds.has(setId);
       const isCutoff = (set.velocityLossPct || 0) >= 20.0;
+      const setIsPr = isSetGoldenPr(set);
       const restDuration = (typeof set.restSeconds === 'number' && set.restSeconds > 0)
         ? formatRestDuration(set.restSeconds)
         : '-';
@@ -2678,7 +2845,7 @@
       rowsHtml += `
         <tr class="coach-history-row ${isExpanded ? 'expanded' : ''}" data-set-id="${escapeHtml(setId)}">
           <td class="font-mono">Set ${set.setNumber}</td>
-          <td><span class="coach-lift-badge lift-${escapeHtml(liftLower)}">${escapeHtml(lift.toUpperCase())}</span></td>
+          <td><span class="coach-lift-badge lift-${escapeHtml(liftLower)}">${escapeHtml(lift.toUpperCase())}</span>${setIsPr ? goldenPrBadgeHtml(false) : ''}</td>
           <td class="font-mono">${(set.weight || 0).toFixed(1)} kg</td>
           <td class="font-mono">${set.reps ? set.reps.length : 0}</td>
           <td class="font-mono">${(set.avgVelocity || 0).toFixed(2)} m/s</td>
@@ -2719,7 +2886,7 @@
                         <td class="text-cyan">${(r.velocity || 0).toFixed(2)} m/s</td>
                         <td>${(r.peakVelocity || (r.velocity ? r.velocity * 1.25 : 0)).toFixed(2)} m/s</td>
                         <td>@${(r.rpe || 8.0).toFixed(1)}</td>
-                        <td>${r.isPR ? '<span class="text-success">Gym PR</span>' : 'Completed'}</td>
+                        <td>${(r.isPR || r.isPr) ? goldenPrBadgeHtml(false) : 'Completed'}</td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -3505,6 +3672,7 @@
           avgVelocity: endingSet ? endingSet.avgVelocity : 0,
           maxVelocity: endingSet ? endingSet.maxVelocity : 0,
           velocityLoss: endingSet ? endingSet.velocityLossPct : 0,
+          isPr: Boolean(endingSet && (endingSet.isPr || endingSet.isPR)),
           timestamp: Date.now()
         };
         if (window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
@@ -3622,11 +3790,11 @@
     const sec = String(section || 'live');
     if (!elements.panelLive) queryElements();
 
-    if (sec === 'history') {
-      switchCoachPanel('history');
-      updateCoachNavActiveState('history');
-      writePersistedState(COACH_SECTION_KEY, 'history');
-      return 'history';
+    if (sec === 'history' || sec === 'preparation') {
+      switchCoachPanel(sec);
+      updateCoachNavActiveState(sec);
+      writePersistedState(COACH_SECTION_KEY, sec);
+      return sec;
     }
 
     if (sec === 'bonds') {
@@ -4816,10 +4984,1114 @@
     });
   }
 
+  // ── Coach Preparation Planner (0 to 12 month builder) ──
+
+  /** Returns the markup for the golden personal record badge. */
+  function goldenPrBadgeHtml(compact) {
+    return compact
+      ? '<span class="coach-golden-pr-badge coach-golden-pr-badge--compact">PR</span>'
+      : '<span class="coach-golden-pr-badge">PR &bull; GOLD</span>';
+  }
+
+  /** Whether the given set carries a personal record flag or was pushed as a record. */
+  function isSetGoldenPr(set) {
+    if (!set) return false;
+    if (set.isPr === true || set.isPR === true) return true;
+    return Boolean(set.setId && goldenPr.setIds.has(set.setId));
+  }
+
+  /** Whether any set of the given workout session is a golden personal record. */
+  function isWorkoutGoldenPr(workout) {
+    if (!workout) return false;
+    if (workout.date && goldenPr.dates.has(workout.date)) return true;
+    return Array.isArray(workout.sets) && workout.sets.some(isSetGoldenPr);
+  }
+
+  /** Records a pushed personal record so every Coach view can stamp the golden badge. */
+  function registerGoldenPr(payload) {
+    if (!payload) return;
+    if (payload.setId) goldenPr.setIds.add(String(payload.setId));
+    const ts = Number(payload.timestamp);
+    const dateObj = isFinite(ts) && ts > 0 ? new Date(ts) : new Date();
+    if (!isNaN(dateObj.getTime())) goldenPr.dates.add(formatIsoDate(dateObj));
+  }
+
+  /** Re-renders the Coach views that display golden personal record badges. */
+  function refreshGoldenPrViews() {
+    if (!isCoachMode) return;
+    try { renderSetsHistoryTable(); } catch (_) {}
+    if (activeCoachPanel === 'history') {
+      try { renderAthleteHistoryPanel(); } catch (_) {}
+    } else if (activeCoachPanel === 'preparation') {
+      renderPrepComparison();
+    }
+  }
+
+  function prepEl(id) {
+    if (typeof document === 'undefined' || typeof document.getElementById !== 'function') return null;
+    return document.getElementById(id);
+  }
+
+  function getPrepEngine() {
+    return (typeof window !== 'undefined' && window.ErosPrepEngine) ? window.ErosPrepEngine : null;
+  }
+
+  function getPrepStore() {
+    return (typeof window !== 'undefined' && window.ErosPrepStore) ? window.ErosPrepStore : null;
+  }
+
+  function callPrepStore(names, args) {
+    const store = getPrepStore();
+    if (!store) return undefined;
+    for (let i = 0; i < names.length; i++) {
+      if (typeof store[names[i]] === 'function') {
+        try { return store[names[i]].apply(store, args || []); } catch (_) { return undefined; }
+      }
+    }
+    return undefined;
+  }
+
+  function callPrepEngine(name, args) {
+    const engine = getPrepEngine();
+    if (!engine || typeof engine[name] !== 'function') return undefined;
+    try { return engine[name].apply(engine, args || []); } catch (_) { return undefined; }
+  }
+
+  function prepNum(id, fallback) {
+    const el = prepEl(id);
+    if (!el) return fallback;
+    const v = parseFloat(el.value);
+    return isFinite(v) ? v : fallback;
+  }
+
+  function prepVal(id) {
+    const el = prepEl(id);
+    return el && typeof el.value === 'string' ? el.value : '';
+  }
+
+  function setPrepVal(id, value) {
+    const el = prepEl(id);
+    if (el) el.value = (value === null || value === undefined) ? '' : String(value);
+  }
+
+  function parsePrepDate(str) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(str || ''));
+    if (!m) return null;
+    const d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function clampPrepMonths(value) {
+    const viaEngine = callPrepEngine('clampPlanHorizonMonths', [value]);
+    if (typeof viaEngine === 'number' && isFinite(viaEngine)) return viaEngine;
+    const n = Math.round(Number(value));
+    if (!isFinite(n)) return 0;
+    return Math.max(0, Math.min(12, n));
+  }
+
+  function getPrepWeekCount() {
+    const months = clampPrepMonths(prepVal('coach-prep-months-select'));
+    return months === 0 ? 1 : Math.min(52, Math.ceil((months * 52) / 12));
+  }
+
+  function getPrepStartDate() {
+    return parsePrepDate(prepVal('coach-prep-start-date')) || new Date();
+  }
+
+  function getPrepDate(weekIdx, dayIdx) {
+    const anchor = getMondayOfIsoWeek(getPrepStartDate());
+    anchor.setDate(anchor.getDate() + (weekIdx * 7) + dayIdx);
+    return formatIsoDate(anchor);
+  }
+
+  function getPrepAthlete() {
+    const id = prepState.athleteId;
+    if (!id) return null;
+    return SQUAD_ATHLETES.find(a => a.id === id) || null;
+  }
+
+  function normalizeBaseLift(value) {
+    const s = String(value || '').toLowerCase();
+    if (/squat/.test(s)) return 'squat';
+    if (/bench/.test(s)) return 'bench';
+    if (/dead/.test(s)) return 'deadlift';
+    return s;
+  }
+
+  function getPrepCatalog() {
+    const engine = getPrepEngine();
+    const base = (engine && Array.isArray(engine.EXERCISE_CATALOG)) ? engine.EXERCISE_CATALOG.slice() : [];
+    prepState.customExercises.forEach(ex => {
+      if (!base.some(b => b && b.id === ex.id)) base.push(ex);
+    });
+    return base;
+  }
+
+  function lookupPrepExercise(exerciseId) {
+    if (!exerciseId) return null;
+    const viaEngine = callPrepEngine('getExerciseById', [exerciseId]);
+    if (viaEngine) return viaEngine;
+    return getPrepCatalog().find(ex => ex && ex.id === exerciseId) || null;
+  }
+
+  /** Fills the exercise picker from the catalog using the live search filter. */
+  function populatePrepExerciseOptions(preferredId) {
+    const select = prepEl('coach-prep-exercise-select');
+    if (!select) return;
+    const query = prepVal('coach-prep-exercise-search').trim().toLowerCase();
+    const previous = preferredId || select.value;
+    let items = getPrepCatalog();
+    if (query) {
+      const viaEngine = callPrepEngine('searchExercises', [query]);
+      if (Array.isArray(viaEngine) && viaEngine.length > 0) {
+        items = viaEngine;
+      } else {
+        items = items.filter(ex => ex && String(ex.name || '').toLowerCase().includes(query));
+      }
+    }
+    if (items.length === 0) {
+      select.innerHTML = `<option value="">${query ? 'No matching exercise' : 'Exercise catalog unavailable'}</option>`;
+      return;
+    }
+    select.innerHTML = items.map(ex => {
+      const id = escapeHtml(ex.id || ex.name || '');
+      const lift = escapeHtml(normalizeBaseLift(ex.baseLift || ex.category || ''));
+      return `<option value="${id}" data-base-lift="${lift}">${escapeHtml(ex.name || ex.id || 'Exercise')}</option>`;
+    }).join('');
+    if (previous && items.some(ex => (ex.id || ex.name) === previous)) {
+      select.value = previous;
+    }
+  }
+
+  /** Fills the template picker from the preparation engine catalog. */
+  function populatePrepTemplateOptions() {
+    const select = prepEl('coach-prep-template-select');
+    const engine = getPrepEngine();
+    if (!select || !engine) return;
+    const list = Array.isArray(engine.TEMPLATE_CATALOG) ? engine.TEMPLATE_CATALOG : (Array.isArray(engine.PREP_TEMPLATES) ? engine.PREP_TEMPLATES : []);
+    if (list.length === 0 || select.options.length > 1) return;
+    list.forEach(t => {
+      const key = (t && (t.key || t.id)) || '';
+      if (!key) return;
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = t.label || t.name || key;
+      select.appendChild(opt);
+    });
+  }
+
+  function populatePrepAthleteSelect() {
+    const select = prepEl('coach-prep-athlete-select');
+    if (!select) return;
+    if (SQUAD_ATHLETES.length === 0) {
+      select.innerHTML = '<option value="">No connected athlete</option>';
+      prepState.athleteId = '';
+      return;
+    }
+    select.innerHTML = SQUAD_ATHLETES.map(a =>
+      `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} (${escapeHtml(a.rack || 'Rack 01')})</option>`
+    ).join('');
+    if (!prepState.athleteId || !SQUAD_ATHLETES.some(a => a.id === prepState.athleteId)) {
+      prepState.athleteId = (currentAthlete && currentAthlete.id) || SQUAD_ATHLETES[0].id;
+    }
+    select.value = prepState.athleteId;
+  }
+
+  function readLocalPrepDraft(athleteId) {
+    try {
+      if (typeof localStorage === 'undefined') return null;
+      const raw = localStorage.getItem(PREP_LOCAL_DRAFT_KEY);
+      if (!raw) return null;
+      const map = JSON.parse(raw);
+      return (map && map[athleteId]) ? map[athleteId] : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function writeLocalPrepDraft(athleteId) {
+    try {
+      if (typeof localStorage === 'undefined') return;
+      const raw = localStorage.getItem(PREP_LOCAL_DRAFT_KEY);
+      const map = raw ? (JSON.parse(raw) || {}) : {};
+      map[athleteId] = { plan: prepState.plan, workouts: prepState.workouts };
+      localStorage.setItem(PREP_LOCAL_DRAFT_KEY, JSON.stringify(map));
+    } catch (_) {}
+  }
+
+  /** Loads the stored plan and planned workouts of the given athlete into the planner state. */
+  function loadPrepForAthlete(athleteId, opts) {
+    const preserveCursor = Boolean(opts && opts.preserveCursor && athleteId && athleteId === prepState.loadedFor);
+    prepState.athleteId = athleteId || '';
+    prepState.loadedFor = prepState.athleteId;
+    prepState.plan = null;
+    prepState.workouts = [];
+    if (!preserveCursor) {
+      prepState.draftSlots = [];
+      prepState.weekIndex = 0;
+      prepState.dayIndex = 0;
+    }
+    if (!athleteId) return;
+
+    let plan = callPrepStore(['getActivePlan'], [athleteId]) || null;
+    let workouts = callPrepStore(['listPlannedWorkouts'], [athleteId]);
+    if ((!Array.isArray(workouts) || workouts.length === 0) && plan && plan.planId) {
+      const byPlan = callPrepStore(['getWorkoutsForPlan'], [plan.planId]);
+      if (Array.isArray(byPlan)) workouts = byPlan;
+    }
+    if (!plan) {
+      const local = readLocalPrepDraft(athleteId);
+      if (local && local.plan) {
+        plan = local.plan;
+        workouts = Array.isArray(local.workouts) ? local.workouts : [];
+      }
+    }
+    prepState.plan = plan;
+    prepState.workouts = Array.isArray(workouts) ? workouts.slice() : [];
+
+    setPrepVal('coach-prep-title-input', plan ? plan.title : '');
+    const months = plan ? clampPrepMonths(plan.durationMonths) : 3;
+    setPrepVal('coach-prep-months-select', months);
+    setPrepVal('coach-prep-start-date', plan && plan.startDate ? plan.startDate : formatIsoDate(new Date()));
+    setPrepVal('coach-prep-meet-date', plan ? (plan.targetMeetDate || '') : '');
+    setPrepVal('coach-prep-1rm-squat', plan && plan.targetSquatKg ? plan.targetSquatKg : '');
+    setPrepVal('coach-prep-1rm-bench', plan && plan.targetBenchKg ? plan.targetBenchKg : '');
+    setPrepVal('coach-prep-1rm-deadlift', plan && plan.targetDeadliftKg ? plan.targetDeadliftKg : '');
+
+    if (prepState.workouts.length > 0) {
+      const curDate = getPrepDate(prepState.weekIndex, prepState.dayIndex);
+      const hasCur = Boolean(findPrepWorkoutByDate(curDate));
+      if (!hasCur && (!preserveCursor || prepState.draftSlots.length === 0)) {
+        const todayStr = formatIsoDate(new Date());
+        const targetW = prepState.workouts.find(w => w && w.scheduledDate === todayStr) || prepState.workouts[0];
+        if (targetW && targetW.scheduledDate) {
+          const dObj = parsePrepDate(targetW.scheduledDate);
+          const anchor = getMondayOfIsoWeek(getPrepStartDate());
+          if (dObj) {
+            const diffDays = Math.round((dObj.getTime() - anchor.getTime()) / 86400000);
+            if (diffDays >= 0) {
+              prepState.weekIndex = Math.min(getPrepWeekCount() - 1, Math.floor(diffDays / 7));
+              prepState.dayIndex = diffDays % 7;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function getPrepOneRms() {
+    return {
+      squat: prepNum('coach-prep-1rm-squat', 0),
+      bench: prepNum('coach-prep-1rm-bench', 0),
+      deadlift: prepNum('coach-prep-1rm-deadlift', 0)
+    };
+  }
+
+  function findPrepWorkoutByDate(dateStr) {
+    return prepState.workouts.find(w => w && w.scheduledDate === dateStr) || null;
+  }
+
+  function getSelectedPrepWorkout() {
+    return findPrepWorkoutByDate(getPrepDate(prepState.weekIndex, prepState.dayIndex));
+  }
+
+  /** Renders the 0 to 12 month macro week track. */
+  function renderPrepWeeks() {
+    const track = prepEl('coach-prep-weeks-track');
+    if (!track) return;
+    const total = getPrepWeekCount();
+    if (prepState.weekIndex >= total) prepState.weekIndex = total - 1;
+    if (prepState.weekIndex < 0) prepState.weekIndex = 0;
+
+    const cells = [];
+    for (let i = 0; i < total; i++) {
+      const weekWorkouts = prepState.workouts.filter(w => w && Number(w.weekIndex) === i);
+      const phase = weekWorkouts.length > 0 ? String(weekWorkouts[0].blockPhase || '') : '';
+      const isDeload = weekWorkouts.some(w => w.isDeload);
+      const selected = i === prepState.weekIndex;
+      cells.push(
+        `<button type="button" role="option" class="coach-prep-week-cell${selected ? ' is-selected' : ''}${isDeload ? ' is-deload' : ''}${weekWorkouts.length ? ' has-sessions' : ''}" data-week="${i}" aria-selected="${selected ? 'true' : 'false'}" aria-label="Week ${i + 1}">` +
+        `<span>W${i + 1}</span><span class="coach-prep-week-cell-phase">${escapeHtml(phase.slice(0, 4))}</span></button>`
+      );
+    }
+    track.innerHTML = cells.join('');
+  }
+
+  /** Renders the Monday to Sunday session tabs of the selected week. */
+  function renderPrepDayTabs() {
+    const tabs = prepEl('coach-prep-day-tabs');
+    if (!tabs) return;
+    tabs.innerHTML = PREP_DAY_NAMES.map((name, i) => {
+      const dateStr = getPrepDate(prepState.weekIndex, i);
+      const selected = i === prepState.dayIndex;
+      const hasSession = Boolean(findPrepWorkoutByDate(dateStr));
+      return `<button type="button" role="tab" class="coach-prep-day-tab${selected ? ' is-selected' : ''}" data-day="${i}" aria-selected="${selected ? 'true' : 'false'}">` +
+        `<span>${escapeHtml(name)}${hasSession ? ' *' : ''}</span><span class="coach-prep-day-tab-date">${escapeHtml(dateStr.slice(5))}</span></button>`;
+    }).join('');
+  }
+
+  function formatPrepSlotSet(block) {
+    if (!block || !(Number(block.sets) > 0)) return '&mdash;';
+    const rpe = Number(block.rpe);
+    const drop = Number(block.dropPct);
+    return escapeHtml(`${block.sets}x${block.reps || '-'}${isFinite(rpe) && rpe > 0 ? ` @RPE ${rpe}` : ''}${isFinite(drop) && drop > 0 ? ` (-${drop}%)` : ''}`);
+  }
+
+  function formatPrepVelocity(slot) {
+    const parts = [];
+    const back = slot.backoff || slot.backoffSets;
+    if (slot.topSet && Number(slot.topSet.targetVelocity) > 0) parts.push(`${Number(slot.topSet.targetVelocity).toFixed(2)} m/s`);
+    if (back && Number(back.targetVelocity) > 0) parts.push(`${Number(back.targetVelocity).toFixed(2)} m/s`);
+    return parts.length ? escapeHtml(parts.join(' / ')) : '&mdash;';
+  }
+
+  /** Renders the prescribed exercise rows of the session draft. */
+  function renderPrepSlotsTable() {
+    const body = prepEl('coach-prep-slots-body');
+    if (!body) return;
+    if (prepState.draftSlots.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" class="coach-prep-empty">No exercises prescribed for this day yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = prepState.draftSlots.map(slot => {
+      const load = slot.topSet && Number(slot.topSet.loadKg) > 0 ? `${Number(slot.topSet.loadKg).toFixed(1)} kg` : '-';
+      return `<tr data-slot-id="${escapeHtml(slot.slotId)}">` +
+        `<td>${escapeHtml(slot.exerciseName || slot.exerciseId || 'Exercise')}</td>` +
+        `<td class="font-mono">${formatPrepSlotSet(slot.topSet)}</td>` +
+        `<td class="font-mono">${formatPrepSlotSet(slot.backoff || slot.backoffSets)}</td>` +
+        `<td class="font-mono">${escapeHtml(load)}</td>` +
+        `<td class="font-mono">${formatPrepVelocity(slot)}</td>` +
+        `<td><button type="button" class="coach-prep-slot-remove" data-remove-slot="${escapeHtml(slot.slotId)}" aria-label="Remove exercise">Remove</button></td>` +
+        `</tr>`;
+    }).join('');
+  }
+
+  /** Loads the selected day session into the builder form. */
+  function loadPrepSessionIntoForm() {
+    const workout = getSelectedPrepWorkout();
+    setPrepVal('coach-prep-session-title', workout ? workout.sessionTitle : '');
+    setPrepVal('coach-prep-phase-select', workout && workout.blockPhase ? workout.blockPhase : 'Hypertrophy');
+    const deload = prepEl('coach-prep-deload-toggle');
+    if (deload) deload.checked = Boolean(workout && workout.isDeload);
+    setPrepVal('coach-prep-workout-notes', workout ? workout.workoutNotes : '');
+    setPrepVal('coach-prep-dietary-notes', workout ? workout.dietaryNotes : '');
+    prepState.draftSlots = workout && Array.isArray(workout.prescribedSlots)
+      ? workout.prescribedSlots.map(s => Object.assign({}, s))
+      : [];
+    renderPrepSlotsTable();
+  }
+
+  /** Builds a prescription slot from the Set X and Set Y inputs without storing it. */
+  function buildPrepSlotFromInputs() {
+    const select = prepEl('coach-prep-exercise-select');
+    const exerciseId = select ? select.value : '';
+    if (!exerciseId) return null;
+    const exercise = lookupPrepExercise(exerciseId);
+    const selectedOpt = select && select.options && select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null;
+    const baseLift = normalizeBaseLift(
+      (exercise && (exercise.baseLift || exercise.category)) ||
+      (selectedOpt && typeof selectedOpt.getAttribute === 'function' ? selectedOpt.getAttribute('data-base-lift') : '')
+    );
+    const topLoad = prepNum('coach-slot-top-load', 0);
+    const backoffSets = Math.max(0, Math.round(prepNum('coach-slot-backoff-sets', 0)));
+    const input = {
+      exerciseId,
+      exerciseName: (exercise && exercise.name) || (selectedOpt ? selectedOpt.textContent : exerciseId),
+      baseLift,
+      topSet: {
+        sets: Math.max(1, Math.round(prepNum('coach-slot-top-sets', 1))),
+        reps: Math.max(1, Math.round(prepNum('coach-slot-top-reps', 3))),
+        rpe: prepNum('coach-slot-top-rpe', 8),
+        targetRpe: prepNum('coach-slot-top-rpe', 8),
+        loadKg: topLoad > 0 ? topLoad : undefined
+      },
+      backoff: backoffSets > 0 ? {
+        sets: backoffSets,
+        reps: Math.max(1, Math.round(prepNum('coach-slot-backoff-reps', 5))),
+        rpe: prepNum('coach-slot-backoff-rpe', 7),
+        targetRpe: prepNum('coach-slot-backoff-rpe', 7),
+        dropPct: Math.max(0, prepNum('coach-slot-backoff-drop', 8))
+      } : null
+    };
+    const prescribed = callPrepEngine('prescribeSlotWithTopAndBackoff', [input, getPrepOneRms()]);
+    const slot = (prescribed && typeof prescribed === 'object') ? Object.assign({}, input, prescribed) : input;
+    if (!slot.topSet) slot.topSet = input.topSet;
+    if (!slot.backoff && slot.backoffSets) slot.backoff = slot.backoffSets;
+    if (slot.backoff && !slot.backoffSets) slot.backoffSets = slot.backoff;
+    if (!slot.slotId) slot.slotId = `slot_${Date.now().toString(36)}_${Math.floor(Math.random() * 1e6).toString(36)}`;
+    return slot;
+  }
+
+  /** Refreshes the live RPE-to-velocity previews of the Set X and Set Y builder. */
+  function updatePrepSlotPreviews() {
+    const topEl = prepEl('coach-slot-top-vel-preview');
+    const backEl = prepEl('coach-slot-backoff-vel-preview');
+    if (!topEl && !backEl) return;
+    const slot = buildPrepSlotFromInputs();
+    const topVel = slot && slot.topSet ? Number(slot.topSet.targetVelocity) : NaN;
+    const backObj = slot ? (slot.backoff || slot.backoffSets) : null;
+    const backVel = backObj ? Number(backObj.targetVelocity) : NaN;
+    if (topEl) topEl.textContent = (isFinite(topVel) && topVel > 0) ? `${topVel.toFixed(2)} m/s` : '\u2014';
+    if (backEl) backEl.textContent = (isFinite(backVel) && backVel > 0) ? `${backVel.toFixed(2)} m/s` : '\u2014';
+    const loadEl = prepEl('coach-slot-top-load');
+    if (loadEl && slot && slot.topSet && Number(slot.topSet.loadKg) > 0 && !loadEl.value) {
+      loadEl.placeholder = Number(slot.topSet.loadKg).toFixed(1);
+    }
+  }
+
+  function emitPrepEvent(type, payload) {
+    if (typeof window === 'undefined') return false;
+    const bus = window.ErosSyncBus;
+    if (bus && typeof bus.emit === 'function') {
+      try { bus.emit(type, payload); return true; } catch (_) {}
+    }
+    return false;
+  }
+
+  /** Builds or updates the active plan from the header inputs of the planner. */
+  function syncPrepPlanFromHeader() {
+    const athlete = getPrepAthlete();
+    if (!athlete) return null;
+    const rms = getPrepOneRms();
+    const meetDate = prepVal('coach-prep-meet-date');
+    const prior = prepState.plan;
+    const plan = Object.assign({}, prior || {}, {
+      planId: (prior && prior.planId) || `plan_${athlete.id}_${Date.now().toString(36)}`,
+      athleteId: athlete.id,
+      athleteName: athlete.name,
+      title: prepVal('coach-prep-title-input').trim() || (prior && prior.title) || 'Preparation plan',
+      goalType: meetDate ? 'meet_prep' : 'general',
+      durationMonths: clampPrepMonths(prepVal('coach-prep-months-select')),
+      startDate: prepVal('coach-prep-start-date') || formatIsoDate(new Date()),
+      targetMeetDate: meetDate || '',
+      targetSquatKg: rms.squat,
+      targetBenchKg: rms.bench,
+      targetDeadliftKg: rms.deadlift,
+      version: ((prior && Number(prior.version)) || 0) + 1,
+      updatedAt: new Date().toISOString()
+    });
+    prepState.plan = plan;
+    return plan;
+  }
+
+  function persistPrepPlan(plan) {
+    const stored = callPrepStore(['savePlan', 'upsertPlan', 'saveActivePlan'], [plan, 'coach']);
+    if (stored && typeof stored === 'object' && stored.planId) {
+      prepState.plan = Object.assign({}, plan, stored);
+    }
+    writeLocalPrepDraft(prepState.athleteId);
+  }
+
+  function persistPrepWorkout(workout) {
+    callPrepStore(['saveWorkout', 'savePlannedWorkout', 'upsertPlannedWorkout'], [workout, 'coach']);
+    writeLocalPrepDraft(prepState.athleteId);
+  }
+
+  function broadcastPrepPlan() {
+    const plan = prepState.plan;
+    if (!plan) return;
+    emitPrepEvent('prep:plan_sync', { plan, planId: plan.planId, athleteId: plan.athleteId, timestamp: Date.now() });
+  }
+
+  function broadcastPrepWorkout(workout) {
+    if (!workout) return;
+    emitPrepEvent('prep:workout_updated', {
+      workout,
+      workoutId: workout.workoutId,
+      planId: workout.planId,
+      athleteId: workout.athleteId,
+      timestamp: Date.now()
+    });
+  }
+
+  function broadcastPrepWorkoutsCapped(list) {
+    const todayStr = formatIsoDate(new Date());
+    list.slice()
+      .sort((a, b) => String(a.scheduledDate).localeCompare(String(b.scheduledDate)))
+      .filter(w => String(w.scheduledDate) >= todayStr)
+      .slice(0, PREP_EVENT_BROADCAST_CAP)
+      .forEach(broadcastPrepWorkout);
+  }
+
+  /** Saves the selected day session and broadcasts it live to the athlete. */
+  function saveCurrentPrepSession(opts) {
+    const silent = Boolean(opts && opts.silent);
+    const athlete = getPrepAthlete();
+    if (!athlete) {
+      if (!silent) showFeedbackMessage('Select a connected athlete to prepare a session.');
+      return null;
+    }
+    const dateStr = getPrepDate(prepState.weekIndex, prepState.dayIndex);
+    let workout = findPrepWorkoutByDate(dateStr);
+    const title = prepVal('coach-prep-session-title').trim();
+    const workoutNotes = prepVal('coach-prep-workout-notes').trim();
+    const dietaryNotes = prepVal('coach-prep-dietary-notes').trim();
+    const hasContent = prepState.draftSlots.length > 0 || title || workoutNotes || dietaryNotes;
+    if (!workout && !hasContent) return null;
+
+    const planWasMissing = !prepState.plan;
+    const plan = syncPrepPlanFromHeader();
+    if (!plan) return null;
+    if (planWasMissing) persistPrepPlan(plan);
+
+    const deloadEl = prepEl('coach-prep-deload-toggle');
+    const isNew = !workout;
+    workout = Object.assign({}, workout || {}, {
+      workoutId: (workout && workout.workoutId) || `pw_${athlete.id}_${dateStr.replace(/-/g, '')}`,
+      planId: plan.planId,
+      athleteId: athlete.id,
+      scheduledDate: dateStr,
+      weekIndex: prepState.weekIndex,
+      dayOfWeek: PREP_DAY_NAMES[prepState.dayIndex],
+      blockPhase: prepVal('coach-prep-phase-select') || 'Hypertrophy',
+      isDeload: Boolean(deloadEl && deloadEl.checked),
+      sessionTitle: title,
+      prescribedSlots: prepState.draftSlots.map(s => Object.assign({}, s)),
+      workoutNotes,
+      dietaryNotes,
+      adherenceStatus: (workout && workout.adherenceStatus) || 'planned',
+      updatedAt: new Date().toISOString()
+    });
+
+    const idx = prepState.workouts.findIndex(w => w && w.scheduledDate === dateStr);
+    if (idx >= 0) prepState.workouts[idx] = workout; else prepState.workouts.push(workout);
+
+    persistPrepWorkout(workout);
+    if (planWasMissing) broadcastPrepPlan();
+    broadcastPrepWorkout(workout);
+
+    renderPrepWeeks();
+    renderPrepDayTabs();
+    renderPrepComparison();
+    if (!silent) showFeedbackMessage(isNew ? 'Session saved and sent to the athlete.' : 'Session updated live for the athlete.');
+    return workout;
+  }
+
+  function schedulePrepAutosave(kind) {
+    if (typeof setTimeout !== 'function') return;
+    if (prepState.autosaveTimer) clearTimeout(prepState.autosaveTimer);
+    prepState.autosaveTimer = setTimeout(() => {
+      prepState.autosaveTimer = null;
+      if (kind === 'plan') {
+        if (!prepState.plan) return;
+        const plan = syncPrepPlanFromHeader();
+        if (plan) {
+          persistPrepPlan(plan);
+          broadcastPrepPlan();
+        }
+      } else {
+        saveCurrentPrepSession({ silent: true });
+      }
+    }, PREP_AUTOSAVE_DELAY_MS);
+  }
+
+  /** Saves the plan header and broadcasts the whole plan to the athlete. */
+  function publishPrepPlan() {
+    const athlete = getPrepAthlete();
+    if (!athlete) {
+      showFeedbackMessage('Select a connected athlete to publish a plan.');
+      return null;
+    }
+    const sessionSaved = saveCurrentPrepSession({ silent: true });
+    const plan = syncPrepPlanFromHeader();
+    if (!plan) return null;
+    persistPrepPlan(plan);
+    broadcastPrepPlan();
+    if (!sessionSaved) broadcastPrepWorkoutsCapped(prepState.workouts);
+    renderPrepFactoring();
+    showFeedbackMessage(`Plan published: ${plan.title}`);
+    return plan;
+  }
+
+  function normalizePrepWorkoutList(result) {
+    if (Array.isArray(result)) return result;
+    if (result && Array.isArray(result.workouts)) return result.workouts;
+    return [];
+  }
+
+  function mergePrepWorkouts(list) {
+    list.forEach(w => {
+      if (!w || !w.scheduledDate) return;
+      const idx = prepState.workouts.findIndex(x => x && x.scheduledDate === w.scheduledDate);
+      if (idx >= 0) prepState.workouts[idx] = w; else prepState.workouts.push(w);
+    });
+  }
+
+  function stampPrepWorkouts(list, plan, athlete) {
+    return list.map(w => Object.assign({}, w, {
+      workoutId: w.workoutId || `pw_${athlete.id}_${String(w.scheduledDate || '').replace(/-/g, '')}`,
+      planId: plan.planId,
+      athleteId: athlete.id
+    }));
+  }
+
+  function afterPrepBulkChange(message) {
+    renderPrepWeeks();
+    renderPrepDayTabs();
+    loadPrepSessionIntoForm();
+    renderPrepComparison();
+    broadcastPrepPlan();
+    broadcastPrepWorkoutsCapped(prepState.workouts);
+    writeLocalPrepDraft(prepState.athleteId);
+    if (message) showFeedbackMessage(message);
+  }
+
+  /** Applies the chosen block template across the plan horizon. */
+  function applyPrepTemplate() {
+    const athlete = getPrepAthlete();
+    const key = prepVal('coach-prep-template-select');
+    if (!athlete || !key) {
+      showFeedbackMessage(athlete ? 'Select a template first.' : 'Select a connected athlete first.');
+      return;
+    }
+    const plan = syncPrepPlanFromHeader();
+    if (!plan) return;
+    const result = callPrepEngine('generateBlockTemplate', [key, {
+      athleteId: athlete.id,
+      startDate: plan.startDate,
+      months: plan.durationMonths,
+      oneRms: getPrepOneRms(),
+      planId: plan.planId
+    }]);
+    const generated = stampPrepWorkouts(normalizePrepWorkoutList(result), plan, athlete);
+    if (generated.length === 0) {
+      showFeedbackMessage('Template unavailable.');
+      return;
+    }
+    if (result && result.plan && typeof result.plan === 'object') {
+      prepState.plan = Object.assign({}, plan, result.plan, { planId: plan.planId, athleteId: athlete.id });
+    }
+    persistPrepPlan(prepState.plan);
+    mergePrepWorkouts(generated);
+    generated.forEach(persistPrepWorkout);
+    afterPrepBulkChange(`Template applied: ${generated.length} sessions planned.`);
+  }
+
+  /** Converts the selected week into a deload week. */
+  function applyPrepDeloadWeek() {
+    const athlete = getPrepAthlete();
+    if (!athlete) {
+      showFeedbackMessage('Select a connected athlete first.');
+      return;
+    }
+    const plan = syncPrepPlanFromHeader();
+    if (!plan) return;
+    const weekWorkouts = prepState.workouts.filter(w => w && Number(w.weekIndex) === prepState.weekIndex);
+    if (weekWorkouts.length === 0) {
+      showFeedbackMessage('Plan sessions in this week before applying a deload.');
+      return;
+    }
+    const result = callPrepEngine('generateDeloadWeek', [weekWorkouts, { weekIndex: prepState.weekIndex }]);
+    const deloaded = stampPrepWorkouts(normalizePrepWorkoutList(result), plan, athlete);
+    if (deloaded.length === 0) {
+      showFeedbackMessage('Deload generator unavailable.');
+      return;
+    }
+    persistPrepPlan(plan);
+    mergePrepWorkouts(deloaded);
+    deloaded.forEach(persistPrepWorkout);
+    afterPrepBulkChange(`Week ${prepState.weekIndex + 1} converted to a deload week.`);
+  }
+
+  /** Clones the selected week into the following week. */
+  function clonePrepWeek() {
+    const athlete = getPrepAthlete();
+    if (!athlete) {
+      showFeedbackMessage('Select a connected athlete first.');
+      return;
+    }
+    const plan = syncPrepPlanFromHeader();
+    if (!plan) return;
+    const weekWorkouts = prepState.workouts.filter(w => w && Number(w.weekIndex) === prepState.weekIndex);
+    if (weekWorkouts.length === 0) {
+      showFeedbackMessage('Plan sessions in this week before cloning it.');
+      return;
+    }
+    const nextWeek = prepState.weekIndex + 1;
+    if (nextWeek >= getPrepWeekCount()) {
+      showFeedbackMessage('Extend the plan horizon to clone into another week.');
+      return;
+    }
+    const result = callPrepEngine('cloneOrShiftWeek', [weekWorkouts, { shiftWeeks: 1, startDate: plan.startDate }]);
+    const cloned = stampPrepWorkouts(normalizePrepWorkoutList(result), plan, athlete);
+    if (cloned.length === 0) {
+      showFeedbackMessage('Week cloning unavailable.');
+      return;
+    }
+    persistPrepPlan(plan);
+    mergePrepWorkouts(cloned);
+    cloned.forEach(persistPrepWorkout);
+    prepState.weekIndex = nextWeek;
+    afterPrepBulkChange(`Week ${nextWeek} cloned into week ${nextWeek + 1}.`);
+  }
+
+  function formatPrepCountdown(info) {
+    if (!info) return 'NO MEET DATE';
+    if (typeof info === 'string') return info.toUpperCase();
+    if (info.label) return String(info.label).toUpperCase();
+    const rawDays = typeof info.days === 'number' ? info.days : info.daysOut;
+    if (typeof rawDays === 'number') {
+      if (rawDays < 0) return 'MEET COMPLETED';
+      const rawWeeks = typeof info.weeks === 'number' ? info.weeks : (typeof info.weeksOut === 'number' ? info.weeksOut : Math.floor(rawDays / 7));
+      return `${rawDays} DAYS | ${rawWeeks} WEEKS`;
+    }
+    return 'NO MEET DATE';
+  }
+
+  function normalizeFactorAlerts(result) {
+    const list = Array.isArray(result) ? result : ((result && (result.alerts || result.factors)) || []);
+    return list.map(item => {
+      if (typeof item === 'string') return { level: 'info', message: item };
+      const rawLevel = String((item && (item.level || item.severity)) || 'info').toLowerCase();
+      const level = /crit|high|error/.test(rawLevel) ? 'crit' : (/warn|medium/.test(rawLevel) ? 'warn' : 'info');
+      return { level, message: String((item && (item.message || item.text)) || '') };
+    }).filter(a => a.message);
+  }
+
+  /** Renders the athlete factoring badges, alerts and meet countdown. */
+  function renderPrepFactoring() {
+    const athlete = getPrepAthlete();
+    const badgesEl = prepEl('coach-prep-factoring-badges');
+    const alertsEl = prepEl('coach-prep-factoring-alerts');
+    const countdownEl = prepEl('coach-prep-meet-countdown');
+
+    const meetDate = prepVal('coach-prep-meet-date');
+    if (countdownEl) {
+      const info = meetDate ? callPrepEngine('computeMeetCountdown', [meetDate, formatIsoDate(new Date())]) : null;
+      countdownEl.textContent = formatPrepCountdown(info);
+    }
+    if (!badgesEl && !alertsEl) return;
+    if (!athlete) {
+      if (badgesEl) badgesEl.innerHTML = '<span class="coach-prep-factor-badge">NO ATHLETE SELECTED</span>';
+      if (alertsEl) alertsEl.innerHTML = '';
+      return;
+    }
+
+    const stored = callPrepStore(['getAthleteBiometrics'], [athlete.id]) || {};
+    const bio = Object.assign({}, stored, prepState.profiles[athlete.id] || {});
+    const badges = [];
+    if (bio.age) badges.push(`AGE ${bio.age}`);
+    if (bio.bodyweightKg) badges.push(`BW ${bio.bodyweightKg} KG`);
+    if (bio.targetWeightClass) badges.push(`CLASS ${bio.targetWeightClass}`);
+    if (bio.experienceTier) badges.push(`TIER ${String(bio.experienceTier).toUpperCase()}`);
+    if (bio.trainingAgeYears !== undefined && bio.trainingAgeYears !== null && bio.trainingAgeYears !== '') badges.push(`TRAINING AGE ${bio.trainingAgeYears} YRS`);
+    if (bio.meetsCompleted !== undefined && bio.meetsCompleted !== null && bio.meetsCompleted !== '') badges.push(`MEETS ${bio.meetsCompleted}`);
+    if (Array.isArray(bio.availableDays)) badges.push(`DAYS ${bio.availableDays.length}/7`);
+    if (bio.federation) badges.push(String(bio.federation).toUpperCase());
+    if (badgesEl) {
+      badgesEl.innerHTML = badges.length
+        ? badges.map(b => `<span class="coach-prep-factor-badge">${escapeHtml(b)}</span>`).join('')
+        : '<span class="coach-prep-factor-badge">AWAITING ATHLETE PROFILE</span>';
+    }
+
+    if (alertsEl) {
+      const alerts = normalizeFactorAlerts(callPrepEngine('evaluateAthletePrepFactors', [bio, prepState.plan]));
+      const dutiesNote = bio.dutiesInjuryNotes ? String(bio.dutiesInjuryNotes).trim() : '';
+      if (dutiesNote && !alerts.some(a => a.message.indexOf(dutiesNote.slice(0, 24)) >= 0)) {
+        alerts.push({ level: 'warn', message: `Athlete notes: ${dutiesNote}` });
+      }
+      alertsEl.innerHTML = alerts.map(a =>
+        `<div class="coach-prep-alert coach-prep-alert-${escapeHtml(a.level)}" role="status">${escapeHtml(a.message)}</div>`
+      ).join('');
+    }
+  }
+
+  function collectCompletedSetsForDate(athleteId, dateStr) {
+    const sets = [];
+    const seen = new Set();
+    const addSet = (s, fallbackLift) => {
+      if (!s) return;
+      const key = s.setId ? String(s.setId) : `${s.setNumber || ''}_${s.lift || fallbackLift || ''}_${s.weight || 0}`;
+      if (s.setId && seen.has(key)) return;
+      seen.add(key);
+      const copy = Object.assign({}, s);
+      if (s.rawLift) copy.lift = s.rawLift;
+      else if (!copy.lift && fallbackLift) copy.lift = fallbackLift;
+      copy.plannedWorkoutId = s.plannedWorkoutId || s.planned_workout_id || '';
+      copy.plannedSlotId = s.plannedSlotId || s.planned_slot_id || '';
+      copy.velocityLoss = Number(s.velocityLossPct != null ? s.velocityLossPct : s.velocityLoss) || 0;
+      copy.isPr = Boolean(s.isPr || s.isPR || (s.setId && goldenPr.setIds.has(s.setId)));
+      copy.isPR = copy.isPr;
+      sets.push(copy);
+    };
+
+    getAthleteWorkouts(athleteId).forEach(w => {
+      if (w && w.date === dateStr && Array.isArray(w.sets)) {
+        w.sets.forEach(s => addSet(s, w.lift));
+      }
+    });
+
+    if (!athleteId || athleteId === 'ath_01') {
+      const activeW = getSafeActiveWorkout();
+      if (activeW && Array.isArray(activeW.sets)) {
+        const dObj = activeW.startTime ? new Date(activeW.startTime) : (activeW.date ? new Date(activeW.date) : new Date());
+        const activeDate = !isNaN(dObj.getTime()) ? formatIsoDate(dObj) : formatIsoDate(new Date());
+        if (activeDate === dateStr) {
+          activeW.sets.forEach(s => addSet(s, activeW.lift));
+        }
+      }
+    }
+    return sets;
+  }
+
+  function fmtPrepCell(value) {
+    if (value === null || value === undefined || value === '') return '&mdash;';
+    if (typeof value === 'string' || typeof value === 'number') return escapeHtml(String(value));
+    const sets = value.sets !== undefined ? value.sets : value.setCount;
+    const reps = value.reps !== undefined ? value.reps : value.repsCount;
+    const load = value.loadKg !== undefined ? value.loadKg : (value.weight !== undefined ? value.weight : value.load);
+    const vel = value.velocity !== undefined ? value.velocity : (value.targetVelocity !== undefined ? value.targetVelocity : value.avgVelocity);
+    const rpe = value.rpe !== undefined ? value.rpe : value.avgRpe;
+    const parts = [];
+    if (sets !== undefined && reps !== undefined) parts.push(`${sets}x${reps}`);
+    else if (sets !== undefined) parts.push(`${sets} sets`);
+    if (rpe !== undefined && Number(rpe) > 0) parts.push(`@RPE ${Number(rpe)}`);
+    if (load !== undefined && Number(load) > 0) parts.push(`${Number(load).toFixed(1)} kg`);
+    if (vel !== undefined && Number(vel) > 0) parts.push(`${Number(vel).toFixed(2)} m/s`);
+    return parts.length ? escapeHtml(parts.join(' | ')) : '&mdash;';
+  }
+
+  function fmtPrepDelta(row) {
+    if (row && row.actual && Number(row.actual.sets) > 0) {
+      const bits = [];
+      if (typeof row.loadDeltaKg === 'number' && isFinite(row.loadDeltaKg) && row.loadDeltaKg !== 0) {
+        bits.push(`${row.loadDeltaKg > 0 ? '+' : ''}${row.loadDeltaKg.toFixed(1)} kg`);
+      }
+      if (typeof row.velocityDelta === 'number' && isFinite(row.velocityDelta) && row.velocityDelta !== 0) {
+        bits.push(`${row.velocityDelta > 0 ? '+' : ''}${row.velocityDelta.toFixed(2)} m/s`);
+      }
+      if (row.status) bits.push(String(row.status));
+      const cls = (row.loadDeltaKg > 0 || row.status === 'exceeded' || row.status === 'hit')
+        ? 'coach-prep-delta-pos'
+        : (row.loadDeltaKg < 0 || row.status === 'under' ? 'coach-prep-delta-neg' : 'coach-prep-delta-flat');
+      return `<span class="${cls}">${escapeHtml(bits.join(' | ') || 'hit')}</span>`;
+    }
+    const delta = row && (row.delta !== undefined ? row.delta : (row.deltaLoadKg !== undefined ? row.deltaLoadKg : row.status));
+    if (delta === undefined || delta === null || delta === '') return '&mdash;';
+    if (typeof delta === 'number') {
+      const cls = delta > 0 ? 'coach-prep-delta-pos' : (delta < 0 ? 'coach-prep-delta-neg' : 'coach-prep-delta-flat');
+      return `<span class="${cls}">${escapeHtml((delta > 0 ? '+' : '') + delta.toFixed(1))}</span>`;
+    }
+    if (typeof delta === 'object') return fmtPrepCell(delta);
+    return escapeHtml(String(delta));
+  }
+
+  /** Renders the side-by-side planned versus actual matrix and athlete feedback. */
+  function renderPrepComparison() {
+    const body = prepEl('coach-prep-comparison-body');
+    const feedbackEl = prepEl('coach-prep-athlete-feedback-view');
+    if (!body && !feedbackEl) return;
+    const athlete = getPrepAthlete();
+    const workout = athlete ? getSelectedPrepWorkout() : null;
+
+    if (feedbackEl) {
+      const note = workout ? (prepState.feedbackByWorkout[workout.workoutId] || workout.athleteFeedbackNote || '') : '';
+      feedbackEl.textContent = note ? `Athlete feedback: ${note}` : '';
+    }
+    if (!body) return;
+    if (!workout || !Array.isArray(workout.prescribedSlots) || workout.prescribedSlots.length === 0) {
+      body.innerHTML = '<p class="coach-prep-empty">Select an athlete and a session day to compare plan and execution.</p>';
+      return;
+    }
+
+    const completed = collectCompletedSetsForDate(athlete.id, workout.scheduledDate);
+    const cmp = callPrepEngine('comparePlanVsActual', [workout, completed]);
+    let rows = Array.isArray(cmp) ? cmp : ((cmp && (cmp.rows || cmp.slots || cmp.comparison)) || []);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      rows = workout.prescribedSlots.map(slot => ({
+        exerciseName: slot.exerciseName,
+        planned: slot.topSet,
+        actual: null
+      }));
+    }
+    const adherence = cmp && !Array.isArray(cmp) ? (cmp.adherencePct !== undefined ? cmp.adherencePct : cmp.adherence) : undefined;
+    const dayHasPr = completed.some(isSetGoldenPr) || goldenPr.dates.has(workout.scheduledDate);
+
+    body.innerHTML =
+      `<table class="coach-prep-compare-table"><thead><tr><th>Exercise</th><th>Planned</th><th>Actual</th><th>Delta</th></tr></thead><tbody>` +
+      rows.map(row => {
+        const name = row.exerciseName || row.name || row.exerciseId || 'Exercise';
+        const rowPr = row.hasPr === true || row.isPr === true || row.isPR === true ||
+          Boolean(row.actual && (row.actual.hasPr === true || row.actual.isPr === true || row.actual.isPR === true));
+        return `<tr><td>${escapeHtml(name)}${rowPr ? goldenPrBadgeHtml(false) : ''}</td><td class="font-mono">${fmtPrepCell(row.planned)}</td><td class="font-mono">${fmtPrepCell(row.actual)}</td><td class="font-mono">${fmtPrepDelta(row)}</td></tr>`;
+      }).join('') +
+      `</tbody></table>` +
+      (adherence !== undefined && adherence !== null && isFinite(Number(adherence))
+        ? `<p class="coach-prep-empty">Adherence ${escapeHtml(String(Math.round(Number(adherence))))}%${dayHasPr ? goldenPrBadgeHtml(false) : ''}</p>`
+        : (dayHasPr ? `<p class="coach-prep-empty">${goldenPrBadgeHtml(false)}</p>` : ''));
+  }
+
+  function setPrepPanelHidden(hidden) {
+    const panel = prepEl('coach-preparation-panel');
+    if (panel && panel.style) panel.style.display = hidden ? 'none' : 'flex';
+  }
+
+  /** Renders every section of the Coach Preparation panel. */
+  function renderPreparationPanel() {
+    if (!prepEl('coach-preparation-panel')) return;
+    initPreparationPanel();
+    populatePrepAthleteSelect();
+    loadPrepForAthlete(prepState.athleteId, { preserveCursor: prepState.athleteId === prepState.loadedFor });
+    populatePrepTemplateOptions();
+    populatePrepExerciseOptions();
+    renderPrepWeeks();
+    renderPrepDayTabs();
+    loadPrepSessionIntoForm();
+    renderPrepFactoring();
+    renderPrepComparison();
+    updatePrepSlotPreviews();
+  }
+
+  function addPrepSlotFromInputs() {
+    const slot = buildPrepSlotFromInputs();
+    if (!slot) {
+      showFeedbackMessage('Choose an exercise before adding it to the session.');
+      return;
+    }
+    prepState.draftSlots.push(slot);
+    renderPrepSlotsTable();
+    saveCurrentPrepSession({ silent: true });
+  }
+
+  function registerCustomPrepExercise() {
+    if (typeof window === 'undefined' || typeof window.prompt !== 'function') return;
+    const name = window.prompt('Custom exercise name');
+    if (!name || !String(name).trim()) return;
+    const lift = window.prompt('Base movement (squat, bench, deadlift or accessory)', 'accessory');
+    const entry = { name: String(name).trim().slice(0, 60), baseLift: normalizeBaseLift(lift) || 'accessory' };
+    const registered = callPrepEngine('registerCustomExercise', [entry]);
+    const exercise = (registered && typeof registered === 'object' && registered.id)
+      ? registered
+      : Object.assign({ id: `custom_${entry.name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`, category: 'custom' }, entry);
+    if (!prepState.customExercises.some(ex => ex.id === exercise.id)) prepState.customExercises.push(exercise);
+    setPrepVal('coach-prep-exercise-search', '');
+    populatePrepExerciseOptions(exercise.id);
+    updatePrepSlotPreviews();
+  }
+
+  function onPrepHeaderChanged(e) {
+    const id = e && e.target ? e.target.id : '';
+    if (id === 'coach-prep-months-select') {
+      setPrepVal('coach-prep-months-select', clampPrepMonths(prepVal('coach-prep-months-select')));
+    }
+    renderPrepWeeks();
+    renderPrepDayTabs();
+    renderPrepFactoring();
+    updatePrepSlotPreviews();
+    schedulePrepAutosave('plan');
+  }
+
+  /** Binds the Coach Preparation panel controls exactly once. */
+  function initPreparationPanel() {
+    if (prepState.bound) return true;
+    const panel = prepEl('coach-preparation-panel');
+    if (!panel || typeof panel.addEventListener !== 'function') return false;
+    prepState.bound = true;
+
+    const on = (id, evt, fn) => {
+      const el = prepEl(id);
+      if (el && typeof el.addEventListener === 'function') el.addEventListener(evt, fn);
+    };
+
+    on('coach-prep-athlete-select', 'change', (e) => {
+      loadPrepForAthlete(e.target.value);
+      renderPreparationPanel();
+    });
+    PREP_HEADER_INPUT_IDS.forEach(id => on(id, 'input', onPrepHeaderChanged));
+    PREP_HEADER_INPUT_IDS.forEach(id => on(id, 'change', onPrepHeaderChanged));
+    PREP_SESSION_INPUT_IDS.forEach(id => {
+      on(id, 'input', () => schedulePrepAutosave('session'));
+      on(id, 'change', () => schedulePrepAutosave('session'));
+    });
+    PREP_SLOT_INPUT_IDS.forEach(id => on(id, 'input', updatePrepSlotPreviews));
+    on('coach-prep-exercise-search', 'input', () => {
+      populatePrepExerciseOptions();
+      updatePrepSlotPreviews();
+    });
+    on('coach-prep-exercise-select', 'change', updatePrepSlotPreviews);
+    on('btn-coach-custom-exercise', 'click', registerCustomPrepExercise);
+    on('btn-coach-add-slot', 'click', addPrepSlotFromInputs);
+    on('btn-coach-save-session', 'click', () => saveCurrentPrepSession({ silent: false }));
+    on('btn-coach-publish-prep', 'click', publishPrepPlan);
+    on('btn-coach-apply-template', 'click', applyPrepTemplate);
+    on('btn-coach-deload-week', 'click', applyPrepDeloadWeek);
+    on('btn-coach-clone-week', 'click', clonePrepWeek);
+
+    on('coach-prep-weeks-track', 'click', (e) => {
+      const cell = e.target && typeof e.target.closest === 'function' ? e.target.closest('[data-week]') : null;
+      if (!cell) return;
+      prepState.weekIndex = parseInt(cell.getAttribute('data-week'), 10) || 0;
+      renderPrepWeeks();
+      renderPrepDayTabs();
+      loadPrepSessionIntoForm();
+      renderPrepComparison();
+    });
+    on('coach-prep-day-tabs', 'click', (e) => {
+      const tab = e.target && typeof e.target.closest === 'function' ? e.target.closest('[data-day]') : null;
+      if (!tab) return;
+      prepState.dayIndex = parseInt(tab.getAttribute('data-day'), 10) || 0;
+      renderPrepDayTabs();
+      loadPrepSessionIntoForm();
+      renderPrepComparison();
+    });
+    on('coach-prep-slots-body', 'click', (e) => {
+      const btn = e.target && typeof e.target.closest === 'function' ? e.target.closest('[data-remove-slot]') : null;
+      if (!btn) return;
+      const slotId = btn.getAttribute('data-remove-slot');
+      prepState.draftSlots = prepState.draftSlots.filter(s => s.slotId !== slotId);
+      renderPrepSlotsTable();
+      saveCurrentPrepSession({ silent: true });
+    });
+    return true;
+  }
+
+  function handleAthleteProfileUpdated(payload) {
+    if (!payload) return;
+    const athleteId = payload.athleteId || 'ath_01';
+    prepState.profiles[athleteId] = Object.assign({}, prepState.profiles[athleteId] || {}, payload);
+    if (isCoachMode && activeCoachPanel === 'preparation') renderPrepFactoring();
+    if (isCoachMode) showFeedbackMessage('Athlete profile updated.');
+  }
+
+  function handlePrepAthleteFeedback(payload) {
+    if (!payload || !payload.workoutId) return;
+    const note = String(payload.note || '').slice(0, 280);
+    prepState.feedbackByWorkout[payload.workoutId] = note;
+    const workout = prepState.workouts.find(w => w && w.workoutId === payload.workoutId);
+    if (workout) workout.athleteFeedbackNote = note;
+    if (isCoachMode && activeCoachPanel === 'preparation') renderPrepComparison();
+    if (isCoachMode) showFeedbackMessage('Athlete feedback received.');
+  }
+
+  function handleWorkoutPrPushed(payload) {
+    if (!payload) return;
+    registerGoldenPr(payload);
+    if (payload.setId) {
+      remoteCompletedSets.forEach(s => {
+        if (s && s.setId === payload.setId) {
+          s.isPr = true;
+          s.isPR = true;
+        }
+      });
+    }
+    refreshGoldenPrViews();
+    if (isCoachMode) showFeedbackMessage(`Personal record pushed: ${payload.lift || 'lift'} ${payload.weight || ''} kg`.trim());
+  }
+
   // Public Interface
   return {
     init,
     initCoachPortal: init,
+    initPreparationPanel,
+    renderPreparationPanel,
+    publishPrepPlan,
+    saveCurrentPrepSession,
+    applyPrepTemplate,
+    applyPrepDeloadWeek,
+    clonePrepWeek,
+    goldenPrBadgeHtml,
+    isSetGoldenPr,
+    isWorkoutGoldenPr,
     initMovableCoachPills,
     startLiveRestTicker: startRestTicker,
     switchMode,

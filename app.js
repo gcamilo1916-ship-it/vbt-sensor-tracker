@@ -196,6 +196,33 @@ let workouts = [];           // Array of Workout Sessions
 let activeWorkout = null;    // Current active Workout Session object
 let activeSet = null;        // Current active Set object
 
+// Preparation Hub & Smart PR Push State (declared early so every lifecycle hook can read it safely)
+const ATHLETE_PREP_ID = 'ath_01';
+const ATHLETE_BIO_FALLBACK_KEY = 'eros_athlete_bio_fallback_v1';
+const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+let activePlannedWorkoutId = null;
+let activePlannedSlotId = null;
+let activePlannedLift = null;
+const athletePrepState = {
+  initialized: false,
+  plan: null,
+  workouts: [],
+  cache: { plan: null, workouts: {} },
+  selectedDate: null,
+  selectedByUser: false,
+  slotMemory: {},
+  lastSlotsHtml: null,
+  lastCompareHtml: null,
+  noticeTimer: null,
+  badgeTimer: null,
+  bioTimer: null,
+  bioStatusTimer: null
+};
+const prPromptedKeys = new Set();
+const prSuppressedKeys = new Set();
+let pendingPrCandidate = null;
+let prHudTimer = null;
+
 // Biomechanical Reference Baselines
 const LIFT_BASELINES = {
   deadlift: { mvt: 0.15, rpe8: 0.35, cmd: 'CMD:SL:DL' },
@@ -1078,6 +1105,10 @@ function startNewSet(lift = currentLift) {
             restSeconds: previousSet.restSeconds,
             timestamp: previousSet.endTime || Date.now()
           };
+          if (previousSet.plannedWorkoutId) completedPayload.plannedWorkoutId = previousSet.plannedWorkoutId;
+          if (previousSet.plannedSlotId) completedPayload.plannedSlotId = previousSet.plannedSlotId;
+          if (previousSet.isPR || previousSet.isPr) completedPayload.isPr = true;
+          if (previousSet.prType) completedPayload.prType = previousSet.prType;
           if (typeof previousSet.maxDeviationCm === 'number' && !isNaN(previousSet.maxDeviationCm)) {
             completedPayload.maxDeviationCm = previousSet.maxDeviationCm;
           }
@@ -1102,12 +1133,20 @@ function startNewSet(lift = currentLift) {
   if (liveSetWeightInput) liveSetWeightInput.value = setWeight.toFixed(1);
   if (workoutSetWeightInput) workoutSetWeightInput.value = setWeight.toFixed(1);
 
+  const resolvedPlannedWorkoutId = activePlannedWorkoutId || (activeWorkout && activeWorkout.plannedWorkoutId) || null;
+  const resolvedPlannedSlotId = resolvePlannedSlotIdForSet(resolvedPlannedWorkoutId, setLift);
+
   const newSet = {
     setId: `set_${Date.now()}_${setNumber}`,
     setNumber: setNumber,
     lift: setLift,
     weight: setWeight,
     targetRpe: currentTargetRpe,
+    plannedWorkoutId: resolvedPlannedWorkoutId,
+    plannedSlotId: resolvedPlannedSlotId,
+    isPR: false,
+    isPr: false,
+    prType: null,
     startTime: Date.now(),
     endTime: null,
     restSeconds: null,
@@ -1193,6 +1232,10 @@ function endActiveSet() {
       restSeconds: typeof activeSet.restSeconds === 'number' ? activeSet.restSeconds : null,
       timestamp: activeSet.endTime || Date.now()
     };
+    if (activeSet.plannedWorkoutId) completedPayload.plannedWorkoutId = activeSet.plannedWorkoutId;
+    if (activeSet.plannedSlotId) completedPayload.plannedSlotId = activeSet.plannedSlotId;
+    if (activeSet.isPR || activeSet.isPr) completedPayload.isPr = true;
+    if (activeSet.prType) completedPayload.prType = activeSet.prType;
     if (typeof activeSet.maxDeviationCm === 'number' && !isNaN(activeSet.maxDeviationCm)) {
       completedPayload.maxDeviationCm = activeSet.maxDeviationCm;
     }
@@ -1264,6 +1307,9 @@ function endActiveSet() {
   persistStorage();
   updateHistoryStats();
   renderHistoryView();
+  maybeEvaluateSetPrCandidate(completedSetForCelebration);
+  renderAthletePrepHub();
+  renderAthletePlanVsActual();
 }
 
 /**
@@ -1466,7 +1512,25 @@ function recordRepetition({ lift, velocity, rpe, deviationCm = null, trajectoryP
       pathEfficiencyPct: repObj.pathEfficiencyPct,
       trajectoryPoints: repObj.trajectoryPoints
     };
+    if (activeSet.plannedWorkoutId) syncRepPayload.plannedWorkoutId = activeSet.plannedWorkoutId;
+    if (activeSet.plannedSlotId) syncRepPayload.plannedSlotId = activeSet.plannedSlotId;
+    if (repObj.isPR) syncRepPayload.isPr = true;
     window.ErosSyncBus.emit('rep:recorded', syncRepPayload);
+  }
+
+  const prCandidate = evaluatePrCandidate({
+    lift: repLift,
+    weight: activeSet.weight,
+    velocity: velocity,
+    rpe: rpe,
+    setId: activeSet.setId,
+    workoutId: activeSet.plannedWorkoutId || (activeWorkout && activeWorkout.id) || null,
+    slotId: activeSet.plannedSlotId || null,
+    repNumber: repObj.repNumber,
+    timestamp: repObj.timestamp
+  });
+  if (prCandidate) {
+    showPrConfirmHud(prCandidate);
   }
 
   // Play rep chime and trigger light haptic pulse
@@ -1487,6 +1551,7 @@ function recordRepetition({ lift, velocity, rpe, deviationCm = null, trajectoryP
   updateSetUI(activeSet);
   updateLiveMiniHud();
   updateHistoryStats();
+  renderAthletePlanVsActual();
 
   // Asynchronous UI Dispatch (Non-blocking Observability)
   requestAnimationFrame(() => {
@@ -3641,12 +3706,20 @@ function updateWorkoutPage() {
       ? `${s.weight.toFixed(1)} kg`
       : '-';
 
+    const isPushedPr = Boolean(s.isPR || s.isPr || s.prPushed || (Array.isArray(s.reps) && s.reps.some(r => r && r.prPushed)));
+    const prBadgeHtml = isPushedPr ? '<span class="golden-pr-badge">PR GOLD</span>' : '';
+    const pushPrBtnHtml = (!isCurrent && repCount > 0 && !isPushedPr)
+      ? `<button type="button" class="push-pr-mini-btn" data-push-pr-set-id="${escapeHtml(s.setId)}">PUSH PR</button>`
+      : '';
+
     rowsHtml += `
-      <div class="workout-set-row ${isCurrent ? 'is-active-set' : ''}" data-set-number="${s.setNumber}" data-lift="${liftKey}">
+      <div class="workout-set-row ${isCurrent ? 'is-active-set' : ''} ${isPushedPr ? 'is-pr-set' : ''}" data-set-number="${s.setNumber}" data-set-id="${escapeHtml(s.setId)}" data-lift="${liftKey}">
         <div class="workout-set-row-left">
           <span class="workout-set-num">SET ${s.setNumber}</span>
           <span class="lift-tag" data-lift="${liftKey}">${escapeHtml(setLift.toUpperCase())}</span>
           <span class="workout-set-reps">${repCount} ${repCount === 1 ? 'rep' : 'reps'}</span>
+          ${prBadgeHtml}
+          ${pushPrBtnHtml}
         </div>
         <div class="workout-set-row-right">
           <div class="workout-set-metric">
@@ -3674,6 +3747,15 @@ function updateWorkoutPage() {
     `;
   });
   tableEl.innerHTML = rowsHtml;
+  if (!tableEl._pushPrBound) {
+    tableEl.addEventListener('click', (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest('[data-push-pr-set-id]') : null;
+      if (!btn) return;
+      const setId = btn.getAttribute('data-push-pr-set-id');
+      if (setId) pushSetAsManualPr(setId);
+    });
+    tableEl._pushPrBound = true;
+  }
 }
 
 let activeRepPressCancel = null;
@@ -4198,6 +4280,11 @@ function updatePrDashboardUI(updateInputs = true) {
   if (dotsTierBadge) dotsTierBadge.textContent = getDotsClassification(dotsScore);
 }
 
+/** Updates the DOTS calculator display and PR summary cards. */
+function updateDotsDisplay(updateInputs = false) {
+  updatePrDashboardUI(updateInputs);
+}
+
 /**
  * Initializes event listeners for PR inputs, gender switches, and DOTS controls
  */
@@ -4254,6 +4341,7 @@ function initPrDashboardListeners() {
       prProfile.bodyweight = parseFloat(dotsBwInput.value) || 0;
       persistPrProfile();
       updatePrDashboardUI(false);
+      syncBiometricsFromDots(prProfile.bodyweight, prProfile.gender);
     });
   }
 
@@ -4266,6 +4354,7 @@ function initPrDashboardListeners() {
       dotsGenderMale.setAttribute('aria-checked', 'true');
       persistPrProfile();
       updatePrDashboardUI(false);
+      syncBiometricsFromDots(prProfile.bodyweight, prProfile.gender);
     });
 
     dotsGenderFemale.addEventListener('click', () => {
@@ -4276,6 +4365,7 @@ function initPrDashboardListeners() {
       dotsGenderFemale.setAttribute('aria-checked', 'true');
       persistPrProfile();
       updatePrDashboardUI(false);
+      syncBiometricsFromDots(prProfile.bodyweight, prProfile.gender);
     });
   }
 
@@ -4367,13 +4457,14 @@ function renderHistoryView() {
 
     const sessionTitle = formatWorkoutTitle(session);
     session.name = sessionTitle;
+    const sessionHasPr = setList.some(s => Boolean(s.isPR || s.isPr || s.prPushed || (Array.isArray(s.reps) && s.reps.some(r => r && r.prPushed))));
 
     html += `
-      <div class="session-card ${isExpanded ? 'expanded' : ''}" data-session-id="${session.id}">
-        <div class="session-card-header" onclick="toggleSessionCard('${session.id}')">
+      <div class="session-card ${isExpanded ? 'expanded' : ''}" data-session-id="${escapeHtml(session.id)}">
+        <div class="session-card-header" onclick="toggleSessionCard('${escapeHtml(session.id)}')">
           <div class="session-card-title-group">
-            <span class="session-card-title">${escapeHtml(sessionTitle)}</span>
-            <span class="session-card-meta">${session.dateStr} • ${durationMins} ${typeof durationMins === 'number' ? 'mins' : ''} • ${setList.length}S / ${sessionRepsCount}R</span>
+            <span class="session-card-title">${escapeHtml(sessionTitle)}${sessionHasPr ? ' <span class="golden-pr-badge">PR GOLD</span>' : ''}</span>
+            <span class="session-card-meta">${escapeHtml(session.dateStr)} • ${durationMins} ${typeof durationMins === 'number' ? 'mins' : ''} • ${setList.length}S / ${sessionRepsCount}R</span>
           </div>
           <div class="session-card-stats">
             <div class="session-stat-chip">
@@ -4421,11 +4512,12 @@ function renderSessionSetsAccordion(sets) {
     const restStr = (typeof s.restSeconds === 'number' && s.restSeconds > 0)
       ? formatRestDuration(s.restSeconds)
       : '-';
+    const setHasPr = Boolean(s.isPR || s.isPr || s.prPushed || (Array.isArray(s.reps) && s.reps.some(r => r && r.prPushed)));
 
     out += `
-      <div class="session-set-item" data-lift="${setLiftKey}">
+      <div class="session-set-item ${setHasPr ? 'is-pr-set' : ''}" data-lift="${setLiftKey}">
         <div class="session-set-header">
-          <span class="session-set-tag" data-lift="${setLiftKey}">SET ${s.setNumber} — ${escapeHtml(setLift.toUpperCase())}${weightLabel}</span>
+          <span class="session-set-tag" data-lift="${setLiftKey}">SET ${s.setNumber} — ${escapeHtml(setLift.toUpperCase())}${weightLabel}${setHasPr ? ' <span class="golden-pr-badge">PR GOLD</span>' : ''}</span>
           <div class="session-set-stats font-mono">
             <span class="set-stat-vol">Vol: ${formattedSetVol}</span>
             <span class="set-stat-vel">Avg: ${s.avgVelocity.toFixed(2)} m/s</span>
@@ -4599,6 +4691,13 @@ navTabs.forEach(tab => {
 
     const prevSection = tabSections[prevTarget];
     const targetSection = tabSections[target];
+
+    if (target === 'set') {
+      renderAthletePrepHub();
+      renderAthletePlanVsActual();
+    } else if (target === 'history') {
+      populateAthleteBiometricsForm();
+    }
 
     // 2. Clear any active transition states from rapid clicking
     clearTabTransitions();
@@ -4908,8 +5007,1300 @@ function initAthleteSettings() {
   }
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// 7. ATHLETE PREPARATION HUB, BIOMETRICS DOSSIER & SMART PR CONFIRMATION
+// ═════════════════════════════════════════════════════════════════════════════
+
+function formatLocalIsoDate(dateInput = new Date()) {
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getMondayDateStr(dateStr) {
+  const parts = String(dateStr || '').split('-').map(Number);
+  const d = (parts.length === 3 && parts[0] && parts[1] && parts[2])
+    ? new Date(parts[0], parts[1] - 1, parts[2])
+    : new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return formatLocalIsoDate(d);
+}
+
+function addDaysIsoDate(dateStr, offsetDays) {
+  const parts = String(dateStr || '').split('-').map(Number);
+  const d = (parts.length === 3 && parts[0] && parts[1] && parts[2])
+    ? new Date(parts[0], parts[1] - 1, parts[2])
+    : new Date();
+  d.setDate(d.getDate() + Number(offsetDays || 0));
+  return formatLocalIsoDate(d);
+}
+
+function getPrepStore() {
+  return (typeof window !== 'undefined' && window.ErosPrepStore) ? window.ErosPrepStore : null;
+}
+
+function getPrepEngine() {
+  return (typeof window !== 'undefined' && window.ErosPrepEngine) ? window.ErosPrepEngine : null;
+}
+
+function normalizePrepSlot(rawSlot, idx = 0) {
+  const s = (rawSlot && typeof rawSlot === 'object') ? rawSlot : {};
+  const topSrc = (s.topSet && typeof s.topSet === 'object') ? s.topSet : {};
+  const backSrc = (s.backoff && typeof s.backoff === 'object')
+    ? s.backoff
+    : ((s.backoffSets && typeof s.backoffSets === 'object') ? s.backoffSets : null);
+  const baseLift = canonicalLift(s.baseLift || s.base_lift || s.lift || currentLift || 'Deadlift');
+  const topRpe = Number(topSrc.rpe != null ? topSrc.rpe : (topSrc.targetRpe != null ? topSrc.targetRpe : 8.0));
+  const topLoad = Number(topSrc.loadKg != null ? topSrc.loadKg : (topSrc.suggestedLoadKg != null ? topSrc.suggestedLoadKg : 0));
+  const topVel = Number(topSrc.targetVelocity != null ? topSrc.targetVelocity : 0);
+  const topLoss = Number(topSrc.velocityLossCapPct != null ? topSrc.velocityLossCapPct : 20);
+
+  let normalizedBackoff = null;
+  if (backSrc && (Number(backSrc.sets) > 0 || Number(backSrc.reps) > 0 || backSrc.rpe != null || backSrc.targetRpe != null)) {
+    const bRpe = Number(backSrc.rpe != null ? backSrc.rpe : (backSrc.targetRpe != null ? backSrc.targetRpe : 7.0));
+    const bDrop = Number(backSrc.dropPct != null ? backSrc.dropPct : 10);
+    const bLoad = Number(backSrc.loadKg != null ? backSrc.loadKg : (backSrc.suggestedLoadKg != null ? backSrc.suggestedLoadKg : (topLoad > 0 ? Math.round((topLoad * (1 - bDrop / 100)) * 2) / 2 : 0)));
+    normalizedBackoff = {
+      sets: Number(backSrc.sets) || 2,
+      reps: Number(backSrc.reps) || Number(topSrc.reps) || 5,
+      rpe: isFinite(bRpe) ? bRpe : 7.0,
+      targetRpe: isFinite(bRpe) ? bRpe : 7.0,
+      dropPct: isFinite(bDrop) ? bDrop : 10,
+      loadKg: isFinite(bLoad) ? bLoad : 0,
+      targetVelocity: Number(backSrc.targetVelocity != null ? backSrc.targetVelocity : 0),
+      velocityLossCapPct: Number(backSrc.velocityLossCapPct != null ? backSrc.velocityLossCapPct : topLoss)
+    };
+  }
+
+  return {
+    slotId: String(s.slotId || s.slot_id || `slot_${idx + 1}`),
+    exerciseId: String(s.exerciseId || s.exercise_id || ''),
+    exerciseName: String(s.exerciseName || s.exercise_name || s.name || baseLift),
+    baseLift: baseLift,
+    topSet: {
+      sets: Number(topSrc.sets) || 1,
+      reps: Number(topSrc.reps) || 3,
+      rpe: isFinite(topRpe) ? topRpe : 8.0,
+      targetRpe: isFinite(topRpe) ? topRpe : 8.0,
+      loadKg: isFinite(topLoad) ? topLoad : 0,
+      targetVelocity: isFinite(topVel) ? topVel : 0,
+      velocityLossCapPct: isFinite(topLoss) ? topLoss : 20
+    },
+    backoff: normalizedBackoff
+  };
+}
+
+function normalizePlannedWorkout(rawWk) {
+  if (!rawWk || typeof rawWk !== 'object') return null;
+  let rawSlots = rawWk.prescribedSlots || rawWk.slots || rawWk.prescribed_slots_json || [];
+  if (typeof rawSlots === 'string') {
+    try { rawSlots = JSON.parse(rawSlots); } catch (_) { rawSlots = []; }
+  }
+  const slots = Array.isArray(rawSlots) ? rawSlots.map((s, idx) => normalizePrepSlot(s, idx)) : [];
+  return {
+    ...rawWk,
+    workoutId: String(rawWk.workoutId || rawWk.workout_id || ''),
+    planId: String(rawWk.planId || rawWk.plan_id || ''),
+    athleteId: String(rawWk.athleteId || rawWk.athlete_id || ATHLETE_PREP_ID),
+    scheduledDate: String(rawWk.scheduledDate || rawWk.scheduled_date || '').slice(0, 10),
+    weekIndex: Number(rawWk.weekIndex != null ? rawWk.weekIndex : (rawWk.week_index || 1)),
+    dayOfWeek: String(rawWk.dayOfWeek || rawWk.day_of_week || ''),
+    blockPhase: String(rawWk.blockPhase || rawWk.block_phase || ''),
+    isDeload: Boolean(rawWk.isDeload != null ? rawWk.isDeload : rawWk.is_deload),
+    sessionTitle: String(rawWk.sessionTitle || rawWk.session_title || 'Planned Session'),
+    prescribedSlots: slots,
+    workoutNotes: String(rawWk.workoutNotes != null ? rawWk.workoutNotes : (rawWk.workout_notes || '')),
+    dietaryNotes: String(rawWk.dietaryNotes != null ? rawWk.dietaryNotes : (rawWk.dietary_notes || '')),
+    athleteFeedbackNote: String(rawWk.athleteFeedbackNote != null ? rawWk.athleteFeedbackNote : (rawWk.athlete_feedback_note || '')),
+    adherenceStatus: String(rawWk.adherenceStatus || rawWk.adherence_status || '')
+  };
+}
+
+function normalizePrepPlan(rawPlan) {
+  if (!rawPlan || typeof rawPlan !== 'object') return null;
+  let macroBlocks = rawPlan.macroBlocks || rawPlan.macro_blocks_json || [];
+  if (typeof macroBlocks === 'string') {
+    try { macroBlocks = JSON.parse(macroBlocks); } catch (_) { macroBlocks = []; }
+  }
+  return {
+    ...rawPlan,
+    planId: String(rawPlan.planId || rawPlan.plan_id || ''),
+    athleteId: String(rawPlan.athleteId || rawPlan.athlete_id || ATHLETE_PREP_ID),
+    title: String(rawPlan.title || 'Active Preparation Plan'),
+    goalType: String(rawPlan.goalType || rawPlan.goal_type || ''),
+    durationMonths: Number(rawPlan.durationMonths != null ? rawPlan.durationMonths : (rawPlan.duration_months || 0)),
+    startDate: String(rawPlan.startDate || rawPlan.start_date || '').slice(0, 10),
+    targetMeetDate: String(rawPlan.targetMeetDate || rawPlan.target_meet_date || '').slice(0, 10),
+    macroBlocks: Array.isArray(macroBlocks) ? macroBlocks : [],
+    dietaryStrategyNotes: String(rawPlan.dietaryStrategyNotes != null ? rawPlan.dietaryStrategyNotes : (rawPlan.dietary_strategy_notes || '')),
+    coachNotes: String(rawPlan.coachNotes != null ? rawPlan.coachNotes : (rawPlan.coach_notes || ''))
+  };
+}
+
+function loadPrepStateFromStore() {
+  const store = getPrepStore();
+  let plan = null;
+  let list = [];
+
+  if (store) {
+    if (typeof store.getActivePlan === 'function') {
+      plan = normalizePrepPlan(store.getActivePlan(ATHLETE_PREP_ID));
+    }
+    if (typeof store.listPlannedWorkouts === 'function') {
+      list = (store.listPlannedWorkouts(ATHLETE_PREP_ID) || []).map(normalizePlannedWorkout).filter(Boolean);
+    } else if (plan && plan.planId && typeof store.getWorkoutsForPlan === 'function') {
+      list = (store.getWorkoutsForPlan(plan.planId) || []).map(normalizePlannedWorkout).filter(Boolean);
+    }
+  }
+
+  if (!plan && athletePrepState.cache.plan) {
+    plan = normalizePrepPlan(athletePrepState.cache.plan);
+  }
+  if (list.length === 0 && Object.keys(athletePrepState.cache.workouts).length > 0) {
+    list = Object.values(athletePrepState.cache.workouts).map(normalizePlannedWorkout).filter(Boolean);
+  }
+
+  list.sort((a, b) => String(a.scheduledDate || '').localeCompare(String(b.scheduledDate || '')));
+  athletePrepState.plan = plan;
+  athletePrepState.workouts = list;
+
+  const today = formatLocalIsoDate(new Date());
+  if (!athletePrepState.selectedDate) {
+    const exactToday = list.find(w => w.scheduledDate === today);
+    const nextUpcoming = list.find(w => w.scheduledDate >= today);
+    athletePrepState.selectedDate = (exactToday && exactToday.scheduledDate)
+      || (nextUpcoming && nextUpcoming.scheduledDate)
+      || (list[0] && list[0].scheduledDate)
+      || today;
+  }
+}
+
+function getSelectedPlannedWorkout() {
+  const dateKey = athletePrepState.selectedDate || formatLocalIsoDate(new Date());
+  return athletePrepState.workouts.find(w => w.scheduledDate === dateKey) || null;
+}
+
+function getAllRecordedSetsForComparison(plannedWorkout) {
+  const collected = [];
+  const seenIds = new Set();
+  const targetDate = plannedWorkout && plannedWorkout.scheduledDate ? plannedWorkout.scheduledDate : '';
+  const targetWorkoutId = plannedWorkout && plannedWorkout.workoutId ? plannedWorkout.workoutId : '';
+
+  const allSessions = [];
+  if (activeWorkout) allSessions.push(activeWorkout);
+  workouts.forEach(w => {
+    if (w && w !== activeWorkout) allSessions.push(w);
+  });
+
+  allSessions.forEach(session => {
+    const sessionDate = session && session.startTime ? formatLocalIsoDate(session.startTime) : '';
+    const sessionMatchesWorkout = Boolean(
+      targetWorkoutId && session && session.plannedWorkoutId && session.plannedWorkoutId === targetWorkoutId
+    );
+    const sets = Array.isArray(session && session.sets) ? session.sets : [];
+    sets.forEach(s => {
+      if (!s || seenIds.has(s.setId)) return;
+      const setWorkoutId = s.plannedWorkoutId || s.planned_workout_id || '';
+      const dateMatches = Boolean(targetDate && sessionDate === targetDate && !setWorkoutId);
+      const idMatches = Boolean(targetWorkoutId && setWorkoutId === targetWorkoutId);
+      if (idMatches || sessionMatchesWorkout || dateMatches || !targetWorkoutId) {
+        seenIds.add(s.setId);
+        collected.push(s);
+      }
+    });
+  });
+
+  return collected;
+}
+
+function resolvePlannedSlotIdForSet(workoutId, liftName) {
+  if (!workoutId) return null;
+  const wk = athletePrepState.workouts.find(w => w.workoutId === workoutId);
+  if (!wk || !Array.isArray(wk.prescribedSlots) || wk.prescribedSlots.length === 0) {
+    return activePlannedSlotId || null;
+  }
+  if (activePlannedSlotId) {
+    const explicit = wk.prescribedSlots.find(s => s.slotId === activePlannedSlotId);
+    if (explicit && sameLift(explicit.baseLift, liftName)) {
+      return explicit.slotId;
+    }
+  }
+  const byLift = wk.prescribedSlots.find(s => sameLift(s.baseLift, liftName));
+  return byLift ? byLift.slotId : (activePlannedSlotId || null);
+}
+
+function isSlotCompletedLocally(workout, slot) {
+  if (!workout || !slot) return false;
+  const sets = getAllRecordedSetsForComparison(workout);
+  return sets.some(s => {
+    if (!s || !Array.isArray(s.reps) || s.reps.length === 0) return false;
+    const sSlotId = s.plannedSlotId || s.planned_slot_id;
+    if (sSlotId && sSlotId === slot.slotId) return true;
+    return !sSlotId && sameLift(s.lift, slot.baseLift);
+  });
+}
+
+function ensurePrepNoticeEl() {
+  const hub = document.getElementById('athlete-prep-hub');
+  if (!hub) return null;
+  let el = document.getElementById('athlete-prep-notice');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'athlete-prep-notice';
+    el.className = 'athlete-prep-notice font-mono';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    const header = document.getElementById('athlete-prep-header-card');
+    if (header && header.nextSibling) {
+      hub.insertBefore(el, header.nextSibling);
+    } else {
+      hub.prepend(el);
+    }
+  }
+  return el;
+}
+
+function showPrepNotice(text, durationMs = 3400) {
+  const el = ensurePrepNoticeEl();
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add('visible');
+  clearTimeout(athletePrepState.noticeTimer);
+  athletePrepState.noticeTimer = setTimeout(() => {
+    el.classList.remove('visible');
+  }, durationMs);
+}
+
+function launchPlannedSlot(workout, slot) {
+  if (!workout || !slot) return;
+  const targetLift = canonicalLift(slot.baseLift || currentLift || 'Deadlift');
+  activePlannedWorkoutId = workout.workoutId || null;
+  activePlannedSlotId = slot.slotId || null;
+  activePlannedLift = targetLift;
+
+  if (!sameLift(currentLift, targetLift)) {
+    applyLiftTheme(targetLift);
+  }
+  const loadKg = Number(slot.topSet && slot.topSet.loadKg);
+  if (isFinite(loadKg) && loadKg > 0) {
+    setWorkingWeight(loadKg, true);
+  }
+  const targetRpe = Number(slot.topSet && (slot.topSet.rpe != null ? slot.topSet.rpe : slot.topSet.targetRpe));
+  if (isFinite(targetRpe) && targetRpe >= 5 && targetRpe <= 10) {
+    setTargetRpe(targetRpe, false);
+  }
+
+  if (!activeWorkout) {
+    startWorkoutSession();
+  }
+  if (activeWorkout) {
+    activeWorkout.plannedWorkoutId = activePlannedWorkoutId;
+    persistStorage();
+  }
+
+  renderAthletePrepHub();
+  renderAthletePlanVsActual();
+  switchTab('live');
+}
+
+function buildComparisonFallback(workout, completedSets) {
+  const slots = Array.isArray(workout && workout.prescribedSlots) ? workout.prescribedSlots : [];
+  const used = new Set();
+  const rows = slots.map(slot => {
+    const matched = [];
+    completedSets.forEach((s, idx) => {
+      if (!s || used.has(idx)) return;
+      const sSlot = s.plannedSlotId || s.planned_slot_id;
+      if (sSlot && sSlot === slot.slotId) {
+        matched.push(s);
+        used.add(idx);
+      } else if (!sSlot && sameLift(s.lift, slot.baseLift)) {
+        matched.push(s);
+        used.add(idx);
+      }
+    });
+    const plannedSets = (slot.topSet.sets || 1) + (slot.backoff ? (slot.backoff.sets || 0) : 0);
+    const plannedLoadKg = Number(slot.topSet.loadKg || 0);
+    const plannedVelocity = Number(slot.topSet.targetVelocity || 0);
+    const plannedRpe = Number(slot.topSet.rpe || 8);
+
+    let actualLoadKg = 0;
+    let velSum = 0;
+    let velCount = 0;
+    let rpeSum = 0;
+    let rpeCount = 0;
+    let hasPr = false;
+    matched.forEach(s => {
+      const w = Number(s.weight) || 0;
+      if (w > actualLoadKg) actualLoadKg = w;
+      if (typeof s.avgVelocity === 'number' && s.avgVelocity > 0) {
+        velSum += s.avgVelocity;
+        velCount++;
+      }
+      if (typeof s.avgRpe === 'number' && s.avgRpe > 0) {
+        rpeSum += s.avgRpe;
+        rpeCount++;
+      }
+      if (s.isPR || s.isPr || s.prPushed || (Array.isArray(s.reps) && s.reps.some(r => r && r.prPushed))) {
+        hasPr = true;
+      }
+    });
+    const actualVelocity = velCount > 0 ? Number((velSum / velCount).toFixed(2)) : 0;
+    const actualRpe = rpeCount > 0 ? Number((rpeSum / rpeCount).toFixed(1)) : 0;
+    let status = 'pending';
+    if (matched.length > 0) {
+      if (hasPr || actualLoadKg > plannedLoadKg || (plannedVelocity > 0 && actualVelocity >= plannedVelocity + 0.03)) {
+        status = 'exceeded';
+      } else if (matched.length >= plannedSets && actualLoadKg >= plannedLoadKg * 0.95) {
+        status = 'hit';
+      } else {
+        status = 'under';
+      }
+    }
+    return {
+      slotId: slot.slotId,
+      exerciseName: slot.exerciseName,
+      baseLift: slot.baseLift,
+      planned: {
+        sets: plannedSets,
+        reps: slot.topSet.reps,
+        loadKg: plannedLoadKg,
+        rpe: plannedRpe,
+        targetVelocity: plannedVelocity,
+        backoff: slot.backoff
+      },
+      actual: {
+        sets: matched.length,
+        loadKg: actualLoadKg,
+        avgVelocity: actualVelocity,
+        avgRpe: actualRpe,
+        hasPr: hasPr
+      },
+      hasPr: hasPr,
+      status: status
+    };
+  });
+  const done = rows.filter(r => r.actual.sets > 0).length;
+  return {
+    rows: rows,
+    adherencePct: rows.length > 0 ? Math.round((done / rows.length) * 100) : 0
+  };
+}
+
+/** Renders the side-by-side planned versus actual table for the selected workout day. */
+function renderAthletePlanVsActual() {
+  const container = document.getElementById('athlete-plan-vs-actual-body');
+  if (!container) return;
+
+  const workout = getSelectedPlannedWorkout();
+  if (!workout || !Array.isArray(workout.prescribedSlots) || workout.prescribedSlots.length === 0) {
+    const emptyHtml = '<p class="athlete-prep-empty">Planned and actual sets appear side by side once a session is scheduled.</p>';
+    if (athletePrepState.lastCompareHtml !== emptyHtml) {
+      container.innerHTML = emptyHtml;
+      athletePrepState.lastCompareHtml = emptyHtml;
+    }
+    return;
+  }
+
+  const matchedSets = getAllRecordedSetsForComparison(workout);
+  const engine = getPrepEngine();
+  const comparison = (engine && typeof engine.comparePlanVsActual === 'function')
+    ? engine.comparePlanVsActual(workout, matchedSets)
+    : buildComparisonFallback(workout, matchedSets);
+
+  const rows = Array.isArray(comparison && comparison.rows) ? comparison.rows : [];
+  const totalPlanned = rows.reduce((acc, r) => acc + (Number(r.planned && r.planned.sets) || 0), 0);
+  const totalActual = rows.reduce((acc, r) => acc + (Number(r.actual && r.actual.sets) || 0), 0);
+  const adherencePct = Number(comparison && comparison.adherencePct) || 0;
+
+  const rowsHtml = rows.map(r => {
+    const p = r.planned || {};
+    const a = r.actual || {};
+    const statusMap = {
+      hit: { cls: 'hit', label: 'HIT' },
+      exceeded: { cls: 'over', label: 'EXCEEDED' },
+      over: { cls: 'over', label: 'EXCEEDED' },
+      under: { cls: 'short', label: 'IN PROGRESS' },
+      short: { cls: 'short', label: 'IN PROGRESS' }
+    };
+    const st = statusMap[r.status] || { cls: 'pending', label: 'PLANNED' };
+    const planLoad = Number(p.loadKg) > 0 ? `${Number(p.loadKg).toFixed(1)} kg` : '--';
+    const planVel = Number(p.targetVelocity) > 0 ? `${Number(p.targetVelocity).toFixed(2)} m/s` : '--';
+    const planRpe = Number(p.rpe) > 0 ? `RPE ${Number(p.rpe).toFixed(1)}` : '--';
+
+    const actSets = Number(a.sets) || 0;
+    const actLoad = actSets > 0 && Number(a.loadKg) > 0 ? `${Number(a.loadKg).toFixed(1)} kg` : '--';
+    const actVel = actSets > 0 && Number(a.avgVelocity) > 0 ? `${Number(a.avgVelocity).toFixed(2)} m/s` : '--';
+    const actRpe = actSets > 0 && Number(a.avgRpe) > 0 ? `RPE ${Number(a.avgRpe).toFixed(1)}` : '--';
+    const isPr = Boolean(r.hasPr || a.hasPr || matchedSets.some(ms => {
+      const mSlot = ms.plannedSlotId || ms.planned_slot_id;
+      const hitSlot = mSlot ? (mSlot === r.slotId) : sameLift(ms.lift, r.baseLift);
+      return hitSlot && Boolean(ms.isPR || ms.isPr || ms.prPushed || (Array.isArray(ms.reps) && ms.reps.some(rep => rep && rep.prPushed)));
+    }));
+
+    return `
+      <div class="plan-actual-row" data-slot-id="${escapeHtml(r.slotId)}" data-status="${st.cls}">
+        <div class="plan-actual-cell">
+          <span class="pa-name">${escapeHtml(r.exerciseName)}</span>
+          <span class="pa-status ${st.cls}">${st.label}</span>
+          ${isPr ? '<span class="golden-pr-badge">PR GOLD</span>' : ''}
+        </div>
+        <div class="plan-actual-cell">
+          <span class="pa-line strong">${Number(p.sets) || 0} sets • ${planLoad}</span>
+          <span class="pa-line">${planRpe} • ${planVel}</span>
+        </div>
+        <div class="plan-actual-cell">
+          <span class="pa-line ${actSets > 0 ? 'strong' : 'muted'}">${actSets} sets • ${actLoad}</span>
+          <span class="pa-line ${actSets > 0 ? '' : 'muted'}">${actRpe} • ${actVel}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const html = `
+    <div class="plan-actual-summary font-mono">
+      <span>Adherence <strong>${adherencePct}%</strong></span>
+      <span>Sets <strong>${totalActual}/${totalPlanned}</strong></span>
+    </div>
+    <div class="plan-actual-table">
+      <div class="plan-actual-row plan-actual-head font-mono">
+        <span>EXERCISE</span>
+        <span>PLANNED</span>
+        <span>ACTUAL</span>
+      </div>
+      ${rowsHtml}
+    </div>
+  `;
+
+  if (athletePrepState.lastCompareHtml !== html) {
+    container.innerHTML = html;
+    athletePrepState.lastCompareHtml = html;
+  }
+}
+
+/** Renders the athlete preparation hub header, weekly strip, notes, and prescribed slots. */
+function renderAthletePrepHub() {
+  const hub = document.getElementById('athlete-prep-hub');
+  if (!hub) return;
+
+  loadPrepStateFromStore();
+
+  const plan = athletePrepState.plan;
+  const selectedWorkout = getSelectedPlannedWorkout();
+  const titleEl = document.getElementById('athlete-prep-plan-title');
+  const phaseEl = document.getElementById('athlete-prep-phase-badge');
+  const weekEl = document.getElementById('athlete-prep-week-pill');
+  const meetEl = document.getElementById('athlete-meet-countdown-pill');
+  const workoutNotesEl = document.getElementById('athlete-prep-workout-notes');
+  const dietaryNotesEl = document.getElementById('athlete-prep-dietary-notes');
+  const slotsListEl = document.getElementById('athlete-prep-slots-list');
+  const feedbackInputEl = document.getElementById('athlete-prep-feedback-input');
+
+  if (titleEl) {
+    titleEl.textContent = plan ? plan.title : 'No active plan';
+  }
+  if (phaseEl) {
+    const phaseLabel = (selectedWorkout && selectedWorkout.blockPhase)
+      || (plan && plan.macroBlocks && plan.macroBlocks[0] && (plan.macroBlocks[0].phase || plan.macroBlocks[0].name))
+      || '';
+    phaseEl.textContent = phaseLabel ? `PHASE ${String(phaseLabel).toUpperCase()}` : 'PHASE —';
+  }
+  if (weekEl) {
+    weekEl.textContent = selectedWorkout && selectedWorkout.weekIndex
+      ? `WEEK ${selectedWorkout.weekIndex}${selectedWorkout.isDeload ? ' DELOAD' : ''}`
+      : 'WEEK —';
+  }
+  if (meetEl) {
+    const engine = getPrepEngine();
+    if (plan && plan.targetMeetDate) {
+      const countdown = (engine && typeof engine.computeMeetCountdown === 'function')
+        ? engine.computeMeetCountdown(plan.targetMeetDate)
+        : null;
+      if (countdown && countdown.label) {
+        meetEl.textContent = String(countdown.label).toUpperCase();
+      } else {
+        const diffDays = Math.ceil((new Date(plan.targetMeetDate).getTime() - Date.now()) / 86400000);
+        meetEl.textContent = isFinite(diffDays) ? (diffDays >= 0 ? `${diffDays}D TO MEET` : 'MEET PASSED') : 'NO MEET DATE';
+      }
+    } else {
+      meetEl.textContent = 'NO MEET DATE';
+    }
+  }
+
+  // Render Monday-Sunday weekly schedule pills around selected date
+  const todayIso = formatLocalIsoDate(new Date());
+  const selectedIso = athletePrepState.selectedDate || todayIso;
+  const mondayIso = getMondayDateStr(selectedIso);
+  const dayButtons = document.querySelectorAll('#athlete-prep-week-strip .athlete-week-day-pill');
+  dayButtons.forEach((btn, idx) => {
+    const iso = addDaysIsoDate(mondayIso, idx);
+    const dayNum = iso.slice(8, 10) || '—';
+    const dateSpan = btn.querySelector('.athlete-week-day-date');
+    if (dateSpan) dateSpan.textContent = dayNum;
+    btn.setAttribute('data-date', iso);
+
+    const dayWorkout = athletePrepState.workouts.find(w => w.scheduledDate === iso);
+    const hasSlots = Boolean(dayWorkout && Array.isArray(dayWorkout.prescribedSlots) && dayWorkout.prescribedSlots.length > 0);
+    const allComplete = Boolean(hasSlots && dayWorkout.prescribedSlots.every(sl => isSlotCompletedLocally(dayWorkout, sl)));
+    const isSelected = iso === selectedIso;
+
+    btn.classList.toggle('has-workout', hasSlots);
+    btn.classList.toggle('is-today', iso === todayIso);
+    btn.classList.toggle('is-complete', allComplete);
+    btn.classList.toggle('active', isSelected);
+    btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+  });
+
+  if (workoutNotesEl) {
+    const wNote = (selectedWorkout && selectedWorkout.workoutNotes) || (plan && plan.coachNotes) || '';
+    workoutNotesEl.textContent = wNote || 'No session notes for this day.';
+    workoutNotesEl.classList.toggle('has-content', Boolean(wNote));
+  }
+  if (dietaryNotesEl) {
+    const dNote = (selectedWorkout && selectedWorkout.dietaryNotes) || (plan && plan.dietaryStrategyNotes) || '';
+    dietaryNotesEl.textContent = dNote || 'No dietary notes for this day.';
+    dietaryNotesEl.classList.toggle('has-content', Boolean(dNote));
+  }
+  if (feedbackInputEl && document.activeElement !== feedbackInputEl) {
+    feedbackInputEl.value = (selectedWorkout && selectedWorkout.athleteFeedbackNote) || '';
+  }
+
+  if (slotsListEl) {
+    const slots = (selectedWorkout && Array.isArray(selectedWorkout.prescribedSlots))
+      ? selectedWorkout.prescribedSlots
+      : [];
+    let slotsHtml = '';
+    if (slots.length === 0) {
+      slotsHtml = `
+        <p class="athlete-prep-empty">No prescribed exercises for this day.</p>
+        <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" disabled>START PLANNED WORKOUT</button>
+      `;
+    } else {
+      const cardsHtml = slots.map(slot => {
+        const liftKey = liftKeyOf(slot.baseLift);
+        const top = slot.topSet;
+        const back = slot.backoff;
+        const isCurrent = Boolean(
+          activePlannedWorkoutId === selectedWorkout.workoutId && activePlannedSlotId === slot.slotId
+        );
+        const isDone = isSlotCompletedLocally(selectedWorkout, slot);
+        const statusCls = isDone ? 'is-done' : (isCurrent ? 'is-active' : '');
+        const statusText = isDone ? 'DONE' : (isCurrent ? 'LOADED' : 'PLANNED');
+
+        const topLoadStr = top.loadKg > 0 ? `${top.loadKg.toFixed(1)} kg` : 'AUTO';
+        const topVelStr = top.targetVelocity > 0 ? `${top.targetVelocity.toFixed(2)} m/s` : '--';
+        const topLossStr = `${Math.round(top.velocityLossCapPct || 20)}%`;
+
+        let backoffHtml = '';
+        if (back) {
+          const backLoadStr = back.loadKg > 0 ? `${back.loadKg.toFixed(1)} kg` : `-${Math.round(back.dropPct)}%`;
+          const backVelStr = back.targetVelocity > 0 ? `${back.targetVelocity.toFixed(2)} m/s` : '--';
+          const backLossStr = `${Math.round(back.velocityLossCapPct || top.velocityLossCapPct || 20)}%`;
+          backoffHtml = `
+            <div class="athlete-slot-set">
+              <span class="athlete-slot-set-label font-mono">SET Y BACKOFF</span>
+              <span class="athlete-slot-set-main">${back.sets} x ${back.reps} @ RPE ${back.rpe.toFixed(1)}</span>
+              <div class="athlete-slot-kpis">
+                <div class="athlete-slot-kpi"><span class="k">LOAD</span><span class="v font-mono">${backLoadStr}</span></div>
+                <div class="athlete-slot-kpi"><span class="k">TARGET VEL</span><span class="v font-mono">${backVelStr}</span></div>
+                <div class="athlete-slot-kpi"><span class="k">VEL LOSS</span><span class="v font-mono">${backLossStr}</span></div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <article class="athlete-slot-card ${statusCls}" data-slot-id="${escapeHtml(slot.slotId)}">
+            <div class="athlete-slot-head">
+              <div class="athlete-slot-titles">
+                <span class="lift-tag" data-lift="${escapeHtml(liftKey)}">${escapeHtml(slot.baseLift.toUpperCase())}</span>
+                <span class="athlete-slot-name">${escapeHtml(slot.exerciseName)}</span>
+              </div>
+              <span class="athlete-slot-status font-mono">${statusText}</span>
+            </div>
+            <div class="athlete-slot-sets">
+              <div class="athlete-slot-set">
+                <span class="athlete-slot-set-label font-mono">SET X TOP SET</span>
+                <span class="athlete-slot-set-main">${top.sets} x ${top.reps} @ RPE ${top.rpe.toFixed(1)}</span>
+                <div class="athlete-slot-kpis">
+                  <div class="athlete-slot-kpi"><span class="k">LOAD</span><span class="v font-mono">${topLoadStr}</span></div>
+                  <div class="athlete-slot-kpi"><span class="k">TARGET VEL</span><span class="v font-mono">${topVelStr}</span></div>
+                  <div class="athlete-slot-kpi"><span class="k">VEL LOSS</span><span class="v font-mono">${topLossStr}</span></div>
+                </div>
+              </div>
+              ${backoffHtml}
+            </div>
+            <button type="button" class="athlete-slot-load-btn" data-load-slot-id="${escapeHtml(slot.slotId)}">LOAD INTO LIVE</button>
+          </article>
+        `;
+      }).join('');
+
+      slotsHtml = `${cardsHtml}<button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout">START PLANNED WORKOUT</button>`;
+    }
+
+    if (athletePrepState.lastSlotsHtml !== slotsHtml) {
+      slotsListEl.innerHTML = slotsHtml;
+      athletePrepState.lastSlotsHtml = slotsHtml;
+    }
+  }
+
+  renderAthletePlanVsActual();
+}
+
+function handleCoachPrepSync(eventType, payload) {
+  const store = getPrepStore();
+  if (store && typeof store.applyRemoteSync === 'function' && payload && typeof payload === 'object') {
+    store.applyRemoteSync(eventType, payload);
+  }
+  if (payload && typeof payload === 'object') {
+    if (eventType === 'prep:plan_sync') {
+      const incomingPlan = payload.plan && typeof payload.plan === 'object' ? payload.plan : payload;
+      athletePrepState.cache.plan = normalizePrepPlan(incomingPlan);
+    } else if (eventType === 'prep:workout_updated') {
+      const incomingWk = payload.workout && typeof payload.workout === 'object' ? payload.workout : payload;
+      const normWk = normalizePlannedWorkout(incomingWk);
+      if (normWk && normWk.workoutId) {
+        athletePrepState.cache.workouts[normWk.workoutId] = normWk;
+        if (normWk.scheduledDate && !athletePrepState.selectedByUser) {
+          athletePrepState.selectedDate = normWk.scheduledDate;
+        }
+      }
+    }
+  }
+
+  loadPrepStateFromStore();
+
+  // Apply non-destructive target adjustments only to uncompleted active slots when not mid-set
+  if (activePlannedWorkoutId && activePlannedSlotId && !activeSet) {
+    const activeWk = athletePrepState.workouts.find(w => w.workoutId === activePlannedWorkoutId);
+    const activeSlot = activeWk && activeWk.prescribedSlots.find(s => s.slotId === activePlannedSlotId);
+    if (activeSlot && !isSlotCompletedLocally(activeWk, activeSlot)) {
+      const nextLoad = Number(activeSlot.topSet.loadKg);
+      if (isFinite(nextLoad) && nextLoad > 0) setWorkingWeight(nextLoad, true);
+      const nextRpe = Number(activeSlot.topSet.rpe);
+      if (isFinite(nextRpe) && nextRpe >= 5 && nextRpe <= 10) setTargetRpe(nextRpe, false);
+    }
+  }
+
+  const syncBadge = document.getElementById('athlete-prep-sync-badge');
+  if (syncBadge) {
+    syncBadge.textContent = 'LIVE';
+    syncBadge.classList.add('is-live');
+  }
+  showPrepNotice('COACH UPDATED PREPARATION');
+  renderAthletePrepHub();
+}
+
+/** Initializes the athlete preparation hub and binds coach sync listeners. */
+function initAthletePrepView() {
+  const hub = document.getElementById('athlete-prep-hub');
+  if (!hub) {
+    loadPrepStateFromStore();
+    return;
+  }
+
+  if (!athletePrepState.initialized) {
+    athletePrepState.initialized = true;
+
+    const weekStrip = document.getElementById('athlete-prep-week-strip');
+    if (weekStrip && !weekStrip._prepBound) {
+      weekStrip.addEventListener('click', (e) => {
+        const pill = e.target && e.target.closest ? e.target.closest('.athlete-week-day-pill') : null;
+        if (!pill) return;
+        const iso = pill.getAttribute('data-date');
+        if (iso) {
+          athletePrepState.selectedDate = iso;
+          athletePrepState.selectedByUser = true;
+          renderAthletePrepHub();
+        }
+      });
+      weekStrip._prepBound = true;
+    }
+
+    const slotsList = document.getElementById('athlete-prep-slots-list');
+    if (slotsList && !slotsList._prepBound) {
+      slotsList.addEventListener('click', (e) => {
+        const slotBtn = e.target && e.target.closest ? e.target.closest('[data-load-slot-id]') : null;
+        if (slotBtn) {
+          const wk = getSelectedPlannedWorkout();
+          const slotId = slotBtn.getAttribute('data-load-slot-id');
+          const slot = wk && wk.prescribedSlots.find(s => s.slotId === slotId);
+          if (wk && slot) launchPlannedSlot(wk, slot);
+          return;
+        }
+        const startBtn = e.target && e.target.closest ? e.target.closest('#btn-start-planned-workout') : null;
+        if (startBtn) {
+          const wk = getSelectedPlannedWorkout();
+          const firstSlot = wk && wk.prescribedSlots && wk.prescribedSlots[0];
+          if (wk && firstSlot) launchPlannedSlot(wk, firstSlot);
+        }
+      });
+      slotsList._prepBound = true;
+    }
+
+    const btnSendFeedback = document.getElementById('btn-send-prep-feedback');
+    const feedbackInput = document.getElementById('athlete-prep-feedback-input');
+    if (btnSendFeedback && feedbackInput && !btnSendFeedback._prepBound) {
+      const submitFeedback = () => {
+        const note = feedbackInput.value.trim();
+        const wk = getSelectedPlannedWorkout();
+        if (!note) return;
+        const workoutId = (wk && wk.workoutId) || activePlannedWorkoutId || '';
+        const store = getPrepStore();
+        if (store && typeof store.saveAthleteSessionFeedback === 'function' && workoutId) {
+          store.saveAthleteSessionFeedback(workoutId, note, { emit: false });
+        }
+        if (wk) wk.athleteFeedbackNote = note;
+        if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
+          window.ErosSyncBus.emit('prep:athlete_feedback', {
+            athleteId: ATHLETE_PREP_ID,
+            workoutId: workoutId,
+            planId: (wk && wk.planId) || (athletePrepState.plan && athletePrepState.plan.planId) || '',
+            note: note,
+            timestamp: Date.now()
+          });
+        }
+        const syncBadge = document.getElementById('athlete-prep-sync-badge');
+        if (syncBadge) {
+          syncBadge.textContent = 'SENT';
+          syncBadge.classList.add('is-live');
+          clearTimeout(athletePrepState.badgeTimer);
+          athletePrepState.badgeTimer = setTimeout(() => {
+            syncBadge.textContent = 'LIVE';
+          }, 2200);
+        }
+        showPrepNotice('FEEDBACK SENT TO COACH', 2200);
+      };
+      btnSendFeedback.addEventListener('click', submitFeedback);
+      feedbackInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitFeedback();
+        }
+      });
+      btnSendFeedback._prepBound = true;
+    }
+
+    if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.on === 'function') {
+      window.ErosSyncBus.on('prep:plan_sync', (payload) => handleCoachPrepSync('prep:plan_sync', payload));
+      window.ErosSyncBus.on('prep:workout_updated', (payload) => handleCoachPrepSync('prep:workout_updated', payload));
+      window.ErosSyncBus.on('session:state', (payload) => {
+        const store = getPrepStore();
+        if (store && typeof store.applyRemoteSync === 'function' && payload) {
+          store.applyRemoteSync('session:state', payload);
+          renderAthletePrepHub();
+        }
+      });
+    }
+  }
+
+  renderAthletePrepHub();
+}
+
+function readBiometricsFallback() {
+  try {
+    const raw = localStorage.getItem(ATHLETE_BIO_FALLBACK_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    }
+  } catch (_) {}
+  return {};
+}
+
+function writeBiometricsFallback(bio) {
+  try {
+    localStorage.setItem(ATHLETE_BIO_FALLBACK_KEY, JSON.stringify(bio));
+  } catch (_) {}
+}
+
+function getCurrentAthleteBiometrics() {
+  const store = getPrepStore();
+  let bio = {};
+  if (store && typeof store.getAthleteBiometrics === 'function') {
+    bio = store.getAthleteBiometrics(ATHLETE_PREP_ID) || {};
+  } else {
+    bio = readBiometricsFallback();
+  }
+  return {
+    athleteId: ATHLETE_PREP_ID,
+    age: bio.age != null ? bio.age : '',
+    bodyweightKg: (typeof bio.bodyweightKg === 'number' && bio.bodyweightKg > 0) ? bio.bodyweightKg : prProfile.bodyweight,
+    targetWeightClass: bio.targetWeightClass || bio.weightClass || '',
+    trainingAgeYears: bio.trainingAgeYears != null ? bio.trainingAgeYears : '',
+    experienceTier: bio.experienceTier || 'Novice',
+    meetsCompleted: bio.meetsCompleted != null ? bio.meetsCompleted : '',
+    federation: bio.federation || '',
+    availableDays: Array.isArray(bio.availableDays) ? bio.availableDays : [],
+    dutiesInjuryNotes: bio.dutiesInjuryNotes || '',
+    gender: bio.gender || prProfile.gender || 'male'
+  };
+}
+
+function populateAthleteBiometricsForm() {
+  const bio = getCurrentAthleteBiometrics();
+  const ageEl = document.getElementById('bio-age-input');
+  const bwEl = document.getElementById('bio-bw-input');
+  const classEl = document.getElementById('bio-weight-class-select');
+  const trainAgeEl = document.getElementById('bio-training-age-input');
+  const tierEl = document.getElementById('bio-exp-tier-select');
+  const meetsEl = document.getElementById('bio-meets-count-input');
+  const fedEl = document.getElementById('bio-federation-input');
+  const notesEl = document.getElementById('bio-duties-notes-input');
+
+  if (ageEl && document.activeElement !== ageEl) ageEl.value = bio.age !== '' && bio.age != null ? String(bio.age) : '';
+  if (bwEl && document.activeElement !== bwEl) bwEl.value = bio.bodyweightKg ? String(bio.bodyweightKg) : '';
+  if (classEl && document.activeElement !== classEl) classEl.value = bio.targetWeightClass || '';
+  if (trainAgeEl && document.activeElement !== trainAgeEl) trainAgeEl.value = bio.trainingAgeYears !== '' && bio.trainingAgeYears != null ? String(bio.trainingAgeYears) : '';
+  if (tierEl && document.activeElement !== tierEl) tierEl.value = bio.experienceTier || 'Novice';
+  if (meetsEl && document.activeElement !== meetsEl) meetsEl.value = bio.meetsCompleted !== '' && bio.meetsCompleted != null ? String(bio.meetsCompleted) : '';
+  if (fedEl && document.activeElement !== fedEl) fedEl.value = bio.federation || '';
+  if (notesEl && document.activeElement !== notesEl) notesEl.value = bio.dutiesInjuryNotes || '';
+
+  const activeSetDays = new Set(Array.isArray(bio.availableDays) ? bio.availableDays : []);
+  document.querySelectorAll('#bio-available-days-group .bio-day-pill').forEach(btn => {
+    const day = btn.getAttribute('data-day');
+    const isActive = activeSetDays.has(day);
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
+function syncBiometricsFromDots(bwKg, gender) {
+  const bwEl = document.getElementById('bio-bw-input');
+  if (bwEl && typeof bwKg === 'number' && !isNaN(bwKg) && document.activeElement !== bwEl) {
+    bwEl.value = bwKg > 0 ? String(bwKg) : '';
+  }
+  const existing = getCurrentAthleteBiometrics();
+  const next = {
+    ...existing,
+    bodyweightKg: (typeof bwKg === 'number' && bwKg > 0) ? bwKg : existing.bodyweightKg,
+    gender: gender === 'female' ? 'female' : 'male'
+  };
+  const store = getPrepStore();
+  if (store && typeof store.saveAthleteBiometrics === 'function') {
+    store.saveAthleteBiometrics(ATHLETE_PREP_ID, next, { emit: false });
+  }
+  writeBiometricsFallback(next);
+
+  clearTimeout(athletePrepState.bioTimer);
+  athletePrepState.bioTimer = setTimeout(() => {
+    if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
+      window.ErosSyncBus.emit('athlete:profile_updated', {
+        ...next,
+        timestamp: Date.now()
+      });
+    }
+  }, 180);
+}
+
+/** Collects and saves the athlete biometrics dossier and broadcasts updates to the coach. */
+function saveAthleteBiometricsFromUI() {
+  const ageEl = document.getElementById('bio-age-input');
+  const bwEl = document.getElementById('bio-bw-input');
+  const classEl = document.getElementById('bio-weight-class-select');
+  const trainAgeEl = document.getElementById('bio-training-age-input');
+  const tierEl = document.getElementById('bio-exp-tier-select');
+  const meetsEl = document.getElementById('bio-meets-count-input');
+  const fedEl = document.getElementById('bio-federation-input');
+  const notesEl = document.getElementById('bio-duties-notes-input');
+  const statusEl = document.getElementById('bio-save-status');
+
+  const availableDays = [];
+  document.querySelectorAll('#bio-available-days-group .bio-day-pill.active').forEach(btn => {
+    const d = btn.getAttribute('data-day');
+    if (WEEKDAY_NAMES.includes(d)) availableDays.push(d);
+  });
+
+  const parsedAge = ageEl && ageEl.value !== '' ? Number(ageEl.value) : null;
+  const parsedBw = bwEl && bwEl.value !== '' ? Number(bwEl.value) : prProfile.bodyweight;
+  const parsedTrainAge = trainAgeEl && trainAgeEl.value !== '' ? Number(trainAgeEl.value) : null;
+  const parsedMeets = meetsEl && meetsEl.value !== '' ? Number(meetsEl.value) : null;
+
+  const payload = {
+    athleteId: ATHLETE_PREP_ID,
+    age: (parsedAge != null && isFinite(parsedAge)) ? Math.max(10, Math.min(100, Math.round(parsedAge))) : undefined,
+    bodyweightKg: (isFinite(parsedBw) && parsedBw > 0) ? Math.max(20, Math.min(300, Number(parsedBw.toFixed(1)))) : prProfile.bodyweight,
+    targetWeightClass: classEl ? String(classEl.value || '').trim() : '',
+    trainingAgeYears: (parsedTrainAge != null && isFinite(parsedTrainAge)) ? Math.max(0, Math.min(60, Number(parsedTrainAge.toFixed(1)))) : undefined,
+    experienceTier: tierEl ? String(tierEl.value || 'Novice').trim() : 'Novice',
+    meetsCompleted: (parsedMeets != null && isFinite(parsedMeets)) ? Math.max(0, Math.min(500, Math.round(parsedMeets))) : undefined,
+    federation: fedEl ? String(fedEl.value || '').trim() : '',
+    availableDays: availableDays,
+    dutiesInjuryNotes: notesEl ? String(notesEl.value || '').trim() : '',
+    gender: prProfile.gender || 'male'
+  };
+
+  if (typeof payload.bodyweightKg === 'number' && payload.bodyweightKg > 0) {
+    prProfile.bodyweight = payload.bodyweightKg;
+    if (dotsBwInput && document.activeElement !== dotsBwInput) {
+      dotsBwInput.value = String(payload.bodyweightKg);
+    }
+    persistPrProfile();
+    updateDotsDisplay(false);
+  }
+
+  const store = getPrepStore();
+  const saved = (store && typeof store.saveAthleteBiometrics === 'function')
+    ? store.saveAthleteBiometrics(ATHLETE_PREP_ID, payload, { emit: false })
+    : payload;
+  writeBiometricsFallback(saved);
+
+  if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
+    window.ErosSyncBus.emit('athlete:profile_updated', {
+      ...saved,
+      timestamp: Date.now()
+    });
+  }
+
+  if (statusEl) {
+    statusEl.textContent = 'SAVED';
+    clearTimeout(athletePrepState.bioStatusTimer);
+    athletePrepState.bioStatusTimer = setTimeout(() => {
+      statusEl.textContent = '';
+    }, 2400);
+  }
+
+  return saved;
+}
+
+/** Initializes the athlete biometrics dossier inputs, schedule toggles, and bodyweight sync. */
+function initAthleteBiometricsDossier() {
+  const card = document.getElementById('athlete-biometrics-card');
+  if (!card) return;
+
+  populateAthleteBiometricsForm();
+
+  if (!card._bioBound) {
+    card._bioBound = true;
+
+    const daysGroup = document.getElementById('bio-available-days-group');
+    if (daysGroup) {
+      daysGroup.addEventListener('click', (e) => {
+        const pill = e.target && e.target.closest ? e.target.closest('.bio-day-pill') : null;
+        if (!pill) return;
+        const nextActive = !pill.classList.contains('active');
+        pill.classList.toggle('active', nextActive);
+        pill.setAttribute('aria-pressed', nextActive ? 'true' : 'false');
+        saveAthleteBiometricsFromUI();
+      });
+    }
+
+    const bwInput = document.getElementById('bio-bw-input');
+    if (bwInput) {
+      bwInput.addEventListener('input', () => {
+        const val = parseFloat(bwInput.value);
+        if (isFinite(val) && val > 0) {
+          prProfile.bodyweight = val;
+          if (dotsBwInput) dotsBwInput.value = String(val);
+          persistPrProfile();
+          updateDotsDisplay(false);
+        }
+      });
+    }
+
+    const saveBtn = document.getElementById('btn-save-biometrics');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        saveAthleteBiometricsFromUI();
+      });
+    }
+
+    const autoSaveIds = [
+      'bio-age-input',
+      'bio-bw-input',
+      'bio-weight-class-select',
+      'bio-training-age-input',
+      'bio-exp-tier-select',
+      'bio-meets-count-input',
+      'bio-federation-input',
+      'bio-duties-notes-input'
+    ];
+    autoSaveIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('change', () => saveAthleteBiometricsFromUI());
+      }
+    });
+  }
+}
+
+/** Evaluates whether a repetition or set qualifies as a personal record candidate. */
+function evaluatePrCandidate(input) {
+  const src = (input && typeof input === 'object') ? input : {};
+  const lift = canonicalLift(src.lift || currentLift);
+  const liftKey = liftKeyOf(lift);
+  if (liftKey !== 'squat' && liftKey !== 'bench' && liftKey !== 'deadlift') return null;
+
+  const weight = Number(src.weight != null ? src.weight : currentWorkingWeight) || 0;
+  const velocity = Number(src.velocity) || 0;
+  const rpe = Number(src.rpe) || 0;
+  if (weight <= 0 || velocity <= 0) return null;
+
+  const currentPrWeight = Number(prProfile.currentPRs && prProfile.currentPRs[liftKey]) || 0;
+  const prDetail = (prProfile.currentPRDetails && prProfile.currentPRDetails[liftKey]) || {};
+  const currentPrVel = Number(prDetail.velocity) || 0;
+
+  let prType = null;
+  if (rpe >= 7.5 && weight > currentPrWeight) {
+    prType = 'weight';
+  } else if (currentPrWeight > 0 && weight >= currentPrWeight && velocity > currentPrVel + 0.03) {
+    prType = 'velocity';
+  }
+  if (!prType) return null;
+
+  const setId = String(src.setId || (activeSet && activeSet.setId) || '');
+  const dedupeKey = `${setId}:${liftKey}:${weight.toFixed(1)}:${prType}`;
+  if (prSuppressedKeys.has(dedupeKey) || prPromptedKeys.has(dedupeKey)) {
+    return null;
+  }
+
+  return {
+    key: dedupeKey,
+    lift: lift,
+    liftKey: liftKey,
+    weight: Number(weight.toFixed(1)),
+    velocity: Number(velocity.toFixed(2)),
+    rpe: Number((rpe || 8.0).toFixed(1)),
+    prType: prType,
+    setId: setId,
+    workoutId: src.workoutId || activePlannedWorkoutId || (activeWorkout && activeWorkout.id) || '',
+    slotId: src.slotId || activePlannedSlotId || '',
+    repNumber: src.repNumber || null,
+    timestamp: src.timestamp || Date.now()
+  };
+}
+
+function maybeEvaluateSetPrCandidate(setObj) {
+  if (!setObj || !Array.isArray(setObj.reps) || setObj.reps.length === 0) return null;
+  if (setObj.isPR || setObj.isPr || setObj.prPushed) return null;
+  const bestVel = Math.max(...setObj.reps.map(r => Number(r.velocity) || 0));
+  const maxRpe = Math.max(...setObj.reps.map(r => Number(r.rpe) || 0));
+  const cand = evaluatePrCandidate({
+    lift: setObj.lift,
+    weight: setObj.weight,
+    velocity: bestVel,
+    rpe: maxRpe || setObj.avgRpe,
+    setId: setObj.setId,
+    workoutId: setObj.plannedWorkoutId || '',
+    slotId: setObj.plannedSlotId || '',
+    timestamp: setObj.endTime || Date.now()
+  });
+  if (cand) showPrConfirmHud(cand);
+  return cand;
+}
+
+/** Displays the personal record confirmation overlay for a detected candidate. */
+function showPrConfirmHud(candidate) {
+  if (!candidate) return;
+  pendingPrCandidate = candidate;
+  if (candidate.key) prPromptedKeys.add(candidate.key);
+
+  const hud = document.getElementById('pr-confirm-hud');
+  const summaryEl = document.getElementById('pr-confirm-summary');
+  const metricsEl = document.getElementById('pr-confirm-metrics');
+  const typeLabel = candidate.prType === 'velocity' ? 'VELOCITY PR' : (candidate.prType === 'manual' ? 'PR CANDIDATE' : 'WEIGHT PR');
+
+  if (summaryEl) {
+    summaryEl.textContent = `${canonicalLift(candidate.lift).toUpperCase()} ${typeLabel}`;
+  }
+  if (metricsEl) {
+    metricsEl.textContent = `${Number(candidate.weight).toFixed(1)} kg • ${Number(candidate.velocity).toFixed(2)} m/s • RPE ${Number(candidate.rpe).toFixed(1)}`;
+  }
+  if (hud) {
+    hud.setAttribute('aria-hidden', 'false');
+    clearTimeout(prHudTimer);
+    prHudTimer = setTimeout(() => {
+      if (hud.getAttribute('aria-hidden') === 'false') {
+        dismissPrConfirmHud();
+      }
+    }, 18000);
+  }
+}
+
+/** Dismisses the personal record confirmation overlay and remembers suppression for this candidate. */
+function dismissPrConfirmHud() {
+  if (pendingPrCandidate && pendingPrCandidate.key) {
+    prSuppressedKeys.add(pendingPrCandidate.key);
+  }
+  pendingPrCandidate = null;
+  clearTimeout(prHudTimer);
+  const hud = document.getElementById('pr-confirm-hud');
+  if (hud) {
+    hud.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function findSetByIdAcrossWorkouts(setId) {
+  if (!setId) return null;
+  if (activeSet && activeSet.setId === setId) return activeSet;
+  if (activeWorkout && Array.isArray(activeWorkout.sets)) {
+    const found = activeWorkout.sets.find(s => s && s.setId === setId);
+    if (found) return found;
+  }
+  for (let i = 0; i < workouts.length; i++) {
+    const w = workouts[i];
+    if (!w || !Array.isArray(w.sets)) continue;
+    const found = w.sets.find(s => s && s.setId === setId);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Promotes a confirmed personal record candidate, stamps golden badges, and notifies the coach. */
+function confirmPushPr(explicitCandidate = null) {
+  const cand = explicitCandidate || pendingPrCandidate;
+  if (!cand) return null;
+
+  const lift = canonicalLift(cand.lift || currentLift);
+  const liftKey = liftKeyOf(lift);
+  const weight = Number(cand.weight) || 0;
+  const velocity = Number(cand.velocity) || 0;
+  const rpe = Number(cand.rpe) || 8.0;
+  const prType = String(cand.prType || 'weight');
+  const timestamp = Number(cand.timestamp) || Date.now();
+
+  if (prProfile.currentPRs && prProfile.currentPRs[liftKey] !== undefined) {
+    if (weight > prProfile.currentPRs[liftKey] || prProfile.currentPRs[liftKey] <= 0) {
+      prProfile.currentPRs[liftKey] = weight;
+    }
+    if (!prProfile.currentPRDetails) prProfile.currentPRDetails = {};
+    prProfile.currentPRDetails[liftKey] = {
+      weight: weight,
+      velocity: Number(velocity.toFixed(2)),
+      rpe: Number(rpe.toFixed(1)),
+      timestamp: timestamp
+    };
+    persistPrProfile();
+  }
+
+  const targetSet = findSetByIdAcrossWorkouts(cand.setId);
+  if (targetSet) {
+    targetSet.isPR = true;
+    targetSet.isPr = true;
+    targetSet.prPushed = true;
+    targetSet.prType = prType;
+    if (Array.isArray(targetSet.reps) && targetSet.reps.length > 0) {
+      let matchedRep = null;
+      if (cand.repNumber != null) {
+        matchedRep = targetSet.reps.find(r => r && r.repNumber === cand.repNumber);
+      }
+      if (!matchedRep) {
+        matchedRep = targetSet.reps.reduce((best, r) => {
+          if (!best) return r;
+          return (Number(r && r.velocity) || 0) >= (Number(best.velocity) || 0) ? r : best;
+        }, null);
+      }
+      if (matchedRep) {
+        matchedRep.isPR = true;
+        matchedRep.isPr = true;
+        matchedRep.prPushed = true;
+      }
+    }
+    persistStorage();
+  }
+
+  const prPayload = {
+    athleteId: ATHLETE_PREP_ID,
+    lift: lift,
+    weight: weight,
+    weightKg: weight,
+    velocity: Number(velocity.toFixed(2)),
+    rpe: Number(rpe.toFixed(1)),
+    prType: prType,
+    setId: String(cand.setId || ''),
+    workoutId: String(cand.workoutId || (targetSet && targetSet.plannedWorkoutId) || ''),
+    slotId: String(cand.slotId || (targetSet && targetSet.plannedSlotId) || ''),
+    plannedWorkoutId: String(cand.workoutId || (targetSet && targetSet.plannedWorkoutId) || ''),
+    plannedSlotId: String(cand.slotId || (targetSet && targetSet.plannedSlotId) || ''),
+    isPr: true,
+    timestamp: timestamp
+  };
+
+  const store = getPrepStore();
+  if (store && typeof store.recordPushedPr === 'function') {
+    store.recordPushedPr(prPayload, { emit: false });
+  }
+
+  if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
+    window.ErosSyncBus.emit('workout:pr_pushed', prPayload);
+  }
+
+  if (typeof SoundFX !== 'undefined' && typeof SoundFX.playPrFanfare === 'function') {
+    SoundFX.playPrFanfare();
+  }
+  if (typeof HapticsFX !== 'undefined' && typeof HapticsFX.vibrate === 'function') {
+    HapticsFX.vibrate([40, 30, 60]);
+  }
+
+  pendingPrCandidate = null;
+  clearTimeout(prHudTimer);
+  const hud = document.getElementById('pr-confirm-hud');
+  if (hud) hud.setAttribute('aria-hidden', 'true');
+
+  updatePrDashboardUI(true);
+  updateDotsDisplay(false);
+  updateWorkoutPage();
+  renderHistoryView();
+  renderAthletePrepHub();
+  renderAthletePlanVsActual();
+
+  return prPayload;
+}
+
+function pushSetAsManualPr(setId) {
+  const s = findSetByIdAcrossWorkouts(setId);
+  if (!s) return null;
+  const bestVel = (Array.isArray(s.reps) && s.reps.length > 0)
+    ? Math.max(...s.reps.map(r => Number(r.velocity) || 0))
+    : (Number(s.maxVelocity) || Number(s.avgVelocity) || 0);
+  const rpe = Number(s.avgRpe) || (Array.isArray(s.reps) && s.reps[s.reps.length - 1] && Number(s.reps[s.reps.length - 1].rpe)) || 8.5;
+  return confirmPushPr({
+    lift: canonicalLift(s.lift || currentLift),
+    weight: Number(s.weight) || currentWorkingWeight || 0,
+    velocity: bestVel,
+    rpe: rpe,
+    prType: 'manual',
+    setId: s.setId,
+    workoutId: s.plannedWorkoutId || activePlannedWorkoutId || '',
+    slotId: s.plannedSlotId || activePlannedSlotId || '',
+    timestamp: Date.now()
+  });
+}
+
+function initPrConfirmHudListeners() {
+  const btnPush = document.getElementById('btn-confirm-push-pr');
+  const btnDismiss = document.getElementById('btn-dismiss-push-pr');
+  if (btnPush && !btnPush._prBound) {
+    btnPush.addEventListener('click', () => confirmPushPr());
+    btnPush._prBound = true;
+  }
+  if (btnDismiss && !btnDismiss._prBound) {
+    btnDismiss.addEventListener('click', () => dismissPrConfirmHud());
+    btnDismiss._prBound = true;
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.initAthleteSettings = initAthleteSettings;
+  window.initAthletePrepView = initAthletePrepView;
+  window.renderAthletePrepHub = renderAthletePrepHub;
+  window.renderAthletePlanVsActual = renderAthletePlanVsActual;
+  window.initAthleteBiometricsDossier = initAthleteBiometricsDossier;
+  window.saveAthleteBiometricsFromUI = saveAthleteBiometricsFromUI;
+  window.evaluatePrCandidate = evaluatePrCandidate;
+  window.showPrConfirmHud = showPrConfirmHud;
+  window.confirmPushPr = confirmPushPr;
+  window.dismissPrConfirmHud = dismissPrConfirmHud;
+  window.updateDotsDisplay = updateDotsDisplay;
+  window.updatePrDashboardUI = updatePrDashboardUI;
+  window.updateWorkoutPage = updateWorkoutPage;
+  window.renderHistoryView = renderHistoryView;
   window.synthesizeRepTrajectory = synthesizeRepTrajectory;
   window.renderBarPathStage = renderBarPathStage;
   window.toggleBarPathMode = toggleBarPathMode;
@@ -4934,6 +6325,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initBleSheetDrag();
   initCoachDirectiveSync();
   initAthleteSettings();
+  initAthletePrepView();
+  initAthleteBiometricsDossier();
+  initPrConfirmHudListeners();
   initBarPathControls();
   renderBarPathStage(0, 1.0);
 });

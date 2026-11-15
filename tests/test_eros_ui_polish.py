@@ -190,7 +190,8 @@ class TestErosUiPolish(unittest.TestCase):
             self.html
         )
         self.assertIsNotNone(nav_match, "Bottom nav button for data-target='set' must exist")
-        self.assertIn("WORKOUT", nav_match.group(1))
+        nav_html = nav_match.group(1)
+        self.assertTrue("WORKOUT" in nav_html or "PREP" in nav_html, "data-target='set' nav label must be 'WORKOUT' or 'PREP'")
 
         required_workout_ids = [
             "workout-summary-card",

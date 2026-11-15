@@ -3427,3 +3427,637 @@ body.portal-coach #coach-cursor-glow {
 }
 
 
+/* ── 14. Coach Preparation Panel (0 to 12 month planner) ── */
+#coach-preparation-panel {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  font-family: var(--coach-font-sans);
+}
+
+.coach-prep-factoring-strip,
+.coach-prep-plan-header,
+.coach-prep-macro-card,
+.coach-prep-session-card,
+.coach-prep-comparison-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--coach-bg-surface-1);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-lg);
+  padding: 12px;
+  box-shadow: var(--neu-out);
+  min-width: 0;
+}
+
+.coach-prep-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 120px;
+}
+
+.coach-prep-field-wide {
+  flex: 2 1 200px;
+}
+
+.coach-prep-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--coach-text-muted);
+  text-transform: uppercase;
+}
+
+.coach-prep-input {
+  width: 100%;
+  min-height: 36px;
+  box-sizing: border-box;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-md);
+  padding: 7px 10px;
+  color: var(--coach-text-primary);
+  font-family: var(--coach-font-sans);
+  font-size: 13px;
+  outline: none;
+  box-shadow: var(--neu-in-sm);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.coach-prep-input:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.coach-prep-input:focus {
+  border-color: var(--coach-accent-teal);
+  background: var(--coach-bg-surface-hover);
+}
+
+.coach-prep-textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.45;
+}
+
+.coach-prep-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 7px 14px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-pill);
+  color: var(--coach-text-secondary);
+  font-family: var(--coach-font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  box-shadow: var(--neu-out-sm);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.coach-prep-btn:hover {
+  background: var(--coach-bg-surface-hover);
+  color: var(--coach-text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.coach-prep-btn:active {
+  background: var(--coach-bg-surface-active);
+  box-shadow: var(--neu-in-sm);
+}
+
+.coach-prep-btn:focus-visible {
+  outline: 1px solid var(--coach-accent-teal);
+  outline-offset: 2px;
+}
+
+.coach-prep-btn-primary {
+  color: var(--coach-text-primary);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.coach-prep-section-head {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.coach-prep-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--coach-text-primary);
+}
+
+.coach-prep-empty {
+  margin: 0;
+  padding: 12px;
+  font-size: 12px;
+  color: var(--coach-text-muted);
+}
+
+/* Factoring strip, badges & alerts */
+.coach-prep-factoring-top {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.coach-prep-field-athlete {
+  flex: 0 1 260px;
+}
+
+.coach-prep-factoring-badges {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.coach-prep-factor-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-pill);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--coach-text-secondary);
+  white-space: nowrap;
+}
+
+.coach-prep-factor-badge-warn {
+  color: #f5c542;
+  border-color: rgba(245, 197, 66, 0.35);
+}
+
+.coach-prep-factor-badge-crit {
+  color: #ff857d;
+  border-color: rgba(255, 59, 48, 0.35);
+}
+
+.coach-prep-factoring-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coach-prep-factoring-alerts:empty {
+  display: none;
+}
+
+.coach-prep-alert {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-left: 3px solid var(--coach-text-muted);
+  border-radius: var(--coach-radius-md);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--coach-text-secondary);
+}
+
+.coach-prep-alert-warn {
+  border-left-color: #f5c542;
+}
+
+.coach-prep-alert-crit {
+  border-left-color: #ff3b30;
+}
+
+.coach-prep-alert-info {
+  border-left-color: var(--coach-accent-teal);
+}
+
+/* Plan header */
+.coach-prep-header-grid,
+.coach-prep-target-row,
+.coach-prep-session-meta,
+.coach-prep-picker-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.coach-prep-countdown-field {
+  flex: 1 1 140px;
+}
+
+.coach-prep-countdown {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--coach-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Macro 0-12 month week track */
+.coach-prep-quick-tools {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.coach-prep-template-select {
+  width: auto;
+  min-width: 160px;
+}
+
+.coach-prep-weeks-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--coach-border-light) transparent;
+}
+
+.coach-prep-week-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  min-width: 52px;
+  padding: 8px 6px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-md);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--coach-text-secondary);
+  cursor: pointer;
+  outline: none;
+  box-shadow: var(--neu-out-sm);
+  transition: all 0.15s ease;
+}
+
+.coach-prep-week-cell:hover {
+  background: var(--coach-bg-surface-hover);
+  color: var(--coach-text-primary);
+}
+
+.coach-prep-week-cell.is-selected,
+.coach-prep-week-cell[aria-selected="true"] {
+  background: var(--coach-bg-surface-active);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--coach-text-primary);
+  box-shadow: var(--neu-in-sm);
+}
+
+.coach-prep-week-cell.is-deload {
+  border-style: dashed;
+  color: var(--coach-text-muted);
+}
+
+.coach-prep-week-cell.has-sessions::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--coach-accent-teal);
+}
+
+.coach-prep-week-cell-phase {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--coach-text-muted);
+  text-transform: uppercase;
+}
+
+/* Day tabs */
+.coach-prep-day-tabs {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.coach-prep-day-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.coach-prep-day-tab {
+  flex: 1 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 56px;
+  padding: 7px 10px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--coach-text-secondary);
+  cursor: pointer;
+  outline: none;
+  box-shadow: var(--neu-out-sm);
+  transition: all 0.15s ease;
+}
+
+.coach-prep-day-tab:hover {
+  background: var(--coach-bg-surface-hover);
+  color: var(--coach-text-primary);
+}
+
+.coach-prep-day-tab.is-selected,
+.coach-prep-day-tab[aria-selected="true"] {
+  background: var(--coach-bg-surface-active);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--coach-text-primary);
+  box-shadow: var(--neu-in-sm);
+}
+
+.coach-prep-day-tab-date {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--coach-text-muted);
+}
+
+.coach-prep-toggle {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.coach-prep-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--coach-accent-teal);
+}
+
+/* Set X / Set Y slot builder */
+.coach-prep-slot-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-md);
+  box-shadow: var(--neu-in-sm);
+}
+
+.coach-prep-slot-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coach-prep-slot-tag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--coach-text-secondary);
+}
+
+.coach-prep-slot-inputs {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.coach-prep-slot-inputs .coach-prep-field {
+  flex: 1 1 88px;
+}
+
+.coach-prep-vel-preview {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--coach-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.coach-prep-slot-actions,
+.coach-prep-session-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.coach-prep-slots-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-md);
+}
+
+.coach-prep-slots-table,
+.coach-prep-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  color: var(--coach-text-secondary);
+}
+
+.coach-prep-slots-table th,
+.coach-prep-slots-table td,
+.coach-prep-compare-table th,
+.coach-prep-compare-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--coach-border-subtle);
+  white-space: nowrap;
+}
+
+.coach-prep-slots-table th,
+.coach-prep-compare-table th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--coach-text-muted);
+  background: var(--coach-bg-surface-2);
+}
+
+.coach-prep-slots-table tbody tr:last-child td,
+.coach-prep-compare-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.coach-prep-slots-table td:first-child,
+.coach-prep-compare-table td:first-child {
+  color: var(--coach-text-primary);
+  font-weight: 600;
+}
+
+.coach-prep-slot-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
+  border-radius: var(--coach-radius-pill);
+  color: #ff857d;
+  font-family: var(--coach-font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+}
+
+.coach-prep-slot-remove:hover {
+  background: var(--coach-bg-surface-hover);
+  border-color: rgba(255, 59, 48, 0.35);
+}
+
+.coach-prep-notes-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.coach-prep-notes-grid .coach-prep-field {
+  flex: 1 1 240px;
+}
+
+/* Planned vs actual comparison matrix */
+.coach-prep-comparison-body {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.coach-prep-delta-pos {
+  color: #66ffa3;
+}
+
+.coach-prep-delta-neg {
+  color: #ff857d;
+}
+
+.coach-prep-delta-flat {
+  color: var(--coach-text-muted);
+}
+
+.coach-prep-athlete-feedback-view {
+  padding: 8px 12px;
+  border-left: 3px solid var(--coach-accent-teal);
+  border-radius: var(--coach-radius-md);
+  background: var(--coach-bg-surface-2);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--coach-text-secondary);
+}
+
+.coach-prep-athlete-feedback-view:empty {
+  display: none;
+}
+
+/* Golden PR badge */
+.coach-golden-pr-badge--compact {
+  margin-left: 0;
+  padding: 1px 6px;
+  font-size: 8px;
+  line-height: 1.2;
+}
+
+.coach-golden-pr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  margin-left: 6px;
+  border-radius: var(--coach-radius-pill);
+  border: 1px solid rgba(245, 166, 35, 0.7);
+  background: linear-gradient(135deg, #ffd60a 0%, #f5a623 100%);
+  color: #1a1200;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  vertical-align: middle;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 8px rgba(255, 214, 10, 0.28);
+  animation: coach-golden-pr-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes coach-golden-pr-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-golden-pr-badge {
+    animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .coach-prep-field-athlete {
+    flex: 1 1 100%;
+  }
+  .coach-prep-template-select {
+    width: 100%;
+  }
+  .coach-prep-quick-tools {
+    width: 100%;
+  }
+  .coach-prep-slot-inputs .coach-prep-field {
+    flex: 1 1 calc(50% - 12px);
+  }
+}

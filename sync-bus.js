@@ -26,8 +26,25 @@
     COACH_LOAD_OVERRIDE: 'coach:load_override',
     COACH_LOAD_RESPONSE: 'coach:load_response',
     COACH_REST_TARGET: 'coach:rest_target',
-    ATHLETE_CONNECT: 'athlete:connect'
+    ATHLETE_CONNECT: 'athlete:connect',
+    PREP_PLAN_SYNC: 'prep:plan_sync',
+    PREP_WORKOUT_UPDATED: 'prep:workout_updated',
+    ATHLETE_PROFILE_UPDATED: 'athlete:profile_updated',
+    WORKOUT_PR_PUSHED: 'workout:pr_pushed',
+    PREP_ATHLETE_FEEDBACK: 'prep:athlete_feedback'
   });
+
+  /** Upper bound for the preparation horizon in months. */
+  const MAX_PREP_MONTHS = 12;
+
+  /** Upper bound for the preparation week index within a plan. */
+  const MAX_PREP_WEEK_INDEX = 52;
+
+  /** Event names that only a coach connection may write. */
+  const COACH_ONLY_PREP_EVENTS = Object.freeze([
+    'prep:plan_sync',
+    'prep:workout_updated'
+  ]);
 
   const BROADCAST_CHANNEL_NAME = 'eros_coach_sync_v1';
   const STORAGE_FALLBACK_KEY = 'eros_coach_sync_v1_storage';
@@ -130,6 +147,7 @@
         return out;
       });
     }
+    copyOptionalPlannedRefs(data, payload);
     return payload;
   }
 
@@ -224,6 +242,7 @@
     if (data.pairingCode) {
       payload.pairingCode = String(data.pairingCode).trim();
     }
+    copyOptionalPlannedRefs(data, payload);
     return payload;
   }
 
@@ -370,7 +389,227 @@
     };
   }
 
+  // ── Preparation, Profile & PR Payload Helpers ──
+
+  /** Clamps a numeric input into a range, returning the fallback for non-finite input. */
+  function clampNum(value, min, max, fallback) {
+    if (value == null || value === '') return fallback;
+    const num = Number(value);
+    if (!isFinite(num)) return fallback;
+    return Math.max(min, Math.min(max, num));
+  }
+
+  /** Trims a value into a bounded plain string with control characters removed. */
+  function cleanStr(value, maxLen) {
+    if (value == null) return '';
+    return String(value)
+      .replace(/[\x00-\x1F\x7F]/g, '')
+      .trim()
+      .slice(0, maxLen || 256);
+  }
+
+  /** Rounds a number to the given number of decimal places. */
+  function roundTo(value, places) {
+    const factor = Math.pow(10, places);
+    return Math.round(value * factor) / factor;
+  }
+
+  /** Throws a TypeError unless the value is a plain object payload. */
+  function requireObject(data, eventName) {
+    if (!data || typeof data !== 'object') {
+      throw new TypeError(`[ErosSyncBus] Payload for ${eventName} must be an object`);
+    }
+  }
+
+  /** Throws a TypeError unless the value is a non-empty string. */
+  function requireId(value, eventName, field) {
+    if (value == null || String(value).trim() === '') {
+      throw new TypeError(`[ErosSyncBus] ${eventName} requires non-empty ${field}`);
+    }
+    return cleanStr(value, 64);
+  }
+
+  /** Returns a validated epoch millisecond timestamp, defaulting to now. */
+  function resolveTimestamp(value) {
+    return (typeof value === 'number' && !isNaN(value)) ? value : Date.now();
+  }
+
+  /** Copies a bounded optional string field onto the payload when present. */
+  function copyOptionalString(source, target, key, maxLen) {
+    if (source[key] != null) {
+      const text = cleanStr(source[key], maxLen);
+      if (text !== '') target[key] = text;
+    }
+  }
+
+  /** Copies a clamped optional numeric field onto the payload when present. */
+  function copyOptionalNumber(source, target, key, min, max, places) {
+    if (source[key] != null && source[key] !== '') {
+      const num = Number(source[key]);
+      if (isFinite(num)) target[key] = roundTo(Math.max(min, Math.min(max, num)), places);
+    }
+  }
+
+  /** Copies planned workout and slot references onto the payload when present. */
+  function copyOptionalPlannedRefs(source, target) {
+    const workoutId = cleanStr(source.plannedWorkoutId != null ? source.plannedWorkoutId : source.workoutId, 64);
+    const slotId = cleanStr(source.plannedSlotId != null ? source.plannedSlotId : source.slotId, 64);
+    if (workoutId !== '') {
+      target.plannedWorkoutId = workoutId;
+      target.workoutId = workoutId;
+    }
+    if (slotId !== '') {
+      target.plannedSlotId = slotId;
+      target.slotId = slotId;
+    }
+    if (source.isPr != null || source.isPR != null) {
+      const flag = Boolean(source.isPr != null ? source.isPr : source.isPR);
+      target.isPr = flag;
+      target.isPR = flag;
+    }
+    copyOptionalString(source, target, 'prType', 16);
+  }
+
+  /** Clamps a preparation horizon to 0 through 12 months. */
+  function clampPrepMonths(months) {
+    return roundTo(clampNum(months, 0, MAX_PREP_MONTHS, 0), 1);
+  }
+
+  // ── Preparation, Profile & PR Validators ──
+
+  function validatePrepPlanSync(data) {
+    requireObject(data, 'prep:plan_sync');
+    const src = (data.plan && typeof data.plan === 'object') ? { ...data.plan, ...data } : data;
+    const payload = {
+      planId: requireId(src.planId != null ? src.planId : src.plan_id, 'prep:plan_sync', 'planId'),
+      athleteId: requireId(src.athleteId != null ? src.athleteId : src.athlete_id, 'prep:plan_sync', 'athleteId'),
+      title: cleanStr(src.title, 128) || 'Preparation Plan',
+      durationMonths: clampPrepMonths(src.durationMonths != null ? src.durationMonths : src.duration_months),
+      version: Math.round(clampNum(src.version, 1, 1000000, 1)),
+      timestamp: resolveTimestamp(src.timestamp)
+    };
+    copyOptionalString(src, payload, 'athleteName', 64);
+    copyOptionalString(src, payload, 'goalType', 64);
+    copyOptionalString(src, payload, 'startDate', 10);
+    copyOptionalString(src, payload, 'targetMeetDate', 10);
+    copyOptionalString(src, payload, 'dietaryStrategyNotes', 1024);
+    copyOptionalString(src, payload, 'coachNotes', 1024);
+    copyOptionalNumber(src, payload, 'targetSquatKg', 0, 600, 1);
+    copyOptionalNumber(src, payload, 'targetBenchKg', 0, 600, 1);
+    copyOptionalNumber(src, payload, 'targetDeadliftKg', 0, 600, 1);
+    copyOptionalNumber(src, payload, 'deloadCadenceWeeks', 0, MAX_PREP_WEEK_INDEX, 0);
+    if (Array.isArray(src.macroBlocks)) payload.macroBlocks = src.macroBlocks.slice(0, 64);
+    if (data.plan && typeof data.plan === 'object') payload.plan = { ...src, ...payload };
+    return payload;
+  }
+
+  function validatePrepWorkoutUpdated(data) {
+    requireObject(data, 'prep:workout_updated');
+    const src = (data.workout && typeof data.workout === 'object') ? { ...data.workout, ...data } : data;
+    const payload = {
+      workoutId: requireId(src.workoutId != null ? src.workoutId : src.workout_id, 'prep:workout_updated', 'workoutId'),
+      planId: requireId(src.planId != null ? src.planId : src.plan_id, 'prep:workout_updated', 'planId'),
+      athleteId: requireId(src.athleteId != null ? src.athleteId : src.athlete_id, 'prep:workout_updated', 'athleteId'),
+      weekIndex: Math.round(clampNum(src.weekIndex, 0, MAX_PREP_WEEK_INDEX, 0)),
+      isDeload: Boolean(src.isDeload),
+      prescribedSlots: Array.isArray(src.prescribedSlots) ? src.prescribedSlots.slice(0, 40) : (Array.isArray(src.slots) ? src.slots.slice(0, 40) : []),
+      timestamp: resolveTimestamp(src.timestamp)
+    };
+    payload.slots = payload.prescribedSlots;
+    copyOptionalString(src, payload, 'scheduledDate', 10);
+    copyOptionalString(src, payload, 'dayOfWeek', 16);
+    copyOptionalString(src, payload, 'blockPhase', 64);
+    copyOptionalString(src, payload, 'sessionTitle', 128);
+    copyOptionalString(src, payload, 'workoutNotes', 1024);
+    copyOptionalString(src, payload, 'dietaryNotes', 1024);
+    copyOptionalString(src, payload, 'athleteFeedbackNote', 1024);
+    copyOptionalString(src, payload, 'adherenceStatus', 32);
+    if (data.workout && typeof data.workout === 'object') payload.workout = { ...src, ...payload };
+    return payload;
+  }
+
+  function validateAthleteProfileUpdated(data) {
+    requireObject(data, 'athlete:profile_updated');
+    const payload = {
+      athleteId: cleanStr(data.athleteId, 64) || 'ath_01',
+      timestamp: resolveTimestamp(data.timestamp)
+    };
+    copyOptionalString(data, payload, 'athleteName', 64);
+    copyOptionalString(data, payload, 'rackId', 32);
+    copyOptionalString(data, payload, 'weightClass', 16);
+    copyOptionalString(data, payload, 'targetWeightClass', 16);
+    copyOptionalString(data, payload, 'gender', 16);
+    copyOptionalString(data, payload, 'experienceTier', 32);
+    copyOptionalString(data, payload, 'federation', 64);
+    copyOptionalString(data, payload, 'dutiesInjuryNotes', 1024);
+    copyOptionalNumber(data, payload, 'age', 10, 100, 0);
+    copyOptionalNumber(data, payload, 'bodyweightKg', 20, 300, 1);
+    copyOptionalNumber(data, payload, 'trainingAgeYears', 0, 60, 1);
+    copyOptionalNumber(data, payload, 'meetsCompleted', 0, 500, 0);
+    ['Squat', 'Bench', 'Deadlift'].forEach(function (lift) {
+      copyOptionalNumber(data, payload, `comp${lift}Kg`, 0, 600, 1);
+      copyOptionalNumber(data, payload, `gym${lift}Kg`, 0, 600, 1);
+      copyOptionalNumber(data, payload, `e1rm${lift}Kg`, 0, 700, 1);
+      copyOptionalNumber(data, payload, `peak${lift}Velocity`, 0, 10, 2);
+    });
+    if (Array.isArray(data.availableDays)) {
+      payload.availableDays = data.availableDays
+        .map(function (d) { return cleanStr(d, 3); })
+        .filter(Boolean)
+        .slice(0, 7);
+    }
+    return payload;
+  }
+
+  function validateWorkoutPrPushed(data) {
+    requireObject(data, 'workout:pr_pushed');
+    const lift = cleanStr(data.lift, 32);
+    if (lift === '') {
+      throw new TypeError('[ErosSyncBus] workout:pr_pushed requires non-empty string lift');
+    }
+    const weightKg = Number(data.weightKg != null ? data.weightKg : data.weight);
+    if (isNaN(weightKg) || weightKg < 0) {
+      throw new TypeError('[ErosSyncBus] workout:pr_pushed requires non-negative numeric weightKg');
+    }
+    const payload = {
+      athleteId: cleanStr(data.athleteId, 64) || 'ath_01',
+      lift: lift,
+      weightKg: roundTo(Math.min(weightKg, 600), 1),
+      prType: cleanStr(data.prType, 16) || 'weight',
+      timestamp: resolveTimestamp(data.timestamp)
+    };
+    copyOptionalString(data, payload, 'athleteName', 64);
+    copyOptionalString(data, payload, 'setId', 64);
+    copyOptionalPlannedRefs(data, payload);
+    payload.weight = payload.weightKg;
+    copyOptionalNumber(data, payload, 'velocity', 0, 10, 2);
+    copyOptionalNumber(data, payload, 'rpe', 1, 10, 1);
+    copyOptionalNumber(data, payload, 'reps', 0, 100, 0);
+    copyOptionalNumber(data, payload, 'e1rmKg', 0, 700, 1);
+    return payload;
+  }
+
+  function validatePrepAthleteFeedback(data) {
+    requireObject(data, 'prep:athlete_feedback');
+    const payload = {
+      workoutId: requireId(data.workoutId != null ? data.workoutId : data.workout_id, 'prep:athlete_feedback', 'workoutId'),
+      athleteId: cleanStr(data.athleteId, 64) || 'ath_01',
+      note: cleanStr(data.note != null ? data.note : data.athleteFeedbackNote, 1024),
+      timestamp: resolveTimestamp(data.timestamp)
+    };
+    copyOptionalString(data, payload, 'planId', 64);
+    copyOptionalString(data, payload, 'athleteName', 64);
+    copyOptionalString(data, payload, 'adherenceStatus', 32);
+    copyOptionalNumber(data, payload, 'sessionRpe', 1, 10, 1);
+    return payload;
+  }
+
   const VALIDATORS = {
+    [EVENTS.PREP_PLAN_SYNC]: validatePrepPlanSync,
+    [EVENTS.PREP_WORKOUT_UPDATED]: validatePrepWorkoutUpdated,
+    [EVENTS.ATHLETE_PROFILE_UPDATED]: validateAthleteProfileUpdated,
+    [EVENTS.WORKOUT_PR_PUSHED]: validateWorkoutPrPushed,
+    [EVENTS.PREP_ATHLETE_FEEDBACK]: validatePrepAthleteFeedback,
     [EVENTS.SET_STARTED]: validateSetStarted,
     [EVENTS.REP_RECORDED]: validateRepRecorded,
     [EVENTS.SET_COMPLETED]: validateSetCompleted,
@@ -667,7 +906,7 @@
 
     /**
      * Connects to the Base44 realtime actor room for cross-device synchronization
-     * @param {string} [pairingCode] Room / squad session code (e.g. 'EROS-7X9K')
+     * @param {string} [pairingCode] Room / squad session code generated by the coach
      * @param {Object} [client] Optional Base44 SDK client instance
      * @returns {boolean} Whether connection was initiated
      */
@@ -678,7 +917,9 @@
         return false;
       }
 
-      const code = String(pairingCode || this.cloudPairingCode || 'EROS-7X9K').trim().toUpperCase();
+      const rawCode = pairingCode || this.cloudPairingCode;
+      if (!rawCode) return false;
+      const code = String(rawCode).trim().toUpperCase();
       if (this.cloudRoom && this.cloudPairingCode === code) {
         return true;
       }
@@ -769,7 +1010,15 @@
     ErosEventBus,
     ErosSyncBus,
     EVENTS,
+    COACH_ONLY_PREP_EVENTS,
+    MAX_PREP_MONTHS,
+    MAX_PREP_WEEK_INDEX,
     validateRepRecorded,
-    validateSetCompleted
+    validateSetCompleted,
+    validatePrepPlanSync,
+    validatePrepWorkoutUpdated,
+    validateAthleteProfileUpdated,
+    validateWorkoutPrPushed,
+    validatePrepAthleteFeedback
   };
 });

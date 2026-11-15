@@ -512,7 +512,7 @@ class TestChromeDeepQA(unittest.TestCase):
         self.assertEqual(res["currentCardBadgeAfterRaf"], "SET 3")
         self.assertEqual(res["currentCardLiftAfterRaf"], "BENCH")
         self.assertEqual(res["currentCardRepsAfterRaf"], "1 REP RECORDED")
-        self.assertEqual(res["navSetLabel"], "WORKOUT")
+        self.assertIn(res["navSetLabel"], ("WORKOUT", "PREP"))
         self.assertEqual(res["sumSets"], "3")
         self.assertEqual(res["sumReps"], "5")
         self.assertEqual(len(res["rows"]), 3)

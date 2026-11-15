@@ -1,0 +1,86 @@
+{
+  "name": "PlannedWorkout",
+  "description": "Scheduled training session within a preparation plan, with prescribed exercise slots and athlete adherence",
+  "type": "object",
+  "properties": {
+    "workout_id": {
+      "type": "string",
+      "description": "Unique identifier for the planned workout"
+    },
+    "plan_id": {
+      "type": "string",
+      "description": "Identifier of the parent preparation plan"
+    },
+    "athlete_id": {
+      "type": "string",
+      "description": "Identifier of the athlete the workout is prescribed to"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO calendar date the workout is scheduled for"
+    },
+    "week_index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 52,
+      "description": "Zero-based week offset from the plan start date"
+    },
+    "day_of_week": {
+      "type": "string",
+      "description": "Weekday label for the session (Mon through Sun)"
+    },
+    "block_phase": {
+      "type": "string",
+      "description": "Macro block phase the session belongs to"
+    },
+    "is_deload": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the session belongs to a deload week"
+    },
+    "session_title": {
+      "type": "string",
+      "description": "Human-readable session title"
+    },
+    "prescribed_slots_json": {
+      "type": "string",
+      "description": "JSON serialized list of prescribed exercise slots with top set and backoff targets"
+    },
+    "workout_notes": {
+      "type": "string",
+      "description": "Coach session notes visible to the athlete"
+    },
+    "dietary_notes": {
+      "type": "string",
+      "description": "Coach dietary notes visible to the athlete"
+    },
+    "athlete_feedback_note": {
+      "type": "string",
+      "description": "Athlete feedback submitted after the session"
+    },
+    "adherence_status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "in_progress",
+        "completed",
+        "partial",
+        "skipped"
+      ],
+      "default": "planned",
+      "description": "Athlete adherence status for the session"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the workout was last updated"
+    }
+  },
+  "required": [
+    "workout_id",
+    "plan_id",
+    "athlete_id",
+    "scheduled_date"
+  ]
+}

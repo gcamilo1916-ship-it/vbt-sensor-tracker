@@ -16,6 +16,7 @@ const files = [
   'athlete-fx.js',
   'coach-cue-hud.js',
   'sync-bus.js',
+  'prep-engine.js',
   'base44-client.js'
 ];
 

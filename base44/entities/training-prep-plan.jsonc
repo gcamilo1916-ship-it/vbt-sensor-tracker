@@ -1,0 +1,88 @@
+{
+  "name": "TrainingPrepPlan",
+  "description": "Coach-authored multi-month preparation plan with macro blocks, targets, and meet timeline",
+  "type": "object",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "description": "Unique identifier for the preparation plan"
+    },
+    "athlete_id": {
+      "type": "string",
+      "description": "Identifier of the athlete the plan is prescribed to"
+    },
+    "athlete_name": {
+      "type": "string",
+      "description": "Display name of the athlete"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable plan title"
+    },
+    "goal_type": {
+      "type": "string",
+      "description": "Primary goal of the plan (e.g. meet peak, strength block, hypertrophy)"
+    },
+    "duration_months": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 12,
+      "description": "Plan horizon in months, from 0 up to 12"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO calendar date when the plan begins"
+    },
+    "target_meet_date": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO calendar date of the target competition"
+    },
+    "target_squat_kg": {
+      "type": "number",
+      "description": "Target squat total for the meet in kilograms"
+    },
+    "target_bench_kg": {
+      "type": "number",
+      "description": "Target bench press total for the meet in kilograms"
+    },
+    "target_deadlift_kg": {
+      "type": "number",
+      "description": "Target deadlift total for the meet in kilograms"
+    },
+    "macro_blocks_json": {
+      "type": "string",
+      "description": "JSON serialized ordered list of macro training blocks"
+    },
+    "deload_cadence_weeks": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 52,
+      "description": "Number of weeks between scheduled deload weeks"
+    },
+    "dietary_strategy_notes": {
+      "type": "string",
+      "description": "Coach notes on nutrition and bodyweight strategy"
+    },
+    "coach_notes": {
+      "type": "string",
+      "description": "General coach notes for the plan"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic revision number incremented on each plan update"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the plan was last updated"
+    }
+  },
+  "required": [
+    "plan_id",
+    "athlete_id",
+    "title"
+  ]
+}

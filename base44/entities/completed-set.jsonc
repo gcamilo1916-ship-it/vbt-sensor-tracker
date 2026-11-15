@@ -75,6 +75,23 @@
       "type": "string",
       "format": "date-time",
       "description": "ISO timestamp when the set was completed"
+    },
+    "planned_workout_id": {
+      "type": "string",
+      "description": "Identifier of the planned workout this set was performed against"
+    },
+    "planned_slot_id": {
+      "type": "string",
+      "description": "Identifier of the prescribed exercise slot this set fulfilled"
+    },
+    "is_pr": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the athlete pushed this set as a personal record"
+    },
+    "pr_type": {
+      "type": "string",
+      "description": "Personal record classification (weight or velocity)"
     }
   },
   "required": [

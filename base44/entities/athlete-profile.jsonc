@@ -1,6 +1,6 @@
 {
   "name": "AthleteProfile",
-  "description": "Persisted athlete training metadata, personal records, and estimated 1RM snapshots",
+  "description": "Persisted athlete training metadata, biometrics, experience dossier, personal records, and estimated 1RM snapshots",
   "type": "object",
   "properties": {
     "athlete_id": {
@@ -62,6 +62,62 @@
     "e1rm_deadlift_kg": {
       "type": "number",
       "description": "Estimated 1RM for deadlift in kilograms"
+    },
+    "age": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 100,
+      "description": "Athlete age in years"
+    },
+    "target_weight_class": {
+      "type": "string",
+      "description": "Weight class the athlete is preparing to compete in"
+    },
+    "training_age_years": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 60,
+      "description": "Years of consistent structured strength training"
+    },
+    "experience_tier": {
+      "type": "string",
+      "enum": [
+        "Novice",
+        "Regional",
+        "National",
+        "International"
+      ],
+      "description": "Competitive experience tier of the athlete"
+    },
+    "meets_completed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 500,
+      "description": "Number of competitions the athlete has completed"
+    },
+    "federation": {
+      "type": "string",
+      "description": "Competition federation the athlete lifts under"
+    },
+    "available_days_json": {
+      "type": "string",
+      "description": "JSON serialized array of weekdays available for training"
+    },
+    "duties_injury_notes": {
+      "type": "string",
+      "description": "Free-text notes on work duties, schedule constraints, and injuries"
+    },
+    "peak_squat_velocity": {
+      "type": "number",
+      "description": "Peak squat mean concentric velocity in m/s"
+    },
+    "peak_bench_velocity": {
+      "type": "number",
+      "description": "Peak bench press mean concentric velocity in m/s"
+    },
+    "peak_deadlift_velocity": {
+      "type": "number",
+      "description": "Peak deadlift mean concentric velocity in m/s"
     },
     "updated_at": {
       "type": "string",
