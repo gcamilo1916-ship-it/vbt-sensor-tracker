@@ -46,16 +46,16 @@
 
 
         <!-- Segmented Mode Switcher: Athlete vs Coach Portal -->
-        <div class="view-mode-toggle" id="view-mode-toggle" role="radiogroup" aria-label="Portal View Mode">
+        <div class="view-mode-toggle" id="view-mode-toggle" role="radiogroup" aria-label="Portal View Mode" data-prep-tooltip-key="header_mode_toggle">
           <button type="button" class="mode-toggle-btn active" id="btn-mode-athlete" data-mode="athlete" role="radio" aria-checked="true" aria-label="Athlete View">
-            <svg class="mode-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg class="mode-icon eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
             <span class="mode-label">Athlete</span>
           </button>
           <button type="button" class="mode-toggle-btn" id="btn-mode-coach" data-mode="coach" role="radio" aria-checked="false" aria-label="Coach Portal">
-            <svg class="mode-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg class="mode-icon eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
               <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -66,14 +66,20 @@
         </div>
 
         <div class="header-actions">
-          <div class="header-rest-ticker font-mono" id="header-rest-ticker" style="display: none;" aria-label="Inter-Set Rest Timer">
-            <span class="rest-ticker-label">REST</span>
+          <div class="header-rest-ticker font-mono" id="header-rest-ticker" style="display: none;" aria-label="Inter-Set Rest Timer" data-prep-tooltip-key="header_rest_ticker">
+            <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="13" r="8"></circle>
+              <path d="M12 9v4l2 2"></path>
+              <path d="M9 3h6"></path>
+              <path d="M12 3v2"></path>
+            </svg>
+            <span class="rest-ticker-label sr-only">REST</span>
             <span class="rest-ticker-time" id="header-rest-time">00:00</span>
           </div>
-          <div id="status-badge" class="glass-pill status-disconnected" role="button" tabindex="0" aria-label="Eros Connection">
+          <div id="status-badge" class="glass-pill status-disconnected" role="button" tabindex="0" aria-label="Eros Connection" data-prep-tooltip-key="header_status_badge">
             <span class="status-dot"></span>
             <span class="status-label">Disconnected</span>
-            <svg class="status-ble-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg class="status-ble-icon eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
             </svg>
           </div>
@@ -89,8 +95,12 @@
           </div>
           <div class="session-timer font-mono" id="session-timer-display">00:00:00</div>
         </div>
-        <button id="btn-workout-master" class="btn-glass-primary">
-          <span class="btn-label" id="btn-workout-text">START WORKOUT</span>
+        <button id="btn-workout-master" class="btn-glass-primary" data-prep-tooltip-key="header_workout_master">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span id="btn-workout-text" class="sr-only">START WORKOUT</span>
+          <span class="btn-short-label" aria-hidden="true">START</span>
         </button>
       </div>
     </header>
@@ -102,16 +112,26 @@
       <!-- TAB 1: LIVE TRACKER                            -->
       <!-- ═══════════════════════════════════════════════ -->
       <section id="tab-live" class="tab-section active-section">
+
+        <!-- Active Planned Session Prescription Strip -->
+        <div id="live-prescription-strip" class="live-prescription-strip glass-card" style="display: none;" data-prep-tooltip-key="live_prescription_strip"></div>
         
         <!-- Lift Control Center -->
         <!-- Exercise & Set Controls -->
         <div class="controls-panel">
           <div class="controls-row">
             <!-- Glass OS Custom Dropdown -->
-            <div class="custom-select-wrapper" id="lift-select-wrapper">
+            <div class="custom-select-wrapper" id="lift-select-wrapper" data-prep-tooltip-key="live_lift_select">
               <div class="custom-select-trigger glass-pill" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="lift-select-options" aria-label="Select Exercise Lift">
                 <span class="select-label-wrap">
-                  <span class="select-prefix">LIFT:</span>
+                  <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6.5 6.5v11"></path>
+                    <path d="M17.5 6.5v11"></path>
+                    <path d="M3 9v6"></path>
+                    <path d="M21 9v6"></path>
+                    <line x1="6.5" y1="12" x2="17.5" y2="12"></line>
+                  </svg>
+                  <span class="select-prefix sr-only">LIFT:</span>
                   <span id="selected-lift-text" class="select-value">DEADLIFT</span>
                 </span>
                 <span class="select-chevron" aria-hidden="true">▾</span>
@@ -133,35 +153,66 @@
             </div>
             
             <!-- Set Weight Input Capsule (Live Page) -->
-            <div class="weight-control-wrapper glass-pill" id="live-weight-control" role="group" aria-label="Set Working Weight">
-              <button type="button" class="weight-stepper-btn" id="btn-live-weight-dec" aria-label="Decrease Working Weight">−</button>
+            <div class="weight-control-wrapper glass-pill" id="live-weight-control" role="group" aria-label="Set Working Weight" data-prep-tooltip-key="live_weight_control">
+              <button type="button" class="weight-stepper-btn" id="btn-live-weight-dec" aria-label="Decrease Working Weight">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span class="sr-only">Decrease Weight</span>
+              </button>
               <div class="weight-input-inner">
                 <input type="number" id="live-set-weight-input" class="set-weight-input font-mono tabular-nums" value="140.0" step="2.5" min="0" max="600" aria-label="Set weight in kg">
                 <span class="weight-unit">kg</span>
               </div>
-              <button type="button" class="weight-stepper-btn" id="btn-live-weight-inc" aria-label="Increase Working Weight">+</button>
+              <button type="button" class="weight-stepper-btn" id="btn-live-weight-inc" aria-label="Increase Working Weight">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span class="sr-only">Increase Weight</span>
+              </button>
             </div>
 
             <!-- Set Trigger Button -->
-            <button id="btn-set-toggle" class="btn-glass-set">
-              <span id="btn-set-text">START SET</span>
+            <button id="btn-set-toggle" class="btn-glass-set" data-prep-tooltip-key="live_set_toggle">
+              <svg class="eros-svg-icon eros-svg-icon--lg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span id="btn-set-text" class="sr-only">START SET</span>
+              <span class="btn-short-label" aria-hidden="true">START</span>
             </button>
-            <button type="button" id="btn-complete-set" class="btn-complete-set font-mono" style="display: none;" aria-label="Complete Active Set">
-              <span>COMPLETE SET</span>
+            <button type="button" id="btn-complete-set" class="btn-complete-set font-mono" style="display: none;" aria-label="Complete Active Set" data-prep-tooltip-key="live_complete_set">
+              <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <polyline points="9 12 11 14 15 10"></polyline>
+              </svg>
+              <span class="sr-only">COMPLETE SET</span>
+              <span aria-hidden="true">DONE</span>
             </button>
           </div>
 
           <!-- Target RPE Configuration Capsule for Current Set -->
-          <div class="target-rpe-module" id="target-rpe-module">
+          <div class="target-rpe-module" id="target-rpe-module" data-prep-tooltip-key="live_target_rpe">
             <div class="target-rpe-row">
               <div class="target-rpe-label-wrap">
                 <span class="target-rpe-badge">TARGET RPE</span>
                 <span class="target-rpe-help">SET CEILING ALERT</span>
               </div>
               <div class="target-rpe-stepper-wrap">
-                <button type="button" class="target-stepper-btn" id="btn-target-rpe-dec" aria-label="Decrease Target RPE">−</button>
+                <button type="button" class="target-stepper-btn" id="btn-target-rpe-dec" aria-label="Decrease Target RPE">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span class="sr-only">Decrease Target RPE</span>
+                </button>
                 <span class="target-rpe-val font-mono tabular-nums" id="target-rpe-display">8.0</span>
-                <button type="button" class="target-stepper-btn" id="btn-target-rpe-inc" aria-label="Increase Target RPE">+</button>
+                <button type="button" class="target-stepper-btn" id="btn-target-rpe-inc" aria-label="Increase Target RPE">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span class="sr-only">Increase Target RPE</span>
+                </button>
               </div>
             </div>
             <div class="target-rpe-chips" role="radiogroup" aria-label="Quick Target RPE Presets">
@@ -200,12 +251,12 @@
             <div class="bar-path-stage" aria-label="Bar Path Trajectory Visualizer">
               <!-- Top Stage HUD Overlay: Mode Toggle Pill, Variant Switcher & Live Metrics -->
               <div class="barpath-hud-top">
-                <button type="button" class="barpath-mode-pill font-mono" id="btn-barpath-mode" aria-label="Toggle Bar Path Mode">
+                <button type="button" class="barpath-mode-pill font-mono" id="btn-barpath-mode" aria-label="Toggle Bar Path Mode" data-prep-tooltip-key="live_barpath_mode">
                   <span class="mode-opt active" id="barpath-mode-path">PATH</span>
                   <span class="mode-sep">/</span>
                   <span class="mode-opt" id="barpath-mode-vel">VEL</span>
                 </button>
-                <button type="button" class="barpath-variant-pill font-mono" id="btn-variant-switcher" aria-label="Switch Animation Variant" aria-haspopup="dialog" aria-expanded="false">
+                <button type="button" class="barpath-variant-pill font-mono" id="btn-variant-switcher" aria-label="Switch Animation Variant" aria-haspopup="dialog" aria-expanded="false" data-prep-tooltip-key="live_barpath_variant">
                   <span class="variant-label">VAR:</span>
                   <span class="variant-current" id="barpath-active-variant">A</span>
                 </button>
@@ -374,9 +425,9 @@
         </div>
 
         <!-- Post-Set Summary Banner (Reveals dynamically on set completion) -->
-        <div class="set-summary-banner glass-card" id="set-summary-banner" role="status" aria-live="polite">
+        <div class="set-summary-banner glass-card" id="set-summary-banner" role="status" aria-live="polite" data-prep-tooltip-key="live_set_summary">
           <div class="summary-check-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="eros-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
@@ -384,8 +435,35 @@
             <span class="summary-title" id="summary-set-title">SET 1 COMPLETED</span>
             <span class="summary-metrics font-mono" id="summary-set-metrics">1 REP @ 0.0 kg • AVG 0.00 m/s</span>
           </div>
+          <div class="summary-quick-trim" id="summary-quick-trim">
+            <button type="button" id="btn-summary-weight-dec" class="summary-trim-btn" aria-label="Decrease next set weight by 2.5 kg" data-prep-tooltip-key="summary_weight_trim">
+              <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>2.5</span>
+            </button>
+            <button type="button" id="btn-summary-weight-inc" class="summary-trim-btn" aria-label="Increase next set weight by 2.5 kg" data-prep-tooltip-key="summary_weight_trim">
+              <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>2.5</span>
+            </button>
+            <button type="button" id="btn-summary-next-set" class="summary-next-btn" aria-label="Start next set" data-prep-tooltip-key="summary_next_set">
+              <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>NEXT</span>
+            </button>
+          </div>
           <div class="summary-rest-countdown font-mono" id="summary-rest-countdown">
-            <span class="rest-timer-label">REST</span>
+            <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="13" r="8"></circle>
+              <path d="M12 9v4l2 2"></path>
+              <path d="M9 3h6"></path>
+              <path d="M12 3v2"></path>
+            </svg>
+            <span class="rest-timer-label sr-only">REST</span>
             <span class="rest-time-val" id="summary-rest-time">03:00</span>
           </div>
         </div>
@@ -486,7 +564,16 @@
             </div>
             <div id="athlete-prep-slots-list" class="athlete-prep-slots-list">
               <p class="athlete-prep-empty">No prescribed exercises for this day.</p>
-              <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout">START PLANNED WORKOUT</button>
+              <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <polygon points="3 5 6 7 3 9 3 5"></polygon>
+                </svg>
+                <span class="sr-only">START PLANNED WORKOUT</span>
+                <span aria-hidden="true">START PLAN</span>
+              </button>
             </div>
           </div>
 
@@ -501,7 +588,13 @@
 
           <div id="athlete-prep-feedback-bar" class="athlete-prep-feedback-bar" data-prep-tooltip-key="prep_athlete_feedback">
             <input type="text" id="athlete-prep-feedback-input" class="athlete-prep-feedback-input" maxlength="280" placeholder="Session feedback for your coach" aria-label="Session feedback for your coach" autocomplete="off" data-prep-tooltip-key="prep_athlete_feedback">
-            <button type="button" id="btn-send-prep-feedback" class="btn-send-prep-feedback" data-prep-tooltip-key="prep_send_feedback">SEND</button>
+            <button type="button" id="btn-send-prep-feedback" class="btn-send-prep-feedback" aria-label="Send session feedback" data-prep-tooltip-key="prep_send_feedback">
+              <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              <span class="sr-only">SEND</span>
+            </button>
           </div>
         </div>
 
@@ -548,12 +641,23 @@
               <span class="set-weight-help">WORKING WEIGHT</span>
             </div>
             <div class="weight-control-wrapper glass-pill" id="workout-weight-control" role="group" aria-label="Set Working Weight">
-              <button type="button" class="weight-stepper-btn" id="btn-workout-weight-dec" aria-label="Decrease Working Weight">−</button>
+              <button type="button" class="weight-stepper-btn" id="btn-workout-weight-dec" aria-label="Decrease Working Weight">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span class="sr-only">Decrease Weight</span>
+              </button>
               <div class="weight-input-inner">
                 <input type="number" id="workout-set-weight-input" class="set-weight-input font-mono tabular-nums" value="140.0" step="2.5" min="0" max="600" aria-label="Working Set Weight in kg">
                 <span class="weight-unit">kg</span>
               </div>
-              <button type="button" class="weight-stepper-btn" id="btn-workout-weight-inc" aria-label="Increase Working Weight">+</button>
+              <button type="button" class="weight-stepper-btn" id="btn-workout-weight-inc" aria-label="Increase Working Weight">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span class="sr-only">Increase Weight</span>
+              </button>
             </div>
           </div>
 
@@ -636,21 +740,33 @@
         <!-- History Top Bar: Athlete Settings Access (Requirement R4) -->
         <div class="history-top-bar">
           <div class="history-top-bar-title font-mono">ATHLETE RECORDS</div>
-          <button type="button" id="btn-athlete-settings" class="btn-athlete-settings" aria-label="Open Athlete & Coach Settings">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <button type="button" id="btn-athlete-settings" class="btn-athlete-settings eros-icon-btn" aria-label="Open Athlete & Coach Settings" data-prep-tooltip-key="history_athlete_settings">
+            <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
-            <span>SETTINGS</span>
+            <span class="sr-only">SETTINGS</span>
           </button>
         </div>
 
         <!-- Athlete Biometrics & Experience Dossier -->
-        <div id="athlete-biometrics-card" class="glass-card athlete-biometrics-card">
+        <div id="athlete-biometrics-card" class="glass-card athlete-biometrics-card" data-prep-tooltip-key="history_biometrics_card">
           <div class="athlete-bio-header">
-            <span class="athlete-bio-title font-mono">ATHLETE DOSSIER</span>
-            <span id="bio-save-status" class="bio-save-status font-mono" aria-live="polite"></span>
+            <div class="athlete-bio-title-group">
+              <span class="athlete-bio-title font-mono">ATHLETE DOSSIER</span>
+              <span id="athlete-bio-summary-pill" class="athlete-bio-summary-pill font-mono" style="display: none;"></span>
+            </div>
+            <div class="athlete-bio-header-actions">
+              <span id="bio-save-status" class="bio-save-status font-mono" aria-live="polite"></span>
+              <button type="button" id="btn-toggle-biometrics" class="btn-toggle-biometrics eros-icon-btn" aria-expanded="true" aria-controls="athlete-bio-body" aria-label="Toggle Athlete Dossier" data-prep-tooltip-key="history_toggle_biometrics">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                <span class="sr-only">Toggle Dossier</span>
+              </button>
+            </div>
           </div>
+          <div id="athlete-bio-body" class="athlete-bio-body">
           <div class="athlete-bio-grid">
             <label class="athlete-bio-field" for="bio-age-input">
               <span class="athlete-bio-label font-mono">AGE</span>
@@ -722,7 +838,14 @@
             <textarea id="bio-duties-notes-input" class="athlete-bio-input athlete-bio-textarea" rows="3" maxlength="500" placeholder="Work schedule, injuries, constraints your coach should factor in"></textarea>
           </label>
           <div class="athlete-bio-actions">
-            <button type="button" id="btn-save-biometrics" class="btn-save-biometrics">SAVE DOSSIER</button>
+            <button type="button" id="btn-save-biometrics" class="btn-save-biometrics" data-prep-tooltip-key="history_save_biometrics">
+              <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                <polyline points="9 10 11 12 15 8"></polyline>
+              </svg>
+              <span>SAVE<span class="sr-only"> DOSSIER</span></span>
+            </button>
+          </div>
           </div>
         </div>
 
@@ -904,14 +1027,28 @@
 
         <!-- Data Export & Actions Row -->
         <div class="history-actions-row">
-          <button id="btn-export-csv" class="btn-action-glass">
-            <span>EXPORT CSV</span>
+          <button id="btn-export-csv" class="btn-action-glass" data-prep-tooltip-key="history_export_csv">
+            <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span><span class="sr-only">EXPORT </span>CSV</span>
           </button>
-          <button id="btn-export-json" class="btn-action-glass">
-            <span>EXPORT JSON</span>
+          <button id="btn-export-json" class="btn-action-glass" data-prep-tooltip-key="history_export_json">
+            <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span><span class="sr-only">EXPORT </span>JSON</span>
           </button>
-          <button id="btn-clear-history" class="btn-action-glass btn-danger">
-            <span>CLEAR</span>
+          <button id="btn-clear-history" class="btn-action-glass btn-danger" aria-label="Clear History" data-prep-tooltip-key="history_clear">
+            <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span class="sr-only">CLEAR</span>
           </button>
         </div>
 
@@ -956,14 +1093,14 @@
           <div class="coach-sidebar-nav">
             <div class="coach-sidebar-group">
               <div class="coach-sidebar-group-label">Coaching</div>
-              <button type="button" class="coach-sidebar-link nav-active neu-inset-sm" data-coach-nav="live" aria-current="page">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <button type="button" class="coach-sidebar-link nav-active neu-inset-sm" data-coach-nav="live" aria-current="page" data-prep-tooltip-key="coach_nav_live">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                 </svg>
                 <span>Live Cockpit</span>
               </button>
-              <button type="button" class="coach-sidebar-link" data-coach-nav="roster">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <button type="button" class="coach-sidebar-link" data-coach-nav="roster" data-prep-tooltip-key="coach_nav_roster">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="9" cy="7" r="4"></circle>
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -971,8 +1108,8 @@
                 </svg>
                 <span>Squad Roster</span>
               </button>
-              <button type="button" class="coach-sidebar-link" data-coach-nav="prescriptions">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <button type="button" class="coach-sidebar-link" data-coach-nav="prescriptions" data-prep-tooltip-key="coach_nav_prescriptions">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <line x1="4" y1="21" x2="4" y2="14"></line>
                   <line x1="4" y1="10" x2="4" y2="3"></line>
                   <line x1="12" y1="21" x2="12" y2="12"></line>
@@ -985,8 +1122,8 @@
                 </svg>
                 <span>Prescriptions</span>
               </button>
-              <button type="button" class="coach-sidebar-link" data-coach-nav="history">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <button type="button" class="coach-sidebar-link" data-coach-nav="history" data-prep-tooltip-key="coach_nav_history">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="16" y1="2" x2="16" y2="6"></line>
                   <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -998,23 +1135,23 @@
 
             <div class="coach-sidebar-group">
               <div class="coach-sidebar-group-label">Management</div>
-              <button type="button" class="coach-sidebar-link" data-coach-nav="preparation">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="8" y="2" width="8" height="4" rx="1"></rect>
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                    <polyline points="9 14 11 16 15 12"></polyline>
-                  </svg>
+              <button type="button" class="coach-sidebar-link" data-coach-nav="preparation" data-prep-tooltip-key="coach_nav_preparation">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <polyline points="9 14 11 16 15 12"></polyline>
+                </svg>
                 <span>Preparation</span>
               </button>
-              <button type="button" class="coach-sidebar-link" data-coach-nav="bonds">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <button type="button" class="coach-sidebar-link" data-coach-nav="bonds" data-prep-tooltip-key="coach_nav_bonds">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                 </svg>
                 <span>Athlete Bonds</span>
               </button>
-              <button type="button" class="coach-sidebar-link" data-coach-nav="sync">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <button type="button" class="coach-sidebar-link" data-coach-nav="sync" data-prep-tooltip-key="coach_nav_sync">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M23 4v6h-6"></path>
                   <path d="M1 20v-6h6"></path>
                   <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
@@ -1027,20 +1164,28 @@
 
           <div class="coach-sidebar-footer">
             <!-- Embossed Live Rest / Session Ticker Widget -->
-            <div id="coach-sidebar-ticker" class="coach-sidebar-ticker neu-inset" aria-live="polite">
+            <div id="coach-sidebar-ticker" class="coach-sidebar-ticker neu-inset" aria-live="polite" data-prep-tooltip-key="coach_sidebar_ticker">
               <div class="coach-sidebar-ticker-top">
                 <span class="coach-sidebar-ticker-meta font-mono">Rest Ticker</span>
                 <span id="coach-sidebar-rest-state" class="coach-sidebar-rest-state font-mono">Ready</span>
               </div>
-              <div id="coach-sidebar-rest-time" class="coach-sidebar-rest-time font-mono">00:00</div>
+              <div class="coach-sidebar-ticker-time-row">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="13" r="8"></circle>
+                  <path d="M12 9v4l2 2"></path>
+                  <path d="M9 3h6"></path>
+                  <path d="M12 3v2"></path>
+                </svg>
+                <div id="coach-sidebar-rest-time" class="coach-sidebar-rest-time font-mono">00:00</div>
+              </div>
               <div class="coach-sidebar-ticker-counts coach-sidebar-ticker-meta font-mono">
                 <span id="coach-sidebar-active-count">0 Active</span>
                 <span id="coach-sidebar-resting-count">0 Rest</span>
               </div>
             </div>
 
-            <button type="button" id="coach-sidebar-toggle" class="coach-sidebar-toggle neu-raised-sm" aria-expanded="true" aria-label="Toggle Coach Sidebar">
-              <svg class="coach-sidebar-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <button type="button" id="coach-sidebar-toggle" class="coach-sidebar-toggle neu-raised-sm" aria-expanded="true" aria-label="Toggle Coach Sidebar" data-prep-tooltip-key="coach_sidebar_toggle">
+              <svg class="coach-sidebar-chevron eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
               <span class="coach-sidebar-toggle-label">Collapse</span>
@@ -1143,7 +1288,7 @@
             <span>Preparation</span>
           </button>
         </div>
-        <div class="coach-sync-architecture-pill" id="coach-cloud-sync-pill" title="Client-side ErosSyncBus active. Cloud PostgreSQL schema ready for deployment upon backend approval.">
+        <div class="coach-sync-architecture-pill" id="coach-cloud-sync-pill" data-prep-tooltip-key="coach_cloud_sync">
           <span class="coach-sync-dot"></span>
           <span id="coach-cloud-sync-text" class="font-mono">Eros Sync: Local Bus [Cloud Ready]</span>
         </div>
@@ -1157,7 +1302,13 @@
               <h3 id="coach-bond-modal-title" class="coach-bond-title">Manual Coach-Athlete Bonding</h3>
               <span class="coach-bond-subtitle">Dual-Consent Handshake &amp; Sovereign Access Control</span>
             </div>
-            <button type="button" id="btn-coach-bond-close" class="coach-bond-close-btn" aria-label="Close Bonding Modal">Close</button>
+            <button type="button" id="btn-coach-bond-close" class="coach-bond-close-btn eros-icon-btn" aria-label="Close Bonding Modal">
+              <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span class="sr-only">Close</span>
+            </button>
           </div>
 
           <div class="coach-bond-grid">
@@ -1170,8 +1321,22 @@
               <div class="coach-pairing-code-box">
                 <span id="coach-pairing-code-display" class="coach-pairing-code font-mono">EROS-INIT</span>
                 <div class="coach-pairing-actions">
-                  <button type="button" id="btn-coach-copy-code" class="coach-sm-btn">Copy Code</button>
-                  <button type="button" id="btn-coach-regen-code" class="coach-sm-btn">Regenerate</button>
+                  <button type="button" id="btn-coach-copy-code" class="coach-sm-btn eros-icon-pill" aria-label="Copy Pairing Code">
+                    <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span class="sr-only">Copy Code</span>
+                  </button>
+                  <button type="button" id="btn-coach-regen-code" class="coach-sm-btn eros-icon-pill" aria-label="Regenerate Pairing Code">
+                    <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="23 4 23 10 17 10"></polyline>
+                      <polyline points="1 20 1 14 7 14"></polyline>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+                      <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+                    </svg>
+                    <span class="sr-only">Regenerate</span>
+                  </button>
                 </div>
               </div>
               <div class="coach-qr-preview-row">
@@ -1205,7 +1370,13 @@
                 <div class="coach-manual-link-inputs">
                   <input type="text" id="coach-bond-athlete-name" class="coach-custom-input" placeholder="e.g., Athlete Name" aria-label="Athlete Full Name" />
                   <input type="text" id="coach-bond-athlete-rack" class="coach-custom-input coach-rack-input" placeholder="Rack 04" value="Rack 04" aria-label="Assigned Rack" />
-                  <button type="button" id="btn-coach-bond-manual-add" class="btn-coach-send">Link</button>
+                  <button type="button" id="btn-coach-bond-manual-add" class="btn-coach-send eros-icon-pill" aria-label="Link Athlete Manually">
+                    <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <span class="sr-only">Link Athlete</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -1243,11 +1414,37 @@
               <span class="coach-history-title">Live Squad Overview</span>
               <span class="coach-overview-sub font-mono" id="coach-kpi-summary-pill">0 Connected • 0 Lifting • 0 Resting</span>
             </div>
-            <div class="coach-roster-filters" id="coach-roster-filters" role="group" aria-label="Filter Squad Roster">
-              <button type="button" class="coach-filter-pill active" data-filter="all">All Connected</button>
-              <button type="button" class="coach-filter-pill" data-filter="lifting">Actively Lifting</button>
-              <button type="button" class="coach-filter-pill" data-filter="resting">Resting</button>
-              <button type="button" class="coach-filter-pill" data-filter="idle">Idle</button>
+            <div class="coach-roster-filters" id="coach-roster-filters" role="group" aria-label="Filter Squad Roster" data-prep-tooltip-key="coach_roster_filters">
+              <button type="button" class="coach-filter-pill eros-icon-pill active" data-filter="all" aria-label="All Connected">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span class="sr-only">All Connected</span>
+              </button>
+              <button type="button" class="coach-filter-pill eros-icon-pill" data-filter="lifting" aria-label="Actively Lifting">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                <span class="sr-only">Actively Lifting</span>
+              </button>
+              <button type="button" class="coach-filter-pill eros-icon-pill" data-filter="resting" aria-label="Resting">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="13" r="8"></circle>
+                  <path d="M12 9v4l2 2"></path>
+                  <path d="M9 3h6"></path>
+                </svg>
+                <span class="sr-only">Resting</span>
+              </button>
+              <button type="button" class="coach-filter-pill eros-icon-pill" data-filter="idle" aria-label="Idle">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <span class="sr-only">Idle</span>
+              </button>
             </div>
           </div>
 
@@ -1281,7 +1478,14 @@
                   <span class="coach-focal-sub font-mono" id="coach-dev-summary">Max Dev: 0.0 cm • Eff: 100.0%</span>
                 </div>
                 <div class="coach-focal-actions">
-                  <button type="button" id="coach-btn-barpath-mode" class="coach-pill-btn font-mono" aria-label="Toggle Bar Path Canvas Mode">Path</button>
+                  <button type="button" id="coach-btn-barpath-mode" class="coach-pill-btn eros-icon-pill font-mono" aria-label="Toggle Bar Path Canvas Mode" data-prep-tooltip-key="coach_barpath_mode">
+                    <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M3 17c3.333-4 6.667-6 10-6 2.5 0 4.5-1.5 8-5"></path>
+                      <circle cx="3" cy="17" r="1.5"></circle>
+                      <circle cx="21" cy="6" r="1.5"></circle>
+                    </svg>
+                    <span id="coach-barpath-mode-text" class="sr-only">Mode: Path</span>
+                  </button>
                 </div>
               </div>
 
@@ -1298,11 +1502,11 @@
               <!-- Replay & Scrub Controls (Pure SVG + Title Case Text, Zero Emojis) -->
               <div class="coach-barpath-controls">
                 <div class="coach-barpath-ctrl-row">
-                  <button type="button" id="coach-btn-barpath-replay" class="coach-ctrl-btn" aria-label="Play or Pause Barbell Replay">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <button type="button" id="coach-btn-barpath-replay" class="coach-ctrl-btn eros-icon-pill" aria-label="Play or Pause Barbell Replay" data-prep-tooltip-key="coach_barpath_replay">
+                    <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
-                    <span>Replay</span>
+                    <span class="sr-only">Replay</span>
                   </button>
                   <button type="button" id="coach-btn-barpath-speed" class="coach-ctrl-btn font-mono" aria-label="Toggle Replay Speed">1.0x</button>
                   <div class="coach-barpath-rep-pills" id="coach-barpath-rep-pills" role="group" aria-label="Select Repetition for Replay">
@@ -1338,7 +1542,7 @@
                 <div class="coach-rpe-gauge-container">
                   <div class="coach-rpe-gauge-track" role="progressbar" aria-label="Coach Live RPE Gauge">
                     <div id="coach-rpe-gauge-fill" class="coach-rpe-gauge-fill" style="width: 80%;"></div>
-                    <div id="coach-rpe-target-pin" class="coach-rpe-target-pin" style="left: 80%;" title="Target RPE @8.0">
+                    <div id="coach-rpe-target-pin" class="coach-rpe-target-pin" style="left: 80%;" data-prep-tooltip-key="coach_rpe_target_pin">
                       <span class="target-pin-tag">Target</span>
                     </div>
                   </div>
@@ -1361,7 +1565,7 @@
           <div class="coach-metrics-grid">
             <div class="coach-metric-card">
               <div class="coach-metric-header">
-                <span class="coach-metric-label">Mean Velocity (MCV)</span>
+                <span class="coach-metric-label">Mean Vel</span>
                 <span class="coach-metric-unit">m/s</span>
               </div>
               <div class="coach-metric-value" id="coach-live-mcv">0.00</div>
@@ -1373,7 +1577,7 @@
 
             <div class="coach-metric-card">
               <div class="coach-metric-header">
-                <span class="coach-metric-label">Peak Velocity (PV)</span>
+                <span class="coach-metric-label">Peak Vel</span>
                 <span class="coach-metric-unit">m/s</span>
               </div>
               <div class="coach-metric-value" id="coach-live-pv">0.00</div>
@@ -1430,8 +1634,17 @@
             <span class="coach-console-status" id="coach-feedback-status">Ready</span>
           </div>
 
+          <!-- Prescribed Set Bridge (from Active Athlete's Planned Slot) -->
+          <div id="coach-prescribed-bridge" class="coach-prescribed-bridge" style="display: none;" data-prep-tooltip-key="coach_cmd_push_prescribed">
+            <span class="coach-block-label">Prescribed Set Bridge:</span>
+            <div class="coach-prescribed-bridge-actions">
+              <button type="button" id="btn-coach-push-set-x" class="coach-load-pill pill-add" data-prep-tooltip-key="coach_cmd_push_prescribed">Push Set X</button>
+              <button type="button" id="btn-coach-push-set-y" class="coach-load-pill pill-keep" data-prep-tooltip-key="coach_cmd_push_prescribed">Push Set Y</button>
+            </div>
+          </div>
+
           <!-- Load Adjustment Pills -->
-          <div class="coach-console-block">
+          <div class="coach-console-block" data-prep-tooltip-key="coach_load_pills">
             <span class="coach-block-label">Load Adjustment Next Set / Next Rep:</span>
             <div class="coach-load-pills-row">
               <button type="button" class="coach-load-pill pill-sub" data-delta="-5.0">-5.0 kg</button>
@@ -1472,12 +1685,12 @@
             <span class="coach-block-label">Custom Technical Directive:</span>
             <div class="coach-custom-cue-row">
               <input type="text" id="coach-custom-cue-input" class="coach-custom-input" placeholder="Type technical cue for athlete rest HUD..." aria-label="Custom technical cue input" />
-              <button type="button" id="btn-coach-send-custom" class="btn-coach-send" aria-label="Send custom cue">
-                <span>Send Cue</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <button type="button" id="btn-coach-send-custom" class="btn-coach-send eros-icon-btn" aria-label="Send custom cue" data-prep-tooltip-key="coach_send_custom">
+                <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <line x1="22" y1="2" x2="11" y2="13"></line>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
+                <span class="sr-only">Send Cue</span>
               </button>
             </div>
           </div>
@@ -1531,7 +1744,13 @@
             <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
               <span class="coach-metric-label">In-Competition Total</span>
-              <button type="button" id="btn-coach-edit-comp" class="coach-inline-action-btn" aria-label="Edit Competition PRs">Edit</button>
+              <button type="button" id="btn-coach-edit-comp" class="coach-inline-action-btn eros-icon-pill" aria-label="Edit Competition PRs">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                <span class="sr-only">Edit Competition PRs</span>
+              </button>
             </div>
             <div class="coach-bento-hero font-mono" id="coach-comp-total-val">0.0 kg</div>
             <div class="coach-bento-sub font-mono" id="coach-comp-breakdown">SQ: 0.0 | BP: 0.0 | DL: 0.0 kg</div>
@@ -1554,7 +1773,12 @@
                   <span>DL</span>
                   <input type="number" id="coach-edit-comp-dl" class="coach-mini-input font-mono" step="2.5" value="0.0" aria-label="Competition Deadlift kg" />
                 </label>
-                <button type="button" id="btn-coach-save-comp" class="coach-sm-btn accent">Save</button>
+                <button type="button" id="btn-coach-save-comp" class="coach-sm-btn accent eros-icon-pill" aria-label="Save Competition PRs">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span class="sr-only">Save Competition PRs</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1617,10 +1841,26 @@
               <span id="coach-cal-summary-stats" class="coach-cal-stats font-mono">0 Workouts with Eros • 0.0t Monthly Volume</span>
             </div>
             <div class="coach-cal-nav-controls">
-              <button type="button" id="btn-coach-cal-prev" class="coach-cal-nav-btn" aria-label="Previous Month">Prev</button>
+              <button type="button" id="btn-coach-cal-prev" class="coach-cal-nav-btn eros-icon-pill" aria-label="Previous Month">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span class="sr-only">Previous Month</span>
+              </button>
               <span id="coach-cal-month-title" class="coach-cal-month-label font-mono">October 2026</span>
-              <button type="button" id="btn-coach-cal-next" class="coach-cal-nav-btn" aria-label="Next Month">Next</button>
-              <button type="button" id="btn-coach-cal-today" class="coach-cal-nav-btn today-btn" aria-label="Jump to Current Month">Today</button>
+              <button type="button" id="btn-coach-cal-next" class="coach-cal-nav-btn eros-icon-pill" aria-label="Next Month">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+                <span class="sr-only">Next Month</span>
+              </button>
+              <button type="button" id="btn-coach-cal-today" class="coach-cal-nav-btn today-btn eros-icon-pill" aria-label="Jump to Current Month">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <circle cx="12" cy="12" r="9"></circle>
+                </svg>
+                <span class="sr-only">Today</span>
+              </button>
             </div>
           </div>
 
@@ -1649,8 +1889,22 @@
               </div>
               <div class="coach-inspector-actions">
                 <span id="coach-inspector-meta" class="coach-inspector-meta font-mono">14,250 kg Volume • 5 Sets with Eros • Avg 0.44 m/s</span>
-                <button type="button" id="btn-coach-export-day" class="coach-sm-btn">Export JSON</button>
-                <button type="button" id="btn-coach-export-day-csv" class="coach-sm-btn">Export CSV</button>
+                <button type="button" id="btn-coach-export-day" class="coach-sm-btn eros-icon-pill" aria-label="Export Day JSON">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span class="sr-only">Export </span><span>JSON</span>
+                </button>
+                <button type="button" id="btn-coach-export-day-csv" class="coach-sm-btn eros-icon-pill" aria-label="Export Day CSV">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span class="sr-only">Export </span><span>CSV</span>
+                </button>
               </div>
             </div>
             <div class="coach-table-wrapper">
@@ -1703,9 +1957,9 @@
         <section id="coach-preparation-panel" class="coach-prep-section coach-panel-section" data-pill-group="coach-prep-big-pills" role="tabpanel" aria-labelledby="btn-coach-panel-preparation" style="display: none;">
 
           <!-- Factoring Strip -->
-          <div id="coach-prep-factoring-strip" class="coach-prep-factoring-strip neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-factoring-strip" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="coach_prep_factoring_strip">
+          <div id="coach-prep-factoring-strip" class="coach-prep-factoring-strip neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-factoring-strip" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill">
             <span class="pill-move-hint" aria-hidden="true"></span>
-            <div class="coach-prep-factoring-top">
+            <div class="coach-prep-factoring-top" data-prep-tooltip-key="coach_prep_factoring_strip">
               <label class="coach-prep-field coach-prep-field-athlete" for="coach-prep-athlete-select" data-prep-tooltip-key="coach_prep_athlete_select">
                 <span class="coach-prep-label font-mono">Athlete</span>
                 <select id="coach-prep-athlete-select" class="coach-prep-input">
@@ -1718,9 +1972,9 @@
           </div>
 
           <!-- Plan Header -->
-          <div id="coach-prep-plan-header" class="coach-prep-plan-header neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-plan-header" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="coach_prep_plan_card">
+          <div id="coach-prep-plan-header" class="coach-prep-plan-header neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-plan-header" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill">
             <span class="pill-move-hint" aria-hidden="true"></span>
-            <div class="coach-prep-header-grid">
+            <div class="coach-prep-header-grid" data-prep-tooltip-key="coach_prep_plan_card">
               <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-title-input" data-prep-tooltip-key="prep_plan_title">
                 <span class="coach-prep-label font-mono">Plan Title</span>
                 <input type="text" id="coach-prep-title-input" class="coach-prep-input" maxlength="80" placeholder="e.g., National meet build" autocomplete="off">
@@ -1769,31 +2023,70 @@
                 <span class="coach-prep-label font-mono">Deadlift 1RM (kg)</span>
                 <input type="number" id="coach-prep-1rm-deadlift" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="kg" inputmode="decimal">
               </label>
-              <button type="button" id="btn-coach-publish-prep" class="coach-prep-btn coach-prep-btn-primary" data-prep-tooltip-key="coach_prep_publish">Publish Plan</button>
+              <button type="button" id="btn-coach-publish-prep" class="coach-prep-btn coach-prep-btn-primary eros-icon-pill" data-prep-tooltip-key="coach_prep_publish">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 2L11 13"></path>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>Publish</span><span class="sr-only"> Plan</span>
+              </button>
             </div>
           </div>
 
           <!-- Macro Timeline & Quick Tools -->
-          <div id="coach-prep-macro-card" class="coach-prep-macro-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-macro-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="coach_prep_macro_card">
+          <div id="coach-prep-macro-card" class="coach-prep-macro-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-macro-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill">
             <span class="pill-move-hint" aria-hidden="true"></span>
-            <div class="coach-prep-section-head">
+            <div class="coach-prep-section-head" data-prep-tooltip-key="coach_prep_macro_card">
               <span class="coach-prep-section-title">Macro Timeline</span>
               <div class="coach-prep-quick-tools">
                 <select id="coach-prep-template-select" class="coach-prep-input coach-prep-template-select" aria-label="Plan template" data-prep-tooltip-key="coach_prep_template_select">
                   <option value="">Select template</option>
                 </select>
-                <button type="button" id="btn-coach-apply-template" class="coach-prep-btn" data-prep-tooltip-key="coach_prep_apply_template">Apply Template</button>
-                <button type="button" id="btn-coach-deload-week" class="coach-prep-btn" data-prep-tooltip-key="coach_prep_deload_week">Deload Week</button>
-                <button type="button" id="btn-coach-clone-week" class="coach-prep-btn" data-prep-tooltip-key="coach_prep_clone_week">Clone Week</button>
+                <button type="button" id="btn-coach-apply-template" class="coach-prep-btn eros-icon-pill" data-prep-tooltip-key="coach_prep_apply_template">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                  </svg>
+                  <span>Apply</span><span class="sr-only"> Template</span>
+                </button>
+                <button type="button" id="btn-coach-deload-week" class="coach-prep-btn eros-icon-pill" data-prep-tooltip-key="coach_prep_deload_week">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                    <polyline points="17 18 23 18 23 12"></polyline>
+                  </svg>
+                  <span>Deload</span><span class="sr-only"> Week</span>
+                </button>
+                <button type="button" id="btn-coach-clone-week" class="coach-prep-btn eros-icon-pill" data-prep-tooltip-key="coach_prep_clone_week">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span>Clone</span><span class="sr-only"> Week</span>
+                </button>
+                <div class="coach-prep-bump-group" data-prep-tooltip-key="coach_prep_week_bump">
+                  <select id="coach-prep-bump-select" class="coach-prep-input coach-prep-bump-select" aria-label="Weekly load progression step">
+                    <option value="load:1.25">+1.25 kg</option>
+                    <option value="load:2.5" selected>+2.5 kg</option>
+                    <option value="rpe:0.5">+0.5 RPE</option>
+                  </select>
+                  <button type="button" id="btn-coach-bump-week-load" class="coach-prep-btn coach-prep-btn-compact eros-icon-pill" aria-label="Apply weekly progression">
+                    <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                      <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
+                    <span>Bump</span>
+                  </button>
+                </div>
               </div>
             </div>
             <div id="coach-prep-weeks-track" class="coach-prep-weeks-track" role="listbox" aria-label="Plan weeks" data-prep-tooltip-key="coach_prep_weeks_track"></div>
           </div>
 
           <!-- Daily Session & Exercise Picker -->
-          <div id="coach-prep-session-card" class="coach-prep-session-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-session-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="coach_prep_session_card">
+          <div id="coach-prep-session-card" class="coach-prep-session-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-session-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill">
             <span class="pill-move-hint" aria-hidden="true"></span>
-            <div class="coach-prep-section-head">
+            <div class="coach-prep-section-head" data-prep-tooltip-key="coach_prep_session_card">
               <span class="coach-prep-section-title">Daily Session</span>
             </div>
             <div id="coach-prep-day-tabs" class="coach-prep-day-tabs" role="tablist" aria-label="Session day" data-prep-tooltip-key="prep_week_day"></div>
@@ -1830,7 +2123,14 @@
                 <span class="coach-prep-label font-mono">Exercise</span>
                 <select id="coach-prep-exercise-select" class="coach-prep-input"></select>
               </label>
-              <button type="button" id="btn-coach-custom-exercise" class="coach-prep-btn" data-prep-tooltip-key="coach_prep_custom_exercise">Custom Exercise</button>
+              <button type="button" id="btn-coach-custom-exercise" class="coach-prep-btn eros-icon-pill" aria-label="Custom Exercise" data-prep-tooltip-key="coach_prep_custom_exercise">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
+                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span class="sr-only">Custom Exercise</span>
+              </button>
             </div>
 
             <div class="coach-prep-slot-builder">
@@ -1885,7 +2185,13 @@
                 </div>
               </div>
               <div class="coach-prep-slot-actions">
-                <button type="button" id="btn-coach-add-slot" class="coach-prep-btn coach-prep-btn-primary" data-prep-tooltip-key="coach_prep_add_exercise">Add Exercise</button>
+                <button type="button" id="btn-coach-add-slot" class="coach-prep-btn coach-prep-btn-primary eros-icon-pill" data-prep-tooltip-key="coach_prep_add_exercise">
+                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>Add</span><span class="sr-only"> Exercise</span>
+                </button>
               </div>
             </div>
 
@@ -1916,14 +2222,19 @@
               </label>
             </div>
             <div class="coach-prep-session-actions">
-              <button type="button" id="btn-coach-save-session" class="coach-prep-btn coach-prep-btn-primary" data-prep-tooltip-key="coach_prep_save_session">Save Session</button>
+              <button type="button" id="btn-coach-save-session" class="coach-prep-btn coach-prep-btn-primary eros-icon-pill" data-prep-tooltip-key="coach_prep_save_session">
+                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Save</span><span class="sr-only"> Session</span>
+              </button>
             </div>
           </div>
 
           <!-- Planned vs Actual Matrix -->
-          <div id="coach-prep-comparison-card" class="coach-prep-comparison-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-comparison-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="prep_plan_vs_actual">
+          <div id="coach-prep-comparison-card" class="coach-prep-comparison-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-comparison-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill">
             <span class="pill-move-hint" aria-hidden="true"></span>
-            <div class="coach-prep-section-head">
+            <div class="coach-prep-section-head" data-prep-tooltip-key="prep_plan_vs_actual">
               <span class="coach-prep-section-title">Planned vs Actual</span>
             </div>
             <div id="coach-prep-comparison-body" class="coach-prep-comparison-body">
@@ -1939,14 +2250,14 @@
 
       <!-- Coach Tablet Bottom Navigation Bar (768px - 1023px) -->
       <nav id="coach-tablet-nav" class="coach-tablet-nav neu-raised" aria-label="Coach Tablet Navigation">
-        <button type="button" class="coach-bottom-nav-btn nav-active neu-inset-sm" data-coach-nav="live">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="coach-bottom-nav-btn nav-active neu-inset-sm" data-coach-nav="live" data-prep-tooltip-key="coach_nav_live">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
           </svg>
           <span>Live Cockpit</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="roster">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="roster" data-prep-tooltip-key="coach_nav_roster">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -1954,15 +2265,22 @@
           </svg>
           <span>Squad Roster</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="prescriptions">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="prescriptions" data-prep-tooltip-key="coach_nav_prescriptions">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
           <span>Prescriptions</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="history">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="history" data-prep-tooltip-key="coach_nav_history">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -1970,25 +2288,27 @@
           </svg>
           <span>History</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="preparation">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="8" y="2" width="8" height="4" rx="1"></rect>
-              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-              <polyline points="9 14 11 16 15 12"></polyline>
-            </svg>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="preparation" data-prep-tooltip-key="coach_nav_preparation">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <polyline points="9 14 11 16 15 12"></polyline>
+          </svg>
           <span>Prep</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="bonds">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="bonds" data-prep-tooltip-key="coach_nav_bonds">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
           </svg>
           <span>Athlete Bonds</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="sync">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <polyline points="9 12 11 14 15 10"></polyline>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="sync" data-prep-tooltip-key="coach_nav_sync">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 4v6h-6"></path>
+            <path d="M1 20v-6h6"></path>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+            <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
           </svg>
           <span>Sync</span>
         </button>
@@ -1996,56 +2316,67 @@
 
       <!-- Coach Mobile Bottom Navigation Bar (< 768px) -->
       <nav id="coach-mobile-nav" class="coach-mobile-nav neu-raised" aria-label="Coach Mobile Navigation">
-        <button type="button" class="coach-bottom-nav-btn nav-active neu-inset-sm" data-coach-nav="live">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="coach-bottom-nav-btn nav-active neu-inset-sm" data-coach-nav="live" data-prep-tooltip-key="coach_nav_live">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
           </svg>
-          <span>Live</span>
+          <span class="sr-only">Live Cockpit</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="roster">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="roster" data-prep-tooltip-key="coach_nav_roster">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          <span>Roster</span>
+          <span class="sr-only">Squad Roster</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="prescriptions">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="prescriptions" data-prep-tooltip-key="coach_nav_prescriptions">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
-          <span>Cues</span>
+          <span class="sr-only">Prescriptions</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="history">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="history" data-prep-tooltip-key="coach_nav_history">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-          <span>History</span>
+          <span class="sr-only">History</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="preparation">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="8" y="2" width="8" height="4" rx="1"></rect>
-              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-              <polyline points="9 14 11 16 15 12"></polyline>
-            </svg>
-          <span>Prep</span>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="preparation" data-prep-tooltip-key="coach_nav_preparation">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <polyline points="9 14 11 16 15 12"></polyline>
+          </svg>
+          <span class="sr-only">Preparation</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="bonds">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="bonds" data-prep-tooltip-key="coach_nav_bonds">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
           </svg>
-          <span>Bonds</span>
+          <span class="sr-only">Athlete Bonds</span>
         </button>
-        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="sync">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <polyline points="9 12 11 14 15 10"></polyline>
+        <button type="button" class="coach-bottom-nav-btn" data-coach-nav="sync" data-prep-tooltip-key="coach_nav_sync">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 4v6h-6"></path>
+            <path d="M1 20v-6h6"></path>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+            <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
           </svg>
-          <span>Sync</span>
+          <span class="sr-only">Sync &amp; Health</span>
         </button>
       </nav>
 
@@ -2059,22 +2390,38 @@
         <div id="pr-confirm-metrics" class="pr-confirm-metrics font-mono"></div>
       </div>
       <div class="pr-confirm-actions">
-        <button type="button" id="btn-confirm-push-pr" class="pr-confirm-btn pr-confirm-btn-primary" data-prep-tooltip-key="prep_push_pr">PUSH PR</button>
-        <button type="button" id="btn-dismiss-push-pr" class="pr-confirm-btn pr-confirm-btn-ghost">DISMISS</button>
+        <button type="button" id="btn-confirm-push-pr" class="pr-confirm-btn pr-confirm-btn-primary eros-icon-pill" data-prep-tooltip-key="prep_push_pr">
+          <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+          </svg>
+          <span>PUSH PR</span>
+        </button>
+        <button type="button" id="btn-dismiss-push-pr" class="pr-confirm-btn pr-confirm-btn-ghost eros-icon-btn" aria-label="Dismiss PR candidate">
+          <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span class="sr-only">DISMISS</span>
+        </button>
       </div>
     </div>
 
     <!-- Floating Glass OS Bottom Navigation Bar -->
     <nav class="bottom-glass-nav" data-active="live" aria-label="Main Navigation">
       <div class="nav-indicator-pill" id="nav-indicator-pill" aria-hidden="true"></div>
-      <button class="nav-tab active" data-target="live" aria-label="Live Tracker Tab">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <button class="nav-tab active" data-target="live" aria-label="Live Tracker Tab" data-prep-tooltip-key="nav_live">
+        <svg class="nav-icon eros-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
         <span class="nav-label sr-only">LIVE</span>
       </button>
-      <button class="nav-tab" data-target="set" aria-label="Preparation Tab">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <button class="nav-tab" data-target="set" aria-label="Preparation Tab" data-prep-tooltip-key="nav_prep">
+        <svg class="nav-icon eros-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="16" y1="2" x2="16" y2="6"></line>
           <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -2083,8 +2430,8 @@
         </svg>
         <span class="nav-label sr-only">PREP</span>
       </button>
-      <button class="nav-tab" data-target="history" aria-label="Athlete Profile Tab">
-        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <button class="nav-tab" data-target="history" aria-label="Athlete Profile Tab" data-prep-tooltip-key="nav_history">
+        <svg class="nav-icon eros-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           <circle cx="12" cy="10" r="2.6"></circle>
           <path d="M7.6 16.2a5 5 0 0 1 8.8 0"></path>
@@ -2096,7 +2443,7 @@
     <!-- Customizable Radial Floating Action Launcher (Athlete & Coach Unified Quick Actions) -->
     <div id="eros-radial-fab" class="eros-radial-fab smart-overflow-protected" data-radial-open="false" data-quadrant="bottom-right">
       <div id="eros-radial-items" class="eros-radial-items" role="menu" aria-label="Quick Actions" aria-hidden="true"></div>
-      <button type="button" id="eros-radial-fab-trigger" class="eros-radial-fab-trigger neu-raised-sm" aria-label="Toggle Quick Actions" aria-expanded="false" aria-controls="eros-radial-items" title="Quick Actions (Right-click or long-press to customize)">
+      <button type="button" id="eros-radial-fab-trigger" class="eros-radial-fab-trigger neu-raised-sm" aria-label="Toggle Quick Actions" aria-expanded="false" aria-controls="eros-radial-items" data-prep-tooltip-key="radial_fab">
         <svg class="eros-radial-plus-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -2167,13 +2514,21 @@
       </div>
 
       <div class="eros-radial-customizer-footer">
-        <button type="button" id="btn-radial-customizer-reset" class="coach-sm-btn neu-btn">Reset Defaults</button>
-        <button type="button" id="btn-radial-customizer-close" class="btn-coach-send neu-btn">Save Actions</button>
+        <button type="button" id="btn-radial-customizer-reset" class="coach-sm-btn neu-btn eros-icon-pill">
+          <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          <span>Reset Defaults</span>
+        </button>
+        <button type="button" id="btn-radial-customizer-close" class="btn-coach-send neu-btn eros-icon-pill">
+          <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Save Actions</span>
+        </button>
       </div>
     </div>
-
-    <!-- Preparation Clean-Slate Embossed Hover Tooltip -->
-    <div id="eros-prep-tooltip-card" class="eros-prep-tooltip-card" role="tooltip" aria-hidden="true"></div>
 
   </div>
 
@@ -2188,8 +2543,12 @@
             <span class="eros-wordmark ble-wordmark">Eros</span>
             <span id="ble-search-title" class="ble-search-title">BLUETOOTH CONNECTION</span>
           </div>
-          <button type="button" id="btn-close-ble-search" class="ble-close-btn" aria-label="Close Eros Connection">
-            <span class="close-label">CLOSE</span>
+          <button type="button" id="btn-close-ble-search" class="ble-close-btn eros-icon-btn" aria-label="Close Eros Connection">
+            <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span class="close-label sr-only">CLOSE</span>
           </button>
         </div>
       </div>
@@ -2238,8 +2597,12 @@
       
       <!-- Connect Action Button -->
       <div class="ble-action-container">
-        <button id="btn-connect" class="btn-glass-connect">
+        <button id="btn-connect" class="btn-glass-connect" data-prep-tooltip-key="modal_ble_connect">
           <span class="btn-ripple"></span>
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
           <span class="btn-text">CONNECT <span class="eros-wordmark">Eros</span></span>
         </button>
       </div>
@@ -2288,16 +2651,23 @@
       </div>
 
       <div class="directive-actions">
-        <button type="button" class="btn-directive-dismiss glass-pill" id="btn-directive-decline">
+        <button type="button" class="btn-directive-dismiss glass-pill" id="btn-directive-decline" data-prep-tooltip-key="modal_directive_decline">
+          <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
           <span id="btn-decline-text">Decline</span>
         </button>
-        <button type="button" class="btn-directive-accept glass-pill-primary" id="btn-directive-accept">
+        <button type="button" class="btn-directive-accept glass-pill-primary" id="btn-directive-accept" data-prep-tooltip-key="modal_directive_accept">
           <span class="countdown-ring">
             <svg id="countdown-ring-svg" class="auto-accept-svg countdown-ring-svg" viewBox="0 0 32 32" aria-hidden="true">
               <circle class="auto-accept-track" cx="16" cy="16" r="13"></circle>
               <circle id="coach-accept-ring" class="auto-accept-fill" cx="16" cy="16" r="13"></circle>
             </svg>
           </span>
+          <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
           <span class="btn-accept-label" id="btn-accept-label">Accept</span>
           <span class="countdown-seconds font-mono" id="coach-countdown-sec">20s</span>
         </button>
@@ -2314,7 +2684,13 @@
           <h3 id="athlete-settings-title" class="athlete-settings-title">ATHLETE & COACH SETTINGS</h3>
           <span class="athlete-settings-sub">Connection & Profile Configuration</span>
         </div>
-        <button type="button" id="btn-athlete-settings-close" class="athlete-settings-close-btn" aria-label="Close Settings">CLOSE</button>
+        <button type="button" id="btn-athlete-settings-close" class="athlete-settings-close-btn eros-icon-btn" aria-label="Close Settings">
+          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span class="sr-only">CLOSE</span>
+        </button>
       </div>
 
       <div class="athlete-settings-body">
@@ -2347,13 +2723,20 @@
 
         <!-- Action Button -->
         <div class="athlete-settings-actions">
-          <button type="button" id="btn-athlete-connect-coach" class="btn-athlete-connect glass-pill-primary">
+          <button type="button" id="btn-athlete-connect-coach" class="btn-athlete-connect glass-pill-primary" data-prep-tooltip-key="modal_athlete_settings_connect">
+            <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
             <span id="btn-athlete-connect-text">Connect to Coach</span>
           </button>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Preparation Clean-Slate Embossed Hover Tooltip (Root Stacking Context) -->
+  <div id="eros-prep-tooltip-card" class="eros-prep-tooltip-card" role="tooltip" aria-hidden="true"></div>
 
   <!-- Error & Notification Glass Banner -->
   <div id="sync-banner" class="glass-banner hidden" role="alert">

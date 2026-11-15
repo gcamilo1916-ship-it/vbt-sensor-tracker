@@ -121,6 +121,7 @@
     plan: null,
     workouts: [],
     weekIndex: 0,
+    selectedWeek: 0,
     dayIndex: 0,
     draftSlots: [],
     profiles: {},
@@ -248,6 +249,29 @@
   /** Formats internal canvas mode token for button UI without mutating API mode strings. */
   function formatCoachCanvasModeLabel(mode) {
     return mode === 'VEL' ? 'Mode: Vel' : 'Mode: Path';
+  }
+
+  function updateBarpathModeButton(mode) {
+    const btn = elements.btnBarpathMode || (typeof document !== 'undefined' ? document.getElementById('coach-btn-barpath-mode') : null);
+    if (!btn) return;
+    const label = formatCoachCanvasModeLabel(mode);
+    let textSpan = btn.querySelector ? btn.querySelector('#coach-barpath-mode-text') : null;
+    if (!textSpan && typeof document !== 'undefined' && typeof document.createElement === 'function') {
+      const hasSvg = btn.querySelector && btn.querySelector('svg');
+      if (hasSvg) {
+        textSpan = document.createElement('span');
+        textSpan.id = 'coach-barpath-mode-text';
+        btn.appendChild(textSpan);
+      } else {
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg><span id="coach-barpath-mode-text"></span>`;
+        textSpan = btn.querySelector ? btn.querySelector('#coach-barpath-mode-text') : null;
+      }
+    }
+    if (textSpan) {
+      textSpan.textContent = label;
+    } else {
+      btn.textContent = label;
+    }
   }
 
   function formatRestDuration(seconds) {
@@ -1543,8 +1567,8 @@
               <span class="coach-bond-item-meta font-mono">Code: ${escapeHtml(req.codeEntered)} • ${escapeHtml(req.rack)}</span>
             </div>
             <div class="coach-pairing-actions">
-              <button type="button" class="coach-sm-btn" data-decline-req="${escapeHtml(req.id)}">Decline</button>
-              <button type="button" class="coach-sm-btn accent" data-approve-req="${escapeHtml(req.id)}">Approve Bond</button>
+              <button type="button" class="coach-sm-btn" data-decline-req="${escapeHtml(req.id)}" aria-label="Decline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span class="sr-only">Decline</span></button>
+              <button type="button" class="coach-sm-btn accent" data-approve-req="${escapeHtml(req.id)}" aria-label="Approve Bond"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="sr-only">Approve Bond</span></button>
             </div>
           </div>
         `).join('');
@@ -1566,7 +1590,7 @@
             <span class="coach-bond-item-meta font-mono">Active Bond • Live &amp; History Permitted</span>
           </div>
           <div class="coach-pairing-actions">
-            <button type="button" class="coach-sm-btn danger" data-revoke-id="${escapeHtml(ath.id)}">Revoke</button>
+            <button type="button" class="coach-sm-btn danger" data-revoke-id="${escapeHtml(ath.id)}" aria-label="Revoke"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="18" y1="8" x2="23" y2="13"></line><line x1="23" y1="8" x2="18" y2="13"></line></svg><span class="sr-only">Revoke</span></button>
           </div>
         </div>
       `).join('');
@@ -1642,6 +1666,9 @@
     if (!elements.rosterFilters || elements.rosterFilters._coachBound) return;
     const buttons = elements.rosterFilters.querySelectorAll('[data-filter]');
     buttons.forEach(btn => {
+      if (typeof btn.setAttribute === 'function' && !btn.getAttribute('data-prep-tooltip-key')) {
+        btn.setAttribute('data-prep-tooltip-key', 'coach_filter_pill');
+      }
       btn.addEventListener('click', () => {
         activeRosterFilter = btn.getAttribute('data-filter') || 'all';
         buttons.forEach(b => b.classList.toggle('active', b === btn));
@@ -1697,7 +1724,7 @@
       const vlBarClass = vl >= 20 ? 'cutoff' : (vl >= 15 ? 'warning' : '');
 
       return `
-        <div class="coach-squad-athlete-card ${isSelected ? 'selected' : ''}" data-squad-athlete-id="${escapeHtml(ath.id)}" role="button" tabindex="0" aria-label="Supervise ${escapeHtml(ath.name)} on ${escapeHtml(ath.rack)}">
+        <div class="coach-squad-athlete-card ${isSelected ? 'selected' : ''}" data-squad-athlete-id="${escapeHtml(ath.id)}" data-prep-tooltip-key="coach_squad_card" role="button" tabindex="0" aria-label="Supervise ${escapeHtml(ath.name)} on ${escapeHtml(ath.rack)}">
           <div class="coach-squad-card-hdr">
             <div>
               <div class="coach-squad-card-name">${escapeHtml(ath.name)}</div>
@@ -1726,7 +1753,7 @@
             </div>
           </div>
           <div class="coach-squad-card-actions">
-            <button type="button" class="coach-squad-action-btn focus-btn" data-action="focus" data-athlete-id="${escapeHtml(ath.id)}" aria-label="Focus ${escapeHtml(ath.name)}">Focus</button>
+            <button type="button" class="coach-squad-action-btn focus-btn" data-action="focus" data-athlete-id="${escapeHtml(ath.id)}" aria-label="Focus ${escapeHtml(ath.name)}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg><span class="sr-only">Focus</span></button>
           </div>
         </div>
       `;
@@ -1911,6 +1938,9 @@
     if (elements.historyLiftFilters && !elements.historyLiftFilters._coachBound) {
       const filterBtns = elements.historyLiftFilters.querySelectorAll('[data-lift-filter]');
       filterBtns.forEach(btn => {
+        if (typeof btn.setAttribute === 'function' && !btn.getAttribute('data-prep-tooltip-key')) {
+          btn.setAttribute('data-prep-tooltip-key', 'coach_filter_pill');
+        }
         btn.addEventListener('click', () => {
           activeHistoryLiftFilter = btn.getAttribute('data-lift-filter') || 'all';
           filterBtns.forEach(b => b.classList.toggle('active', b === btn));
@@ -2156,7 +2186,7 @@
     for (let i = startOffset - 1; i >= 0; i--) {
       const dayNum = prevMonthDays - i;
       cellsHtml.push(`
-        <div class="coach-cal-day-cell outside-month" role="gridcell" aria-disabled="true">
+        <div class="coach-cal-day-cell outside-month" data-prep-tooltip-key="coach_cal_day" role="gridcell" aria-disabled="true">
           <span class="coach-cal-day-num">${dayNum}</span>
         </div>
       `);
@@ -2185,6 +2215,7 @@
       cellsHtml.push(`
         <div class="coach-cal-day-cell ${hasWorkout ? 'has-workout' : ''} ${isSelected ? 'selected-day' : ''}"
              data-cal-date="${dateStr}"
+             data-prep-tooltip-key="coach_cal_day"
              role="gridcell"
              tabindex="0"
              aria-selected="${isSelected ? 'true' : 'false'}"
@@ -2653,6 +2684,7 @@
     renderSquadOverview();
     renderActiveSetFromState();
     renderSetsHistoryTable();
+    renderCoachPrescribedBridge();
     renderAthleteHistoryPanel();
     if (activeCoachPanel === 'preparation') renderPreparationPanel();
   }
@@ -2835,7 +2867,7 @@
       const isCutoff = rep.lossPercent >= 20.0;
       const isSelected = (idx === coachSelectedRepIdx);
       return `
-        <div class="coach-rep-stream-pill ${isCutoff ? 'cutoff-alert' : ''} ${isSelected ? 'active' : ''}" data-rep-idx="${idx}" role="button" tabindex="0" aria-label="Select Rep ${rep.repNumber}">
+        <div class="coach-rep-stream-pill ${isCutoff ? 'cutoff-alert' : ''} ${isSelected ? 'active' : ''}" data-rep-idx="${idx}" data-prep-tooltip-key="coach_rep_stream_pill" role="button" tabindex="0" aria-label="Select Rep ${rep.repNumber}">
           <span class="rep-num">R${rep.repNumber}:</span>
           <span class="rep-vel">${rep.velocity.toFixed(2)} m/s</span>
           <span class="rep-loss">(${rep.lossPercent > 0 ? '-' : ''}${rep.lossPercent.toFixed(1)}%)</span>
@@ -2897,10 +2929,8 @@
           <td class="font-mono">@${(set.avgRpe || 8.0).toFixed(1)}</td>
           <td>
             <div class="coach-table-actions">
-              <button type="button" class="coach-replay-set-btn" data-action="replay" data-set-id="${escapeHtml(setId)}" aria-label="Replay set ${set.setNumber}">Replay</button>
-              <button type="button" class="coach-expand-btn" data-toggle-id="${escapeHtml(setId)}" aria-label="Toggle details for set ${set.setNumber}">
-                ${isExpanded ? 'Hide Reps' : 'View Reps'}
-              </button>
+              <button type="button" class="coach-replay-set-btn" data-action="replay" data-set-id="${escapeHtml(setId)}" aria-label="Replay set ${set.setNumber}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span class="sr-only">Replay</span></button>
+              <button type="button" class="coach-expand-btn" data-toggle-id="${escapeHtml(setId)}" aria-label="Toggle details for set ${set.setNumber}">${isExpanded ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg><span class="sr-only">Hide Reps</span>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg><span class="sr-only">View Reps</span>'}</button>
             </div>
           </td>
         </tr>
@@ -2985,7 +3015,7 @@
     if (!elements.barpathCard) queryElements();
 
     if (elements.btnBarpathMode && !elements.btnBarpathMode._coachBound) {
-      elements.btnBarpathMode.textContent = formatCoachCanvasModeLabel(coachCanvasMode);
+      updateBarpathModeButton(coachCanvasMode);
       elements.btnBarpathMode.addEventListener('click', toggleCoachCanvasMode);
       elements.btnBarpathMode._coachBound = true;
     }
@@ -3245,22 +3275,38 @@
     if (!elements.btnBarpathReplay) queryElements();
     const btn = elements.btnBarpathReplay;
     if (!btn) return;
+    const labelEl = btn.querySelector ? btn.querySelector('span') : null;
+    const svgEl = btn.querySelector ? btn.querySelector('svg') : null;
     if (coachPlaybackActive) {
-      btn.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <rect x="6" y="4" width="4" height="16"></rect>
-          <rect x="14" y="4" width="4" height="16"></rect>
-        </svg>
-        <span>Pause</span>
-      `;
+      if (svgEl) {
+        svgEl.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+      }
+      if (labelEl) {
+        labelEl.textContent = 'Pause';
+      } else if (!svgEl) {
+        btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+          <span>Pause</span>
+        `;
+      }
       btn.classList.add('active');
     } else {
-      btn.innerHTML = `
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-        </svg>
-        <span>Replay</span>
-      `;
+      if (svgEl) {
+        svgEl.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+      }
+      if (labelEl) {
+        labelEl.textContent = 'Replay';
+      } else if (!svgEl) {
+        btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Replay</span>
+        `;
+      }
       btn.classList.remove('active');
     }
   }
@@ -3274,9 +3320,7 @@
 
   function toggleCoachCanvasMode() {
     coachCanvasMode = (coachCanvasMode === 'PATH') ? 'VEL' : 'PATH';
-    if (elements.btnBarpathMode) {
-      elements.btnBarpathMode.textContent = formatCoachCanvasModeLabel(coachCanvasMode);
-    }
+    updateBarpathModeButton(coachCanvasMode);
     renderCoachBarPathCanvas();
   }
 
@@ -3372,7 +3416,9 @@
       const targetPct = Math.min(100, Math.max(10, coachActiveTargetRpe * 10));
       const targetText = `Target @${coachActiveTargetRpe.toFixed(1)}`;
       elements.rpeTargetPin.style.left = `${targetPct}%`;
-      elements.rpeTargetPin.title = targetText;
+      if (typeof elements.rpeTargetPin.removeAttribute === 'function') {
+        elements.rpeTargetPin.removeAttribute('title');
+      }
       const pinLabel = typeof elements.rpeTargetPin.querySelector === 'function'
         ? (elements.rpeTargetPin.querySelector('.coach-rpe-target-label') || elements.rpeTargetPin.querySelector('span'))
         : null;
@@ -3409,7 +3455,7 @@
       return;
     }
     container.innerHTML = coachActiveReps.map((r, idx) => `
-      <button type="button" class="coach-barpath-rep-pill ${idx === coachSelectedRepIdx ? 'active' : ''}" data-rep-idx="${idx}" aria-label="Select Rep ${r.repNumber || idx + 1}">
+      <button type="button" class="coach-barpath-rep-pill ${idx === coachSelectedRepIdx ? 'active' : ''}" data-rep-idx="${idx}" data-prep-tooltip-key="coach_barpath_rep_pill" aria-label="Select Rep ${r.repNumber || idx + 1}">
         R${r.repNumber || idx + 1}
       </button>
     `).join('');
@@ -3569,6 +3615,130 @@
       });
       elements.btnSendCustom._coachBound = true;
     }
+
+    renderCoachPrescribedBridge();
+  }
+
+  function getTodayPrescribedBridgeContext() {
+    const athleteId = currentAthlete ? currentAthlete.id : 'ath_01';
+    const todayStr = formatIsoDate(new Date());
+    let workouts = [];
+    if (prepState.athleteId === athleteId && Array.isArray(prepState.workouts) && prepState.workouts.length > 0) {
+      workouts = prepState.workouts;
+    } else {
+      const fromStore = callPrepStore(['listPlannedWorkouts'], [athleteId]);
+      if (Array.isArray(fromStore) && fromStore.length > 0) {
+        workouts = fromStore;
+      } else {
+        const local = readLocalPrepDraft(athleteId);
+        if (local && Array.isArray(local.workouts)) workouts = local.workouts;
+      }
+    }
+    const todayWorkout = workouts.find(w => w && w.scheduledDate === todayStr && Array.isArray(w.prescribedSlots) && w.prescribedSlots.length > 0) || null;
+    if (!todayWorkout) return null;
+    const activeLift = currentAthlete && currentAthlete.currentLift ? String(currentAthlete.currentLift).toLowerCase() : '';
+    const slot = (activeLift
+      ? todayWorkout.prescribedSlots.find(s => s && String(s.lift || s.exerciseName || s.exerciseId || '').toLowerCase().includes(activeLift))
+      : null) || todayWorkout.prescribedSlots[0];
+    if (!slot) return null;
+    return { athleteId, workout: todayWorkout, slot };
+  }
+
+  function renderCoachPrescribedBridge() {
+    const consoleEl = elements.feedbackConsole || (typeof document !== 'undefined' ? document.getElementById('coach-feedback-console') : null);
+    if (!consoleEl || typeof document === 'undefined') return;
+    let bridgeEl = consoleEl.querySelector ? consoleEl.querySelector('#coach-prescribed-bridge') : document.getElementById('coach-prescribed-bridge');
+    if (!bridgeEl && typeof document.createElement === 'function') {
+      bridgeEl = document.createElement('div');
+      bridgeEl.id = 'coach-prescribed-bridge';
+      bridgeEl.className = 'coach-console-block coach-prescribed-bridge';
+      const headerEl = consoleEl.querySelector ? consoleEl.querySelector('.coach-console-header') : null;
+      if (headerEl && headerEl.nextSibling) {
+        consoleEl.insertBefore(bridgeEl, headerEl.nextSibling);
+      } else {
+        consoleEl.appendChild(bridgeEl);
+      }
+    }
+    if (!bridgeEl) return;
+
+    const ctx = getTodayPrescribedBridgeContext();
+    if (!ctx) {
+      bridgeEl.innerHTML = '<span class="coach-block-label">Today\'s Prescribed Slot:</span><div class="coach-prescribed-bridge-empty font-mono">No scheduled slot today</div>';
+      return;
+    }
+
+    const { athleteId, workout, slot } = ctx;
+    const liftLabel = slot.exerciseName || slot.lift || slot.exerciseId || 'Squat';
+    const topSet = slot.topSet || {};
+    const topWeight = Number(topSet.loadKg || topSet.suggestedLoadKg || 0);
+    const topRpe = Number(topSet.targetRpe || topSet.rpe || 8.0);
+    const backSet = slot.backoff || slot.backoffSets || null;
+    const backWeight = backSet
+      ? Number(backSet.loadKg || backSet.suggestedLoadKg || (topWeight > 0 && Number(backSet.dropPct) > 0 ? (topWeight * (1 - Number(backSet.dropPct) / 100)) : 0))
+      : 0;
+    const backRpe = backSet ? Number(backSet.targetRpe || backSet.rpe || 7.0) : 7.0;
+
+    const setXText = `Set X: ${topWeight.toFixed(1)} kg @ RPE ${topRpe.toFixed(1)}`;
+    const setYText = backSet ? `Set Y: ${backWeight.toFixed(1)} kg @ RPE ${backRpe.toFixed(1)}` : '';
+
+    bridgeEl.innerHTML = `
+      <span class="coach-block-label">Today's Prescribed Slot (${escapeHtml(liftLabel)}):</span>
+      <div class="coach-prescribed-bridge-row">
+        <div class="coach-prescribed-bridge-item">
+          <span class="coach-prescribed-bridge-spec font-mono">${escapeHtml(setXText)}</span>
+          <button type="button" id="btn-coach-push-set-x" class="coach-load-pill coach-prescribed-push-btn" data-prep-tooltip-key="prep_set_x_top" aria-label="Push Set X (${escapeHtml(setXText)})">Push Set X</button>
+        </div>
+        ${backSet ? `
+        <div class="coach-prescribed-bridge-item">
+          <span class="coach-prescribed-bridge-spec font-mono">${escapeHtml(setYText)}</span>
+          <button type="button" id="btn-coach-push-set-y" class="coach-load-pill coach-prescribed-push-btn" data-prep-tooltip-key="prep_set_y_backoff" aria-label="Push Set Y (${escapeHtml(setYText)})">Push Set Y</button>
+        </div>` : ''}
+      </div>
+    `;
+
+    const pushSetXBtn = bridgeEl.querySelector ? bridgeEl.querySelector('#btn-coach-push-set-x') : document.getElementById('btn-coach-push-set-x');
+    if (pushSetXBtn) {
+      pushSetXBtn.addEventListener('click', () => {
+        const currentLoadKg = getSafeWorkingWeight() || (currentAthlete ? Number(currentAthlete.currentLoadKg) || 0 : 0);
+        const deltaKg = Number((topWeight - currentLoadKg).toFixed(2));
+        sendCoachPrescription(
+          `Prescribed Set X: ${liftLabel} ${topWeight.toFixed(1)} kg @ RPE ${topRpe.toFixed(1)}`,
+          deltaKg,
+          topWeight,
+          athleteId,
+          {
+            forceLoadOverride: true,
+            targetRpe: topRpe,
+            plannedWorkoutId: workout.workoutId,
+            plannedSlotId: slot.slotId,
+            lift: liftLabel,
+            setRole: 'topSet'
+          }
+        );
+      });
+    }
+
+    const pushSetYBtn = bridgeEl.querySelector ? bridgeEl.querySelector('#btn-coach-push-set-y') : document.getElementById('btn-coach-push-set-y');
+    if (pushSetYBtn && backSet) {
+      pushSetYBtn.addEventListener('click', () => {
+        const currentLoadKg = getSafeWorkingWeight() || (currentAthlete ? Number(currentAthlete.currentLoadKg) || 0 : 0);
+        const deltaKg = Number((backWeight - currentLoadKg).toFixed(2));
+        sendCoachPrescription(
+          `Prescribed Set Y: ${liftLabel} ${backWeight.toFixed(1)} kg @ RPE ${backRpe.toFixed(1)}`,
+          deltaKg,
+          backWeight,
+          athleteId,
+          {
+            forceLoadOverride: true,
+            targetRpe: backRpe,
+            plannedWorkoutId: workout.workoutId,
+            plannedSlotId: slot.slotId,
+            lift: liftLabel,
+            setRole: 'backoff'
+          }
+        );
+      });
+    }
   }
 
   function handleCustomCueSubmit() {
@@ -3579,10 +3749,13 @@
     elements.customCueInput.value = '';
   }
 
-  function sendCoachPrescription(cueText, deltaKg, targetWeight, targetAthleteId) {
+  function sendCoachPrescription(cueText, deltaKg, targetWeight, targetAthleteId, options) {
     const activeSetRef = getSafeActiveSet();
     const nextSetNumber = activeSetRef ? (activeSetRef.setNumber + 1) : 1;
     const targetId = targetAthleteId || (currentAthlete ? currentAthlete.id : 'ath_01');
+    const opts = (options && typeof options === 'object') ? options : {};
+    const forceLoadOverride = Boolean(opts.forceLoadOverride);
+    const hasLoadOverride = deltaKg !== 0 || forceLoadOverride;
 
     const payload = {
       id: `cmd_cue_${Date.now()}`,
@@ -3592,15 +3765,23 @@
       text: cueText,
       deltaKg: deltaKg,
       newWeight: targetWeight,
-      type: deltaKg !== 0 ? 'load_override' : 'technical',
+      type: hasLoadOverride ? 'load_override' : 'technical',
       autoAcceptSeconds: 20,
       timestamp: Date.now()
     };
 
+    if (opts.targetRpe !== undefined && isFinite(Number(opts.targetRpe))) {
+      payload.targetRpe = Number(opts.targetRpe);
+    }
+    if (opts.plannedWorkoutId) payload.plannedWorkoutId = String(opts.plannedWorkoutId);
+    if (opts.plannedSlotId) payload.plannedSlotId = String(opts.plannedSlotId);
+    if (opts.lift) payload.lift = String(opts.lift);
+    if (opts.setRole) payload.setRole = String(opts.setRole);
+
     // 1. Dispatch via ErosSyncBus if present
     if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
       window.ErosSyncBus.emit('coach:cue', payload);
-      if (deltaKg !== 0) {
+      if (hasLoadOverride) {
         window.ErosSyncBus.emit('coach:load_override', payload);
       }
     }
@@ -3608,7 +3789,7 @@
     // 2. Dispatch via DOM CustomEvent for intra-page listeners
     if (typeof window !== 'undefined' && typeof CustomEvent === 'function') {
       window.dispatchEvent(new CustomEvent('eros:coach_cue', { detail: payload }));
-      if (deltaKg !== 0) {
+      if (hasLoadOverride) {
         window.dispatchEvent(new CustomEvent('eros:coach_load_override', { detail: payload }));
       }
     }
@@ -3617,8 +3798,26 @@
       try { SoundFX.playCoachActionSend(); } catch (_) {}
     }
 
-    // 3. Local state synchronization with athlete working load (only for local primary athlete ath_01)
-    if (targetId === 'ath_01' && deltaKg !== 0 && typeof targetWeight === 'number') {
+    // 3. Pin #coach-rpe-target-pin when targetRpe is prescribed
+    if (payload.targetRpe !== undefined) {
+      coachActiveTargetRpe = payload.targetRpe;
+      const pin = elements.rpeTargetPin || (typeof document !== 'undefined' ? document.getElementById('coach-rpe-target-pin') : null);
+      if (pin) {
+        const targetPct = Math.min(100, Math.max(10, coachActiveTargetRpe * 10));
+        const targetText = `Target @${coachActiveTargetRpe.toFixed(1)}`;
+        pin.style.left = `${targetPct}%`;
+        if (typeof pin.removeAttribute === 'function') pin.removeAttribute('title');
+        const pinLabel = typeof pin.querySelector === 'function'
+          ? (pin.querySelector('.coach-rpe-target-label') || pin.querySelector('span'))
+          : null;
+        if (pinLabel) {
+          pinLabel.textContent = targetText;
+        }
+      }
+    }
+
+    // 4. Local state synchronization with athlete working load (only for local primary athlete ath_01)
+    if (targetId === 'ath_01' && hasLoadOverride && typeof targetWeight === 'number') {
       const liveWeightInput = document.getElementById('live-set-weight-input');
       const workoutWeightInput = document.getElementById('workout-set-weight-input');
       if (liveWeightInput) liveWeightInput.value = targetWeight.toFixed(1);
@@ -3629,7 +3828,7 @@
     }
 
     const sign = deltaKg > 0 ? '+' : '';
-    const summary = deltaKg !== 0
+    const summary = hasLoadOverride
       ? `Dispatched: "${cueText}" [${sign}${deltaKg} kg]`
       : `Dispatched technical cue: "${cueText}"`;
 
@@ -3855,6 +4054,7 @@
         localStorage.setItem(SIDEBAR_COLLAPSED_KEY, nextCollapsed ? '1' : '0');
       }
     } catch (_) {}
+    updateCoachSidebarTicker();
     return nextCollapsed;
   }
 
@@ -4541,7 +4741,7 @@
 
     const itemTabIndex = isRadialOpen ? '0' : '-1';
     itemsContainer.innerHTML = enabledActions.map(action => (
-      `<button type="button" class="eros-radial-item${action.isCustomize ? ' is-customize-item' : ''}" data-radial-action="${escapeHtml(action.id)}" role="menuitem" tabindex="${itemTabIndex}" aria-label="${escapeHtml(action.label)}" title="${escapeHtml(action.label)}">`
+      `<button type="button" class="eros-radial-item${action.isCustomize ? ' is-customize-item' : ''}" data-radial-action="${escapeHtml(action.id)}" role="menuitem" tabindex="${itemTabIndex}" aria-label="${escapeHtml(action.label)}">`
       + getRadialActionSvg(action.icon)
       + `<span class="eros-radial-item-label">${escapeHtml(action.label)}</span>`
       + `</button>`
@@ -5240,9 +5440,9 @@
 
   /** Returns the markup for the golden personal record badge. */
   function goldenPrBadgeHtml(compact) {
-    return compact
-      ? '<span class="coach-golden-pr-badge coach-golden-pr-badge--compact">PR</span>'
-      : '<span class="coach-golden-pr-badge">PR &bull; Gold</span>';
+    const label = compact ? 'PR' : 'PR Gold';
+    const cls = compact ? 'coach-golden-pr-badge coach-golden-pr-badge--compact' : 'coach-golden-pr-badge';
+    return `<span class="${cls}" data-prep-tooltip-key="prep_golden_pr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg><span class="sr-only">${label}</span></span>`;
   }
 
   /** Whether the given set carries a personal record flag or was pushed as a record. */
@@ -5481,6 +5681,7 @@
     if (!preserveCursor) {
       prepState.draftSlots = [];
       prepState.weekIndex = 0;
+      prepState.selectedWeek = 0;
       prepState.dayIndex = 0;
     }
     if (!athleteId) return;
@@ -5554,6 +5755,7 @@
     const total = getPrepWeekCount();
     if (prepState.weekIndex >= total) prepState.weekIndex = total - 1;
     if (prepState.weekIndex < 0) prepState.weekIndex = 0;
+    prepState.selectedWeek = prepState.weekIndex;
 
     const cells = [];
     for (let i = 0; i < total; i++) {
@@ -5562,7 +5764,7 @@
       const isDeload = weekWorkouts.some(w => w.isDeload);
       const selected = i === prepState.weekIndex;
       cells.push(
-        `<button type="button" role="option" class="coach-prep-week-cell${selected ? ' is-selected' : ''}${isDeload ? ' is-deload' : ''}${weekWorkouts.length ? ' has-sessions' : ''}" data-week="${i}" aria-selected="${selected ? 'true' : 'false'}" aria-label="Week ${i + 1}">` +
+        `<button type="button" role="option" class="coach-prep-week-cell${selected ? ' is-selected' : ''}${isDeload ? ' is-deload' : ''}${weekWorkouts.length ? ' has-sessions' : ''}" data-week="${i}" data-prep-tooltip-key="coach_prep_weeks_track" aria-selected="${selected ? 'true' : 'false'}" aria-label="Week ${i + 1}">` +
         `<span>W${i + 1}</span><span class="coach-prep-week-cell-phase">${escapeHtml(phase.slice(0, 4))}</span></button>`
       );
     }
@@ -5577,7 +5779,7 @@
       const dateStr = getPrepDate(prepState.weekIndex, i);
       const selected = i === prepState.dayIndex;
       const hasSession = Boolean(findPrepWorkoutByDate(dateStr));
-      return `<button type="button" role="tab" class="coach-prep-day-tab${selected ? ' is-selected' : ''}" data-day="${i}" aria-selected="${selected ? 'true' : 'false'}">` +
+      return `<button type="button" role="tab" class="coach-prep-day-tab${selected ? ' is-selected' : ''}" data-day="${i}" data-prep-tooltip-key="prep_week_day" aria-selected="${selected ? 'true' : 'false'}">` +
         `<span>${escapeHtml(name)}${hasSession ? ' *' : ''}</span><span class="coach-prep-day-tab-date">${escapeHtml(dateStr.slice(5))}</span></button>`;
     }).join('');
   }
@@ -5607,13 +5809,13 @@
     }
     body.innerHTML = prepState.draftSlots.map(slot => {
       const load = slot.topSet && Number(slot.topSet.loadKg) > 0 ? `${Number(slot.topSet.loadKg).toFixed(1)} kg` : '-';
-      return `<tr data-slot-id="${escapeHtml(slot.slotId)}">` +
+      return `<tr data-slot-id="${escapeHtml(slot.slotId)}" data-prep-tooltip-key="coach_prep_slots_table">` +
         `<td>${escapeHtml(slot.exerciseName || slot.exerciseId || 'Exercise')}</td>` +
         `<td class="font-mono">${formatPrepSlotSet(slot.topSet)}</td>` +
         `<td class="font-mono">${formatPrepSlotSet(slot.backoff || slot.backoffSets)}</td>` +
         `<td class="font-mono">${escapeHtml(load)}</td>` +
         `<td class="font-mono">${formatPrepVelocity(slot)}</td>` +
-        `<td><button type="button" class="coach-prep-slot-remove" data-remove-slot="${escapeHtml(slot.slotId)}" aria-label="Remove exercise">Remove</button></td>` +
+        `<td><button type="button" class="coach-prep-slot-remove" data-remove-slot="${escapeHtml(slot.slotId)}" data-prep-tooltip-key="coach_prep_slots_table" aria-label="Remove exercise"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg><span class="sr-only">Remove</span></button></td>` +
         `</tr>`;
     }).join('');
   }
@@ -5837,6 +6039,159 @@
     }, PREP_AUTOSAVE_DELAY_MS);
   }
 
+  /** Marks or clears the dirty state on #btn-coach-publish-prep (explicit publish). */
+  function markPrepPublishDirty(isDirty) {
+    const btn = prepEl('btn-coach-publish-prep');
+    if (!btn) return;
+    if (isDirty) {
+      if (btn.classList) btn.classList.add('is-dirty');
+      if (typeof btn.setAttribute === 'function') btn.setAttribute('data-dirty', 'true');
+    } else {
+      if (btn.classList) btn.classList.remove('is-dirty');
+      if (typeof btn.removeAttribute === 'function') btn.removeAttribute('data-dirty');
+    }
+  }
+
+  /** Ensures the Macro Week Progression Stepper controls exist in #coach-prep-macro-card. */
+  function ensurePrepMacroStepperControls() {
+    if (typeof document === 'undefined') return;
+    const macroCard = prepEl('coach-prep-macro-card');
+    if (!macroCard) return;
+    const quickTools = macroCard.querySelector ? macroCard.querySelector('.coach-prep-quick-tools') : null;
+    if (!quickTools) return;
+
+    if (!prepEl('coach-prep-bump-select') && typeof document.createElement === 'function') {
+      const select = document.createElement('select');
+      select.id = 'coach-prep-bump-select';
+      select.className = 'coach-prep-input coach-prep-bump-select';
+      select.setAttribute('aria-label', 'Week progression step');
+      select.setAttribute('data-prep-tooltip-key', 'coach_prep_macro_card');
+      select.innerHTML = [
+        '<option value="1.25_kg">+1.25 kg</option>',
+        '<option value="2.5_kg">+2.5 kg</option>',
+        '<option value="0.5_rpe">+0.5 RPE</option>'
+      ].join('');
+      quickTools.appendChild(select);
+    }
+
+    if (!prepEl('btn-coach-bump-week-load') && typeof document.createElement === 'function') {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'btn-coach-bump-week-load';
+      btn.className = 'coach-prep-btn';
+      btn.setAttribute('data-prep-tooltip-key', 'coach_prep_macro_card');
+      btn.textContent = 'Bump Week';
+      quickTools.appendChild(btn);
+    }
+  }
+
+  /** Increments all non-deload day slots in prepState.selectedWeek and marks publish dirty. */
+  function bumpPrepWeekLoad() {
+    const athlete = getPrepAthlete();
+    if (!athlete) {
+      showFeedbackMessage('Select a connected athlete first.');
+      return null;
+    }
+    const plan = syncPrepPlanFromHeader();
+    if (!plan) return null;
+
+    const targetWeek = (typeof prepState.selectedWeek === 'number') ? prepState.selectedWeek : prepState.weekIndex;
+    const weekWorkouts = prepState.workouts.filter(w => w && Number(w.weekIndex) === targetWeek && !w.isDeload);
+    if (weekWorkouts.length === 0) {
+      showFeedbackMessage('No non-deload sessions in the selected week.');
+      return null;
+    }
+
+    const selectEl = prepEl('coach-prep-bump-select');
+    const rawStep = selectEl ? String(selectEl.value || '2.5_kg') : '2.5_kg';
+    const isRpeMode = /rpe/i.test(rawStep);
+    const stepValue = parseFloat(rawStep) || (isRpeMode ? 0.5 : 2.5);
+    const oneRms = getPrepOneRms();
+
+    let updatedSlotsCount = 0;
+    const updatedWorkouts = weekWorkouts.map(workout => {
+      const slots = Array.isArray(workout.prescribedSlots) ? workout.prescribedSlots : [];
+      const nextSlots = slots.map(slot => {
+        if (!slot || typeof slot !== 'object') return slot;
+        updatedSlotsCount += 1;
+        const nextSlot = Object.assign({}, slot);
+        const topSet = Object.assign({}, nextSlot.topSet || {});
+        const rawBack = nextSlot.backoff || nextSlot.backoffSets;
+        const backoff = rawBack ? Object.assign({}, rawBack) : null;
+
+        if (isRpeMode) {
+          const curTopRpe = Number(topSet.rpe != null ? topSet.rpe : (topSet.targetRpe != null ? topSet.targetRpe : 8.0));
+          const nextTopRpe = Math.min(10, Number((curTopRpe + stepValue).toFixed(1)));
+          topSet.rpe = nextTopRpe;
+          topSet.targetRpe = nextTopRpe;
+          if (backoff) {
+            const curBackRpe = Number(backoff.rpe != null ? backoff.rpe : (backoff.targetRpe != null ? backoff.targetRpe : 7.0));
+            const nextBackRpe = Math.min(10, Number((curBackRpe + stepValue).toFixed(1)));
+            backoff.rpe = nextBackRpe;
+            backoff.targetRpe = nextBackRpe;
+          }
+          // Clear cached loads if 1RM anchor is present so ErosPrepEngine derives new weights from RPE
+          if (oneRms.squat > 0 || oneRms.bench > 0 || oneRms.deadlift > 0) {
+            delete topSet.loadKg;
+            delete topSet.suggestedLoadKg;
+            if (backoff) {
+              delete backoff.loadKg;
+              delete backoff.suggestedLoadKg;
+            }
+          }
+        } else {
+          const curTopLoad = Number(topSet.loadKg || topSet.suggestedLoadKg || 0);
+          if (curTopLoad > 0) {
+            const nextTopLoad = Number((curTopLoad + stepValue).toFixed(2));
+            topSet.loadKg = nextTopLoad;
+            topSet.suggestedLoadKg = nextTopLoad;
+          }
+          if (backoff) {
+            if (Number(backoff.dropPct) > 0) {
+              // Let ErosPrepEngine recalculate Set Y weight from Set X load & dropPct
+              delete backoff.loadKg;
+              delete backoff.suggestedLoadKg;
+            } else if (Number(backoff.loadKg || backoff.suggestedLoadKg || 0) > 0) {
+              const curBackLoad = Number(backoff.loadKg || backoff.suggestedLoadKg || 0);
+              const nextBackLoad = Number((curBackLoad + stepValue).toFixed(2));
+              backoff.loadKg = nextBackLoad;
+              backoff.suggestedLoadKg = nextBackLoad;
+            }
+          }
+        }
+
+        const engineInput = Object.assign({}, nextSlot, { topSet });
+        if (backoff) engineInput.backoff = backoff;
+        const recalculated = callPrepEngine('prescribeSlotWithTopAndBackoff', [engineInput, oneRms]);
+        if (recalculated && typeof recalculated === 'object') {
+          if (recalculated.topSet) nextSlot.topSet = recalculated.topSet;
+          if (recalculated.backoff) {
+            nextSlot.backoff = recalculated.backoff;
+            nextSlot.backoffSets = recalculated.backoff;
+          } else if (backoff) {
+            nextSlot.backoff = backoff;
+            nextSlot.backoffSets = backoff;
+          }
+        } else {
+          nextSlot.topSet = topSet;
+          if (backoff) {
+            nextSlot.backoff = backoff;
+            nextSlot.backoffSets = backoff;
+          }
+        }
+        return nextSlot;
+      });
+      return Object.assign({}, workout, { prescribedSlots: nextSlots });
+    });
+
+    persistPrepPlan(plan);
+    mergePrepWorkouts(updatedWorkouts);
+    updatedWorkouts.forEach(persistPrepWorkout);
+    afterPrepBulkChange(`Week ${targetWeek + 1} progressed (${isRpeMode ? `+${stepValue} RPE` : `+${stepValue} kg`}) across ${updatedSlotsCount} slots. Publish to sync.`);
+    markPrepPublishDirty(true);
+    return updatedWorkouts;
+  }
+
   /** Saves the plan header and broadcasts the whole plan to the athlete. */
   function publishPrepPlan() {
     const athlete = getPrepAthlete();
@@ -5851,6 +6206,8 @@
     broadcastPrepPlan();
     if (!sessionSaved) broadcastPrepWorkoutsCapped(prepState.workouts);
     renderPrepFactoring();
+    renderCoachPrescribedBridge();
+    markPrepPublishDirty(false);
     showFeedbackMessage(`Plan published: ${plan.title}`);
     return plan;
   }
@@ -5882,6 +6239,7 @@
     renderPrepDayTabs();
     loadPrepSessionIntoForm();
     renderPrepComparison();
+    renderCoachPrescribedBridge();
     broadcastPrepPlan();
     broadcastPrepWorkoutsCapped(prepState.workouts);
     writeLocalPrepDraft(prepState.athleteId);
@@ -5974,6 +6332,7 @@
     mergePrepWorkouts(cloned);
     cloned.forEach(persistPrepWorkout);
     prepState.weekIndex = nextWeek;
+    prepState.selectedWeek = nextWeek;
     afterPrepBulkChange(`Week ${nextWeek} cloned into week ${nextWeek + 1}.`);
   }
 
@@ -6014,7 +6373,7 @@
     }
     if (!badgesEl && !alertsEl) return;
     if (!athlete) {
-      if (badgesEl) badgesEl.innerHTML = '<span class="coach-prep-factor-badge">No Athlete Selected</span>';
+      if (badgesEl) badgesEl.innerHTML = '<span class="coach-prep-factor-badge" data-prep-tooltip-key="coach_prep_factoring_badges">No Athlete Selected</span>';
       if (alertsEl) alertsEl.innerHTML = '';
       return;
     }
@@ -6036,8 +6395,8 @@
     if (bio.federation) badges.push(String(bio.federation));
     if (badgesEl) {
       badgesEl.innerHTML = badges.length
-        ? badges.map(b => `<span class="coach-prep-factor-badge">${escapeHtml(b)}</span>`).join('')
-        : '<span class="coach-prep-factor-badge">Awaiting Athlete Profile</span>';
+        ? badges.map(b => `<span class="coach-prep-factor-badge" data-prep-tooltip-key="coach_prep_factoring_badges">${escapeHtml(b)}</span>`).join('')
+        : '<span class="coach-prep-factor-badge" data-prep-tooltip-key="coach_prep_factoring_badges">Awaiting Athlete Profile</span>';
     }
 
     if (alertsEl) {
@@ -6047,7 +6406,7 @@
         alerts.push({ level: 'warn', message: `Athlete notes: ${dutiesNote}` });
       }
       alertsEl.innerHTML = alerts.map(a =>
-        `<div class="coach-prep-alert coach-prep-alert-${escapeHtml(a.level)}" role="status">${escapeHtml(a.message)}</div>`
+        `<div class="coach-prep-alert coach-prep-alert-${escapeHtml(a.level)}" data-prep-tooltip-key="coach_prep_factoring_alerts" role="status">${escapeHtml(a.message)}</div>`
       ).join('');
     }
   }
@@ -6272,11 +6631,14 @@
     on('btn-coach-apply-template', 'click', applyPrepTemplate);
     on('btn-coach-deload-week', 'click', applyPrepDeloadWeek);
     on('btn-coach-clone-week', 'click', clonePrepWeek);
+    ensurePrepMacroStepperControls();
+    on('btn-coach-bump-week-load', 'click', bumpPrepWeekLoad);
 
     on('coach-prep-weeks-track', 'click', (e) => {
       const cell = e.target && typeof e.target.closest === 'function' ? e.target.closest('[data-week]') : null;
       if (!cell) return;
       prepState.weekIndex = parseInt(cell.getAttribute('data-week'), 10) || 0;
+      prepState.selectedWeek = prepState.weekIndex;
       renderPrepWeeks();
       renderPrepDayTabs();
       loadPrepSessionIntoForm();
@@ -6345,6 +6707,9 @@
     applyPrepTemplate,
     applyPrepDeloadWeek,
     clonePrepWeek,
+    bumpPrepWeekLoad,
+    markPrepPublishDirty,
+    renderCoachPrescribedBridge,
     goldenPrBadgeHtml,
     isSetGoldenPr,
     isWorkoutGoldenPr,

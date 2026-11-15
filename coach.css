@@ -47,6 +47,44 @@
   --neu-bloom: -10px -10px 24px rgba(255, 255, 255, 0.05), 12px 12px 28px rgba(0, 0, 0, 0.78);
 }
 
+/* ── Shared SVG Icon & Compact Pill Primitives ── */
+.eros-svg-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.eros-svg-icon--sm {
+  width: 14px;
+  height: 14px;
+}
+
+.eros-svg-icon--lg {
+  width: 18px;
+  height: 18px;
+}
+
+.eros-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+}
+
+.eros-icon-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 11px;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+}
+
 /* ── Mode Switcher in Header (.header-top-row) ── */
 .view-mode-toggle {
   display: inline-flex;
@@ -3083,8 +3121,32 @@ body.portal-coach #view-coach {
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-link span,
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-toggle span,
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-toggle-label,
-  #coach-sidebar.coach-sidebar--collapsed #coach-sidebar-ticker {
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-ticker-meta,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-ticker-label,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-rest-state,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-ticker-state,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-ticker-top,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-ticker-counts {
     display: none;
+  }
+
+  #coach-sidebar.coach-sidebar--collapsed #coach-sidebar-ticker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    padding: 6px 4px;
+    gap: 0;
+    border-radius: var(--eros-rect-pill-radius, 14px);
+    background: var(--coach-bg-surface-2, #212121);
+    border: 1px solid #2f2f2f;
+  }
+
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-rest-time,
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-ticker-time {
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
   }
 
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-header,
@@ -3157,7 +3219,7 @@ body.portal-coach #view-coach {
 
   body.portal-coach #coach-mobile-nav {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 4px;
     bottom: 10px;
     left: 10px;
@@ -4103,4 +4165,88 @@ body.portal-coach #coach-preparation-panel[hidden] {
   .coach-prep-slot-inputs .coach-prep-field {
     flex: 1 1 calc(50% - 12px);
   }
+}
+
+/* ── Phase 5 Streamlining: Coach Prescribed Bridge & Week Bump Controls ── */
+#coach-prescribed-bridge,
+.coach-prescribed-bridge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+#btn-coach-push-set-x,
+#btn-coach-push-set-y {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 11px;
+  background: #2f2f2f;
+  border: 1px solid #2f2f2f;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+  color: var(--coach-text-primary, #ececec);
+  font-family: var(--coach-font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+#btn-coach-push-set-x:hover,
+#btn-coach-push-set-y:hover {
+  background: #383838;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+#coach-prep-bump-select {
+  min-height: 36px;
+  padding: 7px 10px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+  color: var(--coach-text-primary, #ececec);
+  font-family: var(--coach-font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+#coach-prep-bump-select:hover,
+#coach-prep-bump-select:focus {
+  background: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+#btn-coach-bump-week-load {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 12px;
+  background: #2f2f2f;
+  border: 1px solid #2f2f2f;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+  color: var(--coach-text-primary, #ececec);
+  font-family: var(--coach-font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+#btn-coach-bump-week-load:hover {
+  background: #383838;
+  border-color: rgba(255, 255, 255, 0.18);
 }

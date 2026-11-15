@@ -91,6 +91,9 @@
     if (restSeconds !== null) {
       payload.restSeconds = restSeconds;
     }
+    copyOptionalNumber(data, payload, 'targetRpe', 1, 10, 1);
+    copyOptionalString(data, payload, 'athleteId', 64);
+    copyOptionalPlannedRefs(data, payload);
     return payload;
   }
 
@@ -311,6 +314,10 @@
     if (data.reason) payload.reason = String(data.reason).trim();
     if (data.cueText) payload.cueText = String(data.cueText).trim();
     if (data.athleteId) payload.athleteId = String(data.athleteId).trim();
+    copyOptionalNumber(data, payload, 'targetRpe', 1, 10, 1);
+    copyOptionalString(data, payload, 'lift', 32);
+    copyOptionalString(data, payload, 'setRole', 16);
+    copyOptionalPlannedRefs(data, payload);
     return payload;
   }
 

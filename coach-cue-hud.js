@@ -219,9 +219,13 @@
 
   // ── Audio & Haptic Chimes ──
   let lastDirectiveAlertTime = 0;
-  function playDirectiveArrivalAlert() {
+  let lastDirectiveAlertSignature = null;
+  function playDirectiveArrivalAlert(signature) {
     const now = Date.now();
-    if (now - lastDirectiveAlertTime < 250) return;
+    const sig = signature != null ? String(signature) : '';
+    if (sig && sig === lastDirectiveAlertSignature && (now - lastDirectiveAlertTime < 400)) return;
+    if (!sig && (now - lastDirectiveAlertTime < 400)) return;
+    lastDirectiveAlertSignature = sig;
     lastDirectiveAlertTime = now;
 
     if (typeof SoundFX !== 'undefined') {
@@ -300,7 +304,7 @@
     }
 
     // Acoustic & tactile notification
-    playDirectiveArrivalAlert();
+    playDirectiveArrivalAlert(`cue:${cueSignature}`);
 
     const parsedDuration = (typeof durationMs === 'number' && !isNaN(durationMs) && durationMs > 0)
       ? durationMs
@@ -362,6 +366,13 @@
       coachName: directive.coachName || 'Coach',
       deltaKg: typeof directive.deltaKg === 'number' ? directive.deltaKg : 0,
       newWeight: typeof directive.newWeight === 'number' ? directive.newWeight : (getCurrentWeight() + (directive.deltaKg || 0)),
+      targetRpe: (typeof directive.targetRpe === 'number' && !isNaN(directive.targetRpe))
+        ? Math.max(1, Math.min(10, Math.round(directive.targetRpe * 10) / 10))
+        : null,
+      plannedWorkoutId: directive.plannedWorkoutId || directive.workoutId || null,
+      plannedSlotId: directive.plannedSlotId || directive.slotId || null,
+      lift: directive.lift || null,
+      setRole: directive.setRole || null,
       reason: directive.reason || (directive.text ? directive.text : 'Prescribed load modification for upcoming set'),
       cueText: directive.cueText || (directive.deltaKg === 0 ? directive.text : ''),
       autoAcceptSeconds: Math.max(1, parseInt(directive.autoAcceptSeconds, 10) || 20),
@@ -372,13 +383,19 @@
     const finalNewWeight = Math.max(0, activeDirective.newWeight);
     const delta = finalNewWeight - currentWeight;
     const deltaSign = delta >= 0 ? '+' : '';
+    const isZeroDelta = Math.abs(delta) < 0.05;
+    const hasTargetRpe = typeof activeDirective.targetRpe === 'number' && !isNaN(activeDirective.targetRpe);
 
     if (dom.coachTitle) dom.coachTitle.textContent = `${activeDirective.coachName} Directive`;
     if (dom.prevWeight) dom.prevWeight.textContent = `${currentWeight.toFixed(1)} kg`;
     if (dom.newWeight) dom.newWeight.textContent = `${finalNewWeight.toFixed(1)} kg`;
 
     if (dom.loadDelta) {
-      dom.loadDelta.textContent = `(${deltaSign}${delta.toFixed(1)} kg)`;
+      if (isZeroDelta && hasTargetRpe) {
+        dom.loadDelta.textContent = `@ RPE ${activeDirective.targetRpe.toFixed(1)}`;
+      } else {
+        dom.loadDelta.textContent = `(${deltaSign}${delta.toFixed(1)} kg)`;
+      }
       dom.loadDelta.className = `load-delta ${delta >= 0 ? 'positive' : 'negative'}`;
     }
 
@@ -404,11 +421,15 @@
     // Update accept button label
     const acceptLabel = dom.directiveModal.querySelector('#btn-accept-label') || dom.directiveModal.querySelector('.btn-accept-label');
     if (acceptLabel) {
-      acceptLabel.textContent = `Accept (${deltaSign}${delta.toFixed(1)} kg)`;
+      if (isZeroDelta && hasTargetRpe) {
+        acceptLabel.textContent = `Accept (@ RPE ${activeDirective.targetRpe.toFixed(1)})`;
+      } else {
+        acceptLabel.textContent = `Accept (${deltaSign}${delta.toFixed(1)} kg)`;
+      }
     }
 
     // Acoustic & tactile notification
-    playDirectiveArrivalAlert();
+    playDirectiveArrivalAlert(`dir:${activeDirective.id}:${finalNewWeight.toFixed(1)}:${hasTargetRpe ? activeDirective.targetRpe.toFixed(1) : ''}`);
 
     // Open Modal
     dom.directiveModal.style.display = 'flex';
@@ -485,11 +506,25 @@
     // Update working weight synchronously across application
     if (typeof setWorkingWeight === 'function') {
       setWorkingWeight(finalWeight, true);
+    } else if (typeof window !== 'undefined' && typeof window.setWorkingWeight === 'function') {
+      window.setWorkingWeight(finalWeight, true);
     } else {
       const liveInput = document.getElementById('live-set-weight-input');
       const workoutInput = document.getElementById('workout-set-weight-input');
       if (liveInput) liveInput.value = finalWeight.toFixed(1);
       if (workoutInput) workoutInput.value = finalWeight.toFixed(1);
+    }
+
+    // Apply prescribed targetRpe and plannedSlotId if present
+    if (typeof directive.targetRpe === 'number' && !isNaN(directive.targetRpe)) {
+      if (typeof setTargetRpe === 'function') {
+        setTargetRpe(directive.targetRpe, false);
+      } else if (typeof window !== 'undefined' && typeof window.setTargetRpe === 'function') {
+        window.setTargetRpe(directive.targetRpe, false);
+      }
+    }
+    if (directive.plannedSlotId && typeof window !== 'undefined' && typeof window.applyCoachPrescribedSlot === 'function') {
+      window.applyCoachPrescribedSlot(directive);
     }
 
     // Emit confirmation payload back to ErosSyncBus

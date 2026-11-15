@@ -281,6 +281,44 @@ html, body {
   align-items: center;
 }
 
+/* ── Shared SVG Icon & Compact Pill Primitives ── */
+.eros-svg-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.eros-svg-icon--sm {
+  width: 14px;
+  height: 14px;
+}
+
+.eros-svg-icon--lg {
+  width: 18px;
+  height: 18px;
+}
+
+.eros-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+}
+
+.eros-icon-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 11px;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+}
+
 /* ── Top Header ── */
 .glass-header {
   display: flex;
@@ -438,7 +476,7 @@ html, body {
   height: 36px;
   min-width: 36px;
   padding: 0;
-  border-radius: 50%;
+  border-radius: var(--eros-rect-pill-radius, 14px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1260,7 +1298,7 @@ html, body {
 .weight-stepper-btn {
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-main);
@@ -4791,12 +4829,14 @@ html, body {
   margin-top: 2px;
 }
 
-.athlete-settings-close-btn {
+.athlete-settings-close-btn,
+#btn-athlete-settings-close {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  border-radius: 14px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -5106,7 +5146,7 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   background: #2f2f2f !important;
   border: 1px solid #383838 !important;
   color: #ececec !important;
-  border-radius: 50% !important;
+  border-radius: 14px !important;
   box-shadow: none !important;
 }
 
@@ -7368,8 +7408,15 @@ body.theme-deadlift .nav-indicator-pill::before {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 8px rgba(var(--accent-rgb), 0.14);
 }
 
+#btn-send-prep-feedback,
 .btn-send-prep-feedback {
   flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 14px;
 }
 
 /* ==========================================================================
@@ -7720,7 +7767,7 @@ select.athlete-bio-input {
 #eros-prep-tooltip-card,
 .eros-prep-tooltip-card {
   position: fixed;
-  z-index: 980;
+  z-index: 10100;
   pointer-events: none;
   max-width: min(310px, calc(100vw - 24px));
   min-width: 210px;
@@ -7739,6 +7786,11 @@ select.athlete-bio-input {
   transition: opacity 0.14s ease, transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
   box-sizing: border-box;
   font-family: var(--font-sans);
+}
+
+#eros-prep-tooltip-card[data-placement="right"],
+.eros-prep-tooltip-card[data-placement="right"] {
+  transform: translate3d(-4px, 0, 0) scale(0.98);
 }
 
 #eros-prep-tooltip-card[aria-hidden="false"],
@@ -7858,4 +7910,113 @@ select.athlete-bio-input {
   .eros-prep-tooltip-card {
     transition: none;
   }
+}
+/* ── Phase 5 Streamlining: Live Prescription Strip & Collapsed Biometrics Chip ── */
+#live-prescription-strip,
+.live-prescription-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #ececec;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  box-sizing: border-box;
+}
+
+#live-prescription-strip .live-prescription-meta,
+.live-prescription-strip .live-prescription-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+  color: #ececec;
+}
+
+#live-prescription-strip .live-prescription-sub,
+.live-prescription-strip .live-prescription-sub {
+  color: #b4b4b4;
+  font-weight: 500;
+}
+
+#live-prescription-strip button,
+.live-prescription-strip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 11px;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+  background: #2f2f2f;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+#live-prescription-strip button:hover,
+.live-prescription-strip button:hover {
+  background: #383838;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+#athlete-biometrics-card.is-collapsed .athlete-bio-grid,
+#athlete-biometrics-card.is-collapsed .athlete-bio-actions,
+#athlete-biometrics-card.is-collapsed .athlete-bio-footer,
+#athlete-biometrics-card.is-collapsed #btn-save-biometrics {
+  display: none;
+}
+
+#athlete-bio-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+#btn-toggle-biometrics {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border-radius: var(--eros-rect-pill-radius, 14px);
+  background: #2f2f2f;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+#btn-toggle-biometrics:hover {
+  background: #383838;
+  border-color: rgba(255, 255, 255, 0.18);
 }

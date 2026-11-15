@@ -198,7 +198,54 @@ let activeSet = null;        // Current active Set object
 
 // Preparation Hub & Smart PR Push State (declared early so every lifecycle hook can read it safely)
 const ATHLETE_PREP_ID = 'ath_01';
+const ATHLETE_CONNECTION_KEY = 'eros_athlete_coach_connection_v1';
 const ATHLETE_BIO_FALLBACK_KEY = 'eros_athlete_bio_fallback_v1';
+
+/**
+ * Returns the persisted athleteId when paired with a coach, or 'ath_01' when unbonded.
+ */
+function getActiveAthleteId() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(ATHLETE_CONNECTION_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.athleteId && String(parsed.athleteId).trim()) {
+          return String(parsed.athleteId).trim();
+        }
+      }
+    }
+  } catch (_) {}
+  return ATHLETE_PREP_ID;
+}
+
+/**
+ * Safely updates a play/stop button's .sr-only label, sibling .btn-short-label, and SVG icon without destroying child SVGs.
+ */
+function updatePlayStopButtonVisual(btn, textEl, srText, shortText, isActive) {
+  if (textEl) textEl.textContent = srText;
+  if (!btn || typeof btn.querySelector !== 'function') return;
+  const shortLabel = btn.querySelector('.btn-short-label');
+  if (shortLabel) shortLabel.textContent = shortText;
+  const svg = btn.querySelector('svg.eros-svg-icon');
+  if (svg) {
+    svg.innerHTML = isActive
+      ? '<rect x="6" y="6" width="12" height="12" rx="1"></rect>'
+      : '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+  }
+}
+
+/**
+ * Returns the compact Crown SVG + 'PR' + .sr-only 'Gold' badge markup.
+ */
+function goldenPrBadgeHtml() {
+  return '<span class="golden-pr-badge" data-prep-tooltip-key="prep_golden_pr">' +
+    '<svg class="eros-svg-icon eros-svg-icon--xs" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"></path><line x1="5" y1="20" x2="19" y2="20"></line>' +
+    '</svg>' +
+    '<span>PR</span><span class="sr-only"> Gold</span>' +
+    '</span>';
+}
 const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 let activePlannedWorkoutId = null;
 let activePlannedSlotId = null;
@@ -957,7 +1004,7 @@ function startWorkoutSession() {
   startSessionTimer(session.startTime);
 
   // Update UI
-  if (btnWorkoutText) btnWorkoutText.textContent = 'END WORKOUT';
+  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'END WORKOUT', 'END', true);
   if (btnWorkoutMaster) btnWorkoutMaster.classList.add('session-active');
   if (sessionPulse) sessionPulse.classList.add('active');
   if (sessionStatusText) {
@@ -968,6 +1015,7 @@ function startWorkoutSession() {
   persistStorage();
   updateHistoryStats();
   updateWorkoutPage();
+  renderLivePrescriptionStrip();
   return session;
 }
 
@@ -1003,7 +1051,7 @@ function endWorkoutSession() {
   }
 
   // Reset UI
-  if (btnWorkoutText) btnWorkoutText.textContent = 'START WORKOUT';
+  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'START WORKOUT', 'START', false);
   if (btnWorkoutMaster) btnWorkoutMaster.classList.remove('session-active');
   if (sessionPulse) sessionPulse.classList.remove('active');
   if (sessionStatusText) {
@@ -1013,6 +1061,7 @@ function endWorkoutSession() {
   if (sessionTimerDisp) sessionTimerDisp.textContent = '00:00:00';
 
   updateLiveMiniHud();
+  renderLivePrescriptionStrip();
   updateSetUI(null);
   persistStorage();
   updateHistoryStats();
@@ -1107,6 +1156,9 @@ function startNewSet(lift = currentLift) {
           };
           if (previousSet.plannedWorkoutId) completedPayload.plannedWorkoutId = previousSet.plannedWorkoutId;
           if (previousSet.plannedSlotId) completedPayload.plannedSlotId = previousSet.plannedSlotId;
+          if (typeof previousSet.avgRpe === 'number' && !isNaN(previousSet.avgRpe)) completedPayload.avgRpe = previousSet.avgRpe;
+          if (typeof previousSet.targetRpe === 'number' && !isNaN(previousSet.targetRpe)) completedPayload.targetRpe = previousSet.targetRpe;
+          completedPayload.athleteId = getActiveAthleteId();
           if (previousSet.isPR || previousSet.isPr) completedPayload.isPr = true;
           if (previousSet.prType) completedPayload.prType = previousSet.prType;
           if (typeof previousSet.maxDeviationCm === 'number' && !isNaN(previousSet.maxDeviationCm)) {
@@ -1165,7 +1217,7 @@ function startNewSet(lift = currentLift) {
   }
 
   // Update Controls UI
-  btnSetText.textContent = 'END SET';
+  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'END SET', 'END', true);
   btnSetToggle.classList.add('set-active');
   btnSetToggle.classList.add('recording');
   btnSetToggle.style.display = 'none';
@@ -1187,14 +1239,19 @@ function startNewSet(lift = currentLift) {
 
   // Dispatch to ErosSyncBus
   if (typeof window !== 'undefined' && window.ErosSyncBus && typeof window.ErosSyncBus.emit === 'function') {
-    window.ErosSyncBus.emit('set:started', {
+    const startedPayload = {
       setId: newSet.setId,
       setNumber: newSet.setNumber,
       lift: newSet.lift,
       weight: newSet.weight,
+      targetRpe: newSet.targetRpe,
+      athleteId: getActiveAthleteId(),
       restSeconds: null,
       timestamp: newSet.startTime
-    });
+    };
+    if (newSet.plannedWorkoutId) startedPayload.plannedWorkoutId = newSet.plannedWorkoutId;
+    if (newSet.plannedSlotId) startedPayload.plannedSlotId = newSet.plannedSlotId;
+    window.ErosSyncBus.emit('set:started', startedPayload);
   }
 
   return newSet;
@@ -1234,6 +1291,9 @@ function endActiveSet() {
     };
     if (activeSet.plannedWorkoutId) completedPayload.plannedWorkoutId = activeSet.plannedWorkoutId;
     if (activeSet.plannedSlotId) completedPayload.plannedSlotId = activeSet.plannedSlotId;
+    if (typeof activeSet.avgRpe === 'number' && !isNaN(activeSet.avgRpe)) completedPayload.avgRpe = activeSet.avgRpe;
+    if (typeof activeSet.targetRpe === 'number' && !isNaN(activeSet.targetRpe)) completedPayload.targetRpe = activeSet.targetRpe;
+    completedPayload.athleteId = getActiveAthleteId();
     if (activeSet.isPR || activeSet.isPr) completedPayload.isPr = true;
     if (activeSet.prType) completedPayload.prType = activeSet.prType;
     if (typeof activeSet.maxDeviationCm === 'number' && !isNaN(activeSet.maxDeviationCm)) {
@@ -1288,7 +1348,7 @@ function endActiveSet() {
   }
 
   // Update Controls UI
-  btnSetText.textContent = 'START SET';
+  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'START SET', 'START', false);
   btnSetToggle.classList.remove('set-active');
   btnSetToggle.classList.remove('recording');
   btnSetToggle.style.display = '';
@@ -1308,6 +1368,8 @@ function endActiveSet() {
   updateHistoryStats();
   renderHistoryView();
   maybeEvaluateSetPrCandidate(completedSetForCelebration);
+  advanceActivePlannedSlotSet(completedSetForCelebration);
+  renderLivePrescriptionStrip();
   renderAthletePrepHub();
   renderAthletePlanVsActual();
 }
@@ -3707,9 +3769,12 @@ function updateWorkoutPage() {
       : '-';
 
     const isPushedPr = Boolean(s.isPR || s.isPr || s.prPushed || (Array.isArray(s.reps) && s.reps.some(r => r && r.prPushed)));
-    const prBadgeHtml = isPushedPr ? '<span class="golden-pr-badge" data-prep-tooltip-key="prep_golden_pr">PR GOLD</span>' : '';
+    const prBadgeHtml = isPushedPr ? goldenPrBadgeHtml() : '';
     const pushPrBtnHtml = (!isCurrent && repCount > 0 && !isPushedPr)
-      ? `<button type="button" class="push-pr-mini-btn" data-push-pr-set-id="${escapeHtml(s.setId)}" data-prep-tooltip-key="prep_push_pr">PUSH PR</button>`
+      ? `<button type="button" class="push-pr-mini-btn" data-push-pr-set-id="${escapeHtml(s.setId)}" data-prep-tooltip-key="prep_push_pr" aria-label="Push Personal Record">` +
+        `<svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>` +
+        `<span class="sr-only">PUSH PR</span>` +
+        `</button>`
       : '';
 
     rowsHtml += `
@@ -4463,7 +4528,7 @@ function renderHistoryView() {
       <div class="session-card ${isExpanded ? 'expanded' : ''}" data-session-id="${escapeHtml(session.id)}">
         <div class="session-card-header" onclick="toggleSessionCard('${escapeHtml(session.id)}')">
           <div class="session-card-title-group">
-            <span class="session-card-title">${escapeHtml(sessionTitle)}${sessionHasPr ? ' <span class="golden-pr-badge">PR GOLD</span>' : ''}</span>
+            <span class="session-card-title">${escapeHtml(sessionTitle)}${sessionHasPr ? ` ${goldenPrBadgeHtml()}` : ''}</span>
             <span class="session-card-meta">${escapeHtml(session.dateStr)} • ${durationMins} ${typeof durationMins === 'number' ? 'mins' : ''} • ${setList.length}S / ${sessionRepsCount}R</span>
           </div>
           <div class="session-card-stats">
@@ -4517,7 +4582,7 @@ function renderSessionSetsAccordion(sets) {
     out += `
       <div class="session-set-item ${setHasPr ? 'is-pr-set' : ''}" data-lift="${setLiftKey}">
         <div class="session-set-header">
-          <span class="session-set-tag" data-lift="${setLiftKey}">SET ${s.setNumber} — ${escapeHtml(setLift.toUpperCase())}${weightLabel}${setHasPr ? ' <span class="golden-pr-badge">PR GOLD</span>' : ''}</span>
+          <span class="session-set-tag" data-lift="${setLiftKey}">SET ${s.setNumber} — ${escapeHtml(setLift.toUpperCase())}${weightLabel}${setHasPr ? ` ${goldenPrBadgeHtml()}` : ''}</span>
           <div class="session-set-stats font-mono">
             <span class="set-stat-vol">Vol: ${formattedSetVol}</span>
             <span class="set-stat-vel">Avg: ${s.avgVelocity.toFixed(2)} m/s</span>
@@ -4965,7 +5030,7 @@ function initAthleteSettings() {
           athleteName: athleteName,
           rackId: rackId,
           coachCode: coachCode,
-          athleteId: 'ath_01',
+          athleteId: currentState.athleteId || ATHLETE_PREP_ID,
           lastSync: Date.now()
         };
         saveConnectionState(currentState);
@@ -4975,19 +5040,22 @@ function initAthleteSettings() {
           coachCode = 'EROS-7X9K';
           if (coachCodeInput) coachCodeInput.value = coachCode;
         }
+        const assignedAthleteId = (currentState.athleteId && String(currentState.athleteId).trim())
+          ? String(currentState.athleteId).trim()
+          : ATHLETE_PREP_ID;
         currentState = {
           connected: true,
           athleteName: athleteName,
           rackId: rackId,
           coachCode: coachCode,
-          athleteId: 'ath_01',
+          athleteId: assignedAthleteId,
           lastSync: Date.now()
         };
         saveConnectionState(currentState);
         updateUI(currentState);
 
         const payload = {
-          athleteId: 'ath_01',
+          athleteId: assignedAthleteId,
           athleteName: athleteName,
           rackId: rackId,
           coachCode: coachCode,
@@ -5305,7 +5373,166 @@ function launchPlannedSlot(workout, slot) {
 
   renderAthletePrepHub();
   renderAthletePlanVsActual();
+  renderLivePrescriptionStrip();
   switchTab('live');
+}
+
+/**
+ * Counts completed sets in the current workout (or stored workouts) matching a planned slot.
+ */
+function countCompletedSetsForSlot(workout, slot) {
+  if (!workout || !slot) return 0;
+  const sets = getAllRecordedSetsForComparison(workout);
+  return sets.filter(s => {
+    if (!s || !Array.isArray(s.reps) || s.reps.length === 0) return false;
+    const sSlotId = s.plannedSlotId || s.planned_slot_id;
+    if (sSlotId) return sSlotId === slot.slotId;
+    return sameLift(s.lift, slot.baseLift);
+  }).length;
+}
+
+/**
+ * Auto-advances Set X -> Set Y target weight and RPE when top sets for the active slot finish.
+ */
+function advanceActivePlannedSlotSet(completedSet) {
+  if (!activePlannedWorkoutId || !activePlannedSlotId || activeSet) return;
+  const wk = athletePrepState.workouts.find(w => w.workoutId === activePlannedWorkoutId);
+  if (!wk || !Array.isArray(wk.prescribedSlots)) return;
+  const slot = wk.prescribedSlots.find(s => s.slotId === activePlannedSlotId);
+  if (!slot) return;
+
+  const topSets = Number(slot.topSet && slot.topSet.sets) || 1;
+  const backoffSets = slot.backoff ? (Number(slot.backoff.sets) || 0) : 0;
+  const completedCount = countCompletedSetsForSlot(wk, slot);
+
+  if (completedCount >= topSets && backoffSets > 0 && slot.backoff) {
+    const backoffLoad = Number(slot.backoff.loadKg);
+    const backoffRpe = Number(slot.backoff.rpe);
+    if (isFinite(backoffLoad) && backoffLoad > 0) setWorkingWeight(backoffLoad, true);
+    if (isFinite(backoffRpe) && backoffRpe >= 5 && backoffRpe <= 10) setTargetRpe(backoffRpe, false);
+  } else if (completedSet && completedCount < topSets && slot.topSet) {
+    const topLoad = Number(slot.topSet.loadKg);
+    const topRpe = Number(slot.topSet.rpe);
+    if (isFinite(topLoad) && topLoad > 0) setWorkingWeight(topLoad, true);
+    if (isFinite(topRpe) && topRpe >= 5 && topRpe <= 10) setTargetRpe(topRpe, false);
+  }
+}
+
+/**
+ * Renders the compact #live-prescription-strip above .controls-panel showing the active planned slot and 1-tap Next Slot loader.
+ */
+function renderLivePrescriptionStrip() {
+  const strip = document.getElementById('live-prescription-strip');
+  if (!strip) return;
+
+  const wk = activePlannedWorkoutId
+    ? athletePrepState.workouts.find(w => w.workoutId === activePlannedWorkoutId)
+    : null;
+  const slots = (wk && Array.isArray(wk.prescribedSlots)) ? wk.prescribedSlots : [];
+  if (!wk || slots.length === 0) {
+    strip.style.display = 'none';
+    strip.innerHTML = '';
+    return;
+  }
+
+  let slotIdx = activePlannedSlotId ? slots.findIndex(s => s.slotId === activePlannedSlotId) : 0;
+  if (slotIdx < 0) slotIdx = 0;
+  const slot = slots[slotIdx];
+  if (!slot) {
+    strip.style.display = 'none';
+    strip.innerHTML = '';
+    return;
+  }
+
+  const topSets = Number(slot.topSet && slot.topSet.sets) || 1;
+  const backoffSets = slot.backoff ? (Number(slot.backoff.sets) || 0) : 0;
+  const totalSlotSets = Math.max(1, topSets + backoffSets);
+  const completedCount = countCompletedSetsForSlot(wk, slot);
+  const currentSetNum = Math.min(totalSlotSets, completedCount + 1);
+  const isBackoffPhase = backoffSets > 0 && completedCount >= topSets;
+  const activePhase = isBackoffPhase ? slot.backoff : slot.topSet;
+  const targetKg = Number(activePhase && activePhase.loadKg) || Number(slot.topSet && slot.topSet.loadKg) || 0;
+  const targetRpe = Number(activePhase && activePhase.rpe) || Number(slot.topSet && slot.topSet.rpe) || currentTargetRpe;
+
+  const summaryText = `Slot ${slotIdx + 1}/${slots.length} • Set ${currentSetNum}/${totalSlotSets} • ${targetKg.toFixed(1)} kg @ RPE ${targetRpe.toFixed(1)}`;
+  const hasNextSlot = slots.length > 1;
+  const nextSlot = hasNextSlot ? slots[(slotIdx + 1) % slots.length] : null;
+
+  strip.innerHTML = `
+    <div class="live-rx-main">
+      <span class="live-rx-badge font-mono">${escapeHtml(slot.exerciseName || slot.baseLift || 'PLANNED')}</span>
+      <span class="live-rx-meta font-mono">${escapeHtml(summaryText)}</span>
+    </div>
+    ${hasNextSlot && nextSlot ? `
+      <button type="button" id="btn-live-next-slot" class="live-rx-next-btn font-mono" data-next-slot-id="${escapeHtml(nextSlot.slotId)}" aria-label="Load next planned slot">
+        <span>Next Slot</span>
+        <svg class="eros-svg-icon eros-svg-icon--xs" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    ` : ''}
+  `;
+  strip.style.display = 'flex';
+
+  const nextBtn = document.getElementById('btn-live-next-slot');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (nextSlot) launchPlannedSlot(wk, nextSlot);
+    });
+  }
+}
+
+/**
+ * Binds quick-trim (-2.5 / +2.5 kg) and Next Set buttons inside #set-summary-banner.
+ */
+function bindSummaryBannerQuickActions() {
+  const decBtn = document.getElementById('btn-summary-weight-dec');
+  const incBtn = document.getElementById('btn-summary-weight-inc');
+  const nextBtn = document.getElementById('btn-summary-next-set');
+
+  if (decBtn && !decBtn._summaryBound) {
+    decBtn._summaryBound = true;
+    decBtn.addEventListener('click', () => {
+      if (typeof SoundFX !== 'undefined' && typeof SoundFX.playStepperTick === 'function') SoundFX.playStepperTick();
+      const base = (typeof currentWorkingWeight === 'number' && !isNaN(currentWorkingWeight)) ? currentWorkingWeight : 0;
+      setWorkingWeight(Math.max(0, base - 2.5), true);
+    });
+  }
+  if (incBtn && !incBtn._summaryBound) {
+    incBtn._summaryBound = true;
+    incBtn.addEventListener('click', () => {
+      if (typeof SoundFX !== 'undefined' && typeof SoundFX.playStepperTick === 'function') SoundFX.playStepperTick();
+      const base = (typeof currentWorkingWeight === 'number' && !isNaN(currentWorkingWeight)) ? currentWorkingWeight : 0;
+      setWorkingWeight(base + 2.5, true);
+    });
+  }
+  if (nextBtn && !nextBtn._summaryBound) {
+    nextBtn._summaryBound = true;
+    nextBtn.addEventListener('click', () => {
+      if (typeof SoundFX !== 'undefined' && typeof SoundFX.playSetStart === 'function') SoundFX.playSetStart();
+      if (typeof HapticsFX !== 'undefined' && typeof HapticsFX.vibrate === 'function') HapticsFX.vibrate([40]);
+      if (!activeSet) startNewSet(currentLift);
+    });
+  }
+}
+
+/**
+ * Applies a coach-pushed planned slot & target RPE directive into the Live tracker.
+ */
+function applyCoachPrescribedSlot(directive) {
+  if (!directive || typeof directive !== 'object') return;
+  if (directive.lift) {
+    const targetLift = canonicalLift(directive.lift);
+    if (!sameLift(currentLift, targetLift)) {
+      applyLiftTheme(targetLift);
+    }
+  }
+  if (directive.plannedWorkoutId) activePlannedWorkoutId = directive.plannedWorkoutId;
+  if (directive.plannedSlotId) activePlannedSlotId = directive.plannedSlotId;
+  if (typeof directive.targetRpe === 'number' && !isNaN(directive.targetRpe)) {
+    setTargetRpe(directive.targetRpe, false);
+  }
+  renderLivePrescriptionStrip();
 }
 
 function buildComparisonFallback(workout, completedSets) {
@@ -5448,7 +5675,7 @@ function renderAthletePlanVsActual() {
         <div class="plan-actual-cell">
           <span class="pa-name">${escapeHtml(r.exerciseName)}</span>
           <span class="pa-status ${st.cls}" data-prep-tooltip-key="prep_adherence_status">${st.label}</span>
-          ${isPr ? '<span class="golden-pr-badge" data-prep-tooltip-key="prep_golden_pr">PR GOLD</span>' : ''}
+          ${isPr ? goldenPrBadgeHtml() : ''}
         </div>
         <div class="plan-actual-cell">
           <span class="pa-line strong">${Number(p.sets) || 0} sets • ${planLoad}</span>
@@ -5636,7 +5863,10 @@ function renderAthletePrepHub() {
               </div>
               ${backoffHtml}
             </div>
-            <button type="button" class="athlete-slot-load-btn" data-load-slot-id="${escapeHtml(slot.slotId)}" data-prep-tooltip-key="prep_load_into_live">LOAD INTO LIVE</button>
+            <button type="button" class="athlete-slot-load-btn" data-load-slot-id="${escapeHtml(slot.slotId)}" data-prep-tooltip-key="prep_load_into_live" aria-label="Load into Live">
+              <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"></rect><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+              <span class="sr-only">LOAD INTO LIVE</span>
+            </button>
           </article>
         `;
       }).join('');
@@ -5970,6 +6200,34 @@ function saveAthleteBiometricsFromUI() {
   return saved;
 }
 
+/** Updates the compact summary pill and collapsed/expanded state on #athlete-biometrics-card. */
+function setAthleteBiometricsCollapsed(collapsed) {
+  const card = document.getElementById('athlete-biometrics-card');
+  const body = document.getElementById('athlete-bio-body');
+  const toggleBtn = document.getElementById('btn-toggle-biometrics');
+  const summaryPill = document.getElementById('athlete-bio-summary-pill');
+  if (!card) return;
+
+  card.classList.toggle('is-collapsed', Boolean(collapsed));
+  if (body) body.style.display = collapsed ? 'none' : '';
+  if (toggleBtn) toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+
+  if (summaryPill) {
+    const bio = getCurrentAthleteBiometrics();
+    const bwVal = Number(bio.bodyweightKg);
+    const daysCount = Array.isArray(bio.availableDays) ? bio.availableDays.length : 0;
+    if (bwVal > 0 && daysCount > 0) {
+      summaryPill.textContent = `${bwVal.toFixed(1)} kg • ${daysCount}d/wk`;
+      summaryPill.style.display = collapsed ? 'inline-flex' : 'none';
+    } else if (bwVal > 0) {
+      summaryPill.textContent = `${bwVal.toFixed(1)} kg`;
+      summaryPill.style.display = collapsed ? 'inline-flex' : 'none';
+    } else {
+      summaryPill.style.display = 'none';
+    }
+  }
+}
+
 /** Initializes the athlete biometrics dossier inputs, schedule toggles, and bodyweight sync. */
 function initAthleteBiometricsDossier() {
   const card = document.getElementById('athlete-biometrics-card');
@@ -5977,8 +6235,20 @@ function initAthleteBiometricsDossier() {
 
   populateAthleteBiometricsForm();
 
+  const initialBio = getCurrentAthleteBiometrics();
+  const hasBwAndDays = Number(initialBio.bodyweightKg) > 0 && Array.isArray(initialBio.availableDays) && initialBio.availableDays.length > 0;
+  setAthleteBiometricsCollapsed(hasBwAndDays);
+
   if (!card._bioBound) {
     card._bioBound = true;
+
+    const toggleBtn = document.getElementById('btn-toggle-biometrics');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const nextCollapsed = !card.classList.contains('is-collapsed');
+        setAthleteBiometricsCollapsed(nextCollapsed);
+      });
+    }
 
     const daysGroup = document.getElementById('bio-available-days-group');
     if (daysGroup) {
@@ -6666,6 +6936,384 @@ const PREP_TOOLTIP_DICTIONARY = {
     category: 'Coaching',
     description: 'Displays the most recent feedback note sent by the athlete for the selected training day.',
     tip: 'Check this line before adjusting next-day load or rest targets.'
+  },
+  header_status_badge: {
+    title: 'Eros Connection Status',
+    category: 'Connection',
+    description: 'Shows whether Eros is paired and ready to stream bar velocity, or waiting to connect.',
+    tip: 'Tap the badge before starting your first warmup set to pair your Eros unit.'
+  },
+  header_rest_ticker: {
+    title: 'Inter-Set Rest Timer',
+    category: 'Rest Tracking',
+    description: 'Counts elapsed rest time between completed sets so recovery intervals stay consistent across the session.',
+    tip: 'Use 3 to 5 minutes between heavy top sets and 90 to 120 seconds on backoff work.'
+  },
+  header_mode_toggle: {
+    title: 'Athlete & Coach Mode Switch',
+    category: 'Navigation',
+    description: 'Switches between the Athlete Live Cockpit and the Coach Supervision Portal.',
+    tip: 'Use Coach Mode to review squad telemetry, adjust loads, or build training blocks.'
+  },
+  header_workout_master: {
+    title: 'Session Start & End',
+    category: 'Session',
+    description: 'Starts or concludes the active training session and saves all logged sets to Workout History.',
+    tip: 'Start the workout before your first working set so session duration and DOTS totals stay accurate.'
+  },
+  live_prescription_strip: {
+    title: 'Active Planned Slot',
+    category: 'Live Bridge',
+    description: 'Shows the currently loaded exercise slot, set progress, prescribed load, and target RPE right above your controls.',
+    tip: 'Tap Next Slot after finishing all prescribed sets to advance straight to the next movement.'
+  },
+  live_lift_select: {
+    title: 'Movement Selector',
+    category: 'Live Setup',
+    description: 'Selects Squat, Bench Press, or Deadlift to apply the matching velocity baseline and RPE curve.',
+    tip: 'Switch lifts before starting a set so estimated RPE and PR thresholds match the movement.'
+  },
+  live_weight_control: {
+    title: 'Working Weight Stepper',
+    category: 'Live Setup',
+    description: 'Adjusts the barbell load in 2.5 kg increments or direct entry for the upcoming set.',
+    tip: 'Keep working weight updated before each set so volume and e1RM calculations stay exact.'
+  },
+  live_set_toggle: {
+    title: 'Set Start & Stop',
+    category: 'Live Execution',
+    description: 'Begins tracking repetitions for the current set or ends the set to compute summary metrics and start rest.',
+    tip: 'Start the set right before unracking so every repetition is captured cleanly.'
+  },
+  live_complete_set: {
+    title: 'Complete Active Set',
+    category: 'Live Execution',
+    description: 'Finalizes the active set, logs all recorded repetitions, and starts the inter-set rest stopwatch.',
+    tip: 'Tap Done as soon as the barbell is racked to lock in accurate rest timing.'
+  },
+  live_target_rpe: {
+    title: 'Target RPE Zone',
+    category: 'Autoregulation',
+    description: 'Sets the intended Rating of Perceived Exertion ceiling for the active set and updates the stage gauge.',
+    tip: 'Match your target RPE to the day prescription so bar speed guides when to rack the bar.'
+  },
+  live_barpath_mode: {
+    title: 'Stage Display Mode',
+    category: 'Bar Path',
+    description: 'Toggles the live stage between 2D movement trajectory path and vertical velocity profile.',
+    tip: 'Use Path mode to inspect horizontal bar drift and Velocity mode to compare rep speed.'
+  },
+  live_barpath_variant: {
+    title: 'Visual Trace Style',
+    category: 'Bar Path',
+    description: 'Opens visual trace style options for rendering repetition paths and ghost consistency lines.',
+    tip: 'Pick a high-contrast trace style when training under bright gym lighting.'
+  },
+  live_set_summary: {
+    title: 'Post-Set Summary Banner',
+    category: 'Live Telemetry',
+    description: 'Summarizes completed set reps, working weight, mean velocity, and elapsed rest right after racking.',
+    tip: 'Review mean velocity before choosing whether to add 2.5 kg or hold load.'
+  },
+  summary_weight_trim: {
+    title: 'Quick Load Trim (2.5 kg)',
+    category: 'Live Streamlining',
+    description: 'Adds or subtracts 2.5 kg from the next set working weight directly from the post-set summary banner.',
+    tip: 'Trim 2.5 kg if bar speed dropped faster than your target RPE zone.'
+  },
+  summary_next_set: {
+    title: 'Quick Start Next Set',
+    category: 'Live Streamlining',
+    description: 'Starts the next set immediately using your updated working weight and active lift.',
+    tip: 'Tap Next once your rest target is reached to jump straight into the next set.'
+  },
+  history_athlete_settings: {
+    title: 'Coach Pairing & Settings',
+    category: 'Connection',
+    description: 'Opens athlete profile settings to enter a coach pairing code and manage live session streaming.',
+    tip: 'Confirm your pairing code is active before starting a coached session.'
+  },
+  history_biometrics_card: {
+    title: 'Athlete Biometrics Dossier',
+    category: 'Profile',
+    description: 'Stores bodyweight, weight class, training age, and weekly availability used for DOTS and coaching alerts.',
+    tip: 'Keep bodyweight and available training days current so block prescriptions fit your schedule.'
+  },
+  history_toggle_biometrics: {
+    title: 'Collapse or Expand Dossier',
+    category: 'Profile',
+    description: 'Toggles the athlete biometrics form between full edit view and a compact summary pill.',
+    tip: 'Keep the dossier collapsed during training blocks and expand only when updating measurements.'
+  },
+  history_save_biometrics: {
+    title: 'Save Biometrics Dossier',
+    category: 'Profile',
+    description: 'Saves updated athlete profile details and syncs them to the coach Preparation factoring strip.',
+    tip: 'Save after changing available days so your coach sees updated schedule constraints.'
+  },
+  history_export_json: {
+    title: 'Export History JSON',
+    category: 'Data Export',
+    description: 'Downloads your complete workout and repetition history as a structured JSON archive.',
+    tip: 'Export a backup periodically before clearing local browser storage.'
+  },
+  history_export_csv: {
+    title: 'Export History CSV',
+    category: 'Data Export',
+    description: 'Downloads set and repetition telemetry in CSV spreadsheet format for external analysis.',
+    tip: 'Open the CSV in a spreadsheet to chart long-term velocity trends at fixed loads.'
+  },
+  history_clear: {
+    title: 'Clear Workout History',
+    category: 'Data Management',
+    description: 'Removes saved local workout sessions after confirmation to reset history storage.',
+    tip: 'Export a JSON or CSV backup before clearing past sessions.'
+  },
+  coach_sidebar_toggle: {
+    title: 'Toggle Coach Sidebar',
+    category: 'Navigation',
+    description: 'Collapses or expands the coach navigation rail between compact icon-only mode and full labels.',
+    tip: 'Press [ on your keyboard anytime to toggle the sidebar rail.'
+  },
+  coach_sidebar_ticker: {
+    title: 'Active Athlete Rest Ticker',
+    category: 'Live Monitoring',
+    description: 'Displays the focused athlete live inter-set rest clock directly inside the coach sidebar.',
+    tip: 'Watch the ticker approach target rest to cue your athlete right before their next set.'
+  },
+  coach_cloud_sync: {
+    title: 'Cloud Session Sync',
+    category: 'Live Bridge',
+    description: 'Opens the pairing and cloud room connection panel to link remote athlete devices.',
+    tip: 'Share the room pairing code with athletes so live sets stream into your squad roster.'
+  },
+  coach_nav_live: {
+    title: 'Coach Live Monitor',
+    category: 'Navigation',
+    description: 'Opens the live athlete bar path stage, rep stream, and tactical coaching console.',
+    tip: 'Use Live Monitor during heavy top sets to send immediate cues or load adjustments.'
+  },
+  coach_nav_history: {
+    title: 'Athlete History & Analytics',
+    category: 'Navigation',
+    description: 'Reviews completed sessions, calendar adherence, and set-by-set replay for the focused athlete.',
+    tip: 'Compare bar path replays across weeks to spot technical consistency under fatigue.'
+  },
+  coach_nav_preparation: {
+    title: 'Block Preparation Workbench',
+    category: 'Navigation',
+    description: 'Builds multi-week periodized training blocks, exercise slots, and target velocities.',
+    tip: 'Publish changes after editing the week so the athlete Preparation hub updates live.'
+  },
+  coach_nav_roster: {
+    title: 'Squad Roster Overview',
+    category: 'Navigation',
+    description: 'Displays all connected athletes, active lifts, rest clocks, and readiness status cards.',
+    tip: 'Click any athlete card to focus their live telemetry and coaching console.'
+  },
+  coach_nav_prescriptions: {
+    title: 'Tactical Prescription Console',
+    category: 'Navigation',
+    description: 'Jumps to the load override, target RPE, rest timer, and cue dispatch controls.',
+    tip: 'Push prescribed Set X or Set Y targets directly to the athlete rest modal.'
+  },
+  coach_nav_sync: {
+    title: 'Live Sync Status',
+    category: 'Navigation',
+    description: 'Checks connection health and pairing status for the active coaching room.',
+    tip: 'Verify sync is active before remote sessions begin.'
+  },
+  coach_nav_bonds: {
+    title: 'Athlete Roster Bonds',
+    category: 'Navigation',
+    description: 'Manages incoming athlete pairing requests, active bonds, and roster access.',
+    tip: 'Approve pending athlete requests here to unlock live streaming.'
+  },
+  coach_roster_filters: {
+    title: 'Roster Lift & Status Filters',
+    category: 'Squad View',
+    description: 'Filters the squad overview by Squat, Bench, Deadlift, or active lifting state.',
+    tip: 'Filter to Active sets during busy team sessions to keep attention on lifters under the bar.'
+  },
+  coach_barpath_mode: {
+    title: 'Coach Stage View Mode',
+    category: 'Bar Path',
+    description: 'Switches the focused athlete stage between 2D movement path and velocity trace.',
+    tip: 'Toggle to Path mode to inspect horizontal bar drift during replays.'
+  },
+  coach_barpath_replay: {
+    title: 'Coach Stage Replay',
+    category: 'Bar Path',
+    description: 'Replays the selected set bar path and repetition cadence on the Coach Live Monitor stage.',
+    tip: 'Step through completed sets to review bar drift and sticking-point speed with your athlete.'
+  },
+  coach_prep_bump_week: {
+    title: 'Progressive Week Bump',
+    category: 'Periodization',
+    description: 'Steps all non-deload prescriptions in the selected week forward by a chosen load or RPE increment.',
+    tip: 'Review the updated Set Y backoff weights and hit Publish Plan when ready.'
+  },
+  coach_prescribed_bridge: {
+    title: 'Prescribed Set X / Set Y Bridge',
+    category: 'Live Bridge',
+    description: 'One-click push for today planned Set X top set or Set Y backoff load and target RPE to the athlete.',
+    tip: 'Push Set Y right after the top set finishes so the athlete receives the exact backoff target.'
+  },
+  coach_rpe_target_pin: {
+    title: 'Pinned Target RPE',
+    category: 'Autoregulation',
+    description: 'Pins the coach-prescribed target RPE zone on the athlete stage for the upcoming set.',
+    tip: 'Use the pinned target RPE to verify whether bar speed matches daily readiness.'
+  },
+  coach_squad_card: {
+    title: 'Connected Athlete Card',
+    category: 'Squad View',
+    description: 'Shows live lift, working load, velocity, RPE, and rest status for a connected athlete.',
+    tip: 'Select Focus to load this athlete full stage and coaching controls.'
+  },
+  coach_rep_pill: {
+    title: 'Repetition Telemetry Pill',
+    category: 'Live Telemetry',
+    description: 'Summarizes a single recorded repetition with mean velocity, RPE, and bar deviation.',
+    tip: 'Compare velocity drop from Rep 1 to the final rep to verify effort.'
+  },
+  coach_calendar_day: {
+    title: 'Training Calendar Day',
+    category: 'History',
+    description: 'Indicates logged training sessions and personal records on that calendar date.',
+    tip: 'Click any highlighted day to inspect its completed sets and replays.'
+  },
+  coach_replay_set: {
+    title: 'Replay Set Trajectory',
+    category: 'Bar Path',
+    description: 'Animates the recorded bar path and repetition cadence for the selected completed set.',
+    tip: 'Use replay to review sticking-point deceleration with your athlete between sets.'
+  },
+  coach_focus_athlete: {
+    title: 'Focus Athlete',
+    category: 'Squad View',
+    description: 'Pins this athlete to the main Coach Live Monitor and Prescription Console.',
+    tip: 'Switch focus anytime without interrupting background telemetry from other racks.'
+  },
+  coach_fab_trigger: {
+    title: 'Quick Action Wheel',
+    category: 'Navigation',
+    description: 'Opens radial shortcuts for common coaching actions and view switches.',
+    tip: 'Use the wheel for fast one-handed navigation.'
+  },
+  radial_fab: {
+    title: 'Quick Action Wheel',
+    category: 'Navigation',
+    description: 'Opens radial shortcuts for common coaching actions and view switches.',
+    tip: 'Use the wheel for fast one-handed navigation.'
+  },
+  coach_barpath_rep_pill: {
+    title: 'Repetition Trajectory Pill',
+    category: 'Bar Path',
+    description: 'Selects an individual repetition from the completed set to inspect its bar path and velocity trace.',
+    tip: 'Compare Rep 1 against the final rep to spot fatigue-related bar drift.'
+  },
+  coach_cal_day: {
+    title: 'Calendar Training Day',
+    category: 'History',
+    description: 'Highlights dates with logged training sessions or verified personal records.',
+    tip: 'Click any highlighted day to load its completed sets and replays.'
+  },
+  coach_cmd_push_prescribed: {
+    title: 'Push Prescribed Load & RPE',
+    category: 'Live Bridge',
+    description: 'Sends the selected Set X or Set Y load and target RPE directly to the athlete rest modal.',
+    tip: 'Push backoff targets immediately after the top set concludes.'
+  },
+  coach_load_pills: {
+    title: 'Quick Load Adjustment Chips',
+    category: 'Coaching',
+    description: 'Applies a 2.5 kg or 5.0 kg load increment or decrement to the athlete upcoming set.',
+    tip: 'Use small 2.5 kg nudges when bar speed drifts slightly above or below target.'
+  },
+  coach_prep_week_bump: {
+    title: 'Progressive Week Bump',
+    category: 'Periodization',
+    description: 'Steps all non-deload prescriptions in the selected week forward by a chosen load or RPE increment.',
+    tip: 'Review the updated Set Y backoff weights and hit Publish Plan when ready.'
+  },
+  coach_rep_stream_pill: {
+    title: 'Live Rep Stream Pill',
+    category: 'Live Telemetry',
+    description: 'Shows repetition number, mean velocity, RPE, and bar deviation in real time.',
+    tip: 'Watch velocity drop across reps to time your rack cue.'
+  },
+  coach_send_custom: {
+    title: 'Send Custom Tactical Cue',
+    category: 'Coaching',
+    description: 'Dispatches a custom text cue straight to the athlete floating HUD during or between sets.',
+    tip: 'Keep live cues under five words so the athlete can process them between reps.'
+  },
+  modal_athlete_settings_connect: {
+    title: 'Connect to Coach',
+    category: 'Connection',
+    description: 'Links this athlete device to a coach session using the shared pairing code.',
+    tip: 'Confirm your name and rack label before connecting.'
+  },
+  modal_ble_connect: {
+    title: 'Pair Eros Device',
+    category: 'Connection',
+    description: 'Scans for and pairs your nearby Eros unit for live bar velocity tracking.',
+    tip: 'Keep Eros awake and nearby before tapping Connect.'
+  },
+  modal_directive_accept: {
+    title: 'Accept Coach Directive',
+    category: 'Coaching',
+    description: 'Commits the coach prescribed working weight and target RPE for the upcoming set.',
+    tip: 'Accept before unracking so your next set logs against the updated target.'
+  },
+  modal_directive_decline: {
+    title: 'Decline Coach Directive',
+    category: 'Coaching',
+    description: 'Keeps your current working weight and notifies the coach that the override was declined.',
+    tip: 'Decline if bar feel or joint readiness calls for holding your current load.'
+  },
+  nav_prep: {
+    title: 'Preparation Hub',
+    category: 'Navigation',
+    description: 'Opens your coach-prescribed training plan, Set X/Y targets, and Planned vs Actual comparison.',
+    tip: 'Load planned slots from here before starting warmups.'
+  },
+  nav_live: {
+    title: 'Live Tracker',
+    category: 'Navigation',
+    description: 'Opens the real-time bar speed, RPE, and trajectory stage.',
+    tip: 'Keep Live open during working sets for instant velocity feedback.'
+  },
+  nav_set: {
+    title: 'Preparation & Active Set',
+    category: 'Navigation',
+    description: 'Opens your coach-prescribed training plan, Set X/Y targets, and active set breakdown.',
+    tip: 'Load planned slots from here before starting warmups.'
+  },
+  nav_history: {
+    title: 'Workout History',
+    category: 'Navigation',
+    description: 'Reviews past training sessions, DOTS score, PRs, and athlete biometrics.',
+    tip: 'Check long-term PRs and export backups from History.'
+  },
+  nav_coach: {
+    title: 'Coach Portal',
+    category: 'Navigation',
+    description: 'Switches to the multi-athlete Coach Supervision Cockpit.',
+    tip: 'Monitor squad velocity and push prescriptions from Coach Mode.'
+  },
+  pr_confirm_hud: {
+    title: 'PR Confirmation Prompt',
+    category: 'PR Tracking',
+    description: 'Prompts to verify a detected weight or velocity personal record before updating 1RM benchmarks.',
+    tip: 'Confirm only clean, full-ROM repetitions so future prescriptions stay accurate.'
+  },
+  coach_bond_modal: {
+    title: 'Roster Bonds Manager',
+    category: 'Coaching',
+    description: 'Reviews pending athlete link requests and manages connected athlete bonds.',
+    tip: 'Revoke old test bonds to keep your active squad roster clean.'
   }
 };
 
@@ -6691,8 +7339,29 @@ const prepTooltipRuntime = {
   openTimer: null,
   activeTrigger: null,
   pendingTrigger: null,
-  globalBound: false
+  globalBound: false,
+  dragActive: false,
+  lastTouchTs: 0
 };
+
+function isTooltipSuppressed() {
+  if (prepTooltipRuntime.dragActive) return true;
+  if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
+    if (document.querySelector('.is-dragging, .coach-pill-dragging, .coach-pill-drag-over, .custom-select-wrapper.open')) {
+      return true;
+    }
+    const bleSheet = document.getElementById('bluetooth-search-tab');
+    if (bleSheet && bleSheet.classList && (bleSheet.classList.contains('dragging') || bleSheet.classList.contains('is-dragging'))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isCollapsedCoachSidebarTarget(el) {
+  if (!el || typeof el.closest !== 'function') return false;
+  return Boolean(el.closest('#coach-sidebar.coach-sidebar--collapsed'));
+}
 
 function matchesPrepTooltipSelector(node, selector) {
   if (!node || !selector) return false;
@@ -6725,9 +7394,9 @@ function resolvePrepTooltipTarget(rawNode, rootPanel) {
   return null;
 }
 
-function positionPrepTooltipCard(card, targetEl) {
+function positionPrepTooltipCard(card, targetEl, preferredPlacement) {
   if (!card || !targetEl || typeof targetEl.getBoundingClientRect !== 'function') return;
-  const margin = 12;
+  const margin = 8;
   const gap = 10;
   const vw = (typeof window !== 'undefined' && Number(window.innerWidth) > 0) ? Number(window.innerWidth) : 1024;
   const vh = (typeof window !== 'undefined' && Number(window.innerHeight) > 0) ? Number(window.innerHeight) : 768;
@@ -6743,29 +7412,47 @@ function positionPrepTooltipCard(card, targetEl) {
   const cardW = cRect.width > 0 ? cRect.width : (card.offsetWidth || 290);
   const cardH = cRect.height > 0 ? cRect.height : (card.offsetHeight || 120);
 
-  const rawLeft = tRect.left + (tRect.width - cardW) / 2;
-  const maxLeft = Math.max(margin, vw - margin - cardW);
-  const left = Math.max(margin, Math.min(rawLeft, maxLeft));
-
-  const aboveTop = tRect.top - cardH - gap;
-  const belowTop = tRect.bottom + gap;
   let placement = 'top';
-  let candidateTop = aboveTop;
-  if (aboveTop < margin) {
-    if (belowTop + cardH <= vh - margin) {
-      placement = 'bottom';
-      candidateTop = belowTop;
-    } else {
-      const spaceAbove = Math.max(0, tRect.top - margin);
-      const spaceBelow = Math.max(0, vh - margin - tRect.bottom);
-      if (spaceBelow > spaceAbove) {
+  let left = 0;
+  let top = 0;
+
+  if (preferredPlacement === 'right') {
+    placement = 'right';
+    let rawLeft = tRect.right + gap;
+    if (rawLeft + cardW > vw - margin && tRect.left - cardW - gap >= margin) {
+      rawLeft = tRect.left - cardW - gap;
+      placement = 'left';
+    }
+    const maxLeft = Math.max(margin, vw - margin - cardW);
+    left = Math.max(margin, Math.min(rawLeft, maxLeft));
+
+    const rawTop = tRect.top + (tRect.height - cardH) / 2;
+    const maxTop = Math.max(margin, vh - margin - cardH);
+    top = Math.max(margin, Math.min(rawTop, maxTop));
+  } else {
+    const rawLeft = tRect.left + (tRect.width - cardW) / 2;
+    const maxLeft = Math.max(margin, vw - margin - cardW);
+    left = Math.max(margin, Math.min(rawLeft, maxLeft));
+
+    const aboveTop = tRect.top - cardH - gap;
+    const belowTop = tRect.bottom + gap;
+    let candidateTop = aboveTop;
+    if (aboveTop < margin) {
+      if (belowTop + cardH <= vh - margin) {
         placement = 'bottom';
         candidateTop = belowTop;
+      } else {
+        const spaceAbove = Math.max(0, tRect.top - margin);
+        const spaceBelow = Math.max(0, vh - margin - tRect.bottom);
+        if (spaceBelow > spaceAbove) {
+          placement = 'bottom';
+          candidateTop = belowTop;
+        }
       }
     }
+    const maxTop = Math.max(margin, vh - margin - cardH);
+    top = Math.max(margin, Math.min(candidateTop, maxTop));
   }
-  const maxTop = Math.max(margin, vh - margin - cardH);
-  const top = Math.max(margin, Math.min(candidateTop, maxTop));
 
   card.setAttribute('data-placement', placement);
   if (card.style) {
@@ -6787,10 +7474,10 @@ function hidePrepTooltipCard() {
   }
 }
 
-function showPrepTooltipForTarget(targetEl, key) {
+function showPrepTooltipForTarget(targetEl, key, preferredPlacement) {
   const entry = PREP_TOOLTIP_DICTIONARY[key];
   const card = document.getElementById('eros-prep-tooltip-card');
-  if (!entry || !card || !targetEl) return;
+  if (!entry || !card || !targetEl || isTooltipSuppressed()) return;
 
   prepTooltipRuntime.activeTrigger = targetEl;
   prepTooltipRuntime.pendingTrigger = null;
@@ -6811,28 +7498,50 @@ function showPrepTooltipForTarget(targetEl, key) {
   if (card.classList && typeof card.classList.add === 'function') {
     card.classList.add('visible');
   }
-  positionPrepTooltipCard(card, targetEl);
+  const placement = preferredPlacement || (isCollapsedCoachSidebarTarget(targetEl) ? 'right' : undefined);
+  positionPrepTooltipCard(card, targetEl, placement);
 }
 
-/** Initializes delegated hover and keyboard-focus tooltips across Athlete and Coach Preparation panels. */
+/** Initializes idempotent document-level hover and keyboard-focus tooltips across the entire app (Desktop Hover & Focus Only). */
 function initPrepHoverTooltips() {
   if (typeof document === 'undefined' || typeof document.getElementById !== 'function') return false;
   const card = document.getElementById('eros-prep-tooltip-card');
   if (!card) return false;
 
-  const panelIds = ['tab-set', 'coach-preparation-panel', 'pr-confirm-hud'];
-  let boundCount = 0;
+  if (!prepTooltipRuntime.globalBound && typeof document.addEventListener === 'function') {
+    prepTooltipRuntime.globalBound = true;
+    const rootEl = document.body || document.documentElement;
+    const isInsideTooltipCard = (node) => Boolean(node && typeof node.closest === 'function' && node.closest('#eros-prep-tooltip-card'));
 
-  panelIds.forEach(panelId => {
-    const panel = document.getElementById(panelId);
-    if (!panel || typeof panel.addEventListener !== 'function') return;
-    if (panel._prepTooltipsBound) {
-      boundCount++;
-      return;
-    }
+    // Record touch timestamps to suppress synthetic iOS Safari mouseover events for 800ms post-touch
+    document.addEventListener('touchstart', () => {
+      prepTooltipRuntime.lastTouchTs = Date.now();
+    }, true);
 
-    panel.addEventListener('mouseover', (e) => {
-      const resolved = resolvePrepTooltipTarget(e && e.target, panel);
+    // Immediate hide on press/drag start
+    document.addEventListener('pointerdown', (e) => {
+      if (e && e.pointerType === 'touch') {
+        prepTooltipRuntime.lastTouchTs = Date.now();
+      }
+      hidePrepTooltipCard();
+    }, true);
+    document.addEventListener('mousedown', () => hidePrepTooltipCard(), true);
+    document.addEventListener('dragstart', () => {
+      prepTooltipRuntime.dragActive = true;
+      hidePrepTooltipCard();
+    }, true);
+    document.addEventListener('dragend', () => { prepTooltipRuntime.dragActive = false; }, true);
+    document.addEventListener('drop', () => { prepTooltipRuntime.dragActive = false; }, true);
+    document.addEventListener('pointercancel', () => { prepTooltipRuntime.dragActive = false; }, true);
+
+    document.addEventListener('mouseover', (e) => {
+      if (Date.now() - prepTooltipRuntime.lastTouchTs < 800) return;
+      if (isInsideTooltipCard(e && e.target)) return;
+      if (isTooltipSuppressed()) {
+        hidePrepTooltipCard();
+        return;
+      }
+      const resolved = resolvePrepTooltipTarget(e && e.target, rootEl);
       if (!resolved) {
         clearTimeout(prepTooltipRuntime.openTimer);
         prepTooltipRuntime.openTimer = null;
@@ -6847,64 +7556,83 @@ function initPrepHoverTooltips() {
       }
       clearTimeout(prepTooltipRuntime.openTimer);
       prepTooltipRuntime.pendingTrigger = resolved.el;
+      const collapsedSidebar = isCollapsedCoachSidebarTarget(resolved.el);
+      const delay = collapsedSidebar ? 40 : 120;
+      const placement = collapsedSidebar ? 'right' : undefined;
       prepTooltipRuntime.openTimer = setTimeout(() => {
         prepTooltipRuntime.openTimer = null;
-        showPrepTooltipForTarget(resolved.el, resolved.key);
-      }, 120);
+        if (isTooltipSuppressed()) return;
+        showPrepTooltipForTarget(resolved.el, resolved.key, placement);
+      }, delay);
     });
 
-    panel.addEventListener('mouseout', (e) => {
-      const next = resolvePrepTooltipTarget(e && e.relatedTarget, panel);
+    document.addEventListener('mouseout', (e) => {
+      if (isInsideTooltipCard(e && e.target)) return;
+      const next = resolvePrepTooltipTarget(e && e.relatedTarget, rootEl);
       if (next && (next.el === prepTooltipRuntime.activeTrigger || next.el === prepTooltipRuntime.pendingTrigger)) {
         return;
       }
       hidePrepTooltipCard();
     });
 
-    panel.addEventListener('focusin', (e) => {
-      const resolved = resolvePrepTooltipTarget(e && e.target, panel);
+    document.addEventListener('focusin', (e) => {
+      if (isInsideTooltipCard(e && e.target)) return;
+      if (isTooltipSuppressed()) return;
+      const resolved = resolvePrepTooltipTarget(e && e.target, rootEl);
       if (!resolved) return;
       clearTimeout(prepTooltipRuntime.openTimer);
       prepTooltipRuntime.openTimer = null;
-      showPrepTooltipForTarget(resolved.el, resolved.key);
+      const placement = isCollapsedCoachSidebarTarget(resolved.el) ? 'right' : undefined;
+      showPrepTooltipForTarget(resolved.el, resolved.key, placement);
     });
 
-    panel.addEventListener('focusout', (e) => {
-      const next = resolvePrepTooltipTarget(e && e.relatedTarget, panel);
+    document.addEventListener('focusout', (e) => {
+      if (isInsideTooltipCard(e && e.target)) return;
+      const next = resolvePrepTooltipTarget(e && e.relatedTarget, rootEl);
       if (next && next.el === prepTooltipRuntime.activeTrigger) return;
       hidePrepTooltipCard();
     });
 
-    panel._prepTooltipsBound = true;
-    boundCount++;
-  });
+    document.addEventListener('click', () => {
+      if (prepTooltipRuntime.activeTrigger) hidePrepTooltipCard();
+    }, true);
 
-  if (!prepTooltipRuntime.globalBound) {
-    prepTooltipRuntime.globalBound = true;
-    if (typeof document.addEventListener === 'function') {
-      document.addEventListener('keydown', (e) => {
-        if (e && e.key === 'Escape') hidePrepTooltipCard();
-      });
-      document.addEventListener('scroll', () => {
-        if (prepTooltipRuntime.activeTrigger) hidePrepTooltipCard();
-      }, true);
-    }
+    document.addEventListener('keydown', (e) => {
+      if (e && e.key === 'Escape') hidePrepTooltipCard();
+    });
+
+    document.addEventListener('scroll', () => {
+      if (prepTooltipRuntime.activeTrigger) hidePrepTooltipCard();
+    }, true);
+
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('blur', () => {
+        prepTooltipRuntime.dragActive = false;
+        hidePrepTooltipCard();
+      });
       window.addEventListener('resize', () => {
         if (prepTooltipRuntime.activeTrigger && card.getAttribute('aria-hidden') === 'false') {
           const resolved = resolvePrepTooltipTarget(prepTooltipRuntime.activeTrigger, document.body || prepTooltipRuntime.activeTrigger);
-          if (resolved) positionPrepTooltipCard(card, resolved.el);
+          if (resolved) {
+            const placement = isCollapsedCoachSidebarTarget(resolved.el) ? 'right' : undefined;
+            positionPrepTooltipCard(card, resolved.el, placement);
+          }
         }
       });
     }
   }
 
-  return boundCount > 0;
+  return true;
 }
 
 if (typeof window !== 'undefined') {
   window.PREP_TOOLTIP_DICTIONARY = PREP_TOOLTIP_DICTIONARY;
   window.initPrepHoverTooltips = initPrepHoverTooltips;
+  window.setWorkingWeight = setWorkingWeight;
+  window.setTargetRpe = setTargetRpe;
+  window.applyCoachPrescribedSlot = applyCoachPrescribedSlot;
+  window.renderLivePrescriptionStrip = renderLivePrescriptionStrip;
+  window.bindSummaryBannerQuickActions = bindSummaryBannerQuickActions;
   window.initAthleteSettings = initAthleteSettings;
   window.initAthletePrepView = initAthletePrepView;
   window.renderAthletePrepHub = renderAthletePrepHub;
@@ -6943,6 +7671,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initBleSheetDrag();
   initCoachDirectiveSync();
   initAthleteSettings();
+  bindSummaryBannerQuickActions();
+  renderLivePrescriptionStrip();
   initAthletePrepView();
   initAthleteBiometricsDossier();
   initPrConfirmHudListeners();

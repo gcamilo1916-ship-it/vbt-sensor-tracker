@@ -1001,11 +1001,13 @@ runTest('5.4 Fix 4: Preparation hover tooltip dictionary (#eros-prep-tooltip-car
     assert.ok(typeof entry.tip === 'string' && entry.tip.trim().length > 5, `Tooltip key "${k}" missing practical tip`);
   }
 
-  // Every data-prep-tooltip-key in index.html & app.js and selector map must resolve cleanly in PREP_TOOLTIP_DICTIONARY
+  // Every data-prep-tooltip-key in index.html, app.js, coach-portal.js and selector map must resolve cleanly in PREP_TOOLTIP_DICTIONARY
+  const coachJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach-portal.js'), 'utf8');
   const htmlKeys = Array.from(indexHtmlSrc.matchAll(/data-prep-tooltip-key="([^"]+)"/g)).map(m => m[1]);
   const appKeys = Array.from(appJsSrc.matchAll(/data-prep-tooltip-key="([^"]+)"/g)).map(m => m[1]);
+  const coachJsKeys = Array.from(coachJsSrc.matchAll(/data-prep-tooltip-key="([^"]+)"/g)).map(m => m[1]);
   const mapKeys = selMap.map(pair => pair[1]);
-  const referenced = new Set([...htmlKeys, ...appKeys, ...mapKeys]);
+  const referenced = new Set([...htmlKeys, ...appKeys, ...coachJsKeys, ...mapKeys]);
 
   for (const rk of referenced) {
     assert.ok(Object.prototype.hasOwnProperty.call(dict, rk), `Tooltip key "${rk}" referenced in DOM/JS is missing from PREP_TOOLTIP_DICTIONARY`);
@@ -1048,7 +1050,40 @@ runTest('5.5 Fix 5: Zero text-transform: uppercase in coach.css and zero unexpec
 
   // Verify Title/Sentence Case returns from Coach helpers
   assert.ok(/return 'Mode: Vel';/.test(coachJsSrc) || /'Mode: Vel'\s*:\s*'Mode: Path'/.test(coachJsSrc), 'Coach canvas mode toggle must use Title Case');
-  assert.ok(coachJsSrc.includes('PR &bull; Gold'), 'goldenPrBadgeHtml must render "PR • Gold" rather than "PR • GOLD"');
+  assert.ok(
+    (coachJsSrc.includes('PR &bull; Gold') || coachJsSrc.includes("'PR Gold'") || coachJsSrc.includes('"PR Gold"')) &&
+    !coachJsSrc.includes('PR &bull; GOLD') && !coachJsSrc.includes('PR GOLD'),
+    'goldenPrBadgeHtml must render Title Case "PR Gold" / "PR • Gold" rather than all-caps GOLD'
+  );
+});
+
+runTest('5.6 Phase 5: Icon-first geometry, tooltip stacking/iOS guard, 7-col mobile nav & Flow 1/2/3 wiring', () => {
+  const indexHtmlSrc = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf8');
+  const styleCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'style.css'), 'utf8');
+  const coachCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach.css'), 'utf8');
+  const appJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'app.js'), 'utf8');
+  const coachJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach-portal.js'), 'utf8');
+
+  // Tooltip stacking root + z-index 10100 + iOS touch guard (2D)
+  const settingsModalIdx = indexHtmlSrc.indexOf('id="athlete-settings-modal"');
+  const tooltipCardIdx = indexHtmlSrc.indexOf('id="eros-prep-tooltip-card"');
+  assert.ok(settingsModalIdx > 0 && tooltipCardIdx > settingsModalIdx, '#eros-prep-tooltip-card must be placed under <body> after #athlete-settings-modal');
+  assert.ok(/#eros-prep-tooltip-card[\s\S]*?z-index:\s*10100/.test(styleCssSrc), '#eros-prep-tooltip-card must have z-index: 10100');
+  assert.ok(appJsSrc.includes('lastTouchTs') && appJsSrc.includes('touchstart'), 'app.js must implement lastTouchTs iOS synthetic mouseover guard');
+
+  // 7-col #coach-mobile-nav and 14px squircle #btn-athlete-settings-close
+  assert.ok(/#coach-mobile-nav[\s\S]*?grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/.test(coachCssSrc), '#coach-mobile-nav must use 7-column grid');
+  const mobileNavStart = indexHtmlSrc.indexOf('id="coach-mobile-nav"');
+  const mobileNavEnd = indexHtmlSrc.indexOf('</nav>', mobileNavStart);
+  const mobileNavHtml = indexHtmlSrc.slice(mobileNavStart, mobileNavEnd);
+  const mobileNavCount = (mobileNavHtml.match(/class="coach-bottom-nav-btn/g) || []).length;
+  assert.strictEqual(mobileNavCount, 7, `#coach-mobile-nav must have 7 nav items, found ${mobileNavCount}`);
+  assert.ok(/#btn-athlete-settings-close[\s\S]*?border-radius:\s*14px/.test(styleCssSrc), '#btn-athlete-settings-close must have 14px squircle radius');
+
+  // Flow 1, Flow 2, Flow 3 DOM & JS hooks
+  assert.ok(indexHtmlSrc.includes('id="live-prescription-strip"') && indexHtmlSrc.includes('id="btn-summary-next-set"') && indexHtmlSrc.includes('id="btn-toggle-biometrics"'), 'Flow 1 DOM hooks must exist in index.html');
+  assert.ok(indexHtmlSrc.includes('id="coach-prescribed-bridge"') && coachJsSrc.includes('forceLoadOverride'), 'Flow 2 #coach-prescribed-bridge and forceLoadOverride must exist');
+  assert.ok(indexHtmlSrc.includes('id="coach-prep-bump-select"') && indexHtmlSrc.includes('id="btn-coach-bump-week-load"') && coachJsSrc.includes('bumpPrepWeekLoad'), 'Flow 3 week progression stepper must exist');
 });
 
 Promise.resolve().then(() => {
