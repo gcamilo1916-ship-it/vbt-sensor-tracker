@@ -1,35 +1,105 @@
-# Velocity Based Training (VBT) Sensor Tracker 🏋️‍♂️⚙️
-![Diagrama de Ligações I2C](SCH_Schematic1_1-P1_2026-09-02.png)
-## 📝 Overview
-This repository details the design and engineering of a portable, embedded loT tracker developed to measure barbell repetition velocity and estimate RPE (Rate of Perceived Exertion).<!--[cite: 3] --> 
-The project bridges mechanical enclosure design with embedded firmware to create a highly accurate, real-world sports technology tool.
-
-## 🛠️ Hardware Architecture
-The physical device was built with a focus on portability and durability during heavy lifting sessions:
-* **Microcontroller:** Seeed Studio XIAO ESP32-C6<!--[cite: 3] -->
-* **Sensor:** MPU6050 6-axis accelerometer and gyroscope<!--[cite: 3] -->
-* **Communication:** I2C hardware connections<!--[cite: 3] -->
-* **Enclosure:** Custom-designed 3D-printed housing<!--[cite: 3] -->
-
-## 💻 Firmware Development
-The logic and data processing were developed entirely from scratch:
-* **Language:** C++<!--[cite: 3] -->
-* **Environment:** Visual Studio Code via PlatformIO<!--[cite: 3] -->
-  
-## 📦 Physical Prototyping & MVP
-The device is housed in a custom-engineered 3D-printed enclosure designed to withstand impact and vibration during heavy powerlifting sessions. 
-
 <p align="center">
-  <img src="mvp3.jpeg" width="32%" title="MVP View 1" />
-  <img src="mvp1.jpeg" width="32%" title="MVP View 2" />
-  <img src="mvp2.jpeg" width="32%" title="MVP View 3" />
+  <img src="olympos-logo.svg" alt="Olympos Technologies — Eros VBT" width="580" />
 </p>
 
-## 📊 Project Execution & Management
-The entire development lifecycle of this sensor was guided by structured project management protocols acquired during the **Santander Project Management Training**. Applied methodologies included phased prototyping, timeline execution, and hardware resource allocation to ensure a viable product delivery.
+<p align="center">
+  <strong>High-Precision Barbell Kinematics &amp; Cloud Coaching Infrastructure</strong><br />
+  Pre-Startup Phase &bull; Olympos Technologies
+</p>
 
-📄 **[View Santander Project Management Certificate](Santander.pdf)**
+<p align="center">
+  <img src="SCH_Schematic1_1-P1_2026-09-02.png" alt="I2C Hardware Schematic" width="85%" />
+</p>
 
 ---
-**Role:** Hardware & Firmware Lead<!--[cite: 3] -->  
-**Date:** July 2026<!--[cite: 3] -->
+
+## Executive Summary
+
+Eros is an integrated hardware and software biomechanics ecosystem engineered for high-performance powerlifting. Developed under the Olympos Technologies pre-startup campaign, the platform delivers objective kinematic feedback to coaches and athletes during competition preparation, replacing subjective exertion estimates with millisecond-accurate sensor fusion.
+
+The system couples a barbell-mounted inertial sensor node with a low-latency edge physics engine, streaming repetition velocity, rate of perceived exertion, and 3D bar path deviation to an athlete cockpit and multi-rack coach console.
+
+---
+
+## Pre-Startup Mission & Rapid MVP Strategy
+
+The core engineering objective of Olympos Technologies is rapid product validation. To de-risk hardware development and accelerate field deployment, Eros follows a structured vertical-slice prototyping model:
+
+### Two-Way WebBLE as a Testing Vehicle
+Rather than gating gym validation behind native mobile application store review cycles, the platform leverages the Web Bluetooth API. This architecture provides zero-install, cross-platform hardware connectivity directly inside modern web browsers. It functions as an agile testbed, allowing real-world data collection, firmware filter tuning, and UI stress testing on training floors across laptops, tablets, and smartphones.
+
+### Roadmap to Integrated Native Application
+All WebBLE transport logic, telemetry decoders, and trajectory rendering pipelines are architected as modular TypeScript and JavaScript modules. These components serve as the direct foundation for our upcoming native iOS and Android application, which will incorporate automated video synchronization, team roster scheduling, and deep historical analytics.
+
+### Proprietary PCB Milestone
+Current physical units utilize a Seeed Studio XIAO ESP32-C6 breakout board and MPU-6050 IMU to validate mechanical packaging and mathematical models. The primary ongoing hardware mission is routing and fabricating a proprietary multilayer PCB. This design integrates the ESP32 SoC, high-bandwidth 6-axis IMU, battery management system (BMS), and charging circuitry into a single ultra-compact board, significantly reducing weight, bill-of-materials cost, and assembly time.
+
+---
+
+## Coach-to-Athlete Cloud Architecture
+
+Eros is built around the operational reality of elite strength coaching, supporting both shared-platform training sessions and remote competition supervision.
+
+### Live Squad Workouts
+During platform training, a coach oversees multiple athletes across different racks simultaneously. The Eros console aggregates live telemetry across all connected bars, displaying rep velocity and inter-set rest countdowns in real time. This automated density tracking allows coaches to enforce strict rest intervals and manage squad training volume without holding a stopwatch.
+
+### High-Fidelity Remote Preparation
+When an athlete trains remotely, the coach receives uncompromised kinematic resolution. Every completed repetition transmits Mean Concentric Velocity (MCV), peak velocity, lift-specific Minimum Velocity Threshold (MVT) estimated RPE, and lateral path sway. The coach can intervene mid-workout by transmitting load modifications or tactical cues directly to the athlete's screen. An offline-first sync bus buffers data locally if gym connectivity drops, ensuring zero telemetry loss.
+
+---
+
+## Hardware Architecture & Physical Prototyping
+
+The physical sensor housing must survive severe bar oscillations, floor impacts, and chalk contamination typical of powerlifting environments:
+
+| System Layer | Implementation Specification |
+| :--- | :--- |
+| Processing Unit | Seeed Studio XIAO ESP32-C6 (BLE 5.0, 3.3V Logic) |
+| Inertial Sensing | MPU-6050 6-Axis Accelerometer and Gyroscope over 400 kHz I2C |
+| Mechanical Enclosure | Generative topology modeled in CAD, 3D-printed impact-resistant chassis (40g) |
+| Barbell Interface | High-force neodymium magnetic mounting with internal vibration isolation bosses |
+| Active Objective | Transition to proprietary surface-mount PCB with integrated power management |
+
+### Gen-2 Compact Enclosure Prototyping
+Our latest physical revision introduces an ultra-compact two-piece chassis featuring an integrated hardware power rocker switch, recessed USB-C charging channel, and curved barbell saddle geometry for maximum contact stability under heavy acceleration:
+
+<p align="center">
+  <img src="prototype_v2_switch.jpg" width="48%" alt="Eros Gen-2 Prototype — Side View with Power Rocker Switch" />
+  <img src="prototype_v2_usbc.jpg" width="48%" alt="Eros Gen-2 Prototype — End View with Recessed USB-C Port" />
+</p>
+
+### Initial Prototyping Milestones
+Physical iterations were subjected to drop tests and barbell whip validation to optimize snap-fit tolerances and ensure sensor isolation:
+
+<p align="center">
+  <img src="mvp3.jpeg" width="31%" alt="Eros MVP View 1" />
+  <img src="mvp1.jpeg" width="31%" alt="Eros MVP View 2" />
+  <img src="mvp2.jpeg" width="31%" alt="Eros MVP View 3" />
+</p>
+
+---
+
+## Edge Firmware & Biomechanical Modeling
+
+Firmware running on the ESP32-C6 processes 6-axis motion data at 100 Hz, computing all physics locally before dispatching telemetry:
+
+* **Madgwick AHRS Orientation:** Continuous quaternion fusion estimates Earth gravity and projects dynamic linear acceleration strictly along the vertical vector, eliminating false acceleration spikes from barbell whip and tilt.
+* **Dual-Tier Dynamic ZUPT:** A multi-sample moving variance detector identifies motionless intervals to zero accumulated velocity error. Smooth online gyro bias calibration cancels junction thermal drift during extended sessions.
+* **Horizontal Plane Deviation:** Integrates orthogonal linear acceleration with leaky high-pass filtering and turnaround clamping, preserving true horizontal displacement relative to the starting plumb line without unbounded drift.
+* **Biomechanical Phase Segmentation:** A finite state machine segments repetitions into Idle, Eccentric, and Concentric regimes, incorporating sticking-point guards to protect against premature completion during maximum-effort grinds.
+
+---
+
+## Project Execution & Engineering Methodology
+
+All hardware prototyping, CAD fabrication, firmware revisions, and validation protocols are executed using Scrum methodologies. Development operates in two-week sprints focused on clear vertical deliverables, risk reduction, and empirical gym testing.
+
+Project execution frameworks and resource allocations are guided by protocols certified through the Santander Project Management Training.
+
+[View Santander Project Management Certificate](Santander.pdf)
+
+---
+
+**Project Lead:** Guilherme Camilo  
+**Venture:** Olympos Technologies  
+**Timeline:** July 2026 – Present
