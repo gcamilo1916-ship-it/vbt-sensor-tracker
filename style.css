@@ -55,6 +55,9 @@
   /* Apple System Typography Stack */
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
   --font-mono: "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Uniform Corner Geometry */
+  --eros-rect-pill-radius: 14px;
 }
 
 /* Theme Switching */
@@ -252,7 +255,7 @@ html, body {
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   box-shadow: var(--specular-top), var(--specular-bottom), var(--glass-shadow);
-  border-radius: 24px;
+  border-radius: 14px;
   position: relative;
   overflow: hidden;
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -273,7 +276,7 @@ html, body {
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--border-glass);
   box-shadow: var(--specular-top);
-  border-radius: 999px;
+  border-radius: 14px;
   display: inline-flex;
   align-items: center;
 }
@@ -313,7 +316,7 @@ html, body {
   gap: 3px;
   background: #171717;
   border: 1px solid #2f2f2f;
-  border-radius: 8px;
+  border-radius: 14px;
   padding: 2px;
   user-select: none;
 }
@@ -324,7 +327,7 @@ html, body {
   justify-content: center;
   width: 28px;
   height: 26px;
-  border-radius: 6px;
+  border-radius: 14px;
   border: 1px solid transparent;
   background: #212121;
   color: #b4b4b4;
@@ -371,7 +374,7 @@ html, body {
   padding: 4px 10px;
   background: #212121;
   border: 1px solid #2f2f2f;
-  border-radius: 999px;
+  border-radius: 14px;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -541,7 +544,7 @@ html, body {
   max-width: 100%;
   margin: 0;
   padding: 14px 16px;
-  border-radius: 16px;
+  border-radius: 14px;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
@@ -611,7 +614,7 @@ html, body {
   border: 1px solid var(--border-glass-bright);
   color: var(--text-main);
   padding: 10px 16px;
-  border-radius: 999px;
+  border-radius: 14px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -904,7 +907,7 @@ html, body {
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   box-shadow: var(--specular-top), var(--specular-bottom), var(--glass-shadow);
-  border-radius: 24px;
+  border-radius: 14px;
   transition: padding 0.35s cubic-bezier(0.22, 1, 0.36, 1),
               gap 0.35s cubic-bezier(0.22, 1, 0.36, 1),
               background 0.3s ease;
@@ -932,7 +935,7 @@ html, body {
 .controls-panel.set-active-compact .target-rpe-module {
   padding: 4px 10px;
   gap: 0;
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.02);
   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -975,7 +978,7 @@ html, body {
   border: 1px solid var(--border-glass-bright);
   color: var(--text-main);
   padding: 14px 20px;
-  border-radius: 999px;
+  border-radius: 14px;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.6px;
@@ -1087,7 +1090,7 @@ html, body {
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--border-glass-bright);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 6px;
   box-shadow: var(--specular-top), 0 20px 48px rgba(0, 0, 0, 0.85);
   display: none;
@@ -1109,7 +1112,7 @@ html, body {
 
 .custom-option {
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1169,7 +1172,7 @@ html, body {
   background: var(--bg-glass-card);
   border: 1px solid var(--border-glass-bright);
   color: var(--text-main);
-  border-radius: 999px;
+  border-radius: 14px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -1205,7 +1208,7 @@ html, body {
   background: #212121;
   border: 1px solid #2f2f2f;
   color: #ececec;
-  border-radius: 999px;
+  border-radius: 14px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 800;
@@ -1239,7 +1242,7 @@ html, body {
   justify-content: space-between;
   background: var(--bg-glass-card);
   border: 1px solid var(--border-glass-bright);
-  border-radius: 999px;
+  border-radius: 14px;
   padding: 3px 8px;
   box-shadow: var(--specular-top);
   height: 48px;
@@ -1344,7 +1347,7 @@ html, body {
   padding: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   overflow: visible;
   position: relative;
@@ -1413,7 +1416,7 @@ html, body {
   gap: 8px;
   background: rgba(0, 0, 0, 0.35);
   padding: 4px 8px;
-  border-radius: 999px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1423,7 +1426,7 @@ html, body {
   color: var(--text-main);
   width: 28px;
   height: 28px;
-  border-radius: 999px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1475,7 +1478,7 @@ html, body {
   font-size: 11px;
   font-weight: 700;
   padding: 6px 4px;
-  border-radius: 8px;
+  border-radius: 14px;
   cursor: pointer;
   text-align: center;
   white-space: nowrap;
@@ -1515,7 +1518,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-radius: 24px;
+  border-radius: 14px;
   position: relative;
   overflow: hidden;
   background: var(--bg-glass-card);
@@ -1569,7 +1572,7 @@ html, body {
   padding: 14px 16px;
   background: #212121;
   border: 1px solid #2f2f2f;
-  border-radius: 20px;
+  border-radius: 14px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 4px 16px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -1657,7 +1660,7 @@ html, body {
   font-weight: 800;
   letter-spacing: 0.5px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 14px;
   text-transform: uppercase;
   transition: all 0.3s ease;
 }
@@ -1849,7 +1852,7 @@ html, body {
   color: var(--text-main);
   background: rgba(255, 255, 255, 0.08);
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: 14px;
   border: 1px solid var(--border-glass-bright);
 }
 
@@ -2058,7 +2061,7 @@ html, body {
   padding: 3px 8px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
+  border-radius: 14px;
   color: var(--text-muted, rgba(255, 255, 255, 0.6));
   font-size: 9.5px;
   font-weight: 800;
@@ -2084,7 +2087,7 @@ html, body {
   padding: 3px 8px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
+  border-radius: 14px;
   color: var(--text-muted, rgba(255, 255, 255, 0.6));
   font-size: 9.5px;
   font-weight: 800;
@@ -2157,7 +2160,7 @@ html, body {
 .variant-sheet-close {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  border-radius: 14px;
   color: #FFFFFF;
   font-size: 8.5px;
   font-weight: 700;
@@ -2181,7 +2184,7 @@ html, body {
   padding: 5px 8px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -2208,7 +2211,7 @@ html, body {
   font-size: 8.5px;
   font-weight: 800;
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.12);
   color: var(--current-accent, #00FF66);
 }
@@ -2233,7 +2236,7 @@ html, body {
 .btn-variant-audition {
   width: 100%;
   padding: 5px 10px;
-  border-radius: 8px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #FFFFFF;
@@ -2335,7 +2338,7 @@ html, body {
   padding: 4px 10px;
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
+  border-radius: 14px;
   color: #FFFFFF;
   font-family: var(--font-family, -apple-system, sans-serif);
   font-size: 10px;
@@ -2367,7 +2370,7 @@ html, body {
   padding: 3px 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
+  border-radius: 14px;
   color: var(--text-muted, rgba(255, 255, 255, 0.6));
   font-family: var(--font-mono, monospace);
   font-size: 9.5px;
@@ -2655,7 +2658,7 @@ html, body {
 .workout-sum-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 10px 6px;
   display: flex;
   flex-direction: column;
@@ -2707,7 +2710,7 @@ html, body {
   font-size: 11px;
   font-weight: 800;
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: 14px;
   background: rgba(var(--accent-rgb), 0.15);
   color: var(--current-accent);
   border: 1px solid rgba(var(--accent-rgb), 0.35);
@@ -2724,7 +2727,7 @@ html, body {
   display: inline-flex;
   align-items: center;
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: 14px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.6px;
@@ -2770,7 +2773,7 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.08);
   gap: 8px;
@@ -2833,7 +2836,7 @@ html, body {
   color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.05);
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 14px;
 }
 
 /* Glass Progress Ring */
@@ -2972,7 +2975,7 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid transparent;
   background:
     linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)) padding-box,
@@ -3049,7 +3052,7 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 2px 7px;
-  border-radius: 6px;
+  border-radius: 14px;
   background: var(--pr-gold-gradient);
   color: #000000;
   font-family: var(--font-mono);
@@ -3086,7 +3089,7 @@ html, body {
   color: var(--text-muted);
   width: 24px;
   height: 24px;
-  border-radius: 6px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
@@ -3199,7 +3202,7 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   transition: all 0.2s ease;
@@ -3304,7 +3307,7 @@ html, body {
 
 .pr-card {
   padding: 16px;
-  border-radius: 20px;
+  border-radius: 14px;
   background: var(--bg-glass-card);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
@@ -3339,7 +3342,7 @@ html, body {
   font-size: 10px;
   font-weight: 800;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 14px;
   background: rgba(0, 229, 255, 0.12);
   color: #00E5FF;
   border: 1px solid rgba(0, 229, 255, 0.35);
@@ -3365,7 +3368,7 @@ html, body {
   gap: 4px;
   background: rgba(255, 255, 255, 0.025);
   padding: 10px 8px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -3432,7 +3435,7 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 3px 6px;
-  border-radius: 6px;
+  border-radius: 14px;
   background: rgba(255, 215, 0, 0.08);
   border: 1px solid rgba(255, 215, 0, 0.35);
   box-shadow: 0 0 10px rgba(255, 215, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -3505,7 +3508,7 @@ html, body {
 /* ── Live DOTS Calculator Module ── */
 .dots-calculator-card {
   padding: 16px;
-  border-radius: 20px;
+  border-radius: 14px;
   background: var(--bg-glass-card);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
@@ -3549,7 +3552,7 @@ html, body {
   display: inline-flex;
   background: rgba(0, 0, 0, 0.4);
   padding: 3px;
-  border-radius: 999px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   gap: 2px;
 }
@@ -3562,7 +3565,7 @@ html, body {
   font-weight: 800;
   letter-spacing: 0.6px;
   padding: 5px 12px;
-  border-radius: 999px;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -3604,7 +3607,7 @@ html, body {
   gap: 4px;
   background: rgba(255, 255, 255, 0.035);
   padding: 6px 10px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   transition: border-color 0.2s ease;
 }
@@ -3642,7 +3645,7 @@ html, body {
   display: flex;
   background: rgba(0, 0, 0, 0.4);
   padding: 3px;
-  border-radius: 999px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   gap: 2px;
 }
@@ -3656,7 +3659,7 @@ html, body {
   font-weight: 800;
   letter-spacing: 0.5px;
   padding: 6px 8px;
-  border-radius: 999px;
+  border-radius: 14px;
   cursor: pointer;
   text-align: center;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -3680,7 +3683,7 @@ html, body {
   align-items: center;
   background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.14) 0%, rgba(255, 255, 255, 0.03) 100%);
   border: 1px solid rgba(var(--accent-rgb), 0.3);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 12px 16px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
 }
@@ -3740,7 +3743,7 @@ html, body {
   font-weight: 900;
   letter-spacing: 0.6px;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 14px;
   background: rgba(255, 215, 0, 0.15);
   color: #FFD700;
   border: 1px solid rgba(255, 215, 0, 0.4);
@@ -3760,7 +3763,7 @@ html, body {
   border: 1px solid var(--border-glass-bright);
   color: var(--text-main);
   padding: 10px 8px;
-  border-radius: 999px;
+  border-radius: 14px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -3804,7 +3807,7 @@ html, body {
     linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 30%, transparent 100%) border-box;
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-radius: 18px;
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: var(--specular-top), var(--glass-shadow);
   transition: border-color 0.25s ease;
@@ -3896,7 +3899,7 @@ html, body {
 .session-set-item {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -3941,7 +3944,7 @@ html, body {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 14px;
   color: var(--text-secondary);
   display: inline-flex;
   align-items: center;
@@ -3964,7 +3967,7 @@ html, body {
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding: 6px 8px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: rgba(18, 18, 18, 0.96);
   border: 1px solid #2f2f2f;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.72);
@@ -3980,7 +3983,7 @@ html, body {
   bottom: 6px;
   left: 8px;
   width: calc((100% - 32px) / 3);
-  border-radius: 999px;
+  border-radius: 14px;
   display: none;
   opacity: 0;
   visibility: hidden;
@@ -4015,7 +4018,7 @@ html, body {
   gap: 4px;
   cursor: pointer;
   padding: 6px 10px;
-  border-radius: 999px;
+  border-radius: 14px;
   position: relative;
   z-index: 2;
   transform: none;
@@ -4143,7 +4146,7 @@ html, body {
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border: 1px solid var(--border-glass-bright);
   border-bottom: none;
-  border-radius: 28px 28px 0 0;
+  border-radius: 14px 14px 0 0;
   padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 16px)) 20px;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(var(--accent-rgb), 0.15);
   display: flex;
@@ -4225,7 +4228,7 @@ html, body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-secondary);
-  border-radius: 999px;
+  border-radius: 14px;
   padding: 6px 14px;
   font-size: 10px;
   font-weight: 800;
@@ -4311,7 +4314,7 @@ html, body {
   gap: 8px;
   background: rgba(255, 255, 255, 0.03);
   padding: 8px 12px;
-  border-radius: 999px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -4343,7 +4346,7 @@ html, body {
   padding: 12px 14px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border-radius: 14px;
   transition: all 0.25s ease;
 }
 
@@ -4356,7 +4359,7 @@ html, body {
 .ble-device-icon {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 14px;
   background: rgba(var(--accent-rgb), 0.15);
   border: 1px solid rgba(var(--accent-rgb), 0.3);
   display: flex;
@@ -4693,7 +4696,7 @@ html, body {
   padding: 6px 14px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
+  border-radius: 14px;
   color: #fff;
   font-family: var(--font-family, -apple-system, BlinkMacSystemFont, sans-serif);
   font-size: 11px;
@@ -4742,7 +4745,7 @@ html, body {
   max-width: 420px;
   background: rgba(18, 18, 26, 0.90);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
+  border-radius: 14px;
   padding: 22px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 229, 255, 0.1);
   backdrop-filter: blur(24px);
@@ -4820,7 +4823,7 @@ html, body {
   padding: 10px 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border-radius: 14px;
 }
 
 .athlete-coach-status-banner .status-label {
@@ -4837,7 +4840,7 @@ html, body {
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 3px 10px;
-  border-radius: 9999px;
+  border-radius: 14px;
   text-transform: uppercase;
 }
 
@@ -4886,7 +4889,7 @@ html, body {
   width: 100%;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  border-radius: 14px;
   padding: 9px 12px;
   color: #fff;
   font-size: 13px;
@@ -4912,7 +4915,7 @@ html, body {
 .btn-athlete-connect {
   width: 100%;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -4957,7 +4960,7 @@ html, body {
   justify-content: center;
   background: var(--coach-bg-surface-2, #1a1a1a);
   border: 1px solid var(--coach-border-subtle, #333333);
-  border-radius: var(--coach-radius-pill, 9999px);
+  border-radius: 14px;
   padding: 6px 14px;
   font-family: var(--font-mono, monospace);
   font-size: 12px;
@@ -5023,7 +5026,7 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   max-width: 100% !important;
   margin: 0 !important;
   padding: 14px 16px !important;
-  border-radius: 16px !important;
+  border-radius: 14px !important;
   box-sizing: border-box !important;
 }
 
@@ -5086,7 +5089,7 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
 #workout-weight-control {
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -5173,7 +5176,7 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   content: "" !important;
   position: absolute !important;
   inset: -10px !important;
-  border-radius: 20px !important;
+  border-radius: 14px !important;
   background: radial-gradient(circle at 50% 50%, rgba(var(--accent-rgb), 0.14) 0%, transparent 72%) !important;
   filter: blur(14px) !important;
   pointer-events: none !important;
@@ -5306,7 +5309,7 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
   transform: translateX(-50%) !important;
   background: #0d0d0d !important;
   border: 1px solid var(--trail-color, #00FF66) !important;
-  border-radius: 6px !important;
+  border-radius: 14px !important;
   padding: 1px 6px !important;
   font-size: 9.5px !important;
   font-weight: 800 !important;
@@ -5355,7 +5358,7 @@ html, body, body.theme-deadlift, body.theme-squat, body.theme-bench {
 .integrated-rpe-tracker {
   background: #1c1c1c !important;
   border: 1px solid #2d2d2d !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   padding: 8px 14px !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
@@ -5508,7 +5511,7 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   grid-template-columns: repeat(3, 1fr) !important;
   gap: 8px !important;
   padding: 6px 8px !important;
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   background: rgba(18, 18, 18, 0.96) !important;
   border: 1px solid #2f2f2f !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.72) !important;
@@ -5528,7 +5531,7 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   min-width: 0 !important;
   margin: 0 !important;
   padding: 6px 10px !important;
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   font-size: 11px !important;
   gap: 4px !important;
   background: #171717 !important;
@@ -5607,7 +5610,7 @@ body, h1, h2, h3, h4, .brand-title, .metric-number, .metric-value, .stat-value {
   bottom: 6px !important;
   left: 8px !important;
   width: calc((100% - 32px) / 3) !important;
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
@@ -5682,7 +5685,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   right: 0;
   height: 2.5px;
   background: linear-gradient(90deg, #00FF66 0%, #00E5FF 55%, #FFB800 82%, #FF3B30 100%);
-  border-radius: 24px 24px 0 0;
+  border-radius: 14px 14px 0 0;
   opacity: 0.95;
   z-index: 5;
   pointer-events: none;
@@ -5816,7 +5819,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   padding: 6px 8px !important;
   min-height: 46px !important;
   height: auto !important;
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 2px 6px rgba(0, 0, 0, 0.40) !important;
@@ -5937,7 +5940,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .session-set-item {
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
-  border-radius: 10px !important;
+  border-radius: 14px !important;
   padding: 10px 12px !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
   backdrop-filter: none !important;
@@ -5964,7 +5967,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .history-rep-pill {
   background: #2f2f2f !important;
   border: 1px solid #383838 !important;
-  border-radius: 6px !important;
+  border-radius: 14px !important;
   color: #ececec !important;
   box-shadow: none !important;
   padding: 3px 8px !important;
@@ -5996,7 +5999,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .workout-set-row {
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.40) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -6038,7 +6041,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .rep-row-item {
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.40) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -6058,7 +6061,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .stat-card.glass-card {
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -6067,7 +6070,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .set-hero-panel {
   background: #212121 !important;
   border: 1px solid #2f2f2f !important;
-  border-radius: 16px !important;
+  border-radius: 14px !important;
   box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -6086,7 +6089,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .pr-lift-item {
   background: #171717 !important;
   border: 1px solid #2f2f2f !important;
-  border-radius: 10px !important;
+  border-radius: 14px !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -6154,7 +6157,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .nav-tab:not(.active) {
   margin: 0 !important;
   min-width: 0 !important;
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   background: #171717 !important;
   border: 1px solid rgba(255, 255, 255, 0.07) !important;
   backdrop-filter: none !important;
@@ -6177,7 +6180,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .nav-tab.active.touch-active {
   margin: 0 !important;
   min-width: 0 !important;
-  border-radius: 999px !important;
+  border-radius: 14px !important;
   background: #212121 !important;
   color: #ececec !important;
   border: 1px solid rgba(var(--accent-rgb), 0.36) !important;
@@ -6292,7 +6295,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   width: 52px;
   height: 52px;
   padding: 0;
-  border-radius: 9999px;
+  border-radius: 50%;
   background: #212121;
   border: 1px solid #2f2f2f;
   color: #ececec;
@@ -6366,7 +6369,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   width: 42px;
   height: 42px;
   padding: 0;
-  border-radius: 9999px;
+  border-radius: 50%;
   background: #212121;
   border: 1px solid #2f2f2f;
   color: #ececec;
@@ -6425,7 +6428,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   transform: translateX(-50%);
   background: #171717;
   border: 1px solid #2f2f2f;
-  border-radius: 999px;
+  border-radius: 14px;
   padding: 2px 7px;
   font-family: var(--font-sans);
   font-size: 9px;
@@ -6459,7 +6462,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   z-index: 1300;
   background: #171717;
   border: 1px solid #2f2f2f;
-  border-radius: 18px;
+  border-radius: 14px;
   padding: 20px;
   color: #ececec;
   box-shadow: -6px -6px 14px rgba(255, 255, 255, 0.035), 8px 8px 20px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -6487,7 +6490,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   letter-spacing: 0.05em;
   color: #ececec;
   margin: 0;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .eros-radial-customizer-list {
@@ -6504,7 +6507,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   padding: 10px 12px;
   background: #212121;
   border: 1px solid #2f2f2f;
-  border-radius: 12px;
+  border-radius: 14px;
   color: #ececec;
   font-size: 13px;
   font-weight: 600;
@@ -6529,14 +6532,14 @@ body.theme-deadlift .nav-indicator-pill::before {
   width: 100%;
   min-height: 42px;
   padding: 10px 16px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: #212121;
   border: 1px solid #2f2f2f;
   color: #ececec;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
+  text-transform: none;
   cursor: pointer;
   box-shadow: -3px -3px 7px rgba(255, 255, 255, 0.035), 4px 4px 10px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -6580,7 +6583,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   max-width: 100% !important;
   margin: 0 !important;
   padding: 14px 16px !important;
-  border-radius: 16px !important;
+  border-radius: 14px !important;
   box-sizing: border-box !important;
 }
 
@@ -6689,7 +6692,6 @@ body.theme-deadlift .nav-indicator-pill::before {
   height: 12px;
   border-top: 1.5px solid rgba(236, 236, 236, 0.22);
   border-right: 1.5px solid rgba(236, 236, 236, 0.22);
-  border-top-right-radius: 7px;
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
@@ -6753,7 +6755,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 #athlete-biometrics-card.glass-card {
   background: #171717 !important;
   border: 1px solid #2f2f2f !important;
-  border-radius: 16px !important;
+  border-radius: 14px !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.45) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -6813,7 +6815,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   justify-content: center;
   min-height: 24px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: #212121;
   border: 1px solid #2f2f2f;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -7065,7 +7067,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   flex-direction: column;
   gap: 6px;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #171717;
   border: 1px solid #2f2f2f;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -7129,7 +7131,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   justify-content: center;
   min-height: 44px;
   padding: 0 16px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: #212121;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -7155,7 +7157,7 @@ body.theme-deadlift .nav-indicator-pill::before {
 .btn-start-planned-workout {
   width: 100%;
   min-height: 48px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(var(--accent-rgb), 0.14);
   border: 1px solid rgba(var(--accent-rgb), 0.5);
   box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -7207,7 +7209,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   gap: 8px;
   align-items: start;
   padding: 10px;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #212121;
   border: 1px solid #2f2f2f;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -7260,7 +7262,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   align-items: center;
   min-height: 18px;
   padding: 0 7px;
-  border-radius: 999px;
+  border-radius: 14px;
   border: 1px solid #2f2f2f;
   background: #171717;
   font-size: 8px;
@@ -7310,7 +7312,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   justify-content: center;
   min-height: 32px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: #171717;
   border: 1px solid rgba(var(--accent-rgb), 0.45);
   box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -7346,7 +7348,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   min-width: 0;
   min-height: 44px;
   padding: 0 14px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: #171717;
   border: 1px solid #2f2f2f;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -7420,7 +7422,7 @@ body.theme-deadlift .nav-indicator-pill::before {
   min-width: 0;
   min-height: 44px;
   padding: 0 12px;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #212121;
   border: 1px solid #2f2f2f;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -7470,7 +7472,7 @@ select.athlete-bio-input {
   min-width: 0;
   min-height: 44px;
   padding: 0 2px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: #171717;
   border: 1px solid #2f2f2f;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -7517,7 +7519,7 @@ select.athlete-bio-input {
   gap: 12px;
   padding: 12px 14px;
   box-sizing: border-box;
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(18, 18, 18, 0.96);
   border: 1px solid rgba(255, 214, 10, 0.55);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.72), 0 0 10px rgba(255, 214, 10, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -7573,7 +7575,7 @@ select.athlete-bio-input {
 .pr-confirm-btn {
   min-height: 44px;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: 14px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.8px;
@@ -7614,7 +7616,7 @@ select.athlete-bio-input {
   justify-content: center;
   min-height: 18px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: rgba(255, 214, 10, 0.10);
   border: 1px solid rgba(255, 214, 10, 0.55);
   box-shadow: 0 0 8px rgba(255, 214, 10, 0.18);
@@ -7634,7 +7636,7 @@ select.athlete-bio-input {
   justify-content: center;
   min-height: 28px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: 14px;
   background: #171717;
   border: 1px solid rgba(255, 214, 10, 0.34);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -7712,5 +7714,148 @@ select.athlete-bio-input {
   .bio-day-pill,
   .athlete-slot-card {
     transition: none !important;
+  }
+}
+/* ── Preparation Hover Tooltip Card (Embossed Clean-Slate Matte Obsidian) ── */
+#eros-prep-tooltip-card,
+.eros-prep-tooltip-card {
+  position: fixed;
+  z-index: 980;
+  pointer-events: none;
+  max-width: min(310px, calc(100vw - 24px));
+  min-width: 210px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    0 14px 32px rgba(0, 0, 0, 0.72),
+    0 3px 8px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transform: translate3d(0, 4px, 0) scale(0.98);
+  transition: opacity 0.14s ease, transform 0.14s cubic-bezier(0.22, 1, 0.36, 1);
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+}
+
+#eros-prep-tooltip-card[aria-hidden="false"],
+#eros-prep-tooltip-card.visible,
+.eros-prep-tooltip-card[aria-hidden="false"],
+.eros-prep-tooltip-card.visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.eros-tooltip-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+  min-width: 0;
+}
+
+.eros-tooltip-slash {
+  flex: 0 0 auto;
+  width: 4px;
+  height: 16px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ececec 0%, #10a37f 100%);
+  transform: skewX(-18deg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 1px 4px rgba(0, 0, 0, 0.65);
+}
+
+.eros-tooltip-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+
+.eros-tooltip-cat {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 14px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  color: #b4b4b4;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.eros-tooltip-desc {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  color: #b4b4b4;
+  font-size: 11.5px;
+  line-height: 1.45;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.eros-tooltip-tip {
+  margin: 6px 0 0;
+  padding: 7px 10px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  color: #ececec;
+  font-size: 11px;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.eros-tooltip-tip-label,
+.eros-tooltip-tip-badge,
+.eros-tooltip-tip strong {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 14px;
+  background: #2f2f2f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #10a37f;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.eros-tooltip-tip-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #ececec;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #eros-prep-tooltip-card,
+  .eros-prep-tooltip-card {
+    transition: none;
   }
 }

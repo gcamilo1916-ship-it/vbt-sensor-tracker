@@ -259,7 +259,7 @@ def run_empirical_suite():
             if not has_sat:
                 failures.append(f"Glass card {gc['selector']} missing saturate(180%): {gc['backdropFilter']}")
 
-        print("\n[STEP 2] Inspecting Action Buttons border-radius (999px)...")
+        print("\n[STEP 2] Inspecting Action Buttons border-radius (14px)...")
         buttons = client.eval_js("""
             (() => {
                 const btns = Array.from(document.querySelectorAll('button, .nav-tab, .btn-action-glass, .btn-glass-primary, .btn-glass-connect, .btn-glass-set'));
@@ -280,13 +280,13 @@ def run_empirical_suite():
         print(f"  Found {len(buttons)} button / navigation action elements:")
         for idx, b in enumerate(buttons, 1):
             print(f"    [{idx}] ID: {b['id']:<24} | Radius: {b['borderRadius']:<10} | Class: {b['className']:<32} | Text: '{b['textContent'][:30]}'")
-            # All pill action buttons and nav pills must have 999px border-radius
+            # All pill action buttons and nav pills must have uniform 14px border-radius
             if b['id'] in ['btn-workout-master', 'btn-connect', 'btn-set-toggle', 'btn-export-csv', 'btn-export-json', 'btn-clear-history']:
-                if b['borderRadius'] != '999px':
-                    failures.append(f"Action button #{b['id']} has border-radius {b['borderRadius']}, expected 999px")
+                if b['borderRadius'] != '14px':
+                    failures.append(f"Action button #{b['id']} has border-radius {b['borderRadius']}, expected 14px")
             elif 'nav-tab' in b['className']:
-                if b['borderRadius'] != '999px':
-                    failures.append(f"Nav tab {b['textContent']} has border-radius {b['borderRadius']}, expected 999px")
+                if b['borderRadius'] != '14px':
+                    failures.append(f"Nav tab {b['textContent']} has border-radius {b['borderRadius']}, expected 14px")
 
         print("\n[STEP 3] Inspecting Typography & Metrics (tabular-nums & letter-spacing -0.03em)...")
         metrics = client.eval_js("""

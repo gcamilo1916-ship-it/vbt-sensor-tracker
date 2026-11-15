@@ -210,7 +210,7 @@ class TestChromeDeepQA(unittest.TestCase):
         self.assertIn("START SET", btn_set["text"])
 
     def test_03_pill_button_border_radius(self):
-        """Verify visionOS pill capsule buttons have 999px border radius."""
+        """Verify pill and rectangular action buttons have uniform 14px border radius."""
         radii = self.eval_js("""
             ({
                 btnWorkout: window.getComputedStyle(document.querySelector('#btn-workout-master')).borderRadius,
@@ -223,7 +223,7 @@ class TestChromeDeepQA(unittest.TestCase):
             })
         """)
         for name, val in radii.items():
-            self.assertEqual(val, "999px", f"{name} border radius is {val}, expected 999px")
+            self.assertEqual(val, "14px", f"{name} border radius is {val}, expected 14px")
 
     def test_04_glass_card_backdrop_filter_and_blur(self):
         """Verify frosted glass cards have blur(30px) and saturate(180%)."""

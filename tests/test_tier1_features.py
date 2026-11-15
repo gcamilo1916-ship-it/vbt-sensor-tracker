@@ -236,43 +236,43 @@ class TestTier1FeatureCoverage(unittest.TestCase):
             self.assertEqual(pictographs, [], f"Navigation tabs must not contain emojis: {pictographs}")
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Feature 6: VisionOS pill capsule buttons
+    # Feature 6: Matte Obsidian uniform rectangular pill & button radius (14px)
     # ─────────────────────────────────────────────────────────────────────────
 
     def test_f06_01_btn_glass_primary_pill_radius(self):
-        """F6: Verify .btn-glass-primary specifies border-radius: 999px."""
+        """F6: Verify .btn-glass-primary specifies uniform border-radius: 14px."""
         rules = extract_css_rules(self.css, ".btn-glass-primary")
         self.assertTrue(len(rules) > 0)
         br = rules[0][1].get("border-radius", "")
-        self.assertEqual(br, "999px", ".btn-glass-primary must have border-radius: 999px")
+        self.assertEqual(br, "14px", ".btn-glass-primary must have border-radius: 14px")
 
     def test_f06_02_btn_glass_connect_pill_radius(self):
-        """F6: Verify .btn-glass-connect specifies border-radius: 999px."""
+        """F6: Verify .btn-glass-connect specifies uniform border-radius: 14px."""
         rules = extract_css_rules(self.css, ".btn-glass-connect")
         self.assertTrue(len(rules) > 0)
         br = rules[0][1].get("border-radius", "")
-        self.assertEqual(br, "999px", ".btn-glass-connect must have border-radius: 999px")
+        self.assertEqual(br, "14px", ".btn-glass-connect must have border-radius: 14px")
 
     def test_f06_03_btn_glass_set_pill_radius(self):
-        """F6: Verify .btn-glass-set specifies border-radius: 999px."""
+        """F6: Verify .btn-glass-set specifies uniform border-radius: 14px."""
         rules = extract_css_rules(self.css, ".btn-glass-set")
         self.assertTrue(len(rules) > 0)
         br = rules[0][1].get("border-radius", "")
-        self.assertEqual(br, "999px", ".btn-glass-set must have border-radius: 999px")
+        self.assertEqual(br, "14px", ".btn-glass-set must have border-radius: 14px")
 
     def test_f06_04_btn_action_glass_pill_radius(self):
-        """F6: Verify .btn-action-glass specifies border-radius: 999px."""
+        """F6: Verify .btn-action-glass specifies uniform border-radius: 14px."""
         rules = extract_css_rules(self.css, ".btn-action-glass")
         self.assertTrue(len(rules) > 0)
         br = rules[0][1].get("border-radius", "")
-        self.assertEqual(br, "999px", ".btn-action-glass must have border-radius: 999px")
+        self.assertEqual(br, "14px", ".btn-action-glass must have border-radius: 14px")
 
     def test_f06_05_glass_pill_general_class(self):
-        """F6: Verify .glass-pill class specifies border-radius: 999px."""
+        """F6: Verify .glass-pill class specifies uniform border-radius: 14px."""
         rules = extract_css_rules(self.css, ".glass-pill")
         self.assertTrue(len(rules) > 0)
         br = rules[0][1].get("border-radius", "")
-        self.assertEqual(br, "999px", ".glass-pill must have border-radius: 999px")
+        self.assertEqual(br, "14px", ".glass-pill must have border-radius: 14px")
 
     # ─────────────────────────────────────────────────────────────────────────
     # Feature 7: Monospace / tabular figures

@@ -61,6 +61,28 @@
   const RADIAL_CONFIG_KEY = 'eros_radial_fab_config_v1';
   const RADIAL_POS_KEY = 'eros_radial_fab_pos_v1';
   const PILL_ORDER_KEY = 'eros_coach_pill_order_v1';
+  const COACH_BIG_PILL_DEFAULT_GROUP = {
+    'coach-live-panel': 'coach-live-big-pills',
+    'coach-athlete-history-panel': 'coach-history-big-pills',
+    'coach-preparation-panel': 'coach-prep-big-pills'
+  };
+  const COACH_BIG_PILL_DEFAULT_ID = {
+    'coach-squad-overview': 'squad-overview',
+    'coach-active-set-card': 'active-set-card',
+    'coach-feedback-console': 'feedback-console',
+    'coach-sets-history-card': 'sets-history-card',
+    'coach-history-bento-quad': 'history-bento-quad',
+    'coach-monthly-calendar-card': 'monthly-calendar-card',
+    'coach-previous-workouts-card': 'previous-workouts-card',
+    'coach-prep-factoring-strip': 'prep-factoring-strip',
+    'coach-prep-plan-card': 'prep-plan-card',
+    'coach-prep-plan-header': 'prep-plan-header',
+    'coach-prep-macro-card': 'prep-macro-card',
+    'coach-prep-session-card': 'prep-session-card',
+    'coach-prep-comparison-card': 'prep-comparison-card'
+  };
+  const INTERACTIVE_DRAG_CHILD_SELECTOR =
+    'canvas, table, button, input, select, textarea, a, [role="button"], [role="slider"], .coach-squad-athlete-card, .coach-rep-stream-pill, .coach-barpath-rep-pill, .coach-cal-day, .coach-cal-day-cell, .coach-prep-day-tab';
   const PORTAL_MODE_KEY = 'eros_portal_mode_v1';
   const COACH_PANEL_KEY = 'eros_coach_active_panel_v1';
   const COACH_SECTION_KEY = 'eros_coach_active_section_v1';
@@ -138,7 +160,7 @@
       currentPv: 0.0,
       currentRomCm: 0.0,
       currentVlPct: 0.0,
-      readiness: '100% [OPTIMAL]',
+      readiness: '100% [Optimal]',
       e1rm: '—',
       volume: '0 kg',
       compPrs: { squat: 0, bench: 0, deadlift: 0 },
@@ -213,6 +235,21 @@
     return s;
   }
 
+  /** Normalizes a raw lift name to Title Case without stripping short acronyms. */
+  function formatDisplayLiftName(liftStr) {
+    const raw = String(liftStr || 'Deadlift').trim();
+    if (!raw) return 'Deadlift';
+    if (raw.length > 3 && raw === raw.toUpperCase()) {
+      return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+    }
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }
+
+  /** Formats internal canvas mode token for button UI without mutating API mode strings. */
+  function formatCoachCanvasModeLabel(mode) {
+    return mode === 'VEL' ? 'Mode: Vel' : 'Mode: Path';
+  }
+
   function formatRestDuration(seconds) {
     if (typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) return '-';
     const m = Math.floor(seconds / 60);
@@ -225,17 +262,17 @@
     const v = Number(velocityMps) || 0;
     const isDl = /deadlift/i.test(String(liftName || ''));
     if (isDl) {
-      if (v > 0.85) return { key: 'starting_strength', label: 'STARTING STRENGTH', css: 'zone-starting' };
-      if (v >= 0.65) return { key: 'speed_strength', label: 'SPEED-STRENGTH', css: 'zone-speed-strength' };
-      if (v >= 0.45) return { key: 'strength_speed', label: 'STRENGTH-SPEED', css: 'zone-strength-speed' };
-      if (v >= 0.25) return { key: 'accelerative_strength', label: 'ACCELERATIVE STRENGTH', css: 'zone-accelerative' };
-      return { key: 'absolute_strength', label: 'ABSOLUTE STRENGTH', css: 'zone-absolute' };
+      if (v > 0.85) return { key: 'starting_strength', label: 'Starting Strength', css: 'zone-starting' };
+      if (v >= 0.65) return { key: 'speed_strength', label: 'Speed-Strength', css: 'zone-speed-strength' };
+      if (v >= 0.45) return { key: 'strength_speed', label: 'Strength-Speed', css: 'zone-strength-speed' };
+      if (v >= 0.25) return { key: 'accelerative_strength', label: 'Accelerative', css: 'zone-accelerative' };
+      return { key: 'absolute_strength', label: 'Absolute Strength', css: 'zone-absolute' };
     }
-    if (v > 1.00) return { key: 'starting_strength', label: 'STARTING STRENGTH', css: 'zone-starting' };
-    if (v >= 0.75) return { key: 'speed_strength', label: 'SPEED-STRENGTH', css: 'zone-speed-strength' };
-    if (v >= 0.50) return { key: 'strength_speed', label: 'STRENGTH-SPEED', css: 'zone-strength-speed' };
-    if (v >= 0.30) return { key: 'accelerative_strength', label: 'ACCELERATIVE STRENGTH', css: 'zone-accelerative' };
-    return { key: 'absolute_strength', label: 'ABSOLUTE STRENGTH', css: 'zone-absolute' };
+    if (v > 1.00) return { key: 'starting_strength', label: 'Starting Strength', css: 'zone-starting' };
+    if (v >= 0.75) return { key: 'speed_strength', label: 'Speed-Strength', css: 'zone-speed-strength' };
+    if (v >= 0.50) return { key: 'strength_speed', label: 'Strength-Speed', css: 'zone-strength-speed' };
+    if (v >= 0.30) return { key: 'accelerative_strength', label: 'Accelerative', css: 'zone-accelerative' };
+    return { key: 'absolute_strength', label: 'Absolute Strength', css: 'zone-absolute' };
   }
 
   // ── Helper: IPF DOTS Score Calculator ──
@@ -922,6 +959,7 @@
           clampRadialFabToViewport(elements.radialFab);
           if (isRadialOpen) positionRadialItems();
         }
+        syncLivePanelGridColumns(elements.panelLive);
       }, { passive: true });
       window._coachViewportSafetyBound = true;
     }
@@ -1151,6 +1189,9 @@
         renderFullCoachDashboard();
       }
       initMovableCoachPills();
+      if (activeCoachPanel === 'live') {
+        syncLivePanelGridColumns(elements.panelLive);
+      }
       updateCoachSidebarTicker();
       renderRadialMenuItems();
     } else {
@@ -1201,8 +1242,8 @@
       btn.setAttribute('aria-selected', active ? 'true' : 'false');
     });
 
-    if (elements.panelLive) elements.panelLive.style.display = activeCoachPanel === 'live' ? 'flex' : 'none';
-    if (elements.panelHistory) elements.panelHistory.style.display = activeCoachPanel === 'history' ? 'flex' : 'none';
+    if (elements.panelLive) elements.panelLive.style.display = activeCoachPanel === 'live' ? '' : 'none';
+    if (elements.panelHistory) elements.panelHistory.style.display = activeCoachPanel === 'history' ? '' : 'none';
     setPrepPanelHidden(activeCoachPanel !== 'preparation');
 
     if (activeCoachPanel === 'history') {
@@ -1216,6 +1257,7 @@
       renderSquadOverview();
       renderActiveSetFromState();
       renderSetsHistoryTable();
+      syncLivePanelGridColumns(elements.panelLive);
     }
   }
 
@@ -1375,7 +1417,7 @@
       currentPv: 0.0,
       currentRomCm: 0.0,
       currentVlPct: 0.0,
-      readiness: '100% [OPTIMAL]',
+      readiness: '100% [Optimal]',
       e1rm: '—',
       volume: '0 kg',
       compPrs: req.compPrs || { squat: 0, bench: 0, deadlift: 0 },
@@ -1429,7 +1471,7 @@
       currentPv: 0.0,
       currentRomCm: 0.0,
       currentVlPct: 0.0,
-      readiness: '100% [OPTIMAL]',
+      readiness: '100% [Optimal]',
       e1rm: '—',
       volume: '0 kg',
       compPrs: { squat: 0, bench: 0, deadlift: 0 },
@@ -1521,7 +1563,7 @@
         <div class="coach-bond-item" data-bonded-id="${escapeHtml(ath.id)}">
           <div class="coach-bond-item-info">
             <span class="coach-bond-item-name">${escapeHtml(ath.name)} (${escapeHtml(ath.rack)})</span>
-            <span class="coach-bond-item-meta font-mono">ACTIVE BOND • Live &amp; History Permitted</span>
+            <span class="coach-bond-item-meta font-mono">Active Bond • Live &amp; History Permitted</span>
           </div>
           <div class="coach-pairing-actions">
             <button type="button" class="coach-sm-btn danger" data-revoke-id="${escapeHtml(ath.id)}">Revoke</button>
@@ -1664,7 +1706,7 @@
             <span class="coach-squad-status-pill ${statusClass}">${statusLabel}</span>
           </div>
           <div class="coach-squad-card-hdr">
-            <span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(ath.currentLift.toUpperCase())}</span>
+            <span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(formatDisplayLiftName(ath.currentLift))}</span>
             <span class="coach-stat-label font-mono">${(Number(ath.currentLoadKg) || 0).toFixed(1)} kg</span>
           </div>
           <div class="coach-squad-card-metrics">
@@ -1984,19 +2026,19 @@
     }
     if (elements.diffBadge && elements.diffDirective) {
       if (totals.compTotal === 0 && totals.activeGymTotal === 0) {
-        elements.diffBadge.textContent = 'READY';
+        elements.diffBadge.textContent = 'Ready';
         elements.diffDirective.textContent = 'Log sets with Eros or enter meet PRs to compute transfer gap.';
       } else if (pctGap > 8.0) {
-        elements.diffBadge.textContent = 'TECHNICAL LEAK';
+        elements.diffBadge.textContent = 'Technical Leak';
         elements.diffDirective.textContent = 'Gym total exceeds meet total by >8%. Enforce competition pause gating with Eros.';
       } else if (pctGap >= 2.0) {
-        elements.diffBadge.textContent = 'OPTIMAL TRANSFER';
+        elements.diffBadge.textContent = 'Optimal Transfer';
         elements.diffDirective.textContent = 'Standard gym-to-meet transfer (+2% to +6%). Athlete is competition-ready.';
       } else if (pctGap >= -2.0) {
-        elements.diffBadge.textContent = 'COMPETITION PEAKER';
+        elements.diffBadge.textContent = 'Competition Peaker';
         elements.diffDirective.textContent = 'High meet conversion ratio. Prescribe assertive 3rd attempts.';
       } else {
-        elements.diffBadge.textContent = 'FATIGUE ACCUMULATION';
+        elements.diffBadge.textContent = 'Fatigue Accumulation';
         elements.diffDirective.textContent = 'Gym capacity below competition baseline. Cap velocity loss at 10% for recovery.';
       }
     }
@@ -2006,7 +2048,7 @@
     const allWorkouts = Array.isArray(workoutsList) ? workoutsList : getAthleteWorkouts(currentAthlete.id);
     const currentNow = (refDate instanceof Date && !isNaN(refDate.getTime())) ? refDate : new Date();
     const monday = getMondayOfIsoWeek(currentNow);
-    const dayLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const todayIso = formatIsoDate(currentNow);
 
     let completedDaysCount = 0;
@@ -2046,7 +2088,7 @@
   function renderWeeklyAdherenceCard() {
     const adherence = computeWeeklyAdherence(getAthleteWorkouts(currentAthlete.id));
     if (elements.weeklyRatioBadge) {
-      elements.weeklyRatioBadge.textContent = `${adherence.completedDaysCount}/7 DAYS`;
+      elements.weeklyRatioBadge.textContent = `${adherence.completedDaysCount}/7 Days`;
     }
     if (elements.weeklyAdherenceVal) {
       elements.weeklyAdherenceVal.textContent = adherence.headline;
@@ -2058,7 +2100,7 @@
       elements.weeklySegments.innerHTML = adherence.segments.map(seg => `
         <div class="coach-week-day-pill ${seg.isDone ? 'done' : ''} ${seg.isToday ? 'today' : ''}" role="listitem" aria-label="${seg.dayLabel} ${seg.dateIso}: ${seg.isDone ? 'Completed with Eros' : 'Rest'}">
           <span>${seg.dayLabel}</span>
-          <span>${seg.isDone ? 'DONE' : '-'}</span>
+          <span>${seg.isDone ? 'Done' : '-'}</span>
         </div>
       `).join('');
     }
@@ -2082,8 +2124,8 @@
     if (!elements.calendarGrid) return;
 
     const monthNames = [
-      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
-      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
     ];
     if (elements.calMonthTitle) {
       elements.calMonthTitle.textContent = `${monthNames[currentCalMonth]} ${currentCalYear}`;
@@ -2221,7 +2263,7 @@
       return `
         <tr>
           <td class="font-mono">Set ${s.setNumber || (idx + 1)}</td>
-          <td><span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(String(s.lift || 'Deadlift').toUpperCase())}</span>${setIsPr ? goldenPrBadgeHtml(false) : ''}</td>
+          <td><span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(formatDisplayLiftName(s.lift))}</span>${setIsPr ? goldenPrBadgeHtml(false) : ''}</td>
           <td class="font-mono">${(Number(s.weight) || 0).toFixed(1)} kg</td>
           <td class="font-mono">${s.repsCount || 3}</td>
           <td class="font-mono text-cyan">${(Number(s.avgVelocity) || 0).toFixed(2)} m/s</td>
@@ -2353,20 +2395,20 @@
 
     if (elements.activeLiftBadge) {
       const canonicalLift = formatCanonicalLiftLabel(lift);
-      elements.activeLiftBadge.textContent = canonicalLift.toUpperCase();
+      elements.activeLiftBadge.textContent = canonicalLift;
       elements.activeLiftBadge.className = 'coach-lift-badge ' + (
         /squat/i.test(lift) ? 'lift-squat' : (/bench/i.test(lift) ? 'lift-bench' : 'lift-deadlift')
       );
     }
 
     if (elements.activeSetTitle) {
-      elements.activeSetTitle.textContent = `${lift.toUpperCase()} — SET ${setNum}`;
+      elements.activeSetTitle.textContent = `${formatDisplayLiftName(lift)} — Set ${setNum}`;
     }
     if (elements.activeSetMeta) {
       elements.activeSetMeta.textContent = `${weight.toFixed(1)} kg | In Progress`;
     }
     if (elements.sessionStatusText) {
-      elements.sessionStatusText.textContent = 'SET IN PROGRESS';
+      elements.sessionStatusText.textContent = 'Active Set';
     }
 
     // Reset metric cards
@@ -2389,7 +2431,7 @@
 
     // Reset Bar Path Stage & RPE Pill
     if (elements.devSummary) {
-      elements.devSummary.textContent = 'MAX DEV: 0.0 cm • EFF: 100.0%';
+      elements.devSummary.textContent = 'Max Dev: 0.0 cm • Eff: 100.0%';
     }
     renderCoachBarpathRepPills();
     updateCoachRpePill(8.0, 0, 0);
@@ -2528,13 +2570,13 @@
     }
 
     if (elements.activeSetTitle) {
-      elements.activeSetTitle.textContent = 'NO ACTIVE SET — RESTING';
+      elements.activeSetTitle.textContent = 'Set Complete — Resting';
     }
     if (elements.activeSetMeta) {
       elements.activeSetMeta.textContent = 'Waiting for next set';
     }
     if (elements.sessionStatusText) {
-      elements.sessionStatusText.textContent = 'REST INTERVAL';
+      elements.sessionStatusText.textContent = 'Rest Interval';
     }
 
     renderSetsHistoryTable();
@@ -2618,7 +2660,7 @@
   function updateSquadRibbon() {
     if (!elements.readinessVal) queryElements();
 
-    const readinessRaw = String((currentAthlete && currentAthlete.readiness) || '100% [OPTIMAL]');
+    const readinessRaw = String((currentAthlete && currentAthlete.readiness) || '100% [Optimal]');
     const readinessMatch = readinessRaw.match(/(\d+(?:\.\d+)?)\s*%/);
     const readinessPct = readinessMatch ? Math.max(0, Math.min(100, parseFloat(readinessMatch[1]))) : 100;
     const readinessSuffix = readinessMatch ? readinessRaw.slice(readinessMatch.index + readinessMatch[0].length) : '';
@@ -2679,13 +2721,13 @@
 
     const safeSet = getSafeActiveSet();
     if (safeSet) {
-      if (elements.sessionStatusText) elements.sessionStatusText.textContent = 'ACTIVE SET';
+      if (elements.sessionStatusText) elements.sessionStatusText.textContent = 'Active Set';
     } else {
       const safeWorkout = getSafeActiveWorkout();
       if (safeWorkout && safeWorkout.sets && safeWorkout.sets.length > 0) {
-        if (elements.sessionStatusText) elements.sessionStatusText.textContent = 'REST INTERVAL';
+        if (elements.sessionStatusText) elements.sessionStatusText.textContent = 'Rest Interval';
       } else {
-        if (elements.sessionStatusText) elements.sessionStatusText.textContent = 'SESSION READY';
+        if (elements.sessionStatusText) elements.sessionStatusText.textContent = 'Session Ready';
       }
     }
   }
@@ -2697,12 +2739,12 @@
     if (!curSet) {
       if (elements.activeLiftBadge) {
         const canonicalLift = formatCanonicalLiftLabel(fallbackLift);
-        elements.activeLiftBadge.textContent = canonicalLift.toUpperCase();
+        elements.activeLiftBadge.textContent = canonicalLift;
         elements.activeLiftBadge.className = 'coach-lift-badge ' + (
           /squat/i.test(fallbackLift) ? 'lift-squat' : (/bench/i.test(fallbackLift) ? 'lift-bench' : 'lift-deadlift')
         );
       }
-      if (elements.activeSetTitle) elements.activeSetTitle.textContent = 'NO ACTIVE SET — READY';
+      if (elements.activeSetTitle) elements.activeSetTitle.textContent = 'No Active Set — Ready';
       if (elements.activeSetMeta) elements.activeSetMeta.textContent = `${getSafeWorkingWeight().toFixed(1)} kg | Standing By`;
       if (elements.liveMcv) elements.liveMcv.textContent = '0.00';
       if (elements.livePv) elements.livePv.textContent = '0.00';
@@ -2726,13 +2768,13 @@
     const lift = curSet.lift || fallbackLift;
     if (elements.activeLiftBadge) {
       const canonicalLift = formatCanonicalLiftLabel(lift);
-      elements.activeLiftBadge.textContent = canonicalLift.toUpperCase();
+      elements.activeLiftBadge.textContent = canonicalLift;
       elements.activeLiftBadge.className = 'coach-lift-badge ' + (
         /squat/i.test(lift) ? 'lift-squat' : (/bench/i.test(lift) ? 'lift-bench' : 'lift-deadlift')
       );
     }
     if (elements.activeSetTitle) {
-      elements.activeSetTitle.textContent = `${lift.toUpperCase()} — SET ${curSet.setNumber || 1}`;
+      elements.activeSetTitle.textContent = `${formatDisplayLiftName(lift)} — Set ${curSet.setNumber || 1}`;
     }
     if (elements.activeSetMeta) {
       elements.activeSetMeta.textContent = `${(curSet.weight || getSafeWorkingWeight()).toFixed(1)} kg | Target RPE @${(curSet.targetRpe || 8.0).toFixed(1)}`;
@@ -2845,7 +2887,7 @@
       rowsHtml += `
         <tr class="coach-history-row ${isExpanded ? 'expanded' : ''}" data-set-id="${escapeHtml(setId)}">
           <td class="font-mono">Set ${set.setNumber}</td>
-          <td><span class="coach-lift-badge lift-${escapeHtml(liftLower)}">${escapeHtml(lift.toUpperCase())}</span>${setIsPr ? goldenPrBadgeHtml(false) : ''}</td>
+          <td><span class="coach-lift-badge lift-${escapeHtml(liftLower)}">${escapeHtml(formatDisplayLiftName(lift))}</span>${setIsPr ? goldenPrBadgeHtml(false) : ''}</td>
           <td class="font-mono">${(set.weight || 0).toFixed(1)} kg</td>
           <td class="font-mono">${set.reps ? set.reps.length : 0}</td>
           <td class="font-mono">${(set.avgVelocity || 0).toFixed(2)} m/s</td>
@@ -2855,7 +2897,7 @@
           <td class="font-mono">@${(set.avgRpe || 8.0).toFixed(1)}</td>
           <td>
             <div class="coach-table-actions">
-              <button type="button" class="coach-replay-set-btn" data-action="replay" data-set-id="${escapeHtml(setId)}" aria-label="Replay set ${set.setNumber}">REPLAY</button>
+              <button type="button" class="coach-replay-set-btn" data-action="replay" data-set-id="${escapeHtml(setId)}" aria-label="Replay set ${set.setNumber}">Replay</button>
               <button type="button" class="coach-expand-btn" data-toggle-id="${escapeHtml(setId)}" aria-label="Toggle details for set ${set.setNumber}">
                 ${isExpanded ? 'Hide Reps' : 'View Reps'}
               </button>
@@ -2872,11 +2914,11 @@
                 <table class="coach-rep-subtable">
                   <thead>
                     <tr>
-                      <th>REP #</th>
-                      <th>MEAN VELOCITY</th>
-                      <th>PEAK VELOCITY</th>
-                      <th>EST. RPE</th>
-                      <th>REPETITION STATUS</th>
+                      <th>Rep #</th>
+                      <th>Mean Velocity</th>
+                      <th>Peak Velocity</th>
+                      <th>Est. RPE</th>
+                      <th>Repetition Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2943,6 +2985,7 @@
     if (!elements.barpathCard) queryElements();
 
     if (elements.btnBarpathMode && !elements.btnBarpathMode._coachBound) {
+      elements.btnBarpathMode.textContent = formatCoachCanvasModeLabel(coachCanvasMode);
       elements.btnBarpathMode.addEventListener('click', toggleCoachCanvasMode);
       elements.btnBarpathMode._coachBound = true;
     }
@@ -2953,6 +2996,7 @@
     }
 
     if (elements.btnBarpathSpeed && !elements.btnBarpathSpeed._coachBound) {
+      elements.btnBarpathSpeed.textContent = `${coachReplaySpeed.toFixed(1)}x`;
       elements.btnBarpathSpeed.addEventListener('click', toggleCoachReplaySpeed);
       elements.btnBarpathSpeed._coachBound = true;
     }
@@ -3207,7 +3251,7 @@
           <rect x="6" y="4" width="4" height="16"></rect>
           <rect x="14" y="4" width="4" height="16"></rect>
         </svg>
-        <span>PAUSE</span>
+        <span>Pause</span>
       `;
       btn.classList.add('active');
     } else {
@@ -3215,7 +3259,7 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <polygon points="5 3 19 12 5 21 5 3"></polygon>
         </svg>
-        <span>REPLAY</span>
+        <span>Replay</span>
       `;
       btn.classList.remove('active');
     }
@@ -3224,14 +3268,14 @@
   function toggleCoachReplaySpeed() {
     coachReplaySpeed = (coachReplaySpeed === 1.0) ? 0.5 : 1.0;
     if (elements.btnBarpathSpeed) {
-      elements.btnBarpathSpeed.textContent = `${coachReplaySpeed.toFixed(1)}X`;
+      elements.btnBarpathSpeed.textContent = `${coachReplaySpeed.toFixed(1)}x`;
     }
   }
 
   function toggleCoachCanvasMode() {
     coachCanvasMode = (coachCanvasMode === 'PATH') ? 'VEL' : 'PATH';
     if (elements.btnBarpathMode) {
-      elements.btnBarpathMode.textContent = coachCanvasMode;
+      elements.btnBarpathMode.textContent = formatCoachCanvasModeLabel(coachCanvasMode);
     }
     renderCoachBarPathCanvas();
   }
@@ -3242,7 +3286,7 @@
       const maxDev = (typeof maxDevArg === 'number') ? maxDevArg : 0;
       const eff = (typeof effArg === 'number') ? effArg : 100.0;
       if (elements.devSummary) {
-        elements.devSummary.textContent = `MAX DEV: ${maxDev >= 0 ? '+' : ''}${maxDev.toFixed(1)} cm • EFF: ${eff.toFixed(1)}%`;
+        elements.devSummary.textContent = `Max Dev: ${maxDev >= 0 ? '+' : ''}${maxDev.toFixed(1)} cm • Eff: ${eff.toFixed(1)}%`;
       }
       renderCoachBarPathCanvas();
       return;
@@ -3265,7 +3309,7 @@
     const maxDev = (typeof rep.maxDeviationCm === 'number') ? rep.maxDeviationCm : (rep.deviationCm || 0);
     const eff = (typeof rep.pathEfficiencyPct === 'number') ? rep.pathEfficiencyPct : 100.0;
     if (elements.devSummary) {
-      elements.devSummary.textContent = `MAX DEV: ${maxDev >= 0 ? '+' : ''}${maxDev.toFixed(1)} cm • EFF: ${eff.toFixed(1)}%`;
+      elements.devSummary.textContent = `Max Dev: ${maxDev >= 0 ? '+' : ''}${maxDev.toFixed(1)} cm • Eff: ${eff.toFixed(1)}%`;
     }
 
     // Update active rep pill highlighting in #coach-barpath-rep-pills
@@ -3297,19 +3341,22 @@
     if (elements.liveRirPill) elements.liveRirPill.textContent = `${Math.max(0, 10.0 - rpe).toFixed(1)} RIR`;
 
     if (elements.rpeTierBadge) {
-      let tier = 'OPTIMAL';
+      let tier = 'Moderate';
       let tierClass = 'tier-optimal';
-      if (rpe < 7.0) {
-        tier = 'WARMUP';
+      if (rpe < 6.5) {
+        tier = 'Warmup';
+        tierClass = 'tier-optimal';
+      } else if (rpe < 7.5) {
+        tier = 'Speed';
         tierClass = 'tier-optimal';
       } else if (rpe < 8.5) {
-        tier = 'OPTIMAL';
+        tier = 'Moderate';
         tierClass = 'tier-optimal';
       } else if (rpe < 9.5) {
-        tier = 'HEAVY EFFORT';
+        tier = 'Heavy';
         tierClass = 'tier-heavy';
       } else {
-        tier = 'LIMIT';
+        tier = 'Max Effort';
         tierClass = 'tier-limit';
       }
       elements.rpeTierBadge.textContent = tier;
@@ -3323,22 +3370,31 @@
 
     if (elements.rpeTargetPin) {
       const targetPct = Math.min(100, Math.max(10, coachActiveTargetRpe * 10));
+      const targetText = `Target @${coachActiveTargetRpe.toFixed(1)}`;
       elements.rpeTargetPin.style.left = `${targetPct}%`;
-      elements.rpeTargetPin.title = `Target RPE @${coachActiveTargetRpe.toFixed(1)}`;
+      elements.rpeTargetPin.title = targetText;
+      const pinLabel = typeof elements.rpeTargetPin.querySelector === 'function'
+        ? (elements.rpeTargetPin.querySelector('.coach-rpe-target-label') || elements.rpeTargetPin.querySelector('span'))
+        : null;
+      if (pinLabel) {
+        pinLabel.textContent = targetText;
+      } else if (elements.rpeTargetPin.textContent && (!elements.rpeTargetPin.children || elements.rpeTargetPin.children.length === 0)) {
+        elements.rpeTargetPin.textContent = targetText;
+      }
     }
 
     if (elements.rpeSub) {
       if (Math.abs(deviationCm) > 3.0) {
-        elements.rpeSub.textContent = 'TECHNICAL DRIFT DETECTED';
+        elements.rpeSub.textContent = 'Technical Drift Detected';
         elements.rpeSub.style.color = '#FF3B30';
       } else if (lossPct >= 20.0) {
-        elements.rpeSub.textContent = 'FATIGUE CEILING REACHED';
+        elements.rpeSub.textContent = 'Fatigue Ceiling Reached';
         elements.rpeSub.style.color = '#FF3B30';
       } else if (rpe >= coachActiveTargetRpe) {
-        elements.rpeSub.textContent = 'TARGET RPE ATTAINED';
+        elements.rpeSub.textContent = 'Target RPE Attained';
         elements.rpeSub.style.color = '#00E5FF';
       } else {
-        elements.rpeSub.textContent = 'ON TARGET GROOVE';
+        elements.rpeSub.textContent = 'On Target Groove';
         elements.rpeSub.style.color = '#00FF66';
       }
     }
@@ -3749,8 +3805,24 @@
 
   function highlightCoachSectionElement(el) {
     if (!el) return;
-    if (typeof el.scrollIntoView === 'function') {
-      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+    let shouldScroll = typeof el.scrollIntoView === 'function';
+    if (shouldScroll && typeof el.getBoundingClientRect === 'function' && typeof window !== 'undefined') {
+      try {
+        const rect = el.getBoundingClientRect();
+        const winW = window.innerWidth || (typeof document !== 'undefined' && document.documentElement && document.documentElement.clientWidth) || 0;
+        const winH = window.innerHeight || (typeof document !== 'undefined' && document.documentElement && document.documentElement.clientHeight) || 0;
+        if (winH > 0) {
+          const vertFullyVisible = rect.top >= 0 && rect.bottom <= winH;
+          const horizVisible = winW <= 0 || (rect.left >= 0 && rect.right <= winW);
+          const widescreenVisible = winW >= 1150 && rect.top >= 0 && rect.top < winH && rect.bottom > 0 && horizVisible;
+          if ((vertFullyVisible && horizVisible) || widescreenVisible) {
+            shouldScroll = false;
+          }
+        }
+      } catch (_) {}
+    }
+    if (shouldScroll && typeof el.scrollIntoView === 'function') {
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
     }
     if (el.classList) {
       el.classList.add('coach-nav-highlight');
@@ -3809,7 +3881,10 @@
 
     if (sec === 'live') {
       if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
-        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+        const scrollTop = window.scrollY || window.pageYOffset || 0;
+        if (scrollTop > 4) {
+          try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+        }
       }
     } else if (sec === 'roster') {
       const rosterEl = elements.squadOverview || (typeof document !== 'undefined' ? document.getElementById('coach-squad-overview') : null);
@@ -3844,20 +3919,20 @@
     }
     if (elements.sidebarRestState) {
       if (currentAthlete && currentAthlete.status === 'lifting') {
-        elements.sidebarRestState.textContent = 'LIFTING';
+        elements.sidebarRestState.textContent = 'Lifting';
       } else if (restingAthletes.length > 0) {
-        elements.sidebarRestState.textContent = 'RESTING';
+        elements.sidebarRestState.textContent = 'Resting';
       } else if (activeAthletes.length > 0) {
-        elements.sidebarRestState.textContent = 'ACTIVE';
+        elements.sidebarRestState.textContent = 'Active';
       } else {
-        elements.sidebarRestState.textContent = 'READY';
+        elements.sidebarRestState.textContent = 'Ready';
       }
     }
     if (elements.sidebarActiveCount) {
       elements.sidebarActiveCount.textContent = `${activeAthletes.length} Active`;
     }
     if (elements.sidebarRestingCount) {
-      elements.sidebarRestingCount.textContent = `${restingAthletes.length} Resting`;
+      elements.sidebarRestingCount.textContent = `${restingAthletes.length} Rest`;
     }
   }
 
@@ -4808,10 +4883,110 @@
     } catch (_) {}
   }
 
+  function isDirectChildOf(el, container) {
+    return Boolean(el && container && (el.parentElement === container || el.parentNode === container));
+  }
+
+  /** Returns direct movable pill children of a container without matching nested inner pills. */
+  function getDirectMovablePills(container) {
+    if (!container) return [];
+    const directChildren = container.children ? Array.from(container.children) : [];
+    if (directChildren.length > 0) {
+      return directChildren.filter(el => el && typeof el.getAttribute === 'function' && el.getAttribute('data-movable-pill') === 'true');
+    }
+    if (typeof container.querySelectorAll === 'function') {
+      return Array.from(container.querySelectorAll('[data-movable-pill="true"]'))
+        .filter(el => isDirectChildOf(el, container));
+    }
+    return [];
+  }
+
+  /** Checks whether a drag or pointer target belongs to a nested pill or interactive widget. */
+  function classifyDragTarget(targetEl, pill) {
+    if (!targetEl || typeof targetEl.closest !== 'function') {
+      return { isNestedPill: false, isInteractiveChild: false };
+    }
+    const closestPill = targetEl.closest('[data-movable-pill="true"]');
+    if (closestPill && closestPill !== pill) {
+      return { isNestedPill: true, isInteractiveChild: true };
+    }
+    const interactiveEl = targetEl.closest(INTERACTIVE_DRAG_CHILD_SELECTOR);
+    if (interactiveEl && interactiveEl !== pill) {
+      return { isNestedPill: false, isInteractiveChild: true };
+    }
+    return { isNestedPill: false, isInteractiveChild: false };
+  }
+
+  function hasDirectMoveHint(pill) {
+    if (!pill) return false;
+    if (pill.children) {
+      return Array.from(pill.children).some(c => c && c.classList && c.classList.contains('pill-move-hint'));
+    }
+    return typeof pill.querySelector === 'function' ? Boolean(pill.querySelector('.pill-move-hint')) : false;
+  }
+
+  function isLiveBigPillContainer(container, groupId) {
+    return Boolean(
+      (container && container.id === 'coach-live-panel') ||
+      groupId === 'coach-live-big-pills'
+    );
+  }
+
+  /** Adapts #coach-live-panel desktop grid track widths to the reordered column cards. */
+  function syncLivePanelGridColumns(containerArg) {
+    const panel = containerArg || elements.panelLive || (typeof document !== 'undefined' ? document.getElementById('coach-live-panel') : null);
+    if (!panel || !panel.style) return;
+
+    const winW = typeof window !== 'undefined' ? (window.innerWidth || 0) : 0;
+    if (winW < 1150) {
+      panel.style.gridTemplateColumns = '';
+      return;
+    }
+
+    const orderedChildren = panel.children ? Array.from(panel.children) : getDirectMovablePills(panel);
+    const columnIds = [];
+    orderedChildren.forEach((child) => {
+      if (!child) return;
+      const domId = child.id || '';
+      const pillId = typeof child.getAttribute === 'function' ? (child.getAttribute('data-pill-id') || '') : '';
+      if (domId === 'coach-sets-history-card' || pillId === 'sets-history-card' || (child.classList && child.classList.contains('coach-sets-history-card'))) {
+        return;
+      }
+      if (domId === 'coach-squad-overview' || pillId === 'squad-overview') {
+        columnIds.push('squad-overview');
+      } else if (domId === 'coach-active-set-card' || pillId === 'active-set-card') {
+        columnIds.push('active-set-card');
+      } else if (domId === 'coach-feedback-console' || pillId === 'feedback-console') {
+        columnIds.push('feedback-console');
+      }
+    });
+
+    if (columnIds.length !== 3) {
+      panel.style.gridTemplateColumns = '';
+      return;
+    }
+
+    const isDefaultOrder =
+      columnIds[0] === 'squad-overview' &&
+      columnIds[1] === 'active-set-card' &&
+      columnIds[2] === 'feedback-console';
+    if (isDefaultOrder) {
+      panel.style.gridTemplateColumns = '';
+      return;
+    }
+
+    const isCompactDesktop = winW <= 1440;
+    const widthByRole = {
+      'squad-overview': isCompactDesktop ? '248px' : '300px',
+      'active-set-card': 'minmax(0, 1fr)',
+      'feedback-console': isCompactDesktop ? '304px' : '360px'
+    };
+    panel.style.gridTemplateColumns = columnIds.map(id => widthByRole[id]).join(' ');
+  }
+
   function saveGroupPillOrder(container, groupId) {
-    if (!container || !groupId || typeof container.querySelectorAll !== 'function') return;
-    const pills = Array.from(container.querySelectorAll('[data-movable-pill="true"]'))
-      .filter(el => el && el.parentElement === container);
+    if (!container || !groupId) return;
+    const pills = getDirectMovablePills(container);
     const ids = pills.map(el => el.getAttribute('data-pill-id')).filter(Boolean);
     if (ids.length === 0) return;
     const map = readSavedPillOrder();
@@ -4821,10 +4996,9 @@
 
   function applyGroupPillOrder(container, groupId, orderMap) {
     if (!container || !groupId || !orderMap || !Array.isArray(orderMap[groupId])) return;
-    if (typeof container.querySelectorAll !== 'function' || typeof container.appendChild !== 'function') return;
+    if (typeof container.appendChild !== 'function') return;
     const savedIds = orderMap[groupId];
-    const items = Array.from(container.querySelectorAll('[data-movable-pill="true"]'))
-      .filter(el => el && el.parentElement === container);
+    const items = getDirectMovablePills(container);
     if (items.length < 2) return;
     const byId = new Map();
     items.forEach(el => {
@@ -4841,37 +5015,76 @@
     byId.forEach(node => container.appendChild(node));
   }
 
+  function discoverContainerPills(container) {
+    if (!container) return [];
+    const candidates = (container.children && container.children.length > 0)
+      ? Array.from(container.children)
+      : (typeof container.querySelectorAll === 'function'
+          ? Array.from(container.querySelectorAll('[data-movable-pill="true"], .coach-stat-chip, .coach-bento-card, .coach-sets-history-card'))
+              .filter(el => isDirectChildOf(el, container))
+          : []);
+    return candidates.filter((el) => {
+      if (!el || typeof el.getAttribute !== 'function') return false;
+      if (el.getAttribute('data-movable-pill') === 'true') return true;
+      if (el.id && COACH_BIG_PILL_DEFAULT_ID[el.id]) return true;
+      return Boolean(el.classList && (
+        el.classList.contains('coach-stat-chip') ||
+        el.classList.contains('coach-bento-card') ||
+        el.classList.contains('coach-sets-history-card')
+      ));
+    });
+  }
+
   function initMovableCoachPills() {
     if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
-    const containers = Array.from(
-      document.querySelectorAll('#view-coach [data-pill-group], .coach-squad-stats, .coach-history-bento-quad, .coach-bento-grid')
+    const rawContainers = Array.from(
+      document.querySelectorAll(
+        '#coach-live-panel, #coach-athlete-history-panel, #coach-preparation-panel, #view-coach [data-pill-group], .coach-squad-stats, .coach-history-bento-quad, .coach-bento-grid'
+      )
     );
-    const uniqueContainers = Array.from(new Set(containers));
+    const uniqueContainers = Array.from(new Set(rawContainers)).filter((el) => {
+      if (!el || typeof el.getAttribute !== 'function') return false;
+      const isKnownContainer = Boolean(
+        (el.id && COACH_BIG_PILL_DEFAULT_GROUP[el.id]) ||
+        (el.classList && (
+          el.classList.contains('coach-squad-stats') ||
+          el.classList.contains('coach-history-bento-quad') ||
+          el.classList.contains('coach-bento-grid')
+        ))
+      );
+      if (isKnownContainer) return true;
+      // Avoid treating leaf movable pills (which carry stamped data-pill-group) as containers
+      if (el.getAttribute('data-movable-pill') === 'true') {
+        return getDirectMovablePills(el).length > 0;
+      }
+      return true;
+    });
     const savedMap = readSavedPillOrder();
     let draggedPill = null;
     let draggedGroup = '';
 
     uniqueContainers.forEach((container, containerIdx) => {
-      if (!container || typeof container.querySelectorAll !== 'function') return;
-      const groupId = container.getAttribute('data-pill-group') || container.id || `coach-group-${containerIdx}`;
+      if (!container) return;
+      const defaultGroup = COACH_BIG_PILL_DEFAULT_GROUP[container.id || ''] || '';
+      const groupId = container.getAttribute('data-pill-group') || defaultGroup || container.id || `coach-group-${containerIdx}`;
       if (!container.getAttribute('data-pill-group')) {
         container.setAttribute('data-pill-group', groupId);
       }
 
-      const pills = Array.from(container.querySelectorAll('[data-movable-pill="true"], .coach-stat-chip, .coach-bento-card'))
-        .filter(el => el && el.parentElement === container);
+      const pills = discoverContainerPills(container);
 
       pills.forEach((pill, pillIdx) => {
         if (!pill.getAttribute('data-movable-pill')) pill.setAttribute('data-movable-pill', 'true');
         if (!pill.getAttribute('data-pill-id')) {
-          pill.setAttribute('data-pill-id', pill.id || `${groupId}-pill-${pillIdx}`);
+          const fallbackPillId = (pill.id && COACH_BIG_PILL_DEFAULT_ID[pill.id]) || pill.id || `${groupId}-pill-${pillIdx}`;
+          pill.setAttribute('data-pill-id', fallbackPillId);
         }
         if (!pill.getAttribute('data-pill-group')) pill.setAttribute('data-pill-group', groupId);
         if (pill.classList) pill.classList.add('coach-movable-pill');
         pill.setAttribute('draggable', 'true');
         if (!pill.hasAttribute('tabindex')) pill.setAttribute('tabindex', '0');
 
-        if (typeof pill.querySelector === 'function' && !pill.querySelector('.pill-move-hint') && typeof document.createElement === 'function') {
+        if (!hasDirectMoveHint(pill) && typeof document.createElement === 'function') {
           const hint = document.createElement('span');
           hint.className = 'pill-move-hint';
           hint.setAttribute('aria-hidden', 'true');
@@ -4880,12 +5093,35 @@
 
         if (pill._movableBound || typeof pill.addEventListener !== 'function') return;
 
+        const temporarilySuppressCardDrag = (e) => {
+          const state = classifyDragTarget(e && e.target, pill);
+          if (!state.isInteractiveChild) return;
+          pill.setAttribute('draggable', 'false');
+          const restoreDraggable = () => {
+            pill.setAttribute('draggable', 'true');
+          };
+          if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+            window.addEventListener('pointerup', restoreDraggable, { once: true });
+            window.addEventListener('mouseup', restoreDraggable, { once: true });
+            window.addEventListener('pointercancel', restoreDraggable, { once: true });
+          } else {
+            pill.addEventListener('mouseup', restoreDraggable, { once: true });
+          }
+        };
+        pill.addEventListener('pointerdown', temporarilySuppressCardDrag);
+        pill.addEventListener('mousedown', temporarilySuppressCardDrag);
+
         pill.addEventListener('dragstart', (e) => {
-          const targetEl = e && e.target;
-          if (targetEl && typeof targetEl.closest === 'function' && targetEl.closest('button, input, select, textarea, a')) {
-            if (typeof e.preventDefault === 'function') e.preventDefault();
+          const state = classifyDragTarget(e && e.target, pill);
+          if (state.isNestedPill) {
             return;
           }
+          if (state.isInteractiveChild) {
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+            return;
+          }
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
           draggedPill = pill;
           draggedGroup = groupId;
           if (pill.classList) {
@@ -4903,6 +5139,7 @@
         pill.addEventListener('dragover', (e) => {
           if (!draggedPill || draggedPill === pill || draggedGroup !== groupId) return;
           if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
           if (pill.classList) {
             pill.classList.add('is-drag-over');
             pill.classList.add('coach-pill-drag-over');
@@ -4922,6 +5159,7 @@
         pill.addEventListener('drop', (e) => {
           if (!draggedPill || draggedPill === pill || draggedGroup !== groupId) return;
           if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
           if (pill.classList) {
             pill.classList.remove('is-drag-over');
             pill.classList.remove('coach-pill-drag-over');
@@ -4936,6 +5174,9 @@
               container.insertBefore(draggedPill, pill);
             }
             saveGroupPillOrder(container, groupId);
+            if (isLiveBigPillContainer(container, groupId)) {
+              syncLivePanelGridColumns(container);
+            }
           }
         });
 
@@ -4960,19 +5201,27 @@
           const isNext = e.key === 'ArrowRight' || e.key === 'ArrowDown';
           if (!isPrev && !isNext) return;
           const activeTarget = e.target;
-          if (activeTarget && typeof activeTarget.closest === 'function' && activeTarget.closest('input, select, textarea')) return;
+          const keyState = classifyDragTarget(activeTarget, pill);
+          if (keyState.isNestedPill) return;
+          if (activeTarget && typeof activeTarget.closest === 'function' && activeTarget.closest('input, select, textarea, [role="slider"]')) return;
           if (typeof e.preventDefault === 'function') e.preventDefault();
-          const ordered = Array.from(container.querySelectorAll('[data-movable-pill="true"]'))
-            .filter(el => el && el.parentElement === container);
+          if (typeof e.stopPropagation === 'function') e.stopPropagation();
+          const ordered = getDirectMovablePills(container);
           const idx = ordered.indexOf(pill);
           if (idx === -1 || typeof container.insertBefore !== 'function') return;
           if (isPrev && idx > 0) {
             container.insertBefore(pill, ordered[idx - 1]);
             saveGroupPillOrder(container, groupId);
+            if (isLiveBigPillContainer(container, groupId)) {
+              syncLivePanelGridColumns(container);
+            }
             if (typeof pill.focus === 'function') pill.focus();
           } else if (isNext && idx < ordered.length - 1) {
             container.insertBefore(pill, ordered[idx + 1].nextSibling || null);
             saveGroupPillOrder(container, groupId);
+            if (isLiveBigPillContainer(container, groupId)) {
+              syncLivePanelGridColumns(container);
+            }
             if (typeof pill.focus === 'function') pill.focus();
           }
         });
@@ -4981,6 +5230,9 @@
       });
 
       applyGroupPillOrder(container, groupId, savedMap);
+      if (isLiveBigPillContainer(container, groupId)) {
+        syncLivePanelGridColumns(container);
+      }
     });
   }
 
@@ -4990,7 +5242,7 @@
   function goldenPrBadgeHtml(compact) {
     return compact
       ? '<span class="coach-golden-pr-badge coach-golden-pr-badge--compact">PR</span>'
-      : '<span class="coach-golden-pr-badge">PR &bull; GOLD</span>';
+      : '<span class="coach-golden-pr-badge">PR &bull; Gold</span>';
   }
 
   /** Whether the given set carries a personal record flag or was pushed as a record. */
@@ -5726,16 +5978,16 @@
   }
 
   function formatPrepCountdown(info) {
-    if (!info) return 'NO MEET DATE';
-    if (typeof info === 'string') return info.toUpperCase();
-    if (info.label) return String(info.label).toUpperCase();
+    if (!info) return 'No Meet Date';
+    if (typeof info === 'string') return info;
+    if (info.label) return String(info.label);
     const rawDays = typeof info.days === 'number' ? info.days : info.daysOut;
     if (typeof rawDays === 'number') {
-      if (rawDays < 0) return 'MEET COMPLETED';
+      if (rawDays < 0) return 'Meet Completed';
       const rawWeeks = typeof info.weeks === 'number' ? info.weeks : (typeof info.weeksOut === 'number' ? info.weeksOut : Math.floor(rawDays / 7));
-      return `${rawDays} DAYS | ${rawWeeks} WEEKS`;
+      return `${rawDays} Days | ${rawWeeks} Weeks`;
     }
-    return 'NO MEET DATE';
+    return 'No Meet Date';
   }
 
   function normalizeFactorAlerts(result) {
@@ -5762,7 +6014,7 @@
     }
     if (!badgesEl && !alertsEl) return;
     if (!athlete) {
-      if (badgesEl) badgesEl.innerHTML = '<span class="coach-prep-factor-badge">NO ATHLETE SELECTED</span>';
+      if (badgesEl) badgesEl.innerHTML = '<span class="coach-prep-factor-badge">No Athlete Selected</span>';
       if (alertsEl) alertsEl.innerHTML = '';
       return;
     }
@@ -5770,18 +6022,22 @@
     const stored = callPrepStore(['getAthleteBiometrics'], [athlete.id]) || {};
     const bio = Object.assign({}, stored, prepState.profiles[athlete.id] || {});
     const badges = [];
-    if (bio.age) badges.push(`AGE ${bio.age}`);
-    if (bio.bodyweightKg) badges.push(`BW ${bio.bodyweightKg} KG`);
-    if (bio.targetWeightClass) badges.push(`CLASS ${bio.targetWeightClass}`);
-    if (bio.experienceTier) badges.push(`TIER ${String(bio.experienceTier).toUpperCase()}`);
-    if (bio.trainingAgeYears !== undefined && bio.trainingAgeYears !== null && bio.trainingAgeYears !== '') badges.push(`TRAINING AGE ${bio.trainingAgeYears} YRS`);
-    if (bio.meetsCompleted !== undefined && bio.meetsCompleted !== null && bio.meetsCompleted !== '') badges.push(`MEETS ${bio.meetsCompleted}`);
-    if (Array.isArray(bio.availableDays)) badges.push(`DAYS ${bio.availableDays.length}/7`);
-    if (bio.federation) badges.push(String(bio.federation).toUpperCase());
+    if (bio.age) badges.push(`Age ${bio.age}`);
+    if (bio.bodyweightKg) badges.push(`BW ${bio.bodyweightKg} kg`);
+    if (bio.targetWeightClass) badges.push(`Class ${bio.targetWeightClass}`);
+    if (bio.experienceTier) {
+      const rawTier = String(bio.experienceTier).trim();
+      const tierTitle = rawTier.replace(/\b[a-zA-Z]+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+      badges.push(`Tier ${tierTitle}`);
+    }
+    if (bio.trainingAgeYears !== undefined && bio.trainingAgeYears !== null && bio.trainingAgeYears !== '') badges.push(`Training Age ${bio.trainingAgeYears} yrs`);
+    if (bio.meetsCompleted !== undefined && bio.meetsCompleted !== null && bio.meetsCompleted !== '') badges.push(`Meets ${bio.meetsCompleted}`);
+    if (Array.isArray(bio.availableDays)) badges.push(`Days ${bio.availableDays.length}/7`);
+    if (bio.federation) badges.push(String(bio.federation));
     if (badgesEl) {
       badgesEl.innerHTML = badges.length
         ? badges.map(b => `<span class="coach-prep-factor-badge">${escapeHtml(b)}</span>`).join('')
-        : '<span class="coach-prep-factor-badge">AWAITING ATHLETE PROFILE</span>';
+        : '<span class="coach-prep-factor-badge">Awaiting Athlete Profile</span>';
     }
 
     if (alertsEl) {
@@ -5923,7 +6179,7 @@
 
   function setPrepPanelHidden(hidden) {
     const panel = prepEl('coach-preparation-panel');
-    if (panel && panel.style) panel.style.display = hidden ? 'none' : 'flex';
+    if (panel && panel.style) panel.style.display = hidden ? 'none' : '';
   }
 
   /** Renders every section of the Coach Preparation panel. */
@@ -6093,6 +6349,7 @@
     isSetGoldenPr,
     isWorkoutGoldenPr,
     initMovableCoachPills,
+    syncLivePanelGridColumns,
     startLiveRestTicker: startRestTicker,
     switchMode,
     switchCoachPanel,

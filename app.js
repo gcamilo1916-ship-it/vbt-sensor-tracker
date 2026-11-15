@@ -3707,9 +3707,9 @@ function updateWorkoutPage() {
       : '-';
 
     const isPushedPr = Boolean(s.isPR || s.isPr || s.prPushed || (Array.isArray(s.reps) && s.reps.some(r => r && r.prPushed)));
-    const prBadgeHtml = isPushedPr ? '<span class="golden-pr-badge">PR GOLD</span>' : '';
+    const prBadgeHtml = isPushedPr ? '<span class="golden-pr-badge" data-prep-tooltip-key="prep_golden_pr">PR GOLD</span>' : '';
     const pushPrBtnHtml = (!isCurrent && repCount > 0 && !isPushedPr)
-      ? `<button type="button" class="push-pr-mini-btn" data-push-pr-set-id="${escapeHtml(s.setId)}">PUSH PR</button>`
+      ? `<button type="button" class="push-pr-mini-btn" data-push-pr-set-id="${escapeHtml(s.setId)}" data-prep-tooltip-key="prep_push_pr">PUSH PR</button>`
       : '';
 
     rowsHtml += `
@@ -5444,11 +5444,11 @@ function renderAthletePlanVsActual() {
     }));
 
     return `
-      <div class="plan-actual-row" data-slot-id="${escapeHtml(r.slotId)}" data-status="${st.cls}">
+      <div class="plan-actual-row" data-slot-id="${escapeHtml(r.slotId)}" data-status="${st.cls}" data-prep-tooltip-key="prep_plan_vs_actual_row">
         <div class="plan-actual-cell">
           <span class="pa-name">${escapeHtml(r.exerciseName)}</span>
-          <span class="pa-status ${st.cls}">${st.label}</span>
-          ${isPr ? '<span class="golden-pr-badge">PR GOLD</span>' : ''}
+          <span class="pa-status ${st.cls}" data-prep-tooltip-key="prep_adherence_status">${st.label}</span>
+          ${isPr ? '<span class="golden-pr-badge" data-prep-tooltip-key="prep_golden_pr">PR GOLD</span>' : ''}
         </div>
         <div class="plan-actual-cell">
           <span class="pa-line strong">${Number(p.sets) || 0} sets • ${planLoad}</span>
@@ -5463,7 +5463,7 @@ function renderAthletePlanVsActual() {
   }).join('');
 
   const html = `
-    <div class="plan-actual-summary font-mono">
+    <div class="plan-actual-summary font-mono" data-prep-tooltip-key="prep_daily_adherence">
       <span>Adherence <strong>${adherencePct}%</strong></span>
       <span>Sets <strong>${totalActual}/${totalPlanned}</strong></span>
     </div>
@@ -5554,6 +5554,7 @@ function renderAthletePrepHub() {
     btn.classList.toggle('is-complete', allComplete);
     btn.classList.toggle('active', isSelected);
     btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    btn.setAttribute('data-prep-tooltip-key', 'prep_week_day');
   });
 
   if (workoutNotesEl) {
@@ -5578,7 +5579,7 @@ function renderAthletePrepHub() {
     if (slots.length === 0) {
       slotsHtml = `
         <p class="athlete-prep-empty">No prescribed exercises for this day.</p>
-        <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" disabled>START PLANNED WORKOUT</button>
+        <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout" disabled>START PLANNED WORKOUT</button>
       `;
     } else {
       const cardsHtml = slots.map(slot => {
@@ -5602,45 +5603,45 @@ function renderAthletePrepHub() {
           const backVelStr = back.targetVelocity > 0 ? `${back.targetVelocity.toFixed(2)} m/s` : '--';
           const backLossStr = `${Math.round(back.velocityLossCapPct || top.velocityLossCapPct || 20)}%`;
           backoffHtml = `
-            <div class="athlete-slot-set">
+            <div class="athlete-slot-set" data-prep-tooltip-key="prep_set_y_backoff">
               <span class="athlete-slot-set-label font-mono">SET Y BACKOFF</span>
               <span class="athlete-slot-set-main">${back.sets} x ${back.reps} @ RPE ${back.rpe.toFixed(1)}</span>
               <div class="athlete-slot-kpis">
-                <div class="athlete-slot-kpi"><span class="k">LOAD</span><span class="v font-mono">${backLoadStr}</span></div>
-                <div class="athlete-slot-kpi"><span class="k">TARGET VEL</span><span class="v font-mono">${backVelStr}</span></div>
-                <div class="athlete-slot-kpi"><span class="k">VEL LOSS</span><span class="v font-mono">${backLossStr}</span></div>
+                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_prescribed_load"><span class="k">LOAD</span><span class="v font-mono">${backLoadStr}</span></div>
+                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_target_velocity"><span class="k">TARGET VEL</span><span class="v font-mono">${backVelStr}</span></div>
+                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_velocity_loss_cap"><span class="k">VEL LOSS</span><span class="v font-mono">${backLossStr}</span></div>
               </div>
             </div>
           `;
         }
 
         return `
-          <article class="athlete-slot-card ${statusCls}" data-slot-id="${escapeHtml(slot.slotId)}">
+          <article class="athlete-slot-card ${statusCls}" data-slot-id="${escapeHtml(slot.slotId)}" data-prep-tooltip-key="prep_slot_card">
             <div class="athlete-slot-head">
               <div class="athlete-slot-titles">
                 <span class="lift-tag" data-lift="${escapeHtml(liftKey)}">${escapeHtml(slot.baseLift.toUpperCase())}</span>
                 <span class="athlete-slot-name">${escapeHtml(slot.exerciseName)}</span>
               </div>
-              <span class="athlete-slot-status font-mono">${statusText}</span>
+              <span class="athlete-slot-status font-mono" data-prep-tooltip-key="prep_slot_status">${statusText}</span>
             </div>
             <div class="athlete-slot-sets">
-              <div class="athlete-slot-set">
+              <div class="athlete-slot-set" data-prep-tooltip-key="prep_set_x_top">
                 <span class="athlete-slot-set-label font-mono">SET X TOP SET</span>
                 <span class="athlete-slot-set-main">${top.sets} x ${top.reps} @ RPE ${top.rpe.toFixed(1)}</span>
                 <div class="athlete-slot-kpis">
-                  <div class="athlete-slot-kpi"><span class="k">LOAD</span><span class="v font-mono">${topLoadStr}</span></div>
-                  <div class="athlete-slot-kpi"><span class="k">TARGET VEL</span><span class="v font-mono">${topVelStr}</span></div>
-                  <div class="athlete-slot-kpi"><span class="k">VEL LOSS</span><span class="v font-mono">${topLossStr}</span></div>
+                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_prescribed_load"><span class="k">LOAD</span><span class="v font-mono">${topLoadStr}</span></div>
+                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_target_velocity"><span class="k">TARGET VEL</span><span class="v font-mono">${topVelStr}</span></div>
+                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_velocity_loss_cap"><span class="k">VEL LOSS</span><span class="v font-mono">${topLossStr}</span></div>
                 </div>
               </div>
               ${backoffHtml}
             </div>
-            <button type="button" class="athlete-slot-load-btn" data-load-slot-id="${escapeHtml(slot.slotId)}">LOAD INTO LIVE</button>
+            <button type="button" class="athlete-slot-load-btn" data-load-slot-id="${escapeHtml(slot.slotId)}" data-prep-tooltip-key="prep_load_into_live">LOAD INTO LIVE</button>
           </article>
         `;
       }).join('');
 
-      slotsHtml = `${cardsHtml}<button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout">START PLANNED WORKOUT</button>`;
+      slotsHtml = `${cardsHtml}<button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout">START PLANNED WORKOUT</button>`;
     }
 
     if (athletePrepState.lastSlotsHtml !== slotsHtml) {
@@ -6286,7 +6287,624 @@ function initPrConfirmHudListeners() {
   }
 }
 
+// ── Preparation Clean-Slate Hover Tooltip Dictionary & Engine ──
+const PREP_TOOLTIP_DICTIONARY = {
+  prep_plan_title: {
+    title: 'Plan Title',
+    category: 'Plan Meta',
+    description: 'Names the active training macrocycle created by the coach and mirrors it live to the athlete Preparation hub.',
+    tip: 'Use a clear block goal and meet name so both coach and athlete know which cycle is active.'
+  },
+  prep_sync_badge: {
+    title: 'Live Sync Status',
+    category: 'Live Bridge',
+    description: 'Shows whether the current plan and feedback are stored locally on this device or actively streaming with the coach.',
+    tip: 'If it stays on Local, confirm your pairing code in Profile Settings before starting the session.'
+  },
+  prep_phase_badge: {
+    title: 'Training Phase',
+    category: 'Periodization',
+    description: 'Identifies the physiological focus for the selected day, such as Hypertrophy, Strength, Peaking, Taper, or Deload.',
+    tip: 'Shift from Hypertrophy toward Peaking as meet day approaches to prioritize bar speed and specificity.'
+  },
+  prep_week_pill: {
+    title: 'Microcycle Week',
+    category: 'Schedule',
+    description: 'Displays the current week number within the 0 to 12 month plan and flags whether the week is scheduled as a deload.',
+    tip: 'Check for a Deload flag before pushing top-set intensity so planned recovery stays intact.'
+  },
+  prep_meet_countdown: {
+    title: 'Meet Countdown',
+    category: 'Plan Meta',
+    description: 'Calculates remaining days and weeks until the target competition date so peaking and taper timing stay aligned.',
+    tip: 'Start tapering heavy axial fatigue 10 to 14 days out when the countdown drops below two weeks.'
+  },
+  prep_week_day: {
+    title: 'Weekly Day Selector',
+    category: 'Schedule',
+    description: 'Switches the view across Monday through Sunday of the active week, highlighting days with prescribed work or completion.',
+    tip: 'Compare adjacent training days to ensure heavy Squat and Deadlift sessions have enough recovery spacing.'
+  },
+  prep_session_notes: {
+    title: 'Session Technical Notes',
+    category: 'Notes',
+    description: 'Carries technical cues, tempo reminders, and execution intent authored by the coach for the selected day.',
+    tip: 'Keep cues short and focused on one movement checkpoint per lift so the athlete executes cleanly under load.'
+  },
+  prep_dietary_notes: {
+    title: 'Dietary & Hydration Strategy',
+    category: 'Notes',
+    description: 'Shares daily fueling, pre-session carbohydrate timing, and hydration targets matched to session demand and weight class.',
+    tip: 'Increase carbohydrate and electrolyte guidance on high-volume Squat or Deadlift days.'
+  },
+  prep_slot_card: {
+    title: 'Prescribed Exercise Slot',
+    category: 'Prescription',
+    description: 'Groups a planned movement with its Set X top-set prescription, Set Y backoff volume, and live completion status.',
+    tip: 'Complete primary competition movements before moving to accessories while velocity output is highest.'
+  },
+  prep_slot_status: {
+    title: 'Slot Completion Status',
+    category: 'Execution',
+    description: 'Tracks whether a prescribed slot is Planned, currently Loaded into the Live tracker, or Done for the day.',
+    tip: 'Load each slot directly from Prep so completed sets automatically link to the Planned vs Actual matrix.'
+  },
+  prep_set_x_top: {
+    title: 'Set X (Top Set)',
+    category: 'Prescription',
+    description: 'Defines the primary heavy work sets, reps, target RPE, and expected bar speed used to gauge daily readiness.',
+    tip: 'Use the first top set velocity to decide whether to hold, add 2.5 kg, or trim load for the backoff work.'
+  },
+  prep_set_y_backoff: {
+    title: 'Set Y (Backoff Volume)',
+    category: 'Prescription',
+    description: 'Prescribes fatigue-managed volume sets scaled down from the top set by percentage drop and target RPE.',
+    tip: 'Keep backoff drop percentages around 8 to 12% in Strength blocks to build quality volume without grinding.'
+  },
+  prep_prescribed_load: {
+    title: 'Prescribed Load (kg)',
+    category: 'VBT Target',
+    description: 'Shows the target barbell weight in kilograms derived from the athlete 1RM anchor or manually entered by the coach.',
+    tip: 'Leave the load blank in the builder to auto-calculate weight from 1RM and target RPE, or type an exact kg load.'
+  },
+  prep_target_velocity: {
+    title: 'Target Mean Velocity (m/s)',
+    category: 'VBT Target',
+    description: 'States the expected mean concentric velocity in meters per second matching the prescribed load and RPE zone.',
+    tip: 'Adjust working weight if warmups move 0.05 m/s slower than expected so daily fatigue never turns into form breakdown.'
+  },
+  prep_velocity_loss_cap: {
+    title: 'Velocity Loss Ceiling (%)',
+    category: 'VBT Target',
+    description: 'Sets the maximum speed drop-off allowed across reps in a set before stopping to protect power output and recovery.',
+    tip: 'Cap velocity loss at 10 to 15% for peaking speed work and 20% for hypertrophy accumulation.'
+  },
+  prep_load_into_live: {
+    title: 'Load Into Live',
+    category: 'Live Bridge',
+    description: 'Pushes this slot lift, target working weight, and target RPE straight into the Live Tracker and marks the slot loaded.',
+    tip: 'Tap Load Into Live right before starting warmups so every working set maps cleanly back to the plan.'
+  },
+  prep_start_planned_workout: {
+    title: 'Start Planned Workout',
+    category: 'Live Bridge',
+    description: 'Starts an active workout session if none is running and loads the first prescribed slot of the day into Live.',
+    tip: 'Use this button at the start of training to keep session duration, rest timers, and adherence tracking unified.'
+  },
+  prep_plan_vs_actual: {
+    title: 'Planned vs Actual Matrix',
+    category: 'Execution',
+    description: 'Compares prescribed sets, loads, RPE, and velocity against real logged sets side by side for both athlete and coach.',
+    tip: 'Review load and velocity deltas after each session before raising next week prescriptions.'
+  },
+  prep_daily_adherence: {
+    title: 'Daily Adherence Summary',
+    category: 'Execution',
+    description: 'Summarizes the percentage of prescribed exercise slots completed and total actual versus planned sets for the day.',
+    tip: 'Aim for 90% or higher adherence across key main-lift weeks before progressing intensity.'
+  },
+  prep_plan_vs_actual_row: {
+    title: 'Exercise Execution Row',
+    category: 'Execution',
+    description: 'Details planned versus completed sets, load, RPE, and mean velocity for an individual exercise slot.',
+    tip: 'If actual RPE runs higher than planned at faster or matching loads, check rest intervals and technique.'
+  },
+  prep_adherence_status: {
+    title: 'Execution Status Badge',
+    category: 'Execution',
+    description: 'Flags whether an exercise hit the prescription (Hit), exceeded target volume or load (Exceeded), or is still In Progress.',
+    tip: 'Watch for repeated Exceeded badges on peaking days so enthusiasm does not steal recovery from meet week.'
+  },
+  prep_athlete_feedback: {
+    title: 'Session Feedback Input',
+    category: 'Coaching',
+    description: 'Lets the athlete record short post-session notes on soreness, sleep, bar feel, or pain for the selected training day.',
+    tip: 'Log one honest sentence right after your last set while bar feel and fatigue signals are fresh.'
+  },
+  prep_send_feedback: {
+    title: 'Send Feedback to Coach',
+    category: 'Coaching',
+    description: 'Saves the feedback note to the session and broadcasts it immediately to the coach Planned vs Actual panel.',
+    tip: 'Mention joint tightness or sleep drops early so the coach can adjust tomorrow load before warmups.'
+  },
+  workout_summary: {
+    title: 'Live Workout Summary',
+    category: 'Live Telemetry',
+    description: 'Aggregates total completed sets, total reps, mean velocity, and peak velocity across the currently active workout.',
+    tip: 'Watch average velocity across the whole session to spot cumulative fatigue before starting accessory work.'
+  },
+  current_set_metrics: {
+    title: 'Active Set Telemetry',
+    category: 'Live Telemetry',
+    description: 'Displays real-time Eros tracking metrics for the current set including working weight, average speed, velocity loss, and RPE.',
+    tip: 'Check velocity loss and average RPE right after racking the bar to confirm whether to add a rep or rest.'
+  },
+  workout_set_load: {
+    title: 'Working Weight Control',
+    category: 'Live Telemetry',
+    description: 'Adjusts the barbell load in 2.5 kg steps or direct entry for the active or upcoming set and keeps Live in sync.',
+    tip: 'Update the weight before starting the set so e1RM, volume, and Planned vs Actual deltas stay exact.'
+  },
+  workout_avg_velocity_ring: {
+    title: 'Average Velocity Ring',
+    category: 'Live Telemetry',
+    description: 'Visualizes mean concentric bar velocity of the current set relative to strength-speed and maximal effort zones.',
+    tip: 'Keep early warmup reps snappy above 0.70 m/s to prime neural drive without burning energy.'
+  },
+  workout_peak_velocity: {
+    title: 'Peak Set Velocity',
+    category: 'Live Telemetry',
+    description: 'Captures the fastest instantaneous concentric bar speed achieved during the active set in meters per second.',
+    tip: 'Accelerate smoothly off the chest or floor and drive explosively through the sticking point.'
+  },
+  workout_velocity_loss: {
+    title: 'Set Velocity Loss (%)',
+    category: 'Live Telemetry',
+    description: 'Measures the percentage speed drop from the fastest rep to the slowest rep in the current set.',
+    tip: 'End the set once velocity loss reaches your planned ceiling to maximize strength gain per unit of fatigue.'
+  },
+  workout_avg_rpe: {
+    title: 'Average Set RPE',
+    category: 'Live Telemetry',
+    description: 'Estimates Rating of Perceived Exertion from bar velocity against lift-specific Minimum Velocity Threshold baselines.',
+    tip: 'Compare estimated RPE against how the set felt; consistent mismatches signal a need to refresh 1RM anchors.'
+  },
+  workout_min_velocity: {
+    title: 'Minimum Set Velocity',
+    category: 'Live Telemetry',
+    description: 'Reports the slowest rep mean velocity in the set, usually the final rep that reflects peak momentary fatigue.',
+    tip: 'If minimum velocity drops near MVT earlier than planned, increase rest before the next set.'
+  },
+  active_set_reps: {
+    title: 'Current Set Rep Stream',
+    category: 'Live Telemetry',
+    description: 'Lists each recorded repetition in the active set with velocity, RPE, and horizontal bar deviation in centimeters.',
+    tip: 'Scan rep-to-rep deviation to catch forward drift or uneven hip shift as fatigue rises.'
+  },
+  workout_sets_history: {
+    title: 'Session Sets Log',
+    category: 'Live Telemetry',
+    description: 'Shows every completed set in the current workout with lift tag, load, velocity averages, rest duration, and Push PR actions.',
+    tip: 'Verify rest intervals between heavy sets stayed consistent before evaluating speed drop-off.'
+  },
+  prep_push_pr: {
+    title: 'Push Personal Record',
+    category: 'PR Tracking',
+    description: 'Confirms a new weight or velocity personal record, updates athlete 1RM benchmarks, and stamps golden PR badges across views.',
+    tip: 'Push verified top-set PRs right after the set so both DOTS calculations and coach prescriptions update automatically.'
+  },
+  prep_golden_pr: {
+    title: 'Golden PR Badge',
+    category: 'PR Tracking',
+    description: 'Marks sets, workouts, and Planned vs Actual rows that produced a verified athlete-pushed personal record.',
+    tip: 'Use golden PR dates on the timeline to identify which loading wave produced peak performance.'
+  },
+  coach_prep_factoring_strip: {
+    title: 'Biometric & Duty Factoring Strip',
+    category: 'Factoring',
+    description: 'Combines athlete age, bodyweight, target weight class, training age, available days, and life-duty notes into planning alerts.',
+    tip: 'Check factoring alerts before building a new block so weekly frequency matches real schedule constraints.'
+  },
+  coach_prep_athlete_select: {
+    title: 'Target Athlete Selector',
+    category: 'Factoring',
+    description: 'Selects which connected athlete plan, biometric profile, and execution history are loaded into the Preparation workbench.',
+    tip: 'Confirm the active athlete name before applying templates or publishing updates.'
+  },
+  coach_prep_factoring_badges: {
+    title: 'Athlete Factor Badges',
+    category: 'Factoring',
+    description: 'Displays key profile inputs synced from the athlete dossier including bodyweight, target class, tier, meets, and training days.',
+    tip: 'Watch bodyweight versus target class badges to time nutrition and taper weeks safely.'
+  },
+  coach_prep_factoring_alerts: {
+    title: 'Readiness & Schedule Alerts',
+    category: 'Factoring',
+    description: 'Highlights actionable warnings such as weight-class gaps, injury constraints, limited weekly availability, or novice pacing.',
+    tip: 'Address warning-level alerts in the Session Notes or reduce weekly backoff sets before publishing.'
+  },
+  coach_prep_plan_card: {
+    title: 'Macro Plan Configuration',
+    category: 'Plan Meta',
+    description: 'Controls plan title, 0 to 12 month horizon, start and meet dates, Squat/Bench/Deadlift 1RM anchors, and live publishing.',
+    tip: 'Set accurate 1RM anchors first so every prescribed load and target velocity auto-calculates cleanly.'
+  },
+  coach_prep_horizon: {
+    title: 'Plan Horizon (0-12 Months)',
+    category: 'Plan Meta',
+    description: 'Sets the macrocycle length from a single current-week sprint (0 months) up to a full 12-month annual progression.',
+    tip: 'Use 3 to 4 months for a focused meet build or 0 to 1 month for short reassessment blocks.'
+  },
+  coach_prep_start_date: {
+    title: 'Plan Start Date',
+    category: 'Plan Meta',
+    description: 'Anchors Week 1 Day 1 on the calendar so every macro week and daily session maps to exact dates.',
+    tip: 'Start blocks on a Monday to keep ISO week adherence and weekend recovery slots aligned.'
+  },
+  coach_prep_meet_date: {
+    title: 'Target Meet Date',
+    category: 'Plan Meta',
+    description: 'Sets the competition date used to compute the live meet countdown and peak/taper timing.',
+    tip: 'Leave empty for off-season general strength blocks, or lock the meet Saturday as soon as registration opens.'
+  },
+  coach_prep_1rm_anchors: {
+    title: 'Lift 1RM Anchors',
+    category: 'VBT Target',
+    description: 'Stores Squat, Bench, and Deadlift reference maximums used to compute prescribed loads and RPE-matched velocities.',
+    tip: 'Update 1RM anchors conservatively after a pushed PR or mid-block test rather than jumping more than 5% at once.'
+  },
+  coach_prep_publish: {
+    title: 'Publish Plan',
+    category: 'Live Bridge',
+    description: 'Saves the macro plan header and broadcasts the full plan and upcoming sessions live to the athlete Preparation hub.',
+    tip: 'Hit Publish Plan after any major calendar, 1RM, or template change so the athlete device stays synchronized.'
+  },
+  coach_prep_macro_card: {
+    title: 'Macro Timeline & Block Tools',
+    category: 'Periodization',
+    description: 'Navigates every week across the horizon and provides one-click templates, deload generation, and week cloning.',
+    tip: 'Build Week 1 carefully, then clone and progress load or RPE week by week to save programming time.'
+  },
+  coach_prep_template_select: {
+    title: 'Periodization Template Selector',
+    category: 'Periodization',
+    description: 'Chooses a structured multi-week progression model (hypertrophy, strength, peaking, or conjugate) to populate the plan.',
+    tip: 'Match the template to training age and available days before fine-tuning individual exercises.'
+  },
+  coach_prep_apply_template: {
+    title: 'Apply Block Template',
+    category: 'Periodization',
+    description: 'Generates scheduled workouts across the selected plan horizon using the chosen template and current 1RM anchors.',
+    tip: 'Apply the template first, then customize individual exercise variations and notes per training day.'
+  },
+  coach_prep_deload_week: {
+    title: 'Deload Week Generator',
+    category: 'Periodization',
+    description: 'Converts all sessions in the currently selected week into reduced-volume, reduced-RPE recovery sessions.',
+    tip: 'Place a deload week every 3 to 5 hard weeks or whenever velocity loss and readiness alerts accumulate.'
+  },
+  coach_prep_clone_week: {
+    title: 'Clone Week Forward',
+    category: 'Periodization',
+    description: 'Copies every prescribed session, exercise slot, and note from the active week into the following week.',
+    tip: 'Clone a solid baseline week forward and bump Set X RPE by 0.5 or add 2.5 kg to keep progression simple.'
+  },
+  coach_prep_weeks_track: {
+    title: 'Macro Week Track',
+    category: 'Periodization',
+    description: 'Displays clickable week tiles across the 0 to 12 month timeline showing block phase tags, deload status, and planned days.',
+    tip: 'Scan the track from left to right to confirm phases step smoothly from Accumulation to Peaking without abrupt jumps.'
+  },
+  coach_prep_session_card: {
+    title: 'Daily Session Builder',
+    category: 'Prescription',
+    description: 'Authors the selected day title, phase, exercise slots, Set X/Y targets, and technical/dietary notes.',
+    tip: 'Keep daily main-lift slots to 1 to 3 focused movements so session quality stays high.'
+  },
+  coach_prep_session_title: {
+    title: 'Daily Session Title',
+    category: 'Prescription',
+    description: 'Names the workout day (such as Heavy Squat & Bench) shown on both coach timeline and athlete Prep hub.',
+    tip: 'Include the main emphasis in the title so the athlete knows the session priority at a glance.'
+  },
+  coach_prep_deload_day: {
+    title: 'Deload Day Flag',
+    category: 'Periodization',
+    description: 'Marks the individual training day as a light recovery or technique session inside the athlete week badge.',
+    tip: 'Toggle Deload Day on mid-week recovery days when full-week deloads are unnecessary.'
+  },
+  coach_prep_exercise_search: {
+    title: 'Exercise Catalog Search',
+    category: 'Exercise Builder',
+    description: 'Filters the 88-movement powerlifting and accessory catalog in real time by name, lift family, or variation keyword.',
+    tip: 'Search by constraint like pause, tempo, or deficit to target specific sticking points quickly.'
+  },
+  coach_prep_exercise_select: {
+    title: 'Exercise Catalog Selector',
+    category: 'Exercise Builder',
+    description: 'Chooses the movement whose base lift kinematics and MVT profile drive velocity and load auto-calculation.',
+    tip: 'Pick the closest competition variation so Set X and Set Y velocity targets match real bar speeds.'
+  },
+  coach_prep_custom_exercise: {
+    title: 'Custom Exercise Builder',
+    category: 'Exercise Builder',
+    description: 'Registers a custom movement name mapped to Squat, Bench, Deadlift, or accessory velocity models.',
+    tip: 'Map specialty bar movements to their closest main lift so Eros target velocities still guide effort accurately.'
+  },
+  coach_prep_set_volume_rpe: {
+    title: 'Sets, Reps & RPE Inputs',
+    category: 'Prescription',
+    description: 'Sets the prescribed set count, rep target, and RPE intensity for Set X top sets or Set Y backoff sets.',
+    tip: 'Keep top-set RPE between 7.5 and 8.5 during regular strength weeks to leave room for steady progression.'
+  },
+  coach_prep_backoff_drop: {
+    title: 'Backoff Load Drop (%)',
+    category: 'Prescription',
+    description: 'Specifies the percentage reduction from the top-set load used to compute Set Y backoff working weight.',
+    tip: 'Use 8 to 10% drop for strength triples/fives and 12 to 15% when aiming for crisp hypertrophy bar speed.'
+  },
+  coach_prep_add_exercise: {
+    title: 'Add Exercise to Session',
+    category: 'Prescription',
+    description: 'Compiles Set X and Set Y targets with computed bar velocity and appends the slot into the day draft table.',
+    tip: 'Check the Target Velocity preview before adding so intensity and rep counts match the block goal.'
+  },
+  coach_prep_slots_table: {
+    title: 'Prescribed Session Draft Table',
+    category: 'Prescription',
+    description: 'Lists every exercise slot queued for the selected day with Set X, Set Y, load, velocity targets, and remove controls.',
+    tip: 'Order competition lifts at the top of the table so fatigue from accessories never slows primary lifts.'
+  },
+  coach_prep_save_session: {
+    title: 'Save & Sync Session',
+    category: 'Live Bridge',
+    description: 'Persists the current day exercises and notes and pushes a live update to the athlete Prep hub.',
+    tip: 'Save Session after adding or removing exercises so any active athlete view updates immediately.'
+  },
+  coach_prep_athlete_feedback_view: {
+    title: 'Athlete Feedback Note',
+    category: 'Coaching',
+    description: 'Displays the most recent feedback note sent by the athlete for the selected training day.',
+    tip: 'Check this line before adjusting next-day load or rest targets.'
+  }
+};
+
+const PREP_TOOLTIP_SELECTOR_MAP = [
+  ['.coach-golden-pr-badge', 'prep_golden_pr'],
+  ['.golden-pr-badge', 'prep_golden_pr'],
+  ['.push-pr-mini-btn', 'prep_push_pr'],
+  ['.coach-prep-slot-remove', 'coach_prep_slots_table'],
+  ['.coach-prep-week-cell', 'coach_prep_weeks_track'],
+  ['.coach-prep-day-tab', 'prep_week_day'],
+  ['.coach-prep-factor-badge', 'coach_prep_factoring_badges'],
+  ['.coach-prep-alert', 'coach_prep_factoring_alerts'],
+  ['.coach-prep-compare-table', 'prep_plan_vs_actual'],
+  ['.athlete-week-day-pill', 'prep_week_day'],
+  ['.athlete-slot-load-btn', 'prep_load_into_live'],
+  ['.athlete-slot-card', 'prep_slot_card'],
+  ['.plan-actual-summary', 'prep_daily_adherence'],
+  ['.plan-actual-row', 'prep_plan_vs_actual_row'],
+  ['.pa-status', 'prep_adherence_status']
+];
+
+const prepTooltipRuntime = {
+  openTimer: null,
+  activeTrigger: null,
+  pendingTrigger: null,
+  globalBound: false
+};
+
+function matchesPrepTooltipSelector(node, selector) {
+  if (!node || !selector) return false;
+  if (typeof node.matches === 'function') {
+    try { return node.matches(selector); } catch (_) { return false; }
+  }
+  if (selector.startsWith('.') && node.classList && typeof node.classList.contains === 'function') {
+    return node.classList.contains(selector.slice(1));
+  }
+  return false;
+}
+
+function resolvePrepTooltipTarget(rawNode, rootPanel) {
+  let cur = rawNode;
+  if (cur && cur.nodeType === 3) cur = cur.parentElement;
+  while (cur) {
+    const key = typeof cur.getAttribute === 'function' ? cur.getAttribute('data-prep-tooltip-key') : null;
+    if (key && Object.prototype.hasOwnProperty.call(PREP_TOOLTIP_DICTIONARY, key)) {
+      return { el: cur, key: key };
+    }
+    for (let i = 0; i < PREP_TOOLTIP_SELECTOR_MAP.length; i++) {
+      const pair = PREP_TOOLTIP_SELECTOR_MAP[i];
+      if (matchesPrepTooltipSelector(cur, pair[0]) && Object.prototype.hasOwnProperty.call(PREP_TOOLTIP_DICTIONARY, pair[1])) {
+        return { el: cur, key: pair[1] };
+      }
+    }
+    if (cur === rootPanel) break;
+    cur = cur.parentElement || null;
+  }
+  return null;
+}
+
+function positionPrepTooltipCard(card, targetEl) {
+  if (!card || !targetEl || typeof targetEl.getBoundingClientRect !== 'function') return;
+  const margin = 12;
+  const gap = 10;
+  const vw = (typeof window !== 'undefined' && Number(window.innerWidth) > 0) ? Number(window.innerWidth) : 1024;
+  const vh = (typeof window !== 'undefined' && Number(window.innerHeight) > 0) ? Number(window.innerHeight) : 768;
+
+  if (card.style) {
+    card.style.maxWidth = `${Math.min(310, Math.max(200, vw - margin * 2))}px`;
+  }
+
+  const tRect = targetEl.getBoundingClientRect();
+  const cRect = typeof card.getBoundingClientRect === 'function'
+    ? card.getBoundingClientRect()
+    : { width: 290, height: 120 };
+  const cardW = cRect.width > 0 ? cRect.width : (card.offsetWidth || 290);
+  const cardH = cRect.height > 0 ? cRect.height : (card.offsetHeight || 120);
+
+  const rawLeft = tRect.left + (tRect.width - cardW) / 2;
+  const maxLeft = Math.max(margin, vw - margin - cardW);
+  const left = Math.max(margin, Math.min(rawLeft, maxLeft));
+
+  const aboveTop = tRect.top - cardH - gap;
+  const belowTop = tRect.bottom + gap;
+  let placement = 'top';
+  let candidateTop = aboveTop;
+  if (aboveTop < margin) {
+    if (belowTop + cardH <= vh - margin) {
+      placement = 'bottom';
+      candidateTop = belowTop;
+    } else {
+      const spaceAbove = Math.max(0, tRect.top - margin);
+      const spaceBelow = Math.max(0, vh - margin - tRect.bottom);
+      if (spaceBelow > spaceAbove) {
+        placement = 'bottom';
+        candidateTop = belowTop;
+      }
+    }
+  }
+  const maxTop = Math.max(margin, vh - margin - cardH);
+  const top = Math.max(margin, Math.min(candidateTop, maxTop));
+
+  card.setAttribute('data-placement', placement);
+  if (card.style) {
+    card.style.left = `${Math.round(left)}px`;
+    card.style.top = `${Math.round(top)}px`;
+  }
+}
+
+function hidePrepTooltipCard() {
+  clearTimeout(prepTooltipRuntime.openTimer);
+  prepTooltipRuntime.openTimer = null;
+  prepTooltipRuntime.pendingTrigger = null;
+  prepTooltipRuntime.activeTrigger = null;
+  const card = document.getElementById('eros-prep-tooltip-card');
+  if (!card) return;
+  card.setAttribute('aria-hidden', 'true');
+  if (card.classList && typeof card.classList.remove === 'function') {
+    card.classList.remove('visible');
+  }
+}
+
+function showPrepTooltipForTarget(targetEl, key) {
+  const entry = PREP_TOOLTIP_DICTIONARY[key];
+  const card = document.getElementById('eros-prep-tooltip-card');
+  if (!entry || !card || !targetEl) return;
+
+  prepTooltipRuntime.activeTrigger = targetEl;
+  prepTooltipRuntime.pendingTrigger = null;
+
+  card.innerHTML =
+    `<div class="eros-tooltip-head">` +
+      `<span class="eros-tooltip-slash" aria-hidden="true"></span>` +
+      `<span class="eros-tooltip-title">${escapeHtml(entry.title)}</span>` +
+      `<span class="eros-tooltip-cat">${escapeHtml(entry.category)}</span>` +
+    `</div>` +
+    `<p class="eros-tooltip-desc">${escapeHtml(entry.description)}</p>` +
+    `<div class="eros-tooltip-tip">` +
+      `<span class="eros-tooltip-tip-label">Coach Tip</span>` +
+      `<span class="eros-tooltip-tip-text">${escapeHtml(entry.tip)}</span>` +
+    `</div>`;
+
+  card.setAttribute('aria-hidden', 'false');
+  if (card.classList && typeof card.classList.add === 'function') {
+    card.classList.add('visible');
+  }
+  positionPrepTooltipCard(card, targetEl);
+}
+
+/** Initializes delegated hover and keyboard-focus tooltips across Athlete and Coach Preparation panels. */
+function initPrepHoverTooltips() {
+  if (typeof document === 'undefined' || typeof document.getElementById !== 'function') return false;
+  const card = document.getElementById('eros-prep-tooltip-card');
+  if (!card) return false;
+
+  const panelIds = ['tab-set', 'coach-preparation-panel', 'pr-confirm-hud'];
+  let boundCount = 0;
+
+  panelIds.forEach(panelId => {
+    const panel = document.getElementById(panelId);
+    if (!panel || typeof panel.addEventListener !== 'function') return;
+    if (panel._prepTooltipsBound) {
+      boundCount++;
+      return;
+    }
+
+    panel.addEventListener('mouseover', (e) => {
+      const resolved = resolvePrepTooltipTarget(e && e.target, panel);
+      if (!resolved) {
+        clearTimeout(prepTooltipRuntime.openTimer);
+        prepTooltipRuntime.openTimer = null;
+        prepTooltipRuntime.pendingTrigger = null;
+        return;
+      }
+      if (resolved.el === prepTooltipRuntime.activeTrigger && card.getAttribute('aria-hidden') === 'false') {
+        return;
+      }
+      if (resolved.el === prepTooltipRuntime.pendingTrigger) {
+        return;
+      }
+      clearTimeout(prepTooltipRuntime.openTimer);
+      prepTooltipRuntime.pendingTrigger = resolved.el;
+      prepTooltipRuntime.openTimer = setTimeout(() => {
+        prepTooltipRuntime.openTimer = null;
+        showPrepTooltipForTarget(resolved.el, resolved.key);
+      }, 120);
+    });
+
+    panel.addEventListener('mouseout', (e) => {
+      const next = resolvePrepTooltipTarget(e && e.relatedTarget, panel);
+      if (next && (next.el === prepTooltipRuntime.activeTrigger || next.el === prepTooltipRuntime.pendingTrigger)) {
+        return;
+      }
+      hidePrepTooltipCard();
+    });
+
+    panel.addEventListener('focusin', (e) => {
+      const resolved = resolvePrepTooltipTarget(e && e.target, panel);
+      if (!resolved) return;
+      clearTimeout(prepTooltipRuntime.openTimer);
+      prepTooltipRuntime.openTimer = null;
+      showPrepTooltipForTarget(resolved.el, resolved.key);
+    });
+
+    panel.addEventListener('focusout', (e) => {
+      const next = resolvePrepTooltipTarget(e && e.relatedTarget, panel);
+      if (next && next.el === prepTooltipRuntime.activeTrigger) return;
+      hidePrepTooltipCard();
+    });
+
+    panel._prepTooltipsBound = true;
+    boundCount++;
+  });
+
+  if (!prepTooltipRuntime.globalBound) {
+    prepTooltipRuntime.globalBound = true;
+    if (typeof document.addEventListener === 'function') {
+      document.addEventListener('keydown', (e) => {
+        if (e && e.key === 'Escape') hidePrepTooltipCard();
+      });
+      document.addEventListener('scroll', () => {
+        if (prepTooltipRuntime.activeTrigger) hidePrepTooltipCard();
+      }, true);
+    }
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('resize', () => {
+        if (prepTooltipRuntime.activeTrigger && card.getAttribute('aria-hidden') === 'false') {
+          const resolved = resolvePrepTooltipTarget(prepTooltipRuntime.activeTrigger, document.body || prepTooltipRuntime.activeTrigger);
+          if (resolved) positionPrepTooltipCard(card, resolved.el);
+        }
+      });
+    }
+  }
+
+  return boundCount > 0;
+}
+
 if (typeof window !== 'undefined') {
+  window.PREP_TOOLTIP_DICTIONARY = PREP_TOOLTIP_DICTIONARY;
+  window.initPrepHoverTooltips = initPrepHoverTooltips;
   window.initAthleteSettings = initAthleteSettings;
   window.initAthletePrepView = initAthletePrepView;
   window.renderAthletePrepHub = renderAthletePrepHub;
@@ -6328,6 +6946,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAthletePrepView();
   initAthleteBiometricsDossier();
   initPrConfirmHudListeners();
+  initPrepHoverTooltips();
   initBarPathControls();
   renderBarPathStage(0, 1.0);
 });

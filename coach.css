@@ -31,10 +31,11 @@
   --coach-accent-amber: #f59e0b;     /* Warning / Caution Tier */
 
   /* Radii & Shadows */
-  --coach-radius-sm: 6px;
-  --coach-radius-md: 10px;
-  --coach-radius-lg: 16px;
-  --coach-radius-pill: 9999px;
+  --eros-rect-pill-radius: 14px;
+  --coach-radius-sm: 14px;
+  --coach-radius-md: 14px;
+  --coach-radius-lg: 14px;
+  --coach-radius-pill: 14px;
   --coach-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.45);
   --coach-shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.7);
 
@@ -72,7 +73,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: none;
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -428,6 +429,31 @@ body.portal-coach #view-coach {
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#coach-athlete-history-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#coach-athlete-history-panel[hidden] {
+  display: none;
+}
+
+#coach-squad-overview,
+#coach-active-set-card,
+#coach-feedback-console,
+#coach-sets-history-card,
+.coach-sets-history-card {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* ── Antigravity 2.0 Widescreen 3-Column Cockpit (Requirement R3) ── */
@@ -442,17 +468,20 @@ body.portal-coach #view-coach {
   body.portal-coach #coach-live-panel {
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr) 360px;
-    grid-template-rows: auto auto;
+    grid-auto-rows: auto;
     gap: 12px;
     align-items: start;
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
-  /* Left Rail: Squad Overview & Roster */
+  /* Movable Widescreen Rail / Console Cards (flow naturally by DOM order) */
   body.portal-coach #coach-live-panel #coach-squad-overview {
-    grid-column: 1;
-    grid-row: 1;
     height: 100%;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   body.portal-coach #coach-squad-overview .coach-overview-top-row {
@@ -472,25 +501,27 @@ body.portal-coach #view-coach {
     gap: 10px;
   }
 
-  /* Center Arena: Active Set Telemetry */
+  /* Active Set Telemetry Arena */
   body.portal-coach #coach-live-panel #coach-active-set-card {
-    grid-column: 2;
-    grid-row: 1;
+    width: 100%;
     min-width: 0;
+    box-sizing: border-box;
   }
 
-  /* Right Inspector: Prescriptive Console */
+  /* Prescriptive Console */
   body.portal-coach #coach-live-panel #coach-feedback-console {
-    grid-column: 3;
-    grid-row: 1;
     height: 100%;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
-  /* Bottom Full-Width Dock: Sets Performance History Table */
+  /* Full-Width Dock: Sets Performance History Table (spans all columns in any row) */
   body.portal-coach #coach-live-panel .coach-sets-history-card {
     grid-column: 1 / -1;
-    grid-row: 2;
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 }
 
@@ -538,7 +569,7 @@ body.portal-coach #view-coach {
 .coach-selector-label {
   font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
   color: var(--coach-text-muted);
 }
@@ -577,7 +608,7 @@ body.portal-coach #view-coach {
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--coach-accent-teal);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .coach-status-dot {
@@ -640,7 +671,7 @@ body.portal-coach #view-coach {
 .coach-stat-label {
   font-size: 10px;
   font-weight: 600;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
   color: var(--coach-text-muted);
 }
@@ -691,7 +722,7 @@ body.portal-coach #view-coach {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: none;
   background: rgba(255, 255, 255, 0.08);
   color: var(--coach-text-primary);
   border: 1px solid var(--coach-border-subtle);
@@ -770,7 +801,7 @@ body.portal-coach #view-coach {
 .coach-metric-label {
   font-size: 10px;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
   color: var(--coach-text-muted);
 }
@@ -846,7 +877,7 @@ body.portal-coach #view-coach {
 .coach-rep-stream-title {
   font-size: 10px;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
   color: var(--coach-text-muted);
 }
@@ -923,7 +954,7 @@ body.portal-coach #view-coach {
 .coach-console-title {
   font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
   color: var(--coach-text-muted);
 }
@@ -944,7 +975,7 @@ body.portal-coach #view-coach {
 .coach-block-label {
   font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.04em;
   color: var(--coach-text-secondary);
 }
@@ -1126,7 +1157,7 @@ body.portal-coach #view-coach {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: none;
   cursor: pointer;
   outline: none;
   transition: background 0.15s ease, transform 0.1s ease;
@@ -1164,7 +1195,7 @@ body.portal-coach #view-coach {
 .coach-history-title {
   font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
   color: var(--coach-text-muted);
 }
@@ -1191,7 +1222,7 @@ body.portal-coach #view-coach {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
+  text-transform: none;
   padding: 10px 12px;
   border-bottom: 1px solid var(--coach-border-subtle);
   white-space: nowrap;
@@ -1215,16 +1246,6 @@ body.portal-coach #view-coach {
 
 .coach-history-row.expanded {
   background: var(--coach-bg-surface-2);
-}
-
-.coach-history-row td:first-child {
-  border-top-left-radius: var(--coach-radius-sm);
-  border-bottom-left-radius: var(--coach-radius-sm);
-}
-
-.coach-history-row td:last-child {
-  border-top-right-radius: var(--coach-radius-sm);
-  border-bottom-right-radius: var(--coach-radius-sm);
 }
 
 .coach-empty-cell {
@@ -1812,7 +1833,7 @@ body.portal-coach #view-coach {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
+  text-transform: none;
   background: rgba(255, 255, 255, 0.08);
   color: var(--coach-text-primary);
 }
@@ -2221,7 +2242,7 @@ body.portal-coach #view-coach {
   font-size: 10px;
   font-weight: 700;
   padding: 2px 5px;
-  border-radius: 4px;
+  border-radius: 14px;
   background: rgba(16, 163, 127, 0.18);
   color: var(--coach-text-primary);
   white-space: nowrap;
@@ -2400,7 +2421,7 @@ body.portal-coach #view-coach {
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--coach-text-secondary);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .coach-focal-sub {
@@ -2413,7 +2434,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   color: var(--coach-text-primary);
   padding: 3px 10px;
-  border-radius: 9999px;
+  border-radius: 14px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -2525,7 +2546,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   color: var(--coach-text-secondary);
   padding: 3px 8px;
-  border-radius: 9999px;
+  border-radius: 14px;
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
@@ -2600,17 +2621,17 @@ body.portal-coach #view-coach {
   border: 1px solid rgba(0, 229, 255, 0.25);
   color: #00E5FF;
   padding: 4px 10px;
-  border-radius: 9999px;
+  border-radius: 14px;
   font-size: 12px;
   font-weight: 700;
 }
 
 .coach-tier-badge {
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: 14px;
   font-size: 10px;
   font-weight: 700;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.05em;
 }
 
@@ -2680,7 +2701,7 @@ body.portal-coach #view-coach {
   letter-spacing: 0.05em;
   background: #000000;
   padding: 1px 4px;
-  border-radius: 2px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   pointer-events: none;
 }
@@ -2726,7 +2747,7 @@ body.portal-coach #view-coach {
   border: 1px solid rgba(0, 229, 255, 0.3);
   color: #00E5FF;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 14px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
@@ -2792,7 +2813,7 @@ body.portal-coach #view-coach {
   display: none;
   background: var(--coach-bg-surface-1);
   border: 1px solid var(--coach-border-subtle);
-  border-radius: 20px;
+  border-radius: 14px;
   padding: 16px 12px;
   box-shadow: var(--neu-out);
   flex-shrink: 0;
@@ -2818,7 +2839,7 @@ body.portal-coach #view-coach {
 .coach-sidebar-emblem {
   width: 34px;
   height: 34px;
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--coach-bg-surface-2);
   border: 1px solid var(--coach-border-subtle);
   display: inline-flex;
@@ -2884,7 +2905,7 @@ body.portal-coach #view-coach {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--coach-text-muted);
   padding: 0 8px 2px;
 }
@@ -2897,7 +2918,7 @@ body.portal-coach #view-coach {
   width: 100%;
   background: var(--coach-bg-surface-2);
   border: 1px solid var(--coach-border-subtle);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 9px 12px;
   color: var(--coach-text-secondary);
   font-family: var(--coach-font-sans);
@@ -2956,7 +2977,7 @@ body.portal-coach #view-coach {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--coach-text-muted);
 }
 
@@ -2967,7 +2988,7 @@ body.portal-coach #view-coach {
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--coach-accent-teal);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .coach-sidebar-rest-time,
@@ -3017,7 +3038,7 @@ body.portal-coach #view-coach {
   gap: 6px;
   background: var(--coach-bg-surface-2);
   border: 1px solid var(--coach-border-subtle);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 8px 12px;
   color: var(--coach-text-secondary);
   font-family: var(--coach-font-sans);
@@ -3045,7 +3066,7 @@ body.portal-coach #view-coach {
   .coach-sidebar {
     display: flex;
     width: 240px;
-    border-radius: 20px;
+    border-radius: 14px;
     padding: 16px 12px;
     position: sticky;
     top: 16px;
@@ -3117,7 +3138,7 @@ body.portal-coach #view-coach {
     left: 50%;
     transform: translateX(-50%);
     padding: 8px 12px;
-    border-radius: 18px;
+    border-radius: 14px;
     max-width: calc(100vw - 24px);
     overflow-x: auto;
   }
@@ -3142,7 +3163,7 @@ body.portal-coach #view-coach {
     left: 10px;
     right: 10px;
     padding: 6px;
-    border-radius: 16px;
+    border-radius: 14px;
     max-width: calc(100vw - 20px);
   }
 
@@ -3322,7 +3343,7 @@ body.portal-coach #coach-cursor-glow {
 .eros-radial-customizer-dismiss {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: 14px;
   background: var(--coach-bg-surface-2);
   border: 1px solid var(--coach-border-subtle);
   color: var(--coach-text-primary);
@@ -3392,7 +3413,9 @@ body.portal-coach #coach-cursor-glow {
 }
 
 #view-coach [data-movable-pill="true"].is-dragging,
+#view-coach [data-movable-pill="true"].dragging,
 #view-coach [data-movable-pill="true"].coach-pill-dragging,
+.coach-movable-pill.dragging,
 .coach-movable-pill.coach-pill-dragging {
   opacity: 0.45;
   cursor: grabbing;
@@ -3400,40 +3423,60 @@ body.portal-coach #coach-cursor-glow {
 }
 
 #view-coach [data-movable-pill="true"].is-drag-over,
+#view-coach [data-movable-pill="true"].drag-over,
 #view-coach [data-movable-pill="true"].coach-pill-drag-over,
+.coach-movable-pill.drag-over,
 .coach-movable-pill.coach-pill-drag-over {
   border-color: var(--coach-accent-teal) !important;
 }
 
+#coach-live-panel > .coach-movable-pill,
+#coach-athlete-history-panel > .coach-movable-pill,
+#coach-preparation-panel > .coach-movable-pill {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 #view-coach .pill-move-hint {
   position: absolute;
-  top: 5px;
-  right: 7px;
+  top: 6px;
+  right: 6px;
   width: 12px;
   height: 12px;
   border-top: 1.5px solid rgba(236, 236, 236, 0.22);
   border-right: 1.5px solid rgba(236, 236, 236, 0.22);
-  border-top-right-radius: 7px;
   pointer-events: none;
+  z-index: 2;
   opacity: 0.72;
   transition: opacity 0.16s ease, border-color 0.16s ease;
 }
 
 #view-coach [data-movable-pill="true"]:hover > .pill-move-hint,
 #view-coach [data-movable-pill="true"]:focus-visible > .pill-move-hint,
-.coach-movable-pill:hover > .pill-move-hint {
+.coach-movable-pill:hover > .pill-move-hint,
+.coach-movable-pill:focus-visible > .pill-move-hint {
   opacity: 0.96;
   border-color: rgba(236, 236, 236, 0.45);
 }
 
+body.portal-coach .rest-ticker-label {
+  text-transform: none;
+}
 
 /* ── 14. Coach Preparation Panel (0 to 12 month planner) ── */
 #coach-preparation-panel {
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   font-family: var(--coach-font-sans);
+}
+
+body.portal-coach #coach-preparation-panel[hidden] {
+  display: none;
 }
 
 .coach-prep-factoring-strip,
@@ -3469,7 +3512,7 @@ body.portal-coach #coach-cursor-glow {
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--coach-text-muted);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .coach-prep-input {
@@ -3760,7 +3803,7 @@ body.portal-coach #coach-cursor-glow {
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--coach-text-muted);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 /* Day tabs */
@@ -3917,7 +3960,7 @@ body.portal-coach #coach-cursor-glow {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--coach-text-muted);
   background: var(--coach-bg-surface-2);
 }

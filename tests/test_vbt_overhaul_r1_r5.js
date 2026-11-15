@@ -139,10 +139,10 @@ assert.ok(
 );
 console.log('  [PASS] 2.4 sync-bus.js restSeconds validation whitelist confirmed');
 
-// 2.5 REST column header and cell formatting in Coach Sets Table
+// 2.5 Rest column header and cell formatting in Coach Sets Table
 assert.ok(
-  /<th>REST<\/th>/.test(indexHtml),
-  'R2.5a: index.html coach-sets-table must contain REST header column'
+  /<th>Rest<\/th>/.test(indexHtml),
+  'R2.5a: index.html coach-sets-table must contain Rest header column'
 );
 assert.ok(
   /formatRestDuration/.test(coachPortalJs),
@@ -355,8 +355,8 @@ console.log('  [PASS] 5.2 VBT_Tracker strictly isolated to single internal const
 
 // 5.3 Lift Naming Conventions ("Main" for Squat and Deadlift)
 assert.ok(
-  /MAIN DEADLIFT/.test(indexHtml),
-  'R5.3a: index.html badges must use MAIN DEADLIFT'
+  /Main Deadlift/.test(indexHtml) && /data-lift-filter="Main deadlift"/.test(indexHtml),
+  'R5.3a: index.html Coach badges must use Title/Sentence Case Main Deadlift / Main deadlift'
 );
 assert.ok(
   /data-lift-filter="Main squat"/.test(indexHtml),

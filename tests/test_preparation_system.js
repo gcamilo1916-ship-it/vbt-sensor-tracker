@@ -816,6 +816,241 @@ runTest('4.1 Zero forbidden hardware terms across all source files', () => {
   assert.strictEqual(violations.length, 0, `Forbidden hardware terms detected: ${violations.join('; ')}`);
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SUITE 5: Phase 4 UI/UX Fixes, Uniform 14px Radius, Tooltips & Case Discipline
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('\n--- SUITE 5: Phase 4 Fixes (Grid Stability, Movable Pills, 14px Radius, Tooltips & Case) ---');
+
+runTest('5.1 Fix 1: switchCoachPanel("live") preserves grid layout and avoids unwanted scroll jumps', () => {
+  const coachJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach-portal.js'), 'utf8');
+  const coachCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach.css'), 'utf8');
+
+  // Verify switchCoachPanel('live') never sets inline display='flex'
+  const switchMatch = coachJsSrc.match(/function switchCoachPanel\s*\([^)]*\)\s*\{[\s\S]*?\n  \}/);
+  assert.ok(switchMatch, 'coach-portal.js must define switchCoachPanel');
+  assert.strictEqual(
+    /panelLive\.style\.display\s*=\s*['"]flex['"]/.test(switchMatch[0]),
+    false,
+    'switchCoachPanel must NOT set panelLive.style.display = "flex"'
+  );
+  assert.ok(
+    /syncLivePanelGridColumns\s*\(/.test(switchMatch[0]),
+    'switchCoachPanel("live") must call syncLivePanelGridColumns'
+  );
+
+  // Verify highlightCoachSectionElement guards vertical scrollIntoView when already visible
+  const hlMatch = coachJsSrc.match(/function highlightCoachSectionElement\s*\([^)]*\)\s*\{[\s\S]*?\n  \}/);
+  assert.ok(hlMatch, 'coach-portal.js must define highlightCoachSectionElement');
+  assert.ok(
+    /getBoundingClientRect\s*\(/.test(hlMatch[0]),
+    'highlightCoachSectionElement must check getBoundingClientRect before scrolling'
+  );
+
+  // Verify widescreen grid rule remains intact in coach.css
+  assert.ok(
+    /#coach-live-panel\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*300px\s+minmax\(0,\s*1fr\)\s+360px/s.test(coachCssSrc),
+    'coach.css must define 3-column desktop grid on #coach-live-panel'
+  );
+
+  // Live sandbox test: switchCoachPanel('live') keeps display='' and does not overwrite with 'flex'
+  const { sandbox, elements } = createBrowserSandbox();
+  sandbox.innerWidth = 1440;
+  vm.runInContext(`CoachPortal.initCoachPortal(); CoachPortal.switchMode('coach'); CoachPortal.switchCoachPanel('history'); CoachPortal.switchCoachPanel('live');`, sandbox);
+  assert.strictEqual(elements['coach-live-panel'].style.display, '', 'panelLive.style.display must clear to "" when returning to live panel');
+});
+
+runTest('5.2 Fix 2: Big cards across Live, History & Preparation have movable pill metadata and dynamic grid columns', () => {
+  const indexHtmlSrc = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf8');
+  const coachJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach-portal.js'), 'utf8');
+
+  const expectedMovableCardIds = [
+    // Live Cockpit (4)
+    'coach-squad-overview',
+    'coach-active-set-card',
+    'coach-feedback-console',
+    'coach-sets-history-card',
+    // History Panel (3)
+    'coach-history-bento-quad',
+    'coach-monthly-calendar-card',
+    'coach-previous-workouts-card',
+    // Preparation Panel (5)
+    'coach-prep-factoring-strip',
+    'coach-prep-plan-header',
+    'coach-prep-macro-card',
+    'coach-prep-session-card',
+    'coach-prep-comparison-card'
+  ];
+
+  for (const id of expectedMovableCardIds) {
+    const tagRe = new RegExp(`<(?:section|div)[^>]*id="${id}"[^>]*>`, 'i');
+    const tagMatch = indexHtmlSrc.match(tagRe);
+    assert.ok(tagMatch, `index.html missing Coach big card #${id}`);
+    assert.ok(
+      tagMatch[0].includes('data-movable-pill="true"'),
+      `Coach card #${id} must carry data-movable-pill="true"`
+    );
+    assert.ok(
+      tagMatch[0].includes('data-pill-group=') && tagMatch[0].includes('data-pill-id='),
+      `Coach card #${id} must carry data-pill-group and data-pill-id`
+    );
+    assert.ok(
+      tagMatch[0].includes('draggable="true"'),
+      `Coach card #${id} must carry draggable="true"`
+    );
+  }
+
+  // Verify interactive child drag suppression and grid column sync helper
+  assert.ok(coachJsSrc.includes('INTERACTIVE_DRAG_CHILD_SELECTOR'), 'coach-portal.js must guard interactive children from dragging');
+  assert.ok(coachJsSrc.includes('getDirectMovablePills'), 'coach-portal.js must isolate nested vs direct movable pill groups');
+  assert.ok(coachJsSrc.includes('syncLivePanelGridColumns'), 'coach-portal.js must export/define syncLivePanelGridColumns');
+
+  // Behavioral test: reorder mock Live cards to feedback-console -> squad-overview -> active-set-card -> sets-history-card
+  const { sandbox } = createBrowserSandbox();
+  sandbox.innerWidth = 1500;
+  const computedCols = vm.runInContext(`
+    const mk = (domId, pillId) => ({
+      id: domId,
+      attributes: { 'data-movable-pill': 'true', 'data-pill-id': pillId },
+      getAttribute(k) { return this.attributes[k] || null; }
+    });
+    const fakePanel = {
+      id: 'coach-live-panel',
+      children: [
+        mk('coach-feedback-console', 'feedback-console'),
+        mk('coach-squad-overview', 'squad-overview'),
+        mk('coach-active-set-card', 'active-set-card'),
+        mk('coach-sets-history-card', 'sets-history-card')
+      ],
+      style: { gridTemplateColumns: '' }
+    };
+    CoachPortal.syncLivePanelGridColumns(fakePanel);
+    fakePanel.style.gridTemplateColumns;
+  `, sandbox);
+  assert.strictEqual(
+    computedCols,
+    '360px 300px minmax(0, 1fr)',
+    `Expected reordered desktop 3-col tracks "360px 300px minmax(0, 1fr)", got "${computedCols}"`
+  );
+
+  // Verify narrower desktop band (1150..1440) tracks scale cleanly without overflow
+  sandbox.innerWidth = 1280;
+  const midCols = vm.runInContext(`
+    const mk2 = (domId, pillId) => ({
+      id: domId,
+      attributes: { 'data-movable-pill': 'true', 'data-pill-id': pillId },
+      getAttribute(k) { return this.attributes[k] || null; }
+    });
+    const fakePanel2 = {
+      id: 'coach-live-panel',
+      children: [
+        mk2('coach-active-set-card', 'active-set-card'),
+        mk2('coach-feedback-console', 'feedback-console'),
+        mk2('coach-squad-overview', 'squad-overview'),
+        mk2('coach-sets-history-card', 'sets-history-card')
+      ],
+      style: { gridTemplateColumns: '' }
+    };
+    CoachPortal.syncLivePanelGridColumns(fakePanel2);
+    fakePanel2.style.gridTemplateColumns;
+  `, sandbox);
+  assert.strictEqual(
+    midCols,
+    'minmax(0, 1fr) 304px 248px',
+    `Expected 1280px reordered tracks "minmax(0, 1fr) 304px 248px", got "${midCols}"`
+  );
+});
+
+runTest('5.3 Fix 3: Uniform 14px corner radius across Coach & Athlete styles with zero asymmetric 7px overrides', () => {
+  const coachCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach.css'), 'utf8');
+  const styleCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'style.css'), 'utf8');
+  const athleteFxCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'athlete-fx.css'), 'utf8');
+  const cueHudCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach-cue-hud.css'), 'utf8');
+
+  assert.ok(/--coach-radius-pill:\s*14px/.test(coachCssSrc), 'coach.css must set --coach-radius-pill: 14px');
+  assert.ok(/--eros-rect-pill-radius:\s*14px/.test(styleCssSrc), 'style.css must set --eros-rect-pill-radius: 14px');
+
+  // Verify zero asymmetric border-top-right-radius: 7px or old 999px capsule radii on Coach/pill classes
+  assert.strictEqual(/border-top-right-radius:\s*7px/i.test(coachCssSrc + styleCssSrc), false, 'Must have zero asymmetric 7px corner overrides on .pill-move-hint');
+  assert.strictEqual(/border-radius:\s*9999px/i.test(cueHudCssSrc), false, 'coach-cue-hud.css must use uniform 14px instead of 9999px');
+  assert.ok(/\.coach-pill-btn[\s\S]*?border-radius:\s*14px/.test(coachCssSrc), '.coach-pill-btn must use border-radius: 14px');
+  assert.ok(/\.vel-zone-badge[\s\S]*?border-radius:\s*14px/.test(athleteFxCssSrc), '.vel-zone-badge must use border-radius: 14px');
+});
+
+runTest('5.4 Fix 4: Preparation hover tooltip dictionary (#eros-prep-tooltip-card) covers Athlete & Coach with descriptions + tips', () => {
+  const indexHtmlSrc = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf8');
+  const styleCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'style.css'), 'utf8');
+  const appJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'app.js'), 'utf8');
+
+  // Verify embossed clean-slate tooltip DOM + CSS
+  assert.ok(indexHtmlSrc.includes('id="eros-prep-tooltip-card"'), 'index.html must include #eros-prep-tooltip-card');
+  assert.ok(appJsSrc.includes('eros-tooltip-slash'), 'Tooltip renderer must render embossed angled slash element');
+  assert.ok(/\.eros-tooltip-slash[\s\S]*?skewX\(-18deg\)/.test(styleCssSrc), 'style.css must style .eros-tooltip-slash with diagonal skew');
+  assert.ok(/\.eros-prep-tooltip-card[\s\S]*?border-radius:\s*14px/.test(styleCssSrc), 'Tooltip card must use 14px Matte Obsidian corners');
+
+  // Evaluate PREP_TOOLTIP_DICTIONARY & selector map inside sandbox
+  const { sandbox } = createBrowserSandbox();
+  const { dict, selMap } = vm.runInContext('({ dict: PREP_TOOLTIP_DICTIONARY, selMap: PREP_TOOLTIP_SELECTOR_MAP })', sandbox);
+  const dictKeys = Object.keys(dict);
+  assert.ok(dictKeys.length >= 50, `Expected comprehensive PREP_TOOLTIP_DICTIONARY (>= 50 keys), got ${dictKeys.length}`);
+
+  for (const k of dictKeys) {
+    const entry = dict[k];
+    assert.ok(entry && typeof entry.title === 'string' && entry.title.trim().length > 2, `Tooltip key "${k}" missing title`);
+    assert.ok(typeof entry.category === 'string' && entry.category.trim().length > 1, `Tooltip key "${k}" missing category`);
+    assert.ok(typeof entry.description === 'string' && entry.description.trim().length > 10, `Tooltip key "${k}" missing plain-English description`);
+    assert.ok(typeof entry.tip === 'string' && entry.tip.trim().length > 5, `Tooltip key "${k}" missing practical tip`);
+  }
+
+  // Every data-prep-tooltip-key in index.html & app.js and selector map must resolve cleanly in PREP_TOOLTIP_DICTIONARY
+  const htmlKeys = Array.from(indexHtmlSrc.matchAll(/data-prep-tooltip-key="([^"]+)"/g)).map(m => m[1]);
+  const appKeys = Array.from(appJsSrc.matchAll(/data-prep-tooltip-key="([^"]+)"/g)).map(m => m[1]);
+  const mapKeys = selMap.map(pair => pair[1]);
+  const referenced = new Set([...htmlKeys, ...appKeys, ...mapKeys]);
+
+  for (const rk of referenced) {
+    assert.ok(Object.prototype.hasOwnProperty.call(dict, rk), `Tooltip key "${rk}" referenced in DOM/JS is missing from PREP_TOOLTIP_DICTIONARY`);
+  }
+
+  // Confirm both #tab-set AND #coach-preparation-panel carry annotated tooltip triggers
+  const tabSetSection = indexHtmlSrc.slice(indexHtmlSrc.indexOf('id="tab-set"'), indexHtmlSrc.indexOf('id="tab-history"'));
+  const coachPrepIdx = indexHtmlSrc.indexOf('id="coach-preparation-panel"');
+  const coachPrepEnd = indexHtmlSrc.indexOf('<!-- Orbital Quick-Jump', coachPrepIdx);
+  const coachPrepSection = indexHtmlSrc.slice(coachPrepIdx, coachPrepEnd > coachPrepIdx ? coachPrepEnd : coachPrepIdx + 25000);
+  assert.ok(/data-prep-tooltip-key="/.test(tabSetSection), 'Athlete Preparation (#tab-set) must declare data-prep-tooltip-key triggers');
+  assert.ok(/data-prep-tooltip-key="/.test(coachPrepSection), 'Coach Preparation (#coach-preparation-panel) must declare data-prep-tooltip-key triggers');
+
+  // Verify escapeHtml() guards tooltip card innerHTML interpolation
+  assert.ok(/showPrepTooltipForTarget[\s\S]*?escapeHtml\(entry\.title\)/.test(appJsSrc), 'Tooltip renderer must escapeHtml entry fields');
+});
+
+runTest('5.5 Fix 5: Zero text-transform: uppercase in coach.css and zero unexpected ALL-CAPS words in Coach Cockpit', () => {
+  const indexHtmlSrc = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf8');
+  const coachCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach.css'), 'utf8');
+  const coachJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach-portal.js'), 'utf8');
+
+  assert.strictEqual(/text-transform\s*:\s*uppercase/i.test(coachCssSrc), false, 'coach.css must contain zero text-transform: uppercase rules');
+
+  // Scan visible text inside #view-coach for disallowed purely uppercase words
+  const allowedAcronyms = new Set([
+    'RPE', 'RIR', '1RM', 'E1RM', 'SBD', 'PR', 'PRS', 'DOTS', 'IPF', 'GL',
+    'ROM', 'MVT', 'CSV', 'JSON', 'KG', 'MCV', 'PV', 'SQ', 'BP', 'DL',
+    'ISO', 'QR', 'TTL', 'EROS', 'INIT', 'AMRAP', 'VBT', 'PA', 'OK', 'ID'
+  ]);
+  const coachStart = indexHtmlSrc.indexOf('id="view-coach"');
+  const coachEnd = indexHtmlSrc.indexOf('id="pr-confirm-hud"');
+  const coachHtmlText = indexHtmlSrc
+    .slice(coachStart, coachEnd)
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<[^>]+>/g, ' ');
+  const badCaps = Array.from(new Set(coachHtmlText.match(/\b[A-Z]{2,}\b/g) || []))
+    .filter(w => !allowedAcronyms.has(w));
+  assert.deepStrictEqual(badCaps, [], `Unexpected ALL-CAPS words in #view-coach HTML: ${badCaps.join(', ')}`);
+
+  // Verify Title/Sentence Case returns from Coach helpers
+  assert.ok(/return 'Mode: Vel';/.test(coachJsSrc) || /'Mode: Vel'\s*:\s*'Mode: Path'/.test(coachJsSrc), 'Coach canvas mode toggle must use Title Case');
+  assert.ok(coachJsSrc.includes('PR &bull; Gold'), 'goldenPrBadgeHtml must render "PR • Gold" rather than "PR • GOLD"');
+});
+
 Promise.resolve().then(() => {
   setTimeout(() => {
     console.log('\n╔════════════════════════════════════════════════════════════════════════╗');

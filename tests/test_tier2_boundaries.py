@@ -221,16 +221,16 @@ class TestTier2BoundariesAndCornerCases(unittest.TestCase):
             self.assertGreater(len(clean), 0, f"Button {b['attrs']} must have readable text")
 
     # ─────────────────────────────────────────────────────────────────────────
-    # F6 Boundaries: VisionOS pill capsule buttons
+    # F6 Boundaries: Uniform 14px pill & button corners
     # ─────────────────────────────────────────────────────────────────────────
 
     def test_b06_01_pill_radius_unit_strictly_pixels(self):
-        """B6.1: Verify pill buttons use 999px (capsule) rather than percentages."""
+        """B6.1: Verify pill buttons use uniform 14px in pixels rather than percentages."""
         for cls in [".btn-glass-primary", ".btn-glass-connect", ".btn-glass-set", ".btn-action-glass"]:
             rules = extract_css_rules(self.css, cls)
             self.assertTrue(len(rules) > 0)
             br = rules[0][1].get("border-radius")
-            self.assertEqual(br, "999px", f"{cls} border-radius must be exactly '999px'")
+            self.assertEqual(br, "14px", f"{cls} border-radius must be exactly '14px'")
 
     def test_b06_02_button_overflow_hidden_for_pill(self):
         """B6.2: Verify pill buttons have overflow: hidden or contain borders properly."""
@@ -243,7 +243,7 @@ class TestTier2BoundariesAndCornerCases(unittest.TestCase):
             rules = extract_css_rules(self.css, f".btn-glass-primary{state}")
             for _, props, _ in rules:
                 if "border-radius" in props:
-                    self.assertEqual(props["border-radius"], "999px")
+                    self.assertEqual(props["border-radius"], "14px")
 
     def test_b06_04_pill_button_padding_balance(self):
         """B6.4: Verify pill buttons provide horizontal padding >= 12px for thumb targets."""

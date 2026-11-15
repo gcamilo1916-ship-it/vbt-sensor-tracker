@@ -52,7 +52,7 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
-            <span class="mode-label">ATHLETE</span>
+            <span class="mode-label">Athlete</span>
           </button>
           <button type="button" class="mode-toggle-btn" id="btn-mode-coach" data-mode="coach" role="radio" aria-checked="false" aria-label="Coach Portal">
             <svg class="mode-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -61,7 +61,7 @@
               <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
-            <span class="mode-label">COACH</span>
+            <span class="mode-label">Coach</span>
           </button>
         </div>
 
@@ -423,74 +423,74 @@
 
         <!-- Athlete Preparation Hub (Coach-authored plan, live synced) -->
         <div id="athlete-prep-hub" class="athlete-prep-hub" aria-label="Preparation Hub">
-          <div id="athlete-prep-header-card" class="glass-card athlete-prep-header-card">
+          <div id="athlete-prep-header-card" class="glass-card athlete-prep-header-card" data-prep-tooltip-key="prep_plan_title">
             <div class="athlete-prep-header-top">
-              <div class="athlete-prep-title-group">
+              <div class="athlete-prep-title-group" data-prep-tooltip-key="prep_plan_title">
                 <span class="athlete-prep-eyebrow font-mono">PREPARATION</span>
                 <span id="athlete-prep-plan-title" class="athlete-prep-plan-title">No active plan</span>
               </div>
-              <span id="athlete-prep-sync-badge" class="athlete-prep-sync-badge font-mono">LOCAL</span>
+              <span id="athlete-prep-sync-badge" class="athlete-prep-sync-badge font-mono" data-prep-tooltip-key="prep_sync_badge">LOCAL</span>
             </div>
             <div class="athlete-prep-pill-row">
-              <span id="athlete-prep-phase-badge" class="athlete-prep-pill font-mono">PHASE &mdash;</span>
-              <span id="athlete-prep-week-pill" class="athlete-prep-pill font-mono">WEEK &mdash;</span>
-              <span id="athlete-meet-countdown-pill" class="athlete-prep-pill font-mono">NO MEET DATE</span>
+              <span id="athlete-prep-phase-badge" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_phase_badge">PHASE &mdash;</span>
+              <span id="athlete-prep-week-pill" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_week_pill">WEEK &mdash;</span>
+              <span id="athlete-meet-countdown-pill" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_meet_countdown">NO MEET DATE</span>
             </div>
           </div>
 
           <div id="athlete-prep-week-strip" class="athlete-prep-week-strip" role="group" aria-label="Weekly Schedule">
-            <button type="button" class="athlete-week-day-pill" data-day="Mon" data-day-index="0" aria-pressed="false">
+            <button type="button" class="athlete-week-day-pill" data-day="Mon" data-day-index="0" aria-pressed="false" data-prep-tooltip-key="prep_week_day">
               <span class="athlete-week-day-name">Mon</span>
               <span class="athlete-week-day-date font-mono">&mdash;</span>
             </button>
-            <button type="button" class="athlete-week-day-pill" data-day="Tue" data-day-index="1" aria-pressed="false">
+            <button type="button" class="athlete-week-day-pill" data-day="Tue" data-day-index="1" aria-pressed="false" data-prep-tooltip-key="prep_week_day">
               <span class="athlete-week-day-name">Tue</span>
               <span class="athlete-week-day-date font-mono">&mdash;</span>
             </button>
-            <button type="button" class="athlete-week-day-pill" data-day="Wed" data-day-index="2" aria-pressed="false">
+            <button type="button" class="athlete-week-day-pill" data-day="Wed" data-day-index="2" aria-pressed="false" data-prep-tooltip-key="prep_week_day">
               <span class="athlete-week-day-name">Wed</span>
               <span class="athlete-week-day-date font-mono">&mdash;</span>
             </button>
-            <button type="button" class="athlete-week-day-pill" data-day="Thu" data-day-index="3" aria-pressed="false">
+            <button type="button" class="athlete-week-day-pill" data-day="Thu" data-day-index="3" aria-pressed="false" data-prep-tooltip-key="prep_week_day">
               <span class="athlete-week-day-name">Thu</span>
               <span class="athlete-week-day-date font-mono">&mdash;</span>
             </button>
-            <button type="button" class="athlete-week-day-pill" data-day="Fri" data-day-index="4" aria-pressed="false">
+            <button type="button" class="athlete-week-day-pill" data-day="Fri" data-day-index="4" aria-pressed="false" data-prep-tooltip-key="prep_week_day">
               <span class="athlete-week-day-name">Fri</span>
               <span class="athlete-week-day-date font-mono">&mdash;</span>
             </button>
-            <button type="button" class="athlete-week-day-pill" data-day="Sat" data-day-index="5" aria-pressed="false">
+            <button type="button" class="athlete-week-day-pill" data-day="Sat" data-day-index="5" aria-pressed="false" data-prep-tooltip-key="prep_week_day">
               <span class="athlete-week-day-name">Sat</span>
               <span class="athlete-week-day-date font-mono">&mdash;</span>
             </button>
-            <button type="button" class="athlete-week-day-pill" data-day="Sun" data-day-index="6" aria-pressed="false">
+            <button type="button" class="athlete-week-day-pill" data-day="Sun" data-day-index="6" aria-pressed="false" data-prep-tooltip-key="prep_week_day">
               <span class="athlete-week-day-name">Sun</span>
               <span class="athlete-week-day-date font-mono">&mdash;</span>
             </button>
           </div>
 
           <div id="athlete-prep-notes-row" class="athlete-prep-notes-row">
-            <div class="glass-card athlete-prep-note-card">
+            <div class="glass-card athlete-prep-note-card" data-prep-tooltip-key="prep_session_notes">
               <span class="athlete-prep-note-label font-mono">COACH SESSION NOTES</span>
               <p id="athlete-prep-workout-notes" class="athlete-prep-note-body">No session notes for this day.</p>
             </div>
-            <div class="glass-card athlete-prep-note-card">
+            <div class="glass-card athlete-prep-note-card" data-prep-tooltip-key="prep_dietary_notes">
               <span class="athlete-prep-note-label font-mono">DIETARY NOTES</span>
               <p id="athlete-prep-dietary-notes" class="athlete-prep-note-body">No dietary notes for this day.</p>
             </div>
           </div>
 
-          <div class="glass-card athlete-prep-slots-card">
+          <div class="glass-card athlete-prep-slots-card" data-prep-tooltip-key="prep_slot_card">
             <div class="athlete-prep-slots-header">
               <span class="athlete-prep-note-label font-mono">PRESCRIBED SESSION</span>
             </div>
             <div id="athlete-prep-slots-list" class="athlete-prep-slots-list">
               <p class="athlete-prep-empty">No prescribed exercises for this day.</p>
-              <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout">START PLANNED WORKOUT</button>
+              <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout">START PLANNED WORKOUT</button>
             </div>
           </div>
 
-          <div id="athlete-plan-vs-actual-card" class="glass-card athlete-plan-vs-actual-card">
+          <div id="athlete-plan-vs-actual-card" class="glass-card athlete-plan-vs-actual-card" data-prep-tooltip-key="prep_plan_vs_actual">
             <div class="athlete-prep-slots-header">
               <span class="athlete-prep-note-label font-mono">PLANNED VS ACTUAL</span>
             </div>
@@ -499,14 +499,14 @@
             </div>
           </div>
 
-          <div id="athlete-prep-feedback-bar" class="athlete-prep-feedback-bar">
-            <input type="text" id="athlete-prep-feedback-input" class="athlete-prep-feedback-input" maxlength="280" placeholder="Session feedback for your coach" aria-label="Session feedback for your coach" autocomplete="off">
-            <button type="button" id="btn-send-prep-feedback" class="btn-send-prep-feedback">SEND</button>
+          <div id="athlete-prep-feedback-bar" class="athlete-prep-feedback-bar" data-prep-tooltip-key="prep_athlete_feedback">
+            <input type="text" id="athlete-prep-feedback-input" class="athlete-prep-feedback-input" maxlength="280" placeholder="Session feedback for your coach" aria-label="Session feedback for your coach" autocomplete="off" data-prep-tooltip-key="prep_athlete_feedback">
+            <button type="button" id="btn-send-prep-feedback" class="btn-send-prep-feedback" data-prep-tooltip-key="prep_send_feedback">SEND</button>
           </div>
         </div>
 
         <!-- Workout Summary -->
-        <div class="glass-card workout-summary-card" id="workout-summary-card">
+        <div class="glass-card workout-summary-card" id="workout-summary-card" data-prep-tooltip-key="workout_summary">
           <div class="workout-summary-header">
             <span class="workout-summary-title">WORKOUT</span>
             <span class="workout-summary-status" id="workout-summary-status">No active workout</span>
@@ -532,7 +532,7 @@
         </div>
 
         <!-- Current Set -->
-        <div class="glass-card set-hero-panel" id="current-set-card">
+        <div class="glass-card set-hero-panel" id="current-set-card" data-prep-tooltip-key="current_set_metrics">
           <div class="set-meta-header">
             <div class="set-title-group">
               <span class="set-badge-pill" id="set-badge-label">SET 1</span>
@@ -542,7 +542,7 @@
           </div>
 
           <!-- Set Weight Module (Workout Page) -->
-          <div class="set-weight-module" id="workout-set-weight-module">
+          <div class="set-weight-module" id="workout-set-weight-module" data-prep-tooltip-key="workout_set_load">
             <div class="set-weight-label-wrap">
               <span class="set-weight-badge">SET LOAD</span>
               <span class="set-weight-help">WORKING WEIGHT</span>
@@ -558,7 +558,7 @@
           </div>
 
           <!-- Glass Progress Ring -->
-          <div class="set-ring-container">
+          <div class="set-ring-container" data-prep-tooltip-key="workout_avg_velocity_ring">
             <svg class="progress-ring-svg" viewBox="0 0 220 220">
               <defs>
                 <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -581,22 +581,22 @@
 
           <!-- Set Statistics Grid -->
           <div class="set-metrics-grid">
-            <div class="stat-card glass-card">
+            <div class="stat-card glass-card" data-prep-tooltip-key="workout_peak_velocity">
               <span class="stat-label">PEAK VELOCITY</span>
               <span class="stat-value font-mono" id="set-max-vel">-</span>
               <span class="stat-unit">m/s</span>
             </div>
-            <div class="stat-card glass-card">
+            <div class="stat-card glass-card" data-prep-tooltip-key="workout_velocity_loss">
               <span class="stat-label">VELOCITY LOSS</span>
               <span class="stat-value font-mono" id="set-vel-loss">-</span>
               <span class="stat-unit">%</span>
             </div>
-            <div class="stat-card glass-card">
+            <div class="stat-card glass-card" data-prep-tooltip-key="workout_avg_rpe">
               <span class="stat-label">AVERAGE RPE</span>
               <span class="stat-value font-mono" id="set-avg-rpe">-</span>
               <span class="stat-unit">/10</span>
             </div>
-            <div class="stat-card glass-card">
+            <div class="stat-card glass-card" data-prep-tooltip-key="workout_min_velocity">
               <span class="stat-label">MIN VELOCITY</span>
               <span class="stat-value font-mono" id="set-min-vel">-</span>
               <span class="stat-unit">m/s</span>
@@ -605,7 +605,7 @@
         </div>
 
         <!-- Real-time Rep Stream for Active Set -->
-        <section class="active-set-reps-section">
+        <section class="active-set-reps-section" data-prep-tooltip-key="active_set_reps">
           <div class="section-title-row">
             <span class="section-heading">CURRENT SET REPS</span>
             <span class="section-subtext" id="active-set-rep-counter">0 reps</span>
@@ -616,7 +616,7 @@
         </section>
 
         <!-- Sets Table: every set of the workout, tagged with its lift -->
-        <section class="workout-sets-section" id="workout-sets-section" aria-label="Workout Sets">
+        <section class="workout-sets-section" id="workout-sets-section" aria-label="Workout Sets" data-prep-tooltip-key="workout_sets_history">
           <div class="section-title-row">
             <span class="section-heading">SETS</span>
             <span class="section-subtext" id="workout-sets-counter">0 sets</span>
@@ -955,7 +955,7 @@
 
           <div class="coach-sidebar-nav">
             <div class="coach-sidebar-group">
-              <div class="coach-sidebar-group-label">COACHING</div>
+              <div class="coach-sidebar-group-label">Coaching</div>
               <button type="button" class="coach-sidebar-link nav-active neu-inset-sm" data-coach-nav="live" aria-current="page">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
@@ -997,7 +997,7 @@
             </div>
 
             <div class="coach-sidebar-group">
-              <div class="coach-sidebar-group-label">MANAGEMENT</div>
+              <div class="coach-sidebar-group-label">Management</div>
               <button type="button" class="coach-sidebar-link" data-coach-nav="preparation">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <rect x="8" y="2" width="8" height="4" rx="1"></rect>
@@ -1029,13 +1029,13 @@
             <!-- Embossed Live Rest / Session Ticker Widget -->
             <div id="coach-sidebar-ticker" class="coach-sidebar-ticker neu-inset" aria-live="polite">
               <div class="coach-sidebar-ticker-top">
-                <span class="coach-sidebar-ticker-meta font-mono">REST TICKER</span>
-                <span id="coach-sidebar-rest-state" class="coach-sidebar-rest-state font-mono">READY</span>
+                <span class="coach-sidebar-ticker-meta font-mono">Rest Ticker</span>
+                <span id="coach-sidebar-rest-state" class="coach-sidebar-rest-state font-mono">Ready</span>
               </div>
               <div id="coach-sidebar-rest-time" class="coach-sidebar-rest-time font-mono">00:00</div>
               <div class="coach-sidebar-ticker-counts coach-sidebar-ticker-meta font-mono">
-                <span id="coach-sidebar-active-count">0 ACTIVE</span>
-                <span id="coach-sidebar-resting-count">0 REST</span>
+                <span id="coach-sidebar-active-count">0 Active</span>
+                <span id="coach-sidebar-resting-count">0 Rest</span>
               </div>
             </div>
 
@@ -1074,21 +1074,21 @@
       <div class="coach-squad-ribbon neu-raised coach-fade-up" style="--stagger-delay: 0.02s;">
         <div class="coach-squad-left">
           <div class="coach-athlete-selector-group">
-            <label for="coach-athlete-select" class="coach-selector-label">ATHLETE:</label>
+            <label for="coach-athlete-select" class="coach-selector-label">Athlete:</label>
             <select id="coach-athlete-select" class="coach-select" aria-label="Select Athlete">
               <option value="ath_01" selected>Active Athlete (Rack 01)</option>
             </select>
           </div>
           <div id="coach-session-status-badge" class="coach-session-status-badge">
             <span class="coach-status-dot"></span>
-            <span id="coach-session-status-text">SESSION READY</span>
+            <span id="coach-session-status-text">Session Ready</span>
           </div>
           <button type="button" id="btn-coach-bond-open" class="coach-bond-trigger-btn neu-btn" aria-label="Link or Manage Bonded Athletes">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
             </svg>
-            <span>LINK ATHLETE</span>
+            <span>Link Athlete</span>
             <span id="coach-bond-pending-count" class="coach-bond-badge-count" style="display: none;">0</span>
           </button>
         </div>
@@ -1098,7 +1098,7 @@
               <div id="coach-readiness-ring" class="coach-progress-ring" aria-hidden="true"></div>
               <div class="coach-stat-text-col">
                 <span class="coach-stat-label">Daily Readiness</span>
-                <span id="coach-readiness-val" class="coach-stat-value optimal">100% [OPTIMAL]</span>
+                <span id="coach-readiness-val" class="coach-stat-value optimal">100% [Optimal]</span>
               </div>
             </div>
             <span class="pill-move-hint" aria-hidden="true"></span>
@@ -1123,7 +1123,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
             </svg>
-            <span>LIVE PANEL</span>
+            <span>Live Panel</span>
           </button>
           <button type="button" id="btn-coach-panel-history" class="coach-subnav-btn" data-panel="history" role="tab" aria-selected="false" aria-controls="coach-athlete-history-panel">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1132,7 +1132,7 @@
               <line x1="8" y1="2" x2="8" y2="6"></line>
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
-            <span>ATHLETE HISTORY PANEL</span>
+            <span>Athlete History Panel</span>
           </button>
           <button type="button" id="btn-coach-panel-preparation" class="coach-subnav-btn" data-panel="preparation" role="tab" aria-selected="false" aria-controls="coach-preparation-panel">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1140,12 +1140,12 @@
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
               <polyline points="9 14 11 16 15 12"></polyline>
             </svg>
-            <span>PREPARATION</span>
+            <span>Preparation</span>
           </button>
         </div>
         <div class="coach-sync-architecture-pill" id="coach-cloud-sync-pill" title="Client-side ErosSyncBus active. Cloud PostgreSQL schema ready for deployment upon backend approval.">
           <span class="coach-sync-dot"></span>
-          <span id="coach-cloud-sync-text" class="font-mono">EROS SYNC: LOCAL BUS [CLOUD READY]</span>
+          <span id="coach-cloud-sync-text" class="font-mono">Eros Sync: Local Bus [Cloud Ready]</span>
         </div>
       </div>
 
@@ -1154,10 +1154,10 @@
         <div class="coach-bond-card neu-raised smart-overflow-protected">
           <div class="coach-bond-header">
             <div class="coach-bond-title-wrap">
-              <h3 id="coach-bond-modal-title" class="coach-bond-title">MANUAL COACH-ATHLETE BONDING</h3>
+              <h3 id="coach-bond-modal-title" class="coach-bond-title">Manual Coach-Athlete Bonding</h3>
               <span class="coach-bond-subtitle">Dual-Consent Handshake &amp; Sovereign Access Control</span>
             </div>
-            <button type="button" id="btn-coach-bond-close" class="coach-bond-close-btn" aria-label="Close Bonding Modal">CLOSE</button>
+            <button type="button" id="btn-coach-bond-close" class="coach-bond-close-btn" aria-label="Close Bonding Modal">Close</button>
           </div>
 
           <div class="coach-bond-grid">
@@ -1205,7 +1205,7 @@
                 <div class="coach-manual-link-inputs">
                   <input type="text" id="coach-bond-athlete-name" class="coach-custom-input" placeholder="e.g., Athlete Name" aria-label="Athlete Full Name" />
                   <input type="text" id="coach-bond-athlete-rack" class="coach-custom-input coach-rack-input" placeholder="Rack 04" value="Rack 04" aria-label="Assigned Rack" />
-                  <button type="button" id="btn-coach-bond-manual-add" class="btn-coach-send">LINK</button>
+                  <button type="button" id="btn-coach-bond-manual-add" class="btn-coach-send">Link</button>
                 </div>
               </div>
             </div>
@@ -1233,10 +1233,11 @@
       <!-- ═══════════════════════════════════════════════════════════════════ -->
       <!-- PANEL A: COACH LIVE PANEL (Requirement R3)                          -->
       <!-- ═══════════════════════════════════════════════════════════════════ -->
-      <div id="coach-live-panel" class="coach-panel-section" role="tabpanel" aria-labelledby="btn-coach-panel-live">
+      <div id="coach-live-panel" class="coach-panel-section" data-pill-group="coach-live-big-pills" role="tabpanel" aria-labelledby="btn-coach-panel-live">
 
         <!-- Live Squad Overview & Multi-Athlete Roster Grid -->
-        <div class="coach-squad-overview-card neu-raised coach-fade-up" id="coach-squad-overview" style="--stagger-delay: 0.08s">
+        <div class="coach-squad-overview-card neu-raised coach-fade-up coach-movable-pill" id="coach-squad-overview" data-movable-pill="true" data-pill-id="squad-overview" data-pill-group="coach-live-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" style="--stagger-delay: 0.08s">
+          <span class="pill-move-hint" aria-hidden="true"></span>
           <div class="coach-overview-top-row">
             <div class="coach-overview-title-group">
               <span class="coach-history-title">Live Squad Overview</span>
@@ -1257,12 +1258,13 @@
         </div>
 
         <!-- Component 2: Active Set Live Monitor -->
-        <div class="coach-active-set-monitor neu-raised coach-fade-up" id="coach-active-set-card" style="--stagger-delay: 0.12s">
+        <div class="coach-active-set-monitor neu-raised coach-fade-up coach-movable-pill" id="coach-active-set-card" data-movable-pill="true" data-pill-id="active-set-card" data-pill-group="coach-live-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" style="--stagger-delay: 0.12s">
+          <span class="pill-move-hint" aria-hidden="true"></span>
           <div class="coach-monitor-header">
             <div class="coach-monitor-title-group">
-              <span id="coach-active-lift-badge" class="coach-lift-badge lift-deadlift">MAIN DEADLIFT</span>
-              <h2 id="coach-active-set-title" class="coach-active-set-title">DEADLIFT — SET 1</h2>
-              <span id="coach-live-zone-badge" class="coach-zone-badge zone-accelerative font-mono">ACCELERATIVE STRENGTH</span>
+              <span id="coach-active-lift-badge" class="coach-lift-badge lift-deadlift">Main Deadlift</span>
+              <h2 id="coach-active-set-title" class="coach-active-set-title">Deadlift — Set 1</h2>
+              <span id="coach-live-zone-badge" class="coach-zone-badge zone-accelerative font-mono">Accelerative Strength</span>
             </div>
             <div class="coach-monitor-meta" id="coach-active-set-meta">
               140.0 kg | Target RPE @8.0
@@ -1275,11 +1277,11 @@
             <div class="coach-focal-card" id="coach-barpath-card">
               <div class="coach-focal-header">
                 <div class="coach-focal-title-group">
-                  <span class="coach-focal-title">BAR PATH KINEMATICS</span>
-                  <span class="coach-focal-sub font-mono" id="coach-dev-summary">MAX DEV: 0.0 cm • EFF: 100.0%</span>
+                  <span class="coach-focal-title">Bar Path Kinematics</span>
+                  <span class="coach-focal-sub font-mono" id="coach-dev-summary">Max Dev: 0.0 cm • Eff: 100.0%</span>
                 </div>
                 <div class="coach-focal-actions">
-                  <button type="button" id="coach-btn-barpath-mode" class="coach-pill-btn font-mono" aria-label="Toggle Bar Path Canvas Mode">PATH</button>
+                  <button type="button" id="coach-btn-barpath-mode" class="coach-pill-btn font-mono" aria-label="Toggle Bar Path Canvas Mode">Path</button>
                 </div>
               </div>
 
@@ -1293,16 +1295,16 @@
                 </div>
               </div>
 
-              <!-- Replay & Scrub Controls (Pure SVG + Uppercase Text, Zero Emojis) -->
+              <!-- Replay & Scrub Controls (Pure SVG + Title Case Text, Zero Emojis) -->
               <div class="coach-barpath-controls">
                 <div class="coach-barpath-ctrl-row">
                   <button type="button" id="coach-btn-barpath-replay" class="coach-ctrl-btn" aria-label="Play or Pause Barbell Replay">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
-                    <span>REPLAY</span>
+                    <span>Replay</span>
                   </button>
-                  <button type="button" id="coach-btn-barpath-speed" class="coach-ctrl-btn font-mono" aria-label="Toggle Replay Speed">1.0X</button>
+                  <button type="button" id="coach-btn-barpath-speed" class="coach-ctrl-btn font-mono" aria-label="Toggle Replay Speed">1.0x</button>
                   <div class="coach-barpath-rep-pills" id="coach-barpath-rep-pills" role="group" aria-label="Select Repetition for Replay">
                     <!-- Dynamic Rep Pills R1, R2, etc. -->
                   </div>
@@ -1317,10 +1319,10 @@
             <div class="coach-focal-card" id="coach-rpe-pill-card">
               <div class="coach-focal-header">
                 <div class="coach-focal-title-group">
-                  <span class="coach-focal-title">AUTOREGULATED INTENSITY</span>
+                  <span class="coach-focal-title">Autoregulated Intensity</span>
                   <span class="coach-focal-sub font-mono">Live RPE Continuum</span>
                 </div>
-                <span id="coach-rpe-tier-badge" class="coach-tier-badge tier-optimal font-mono">OPTIMAL</span>
+                <span id="coach-rpe-tier-badge" class="coach-tier-badge tier-optimal font-mono">Optimal</span>
               </div>
 
               <div class="coach-rpe-hero-content">
@@ -1337,7 +1339,7 @@
                   <div class="coach-rpe-gauge-track" role="progressbar" aria-label="Coach Live RPE Gauge">
                     <div id="coach-rpe-gauge-fill" class="coach-rpe-gauge-fill" style="width: 80%;"></div>
                     <div id="coach-rpe-target-pin" class="coach-rpe-target-pin" style="left: 80%;" title="Target RPE @8.0">
-                      <span class="target-pin-tag">TARGET</span>
+                      <span class="target-pin-tag">Target</span>
                     </div>
                   </div>
                   <div class="coach-rpe-ticks" aria-hidden="true">
@@ -1349,7 +1351,7 @@
                 </div>
 
                 <div class="coach-rpe-feedback-footer">
-                  <span id="coach-rpe-sub" class="coach-rpe-sub font-mono">ON TARGET GROOVE</span>
+                  <span id="coach-rpe-sub" class="coach-rpe-sub font-mono">On Target Groove</span>
                 </div>
               </div>
             </div>
@@ -1421,7 +1423,8 @@
         </div>
 
         <!-- Component 3: Coach Prescriptive Feedback Console -->
-        <div class="coach-feedback-console neu-raised coach-fade-up" id="coach-feedback-console" style="--stagger-delay: 0.16s">
+        <div class="coach-feedback-console neu-raised coach-fade-up coach-movable-pill" id="coach-feedback-console" data-movable-pill="true" data-pill-id="feedback-console" data-pill-group="coach-live-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" style="--stagger-delay: 0.16s">
+          <span class="pill-move-hint" aria-hidden="true"></span>
           <div class="coach-console-header">
             <span class="coach-console-title">Coach Prescriptive Console</span>
             <span class="coach-console-status" id="coach-feedback-status">Ready</span>
@@ -1470,7 +1473,7 @@
             <div class="coach-custom-cue-row">
               <input type="text" id="coach-custom-cue-input" class="coach-custom-input" placeholder="Type technical cue for athlete rest HUD..." aria-label="Custom technical cue input" />
               <button type="button" id="btn-coach-send-custom" class="btn-coach-send" aria-label="Send custom cue">
-                <span>SEND CUE</span>
+                <span>Send Cue</span>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <line x1="22" y1="2" x2="11" y2="13"></line>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -1481,7 +1484,8 @@
         </div>
 
         <!-- Component 4: Sets Performance History Table -->
-        <div class="coach-sets-history-card neu-raised coach-fade-up" style="--stagger-delay: 0.20s">
+        <div id="coach-sets-history-card" class="coach-sets-history-card neu-raised coach-fade-up coach-movable-pill" data-movable-pill="true" data-pill-id="sets-history-card" data-pill-group="coach-live-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" style="--stagger-delay: 0.20s">
+          <span class="pill-move-hint" aria-hidden="true"></span>
           <div class="coach-history-header">
             <span class="coach-history-title">Sets Performance History</span>
             <span class="coach-stat-label font-mono" id="coach-sets-counter">0 Completed</span>
@@ -1490,16 +1494,16 @@
             <table class="coach-table" id="coach-sets-table">
               <thead>
                 <tr>
-                  <th>SET #</th>
-                  <th>LIFT</th>
-                  <th>LOAD</th>
-                  <th>REPS</th>
-                  <th>AVG VEL</th>
-                  <th>PEAK VEL</th>
-                  <th>VEL LOSS</th>
-                  <th>REST</th>
+                  <th>Set #</th>
+                  <th>Lift</th>
+                  <th>Load</th>
+                  <th>Reps</th>
+                  <th>Avg Vel</th>
+                  <th>Peak Vel</th>
+                  <th>Vel Loss</th>
+                  <th>Rest</th>
                   <th>RPE</th>
-                  <th>DETAILS</th>
+                  <th>Details</th>
                 </tr>
               </thead>
               <tbody id="coach-sets-table-body">
@@ -1516,16 +1520,17 @@
       <!-- ═══════════════════════════════════════════════════════════════════ -->
       <!-- PANEL B: ATHLETE HISTORY PANEL (Requirement R4)                     -->
       <!-- ═══════════════════════════════════════════════════════════════════ -->
-      <div id="coach-athlete-history-panel" class="coach-panel-section" role="tabpanel" aria-labelledby="btn-coach-panel-history" style="display: none;">
+      <div id="coach-athlete-history-panel" class="coach-panel-section" data-pill-group="coach-history-big-pills" role="tabpanel" aria-labelledby="btn-coach-panel-history" style="display: none;">
 
         <!-- 1. Bento Quad: In-Competition Total, Gym Total, Differential & Weekly Adherence -->
-        <div class="coach-history-bento-quad" id="coach-history-bento-quad" data-pill-group="history-bento">
+        <div class="coach-history-bento-quad coach-movable-pill" id="coach-history-bento-quad" data-movable-pill="true" data-pill-id="history-bento-quad" data-pill-group="history-bento" data-parent-pill-group="coach-history-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill">
+          <span class="pill-move-hint" aria-hidden="true"></span>
 
           <!-- Card 1: Current In-Competition Total -->
           <div class="coach-bento-card neu-raised coach-fade-up coach-movable-pill" id="coach-comp-total-card" data-movable-pill="true" data-pill-id="comp-total" data-pill-group="history-bento" draggable="true" tabindex="0" aria-roledescription="movable bento card" style="--stagger-delay: 0.04s">
             <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
-              <span class="coach-metric-label">IN-COMPETITION TOTAL</span>
+              <span class="coach-metric-label">In-Competition Total</span>
               <button type="button" id="btn-coach-edit-comp" class="coach-inline-action-btn" aria-label="Edit Competition PRs">Edit</button>
             </div>
             <div class="coach-bento-hero font-mono" id="coach-comp-total-val">0.0 kg</div>
@@ -1558,7 +1563,7 @@
           <div class="coach-bento-card neu-raised coach-fade-up coach-movable-pill" id="coach-gym-total-card" data-movable-pill="true" data-pill-id="gym-total" data-pill-group="history-bento" draggable="true" tabindex="0" aria-roledescription="movable bento card" style="--stagger-delay: 0.08s">
             <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
-              <span class="coach-metric-label">CURRENT GYM TOTAL</span>
+              <span class="coach-metric-label">Current Gym Total</span>
               <div class="coach-model-switch" id="coach-gym-model-toggle" role="group" aria-label="Gym Total Calculation Model">
                 <button type="button" id="btn-coach-gym-model-abs" class="coach-model-btn active" data-model="abs">Abs 1RM</button>
                 <button type="button" id="btn-coach-gym-model-e1rm" class="coach-model-btn" data-model="e1rm">e1RM</button>
@@ -1575,8 +1580,8 @@
           <div class="coach-bento-card neu-raised coach-fade-up coach-movable-pill" id="coach-total-diff-card" data-movable-pill="true" data-pill-id="total-diff" data-pill-group="history-bento" draggable="true" tabindex="0" aria-roledescription="movable bento card" style="--stagger-delay: 0.12s">
             <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
-              <span class="coach-metric-label">GYM VS COMP TRANSFER</span>
-              <span id="coach-diff-badge" class="coach-transfer-badge optimal">READY</span>
+              <span class="coach-metric-label">Gym vs Comp Transfer</span>
+              <span id="coach-diff-badge" class="coach-transfer-badge optimal">Ready</span>
             </div>
             <div class="coach-bento-hero font-mono" id="coach-diff-val">0.0 kg (0.0%)</div>
             <div class="coach-bento-sub" id="coach-diff-directive">Log sets with Eros or enter meet PRs to compute transfer gap.</div>
@@ -1589,8 +1594,8 @@
           <div class="coach-bento-card neu-raised coach-fade-up coach-movable-pill" id="coach-weekly-adherence-card" data-movable-pill="true" data-pill-id="weekly-adherence" data-pill-group="history-bento" draggable="true" tabindex="0" aria-roledescription="movable bento card" style="--stagger-delay: 0.16s">
             <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
-              <span class="coach-metric-label">WEEKLY EROS ADHERENCE</span>
-              <span id="coach-weekly-ratio-badge" class="coach-adherence-pill font-mono">0/7 DAYS</span>
+              <span class="coach-metric-label">Weekly Eros Adherence</span>
+              <span id="coach-weekly-ratio-badge" class="coach-adherence-pill font-mono">0/7 Days</span>
             </div>
             <div class="coach-adherence-headline" id="coach-weekly-adherence-val">0/7 workouts completed this week with Eros</div>
             <div class="coach-weekly-segments" id="coach-weekly-segments" role="list" aria-label="Weekly Training Days Monday to Sunday">
@@ -1604,7 +1609,8 @@
         </div>
 
         <!-- 2. Monthly Calendar View of Completed Workouts with Accessible Data -->
-        <div class="coach-monthly-calendar-card neu-raised coach-fade-up" id="coach-monthly-calendar-card" style="--stagger-delay: 0.20s">
+        <div class="coach-monthly-calendar-card neu-raised coach-fade-up coach-movable-pill" id="coach-monthly-calendar-card" data-movable-pill="true" data-pill-id="monthly-calendar-card" data-pill-group="coach-history-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" style="--stagger-delay: 0.20s">
+          <span class="pill-move-hint" aria-hidden="true"></span>
           <div class="coach-calendar-header">
             <div class="coach-cal-title-block">
               <span class="coach-history-title">Monthly Completed Workouts Calendar</span>
@@ -1612,7 +1618,7 @@
             </div>
             <div class="coach-cal-nav-controls">
               <button type="button" id="btn-coach-cal-prev" class="coach-cal-nav-btn" aria-label="Previous Month">Prev</button>
-              <span id="coach-cal-month-title" class="coach-cal-month-label font-mono">OCTOBER 2026</span>
+              <span id="coach-cal-month-title" class="coach-cal-month-label font-mono">October 2026</span>
               <button type="button" id="btn-coach-cal-next" class="coach-cal-nav-btn" aria-label="Next Month">Next</button>
               <button type="button" id="btn-coach-cal-today" class="coach-cal-nav-btn today-btn" aria-label="Jump to Current Month">Today</button>
             </div>
@@ -1620,13 +1626,13 @@
 
           <!-- 7-Column Weekday Header (Monday to Sunday ISO) -->
           <div class="coach-calendar-weekdays" aria-hidden="true">
-            <span>MON</span>
-            <span>TUE</span>
-            <span>WED</span>
-            <span>THU</span>
-            <span>FRI</span>
-            <span>SAT</span>
-            <span>SUN</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+            <span>Sun</span>
           </div>
 
           <!-- 7-Column Accessible Calendar Grid -->
@@ -1651,15 +1657,15 @@
               <table class="coach-table" id="coach-inspector-sets-table">
                 <thead>
                   <tr>
-                    <th>SET #</th>
-                    <th>MOVEMENT</th>
-                    <th>LOAD</th>
-                    <th>REPS</th>
-                    <th>MEAN VEL</th>
-                    <th>PEAK VEL</th>
+                    <th>Set #</th>
+                    <th>Movement</th>
+                    <th>Load</th>
+                    <th>Reps</th>
+                    <th>Mean Vel</th>
+                    <th>Peak Vel</th>
                     <th>ROM</th>
-                    <th>VEL LOSS</th>
-                    <th>VELOCITY ZONE</th>
+                    <th>Vel Loss</th>
+                    <th>Velocity Zone</th>
                     <th>RPE</th>
                   </tr>
                 </thead>
@@ -1672,7 +1678,8 @@
         </div>
 
         <!-- 3. Chronological Previous Workouts Feed -->
-        <div class="coach-sets-history-card neu-raised coach-fade-up" id="coach-previous-workouts-card" style="--stagger-delay: 0.24s">
+        <div class="coach-sets-history-card neu-raised coach-fade-up coach-movable-pill" id="coach-previous-workouts-card" data-movable-pill="true" data-pill-id="previous-workouts-card" data-pill-group="coach-history-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" style="--stagger-delay: 0.24s">
+          <span class="pill-move-hint" aria-hidden="true"></span>
           <div class="coach-history-header">
             <div class="coach-overview-title-group">
               <span class="coach-history-title">Previous Workouts Logbook (Tracked with Eros)</span>
@@ -1693,31 +1700,33 @@
 
       </div>
         <!-- ═══ Coach Preparation Panel (0 to 12 month planner) ═══ -->
-        <section id="coach-preparation-panel" class="coach-prep-section coach-panel-section" role="tabpanel" aria-labelledby="btn-coach-panel-preparation" style="display: none;">
+        <section id="coach-preparation-panel" class="coach-prep-section coach-panel-section" data-pill-group="coach-prep-big-pills" role="tabpanel" aria-labelledby="btn-coach-panel-preparation" style="display: none;">
 
           <!-- Factoring Strip -->
-          <div id="coach-prep-factoring-strip" class="coach-prep-factoring-strip neu-raised">
+          <div id="coach-prep-factoring-strip" class="coach-prep-factoring-strip neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-factoring-strip" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="coach_prep_factoring_strip">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-prep-factoring-top">
-              <label class="coach-prep-field coach-prep-field-athlete" for="coach-prep-athlete-select">
-                <span class="coach-prep-label font-mono">ATHLETE</span>
+              <label class="coach-prep-field coach-prep-field-athlete" for="coach-prep-athlete-select" data-prep-tooltip-key="coach_prep_athlete_select">
+                <span class="coach-prep-label font-mono">Athlete</span>
                 <select id="coach-prep-athlete-select" class="coach-prep-input">
                   <option value="">No connected athlete</option>
                 </select>
               </label>
-              <div id="coach-prep-factoring-badges" class="coach-prep-factoring-badges" aria-label="Athlete factors"></div>
+              <div id="coach-prep-factoring-badges" class="coach-prep-factoring-badges" aria-label="Athlete factors" data-prep-tooltip-key="coach_prep_factoring_badges"></div>
             </div>
-            <div id="coach-prep-factoring-alerts" class="coach-prep-factoring-alerts" aria-live="polite"></div>
+            <div id="coach-prep-factoring-alerts" class="coach-prep-factoring-alerts" aria-live="polite" data-prep-tooltip-key="coach_prep_factoring_alerts"></div>
           </div>
 
           <!-- Plan Header -->
-          <div id="coach-prep-plan-header" class="coach-prep-plan-header neu-raised">
+          <div id="coach-prep-plan-header" class="coach-prep-plan-header neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-plan-header" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="coach_prep_plan_card">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-prep-header-grid">
-              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-title-input">
-                <span class="coach-prep-label font-mono">PLAN TITLE</span>
+              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-title-input" data-prep-tooltip-key="prep_plan_title">
+                <span class="coach-prep-label font-mono">Plan Title</span>
                 <input type="text" id="coach-prep-title-input" class="coach-prep-input" maxlength="80" placeholder="e.g., National meet build" autocomplete="off">
               </label>
-              <label class="coach-prep-field" for="coach-prep-months-select">
-                <span class="coach-prep-label font-mono">HORIZON</span>
+              <label class="coach-prep-field" for="coach-prep-months-select" data-prep-tooltip-key="coach_prep_horizon">
+                <span class="coach-prep-label font-mono">Horizon</span>
                 <select id="coach-prep-months-select" class="coach-prep-input">
                   <option value="0">0 months</option>
                   <option value="1">1 month</option>
@@ -1734,65 +1743,67 @@
                   <option value="12">12 months</option>
                 </select>
               </label>
-              <label class="coach-prep-field" for="coach-prep-start-date">
-                <span class="coach-prep-label font-mono">START DATE</span>
+              <label class="coach-prep-field" for="coach-prep-start-date" data-prep-tooltip-key="coach_prep_start_date">
+                <span class="coach-prep-label font-mono">Start Date</span>
                 <input type="date" id="coach-prep-start-date" class="coach-prep-input">
               </label>
-              <label class="coach-prep-field" for="coach-prep-meet-date">
-                <span class="coach-prep-label font-mono">MEET DATE</span>
+              <label class="coach-prep-field" for="coach-prep-meet-date" data-prep-tooltip-key="coach_prep_meet_date">
+                <span class="coach-prep-label font-mono">Meet Date</span>
                 <input type="date" id="coach-prep-meet-date" class="coach-prep-input">
               </label>
-              <div class="coach-prep-field coach-prep-countdown-field">
-                <span class="coach-prep-label font-mono">COUNTDOWN</span>
-                <span id="coach-prep-meet-countdown" class="coach-prep-countdown font-mono">NO MEET DATE</span>
+              <div class="coach-prep-field coach-prep-countdown-field" data-prep-tooltip-key="prep_meet_countdown">
+                <span class="coach-prep-label font-mono">Countdown</span>
+                <span id="coach-prep-meet-countdown" class="coach-prep-countdown font-mono">No Meet Date</span>
               </div>
             </div>
             <div class="coach-prep-target-row">
-              <label class="coach-prep-field" for="coach-prep-1rm-squat">
-                <span class="coach-prep-label font-mono">SQUAT 1RM (KG)</span>
+              <label class="coach-prep-field" for="coach-prep-1rm-squat" data-prep-tooltip-key="coach_prep_1rm_anchors">
+                <span class="coach-prep-label font-mono">Squat 1RM (kg)</span>
                 <input type="number" id="coach-prep-1rm-squat" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="kg" inputmode="decimal">
               </label>
-              <label class="coach-prep-field" for="coach-prep-1rm-bench">
-                <span class="coach-prep-label font-mono">BENCH 1RM (KG)</span>
+              <label class="coach-prep-field" for="coach-prep-1rm-bench" data-prep-tooltip-key="coach_prep_1rm_anchors">
+                <span class="coach-prep-label font-mono">Bench 1RM (kg)</span>
                 <input type="number" id="coach-prep-1rm-bench" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="kg" inputmode="decimal">
               </label>
-              <label class="coach-prep-field" for="coach-prep-1rm-deadlift">
-                <span class="coach-prep-label font-mono">DEADLIFT 1RM (KG)</span>
+              <label class="coach-prep-field" for="coach-prep-1rm-deadlift" data-prep-tooltip-key="coach_prep_1rm_anchors">
+                <span class="coach-prep-label font-mono">Deadlift 1RM (kg)</span>
                 <input type="number" id="coach-prep-1rm-deadlift" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="kg" inputmode="decimal">
               </label>
-              <button type="button" id="btn-coach-publish-prep" class="coach-prep-btn coach-prep-btn-primary">PUBLISH PLAN</button>
+              <button type="button" id="btn-coach-publish-prep" class="coach-prep-btn coach-prep-btn-primary" data-prep-tooltip-key="coach_prep_publish">Publish Plan</button>
             </div>
           </div>
 
           <!-- Macro Timeline & Quick Tools -->
-          <div id="coach-prep-macro-card" class="coach-prep-macro-card neu-raised">
+          <div id="coach-prep-macro-card" class="coach-prep-macro-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-macro-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="coach_prep_macro_card">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-prep-section-head">
               <span class="coach-prep-section-title">Macro Timeline</span>
               <div class="coach-prep-quick-tools">
-                <select id="coach-prep-template-select" class="coach-prep-input coach-prep-template-select" aria-label="Plan template">
+                <select id="coach-prep-template-select" class="coach-prep-input coach-prep-template-select" aria-label="Plan template" data-prep-tooltip-key="coach_prep_template_select">
                   <option value="">Select template</option>
                 </select>
-                <button type="button" id="btn-coach-apply-template" class="coach-prep-btn">APPLY TEMPLATE</button>
-                <button type="button" id="btn-coach-deload-week" class="coach-prep-btn">DELOAD WEEK</button>
-                <button type="button" id="btn-coach-clone-week" class="coach-prep-btn">CLONE WEEK</button>
+                <button type="button" id="btn-coach-apply-template" class="coach-prep-btn" data-prep-tooltip-key="coach_prep_apply_template">Apply Template</button>
+                <button type="button" id="btn-coach-deload-week" class="coach-prep-btn" data-prep-tooltip-key="coach_prep_deload_week">Deload Week</button>
+                <button type="button" id="btn-coach-clone-week" class="coach-prep-btn" data-prep-tooltip-key="coach_prep_clone_week">Clone Week</button>
               </div>
             </div>
-            <div id="coach-prep-weeks-track" class="coach-prep-weeks-track" role="listbox" aria-label="Plan weeks"></div>
+            <div id="coach-prep-weeks-track" class="coach-prep-weeks-track" role="listbox" aria-label="Plan weeks" data-prep-tooltip-key="coach_prep_weeks_track"></div>
           </div>
 
           <!-- Daily Session & Exercise Picker -->
-          <div id="coach-prep-session-card" class="coach-prep-session-card neu-raised">
+          <div id="coach-prep-session-card" class="coach-prep-session-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-session-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="coach_prep_session_card">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-prep-section-head">
               <span class="coach-prep-section-title">Daily Session</span>
             </div>
-            <div id="coach-prep-day-tabs" class="coach-prep-day-tabs" role="tablist" aria-label="Session day"></div>
+            <div id="coach-prep-day-tabs" class="coach-prep-day-tabs" role="tablist" aria-label="Session day" data-prep-tooltip-key="prep_week_day"></div>
             <div class="coach-prep-session-meta">
-              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-session-title">
-                <span class="coach-prep-label font-mono">SESSION TITLE</span>
+              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-session-title" data-prep-tooltip-key="coach_prep_session_title">
+                <span class="coach-prep-label font-mono">Session Title</span>
                 <input type="text" id="coach-prep-session-title" class="coach-prep-input" maxlength="80" placeholder="e.g., Heavy squat and bench" autocomplete="off">
               </label>
-              <label class="coach-prep-field" for="coach-prep-phase-select">
-                <span class="coach-prep-label font-mono">PHASE</span>
+              <label class="coach-prep-field" for="coach-prep-phase-select" data-prep-tooltip-key="prep_phase_badge">
+                <span class="coach-prep-label font-mono">Phase</span>
                 <select id="coach-prep-phase-select" class="coach-prep-input">
                   <option value="Hypertrophy">Hypertrophy</option>
                   <option value="Accumulation">Accumulation</option>
@@ -1804,81 +1815,81 @@
                   <option value="Test">Test</option>
                 </select>
               </label>
-              <label class="coach-prep-toggle" for="coach-prep-deload-toggle">
+              <label class="coach-prep-toggle" for="coach-prep-deload-toggle" data-prep-tooltip-key="coach_prep_deload_day">
                 <input type="checkbox" id="coach-prep-deload-toggle">
-                <span class="coach-prep-label font-mono">DELOAD DAY</span>
+                <span class="coach-prep-label font-mono">Deload Day</span>
               </label>
             </div>
 
             <div class="coach-prep-picker-row">
-              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-exercise-search">
-                <span class="coach-prep-label font-mono">EXERCISE SEARCH</span>
+              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-exercise-search" data-prep-tooltip-key="coach_prep_exercise_search">
+                <span class="coach-prep-label font-mono">Exercise Search</span>
                 <input type="search" id="coach-prep-exercise-search" class="coach-prep-input" placeholder="Filter exercises" autocomplete="off">
               </label>
-              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-exercise-select">
-                <span class="coach-prep-label font-mono">EXERCISE</span>
+              <label class="coach-prep-field coach-prep-field-wide" for="coach-prep-exercise-select" data-prep-tooltip-key="coach_prep_exercise_select">
+                <span class="coach-prep-label font-mono">Exercise</span>
                 <select id="coach-prep-exercise-select" class="coach-prep-input"></select>
               </label>
-              <button type="button" id="btn-coach-custom-exercise" class="coach-prep-btn">CUSTOM EXERCISE</button>
+              <button type="button" id="btn-coach-custom-exercise" class="coach-prep-btn" data-prep-tooltip-key="coach_prep_custom_exercise">Custom Exercise</button>
             </div>
 
             <div class="coach-prep-slot-builder">
-              <div class="coach-prep-slot-group" id="coach-prep-top-set-group">
-                <span class="coach-prep-slot-tag font-mono">SET X &middot; TOP SET</span>
+              <div class="coach-prep-slot-group" id="coach-prep-top-set-group" data-prep-tooltip-key="prep_set_x_top">
+                <span class="coach-prep-slot-tag font-mono">Set X &middot; Top Set</span>
                 <div class="coach-prep-slot-inputs">
-              <label class="coach-prep-field" for="coach-slot-top-sets">
-                <span class="coach-prep-label font-mono">SETS</span>
+              <label class="coach-prep-field" for="coach-slot-top-sets" data-prep-tooltip-key="coach_prep_set_volume_rpe">
+                <span class="coach-prep-label font-mono">Sets</span>
                 <input type="number" id="coach-slot-top-sets" class="coach-prep-input" min="1" max="10" step="1" placeholder="1" inputmode="decimal">
               </label>
-              <label class="coach-prep-field" for="coach-slot-top-reps">
-                <span class="coach-prep-label font-mono">REPS</span>
+              <label class="coach-prep-field" for="coach-slot-top-reps" data-prep-tooltip-key="coach_prep_set_volume_rpe">
+                <span class="coach-prep-label font-mono">Reps</span>
                 <input type="number" id="coach-slot-top-reps" class="coach-prep-input" min="1" max="30" step="1" placeholder="3" inputmode="decimal">
               </label>
-              <label class="coach-prep-field" for="coach-slot-top-rpe">
+              <label class="coach-prep-field" for="coach-slot-top-rpe" data-prep-tooltip-key="coach_prep_set_volume_rpe">
                 <span class="coach-prep-label font-mono">RPE</span>
                 <input type="number" id="coach-slot-top-rpe" class="coach-prep-input" min="5" max="10" step="0.5" placeholder="8" inputmode="decimal">
               </label>
-              <label class="coach-prep-field" for="coach-slot-top-load">
-                <span class="coach-prep-label font-mono">LOAD (KG)</span>
+              <label class="coach-prep-field" for="coach-slot-top-load" data-prep-tooltip-key="prep_prescribed_load">
+                <span class="coach-prep-label font-mono">Load (kg)</span>
                 <input type="number" id="coach-slot-top-load" class="coach-prep-input" min="0" max="600" step="0.5" placeholder="auto" inputmode="decimal">
               </label>
-                  <div class="coach-prep-field">
-                    <span class="coach-prep-label font-mono">TARGET VELOCITY</span>
+                  <div class="coach-prep-field" data-prep-tooltip-key="prep_target_velocity">
+                    <span class="coach-prep-label font-mono">Target Velocity</span>
                     <span id="coach-slot-top-vel-preview" class="coach-prep-vel-preview font-mono">&mdash;</span>
                   </div>
                 </div>
               </div>
-              <div class="coach-prep-slot-group" id="coach-prep-backoff-group">
-                <span class="coach-prep-slot-tag font-mono">SET Y &middot; BACKOFF</span>
+              <div class="coach-prep-slot-group" id="coach-prep-backoff-group" data-prep-tooltip-key="prep_set_y_backoff">
+                <span class="coach-prep-slot-tag font-mono">Set Y &middot; Backoff</span>
                 <div class="coach-prep-slot-inputs">
-              <label class="coach-prep-field" for="coach-slot-backoff-sets">
-                <span class="coach-prep-label font-mono">SETS</span>
+              <label class="coach-prep-field" for="coach-slot-backoff-sets" data-prep-tooltip-key="coach_prep_set_volume_rpe">
+                <span class="coach-prep-label font-mono">Sets</span>
                 <input type="number" id="coach-slot-backoff-sets" class="coach-prep-input" min="0" max="10" step="1" placeholder="3" inputmode="decimal">
               </label>
-              <label class="coach-prep-field" for="coach-slot-backoff-reps">
-                <span class="coach-prep-label font-mono">REPS</span>
+              <label class="coach-prep-field" for="coach-slot-backoff-reps" data-prep-tooltip-key="coach_prep_set_volume_rpe">
+                <span class="coach-prep-label font-mono">Reps</span>
                 <input type="number" id="coach-slot-backoff-reps" class="coach-prep-input" min="1" max="30" step="1" placeholder="5" inputmode="decimal">
               </label>
-              <label class="coach-prep-field" for="coach-slot-backoff-rpe">
+              <label class="coach-prep-field" for="coach-slot-backoff-rpe" data-prep-tooltip-key="coach_prep_set_volume_rpe">
                 <span class="coach-prep-label font-mono">RPE</span>
                 <input type="number" id="coach-slot-backoff-rpe" class="coach-prep-input" min="5" max="10" step="0.5" placeholder="7" inputmode="decimal">
               </label>
-              <label class="coach-prep-field" for="coach-slot-backoff-drop">
-                <span class="coach-prep-label font-mono">DROP (%)</span>
+              <label class="coach-prep-field" for="coach-slot-backoff-drop" data-prep-tooltip-key="coach_prep_backoff_drop">
+                <span class="coach-prep-label font-mono">Drop (%)</span>
                 <input type="number" id="coach-slot-backoff-drop" class="coach-prep-input" min="0" max="50" step="0.5" placeholder="8" inputmode="decimal">
               </label>
-                  <div class="coach-prep-field">
-                    <span class="coach-prep-label font-mono">TARGET VELOCITY</span>
+                  <div class="coach-prep-field" data-prep-tooltip-key="prep_target_velocity">
+                    <span class="coach-prep-label font-mono">Target Velocity</span>
                     <span id="coach-slot-backoff-vel-preview" class="coach-prep-vel-preview font-mono">&mdash;</span>
                   </div>
                 </div>
               </div>
               <div class="coach-prep-slot-actions">
-                <button type="button" id="btn-coach-add-slot" class="coach-prep-btn coach-prep-btn-primary">ADD EXERCISE</button>
+                <button type="button" id="btn-coach-add-slot" class="coach-prep-btn coach-prep-btn-primary" data-prep-tooltip-key="coach_prep_add_exercise">Add Exercise</button>
               </div>
             </div>
 
-            <div class="coach-prep-slots-table-wrap">
+            <div class="coach-prep-slots-table-wrap" data-prep-tooltip-key="coach_prep_slots_table">
               <table class="coach-prep-slots-table">
                 <thead>
                   <tr>
@@ -1895,29 +1906,30 @@
             </div>
 
             <div class="coach-prep-notes-grid">
-              <label class="coach-prep-field" for="coach-prep-workout-notes">
-                <span class="coach-prep-label font-mono">SESSION NOTES</span>
+              <label class="coach-prep-field" for="coach-prep-workout-notes" data-prep-tooltip-key="prep_session_notes">
+                <span class="coach-prep-label font-mono">Session Notes</span>
                 <textarea id="coach-prep-workout-notes" class="coach-prep-input coach-prep-textarea" rows="3" maxlength="600" placeholder="Cues and intent for this session"></textarea>
               </label>
-              <label class="coach-prep-field" for="coach-prep-dietary-notes">
-                <span class="coach-prep-label font-mono">DIETARY NOTES</span>
+              <label class="coach-prep-field" for="coach-prep-dietary-notes" data-prep-tooltip-key="prep_dietary_notes">
+                <span class="coach-prep-label font-mono">Dietary Notes</span>
                 <textarea id="coach-prep-dietary-notes" class="coach-prep-input coach-prep-textarea" rows="3" maxlength="600" placeholder="Fueling and hydration for this day"></textarea>
               </label>
             </div>
             <div class="coach-prep-session-actions">
-              <button type="button" id="btn-coach-save-session" class="coach-prep-btn coach-prep-btn-primary">SAVE SESSION</button>
+              <button type="button" id="btn-coach-save-session" class="coach-prep-btn coach-prep-btn-primary" data-prep-tooltip-key="coach_prep_save_session">Save Session</button>
             </div>
           </div>
 
           <!-- Planned vs Actual Matrix -->
-          <div id="coach-prep-comparison-card" class="coach-prep-comparison-card neu-raised">
+          <div id="coach-prep-comparison-card" class="coach-prep-comparison-card neu-raised coach-movable-pill" data-movable-pill="true" data-pill-id="prep-comparison-card" data-pill-group="coach-prep-big-pills" draggable="true" tabindex="0" aria-roledescription="movable panel pill" data-prep-tooltip-key="prep_plan_vs_actual">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-prep-section-head">
               <span class="coach-prep-section-title">Planned vs Actual</span>
             </div>
             <div id="coach-prep-comparison-body" class="coach-prep-comparison-body">
               <p class="coach-prep-empty">Select an athlete and a session day to compare plan and execution.</p>
             </div>
-            <div id="coach-prep-athlete-feedback-view" class="coach-prep-athlete-feedback-view" aria-live="polite"></div>
+            <div id="coach-prep-athlete-feedback-view" class="coach-prep-athlete-feedback-view" aria-live="polite" data-prep-tooltip-key="coach_prep_athlete_feedback_view"></div>
           </div>
 
         </section>
@@ -2047,7 +2059,7 @@
         <div id="pr-confirm-metrics" class="pr-confirm-metrics font-mono"></div>
       </div>
       <div class="pr-confirm-actions">
-        <button type="button" id="btn-confirm-push-pr" class="pr-confirm-btn pr-confirm-btn-primary">PUSH PR</button>
+        <button type="button" id="btn-confirm-push-pr" class="pr-confirm-btn pr-confirm-btn-primary" data-prep-tooltip-key="prep_push_pr">PUSH PR</button>
         <button type="button" id="btn-dismiss-push-pr" class="pr-confirm-btn pr-confirm-btn-ghost">DISMISS</button>
       </div>
     </div>
@@ -2097,7 +2109,7 @@
     <div id="eros-radial-customizer-modal" class="eros-radial-customizer-modal smart-overflow-protected" role="dialog" aria-modal="true" aria-labelledby="eros-radial-customizer-title" style="display: none;">
       <div class="eros-radial-customizer-header">
         <div>
-          <h3 id="eros-radial-customizer-title" class="eros-radial-customizer-title">CUSTOMIZE QUICK ACTIONS</h3>
+          <h3 id="eros-radial-customizer-title" class="eros-radial-customizer-title">Customize Quick Actions</h3>
           <p class="eros-radial-customizer-sub">Select shortcuts for your floating radial launcher. Drag the button anywhere along screen edges.</p>
         </div>
         <button type="button" id="btn-radial-customizer-dismiss" class="eros-radial-customizer-dismiss neu-btn" aria-label="Dismiss Quick Actions Customizer">
@@ -2159,6 +2171,9 @@
         <button type="button" id="btn-radial-customizer-close" class="btn-coach-send neu-btn">Save Actions</button>
       </div>
     </div>
+
+    <!-- Preparation Clean-Slate Embossed Hover Tooltip -->
+    <div id="eros-prep-tooltip-card" class="eros-prep-tooltip-card" role="tooltip" aria-hidden="true"></div>
 
   </div>
 

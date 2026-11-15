@@ -89,10 +89,10 @@ class TestCoachCueHud(unittest.TestCase):
 
     def test_02_css_glass_os_styling(self):
         """Verify visionOS Glass OS styling rules in coach-cue-hud.css."""
-        # Frosted glass styling for cue pill
+        # Matte Obsidian uniform 14px styling for cue pill
         self.assertIn('.coach-cue-pill', self.css)
         self.assertIn('backdrop-filter', self.css)
-        self.assertIn('border-radius: 9999px', self.css)
+        self.assertIn('border-radius: 14px', self.css)
 
         # Pulse animation for cue indicator dot
         self.assertIn('@keyframes cueDotPulse', self.css)

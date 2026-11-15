@@ -201,18 +201,18 @@ class TestOverhaulR2FloatingNavAndTransitions(unittest.TestCase):
         cls.js = get_app_js()
 
     def test_r2_01_bottom_glass_nav_floating_capsule(self):
-        """R2: Verify .bottom-glass-nav is a floating pill capsule with border-radius: 999px."""
+        """R2: Verify .bottom-glass-nav uses uniform 14px rectangular radius."""
         rules = extract_css_rules(self.css, ".bottom-glass-nav")
         self.assertTrue(len(rules) > 0, ".bottom-glass-nav must exist in style.css")
         matched = False
         for _, props, _ in rules:
             br = props.get("border-radius", "").strip()
-            if "999px" in br or "50px" in br or "9999px" in br:
+            if "14px" in br:
                 matched = True
                 break
         self.assertTrue(
             matched,
-            ".bottom-glass-nav must specify pill border-radius: 999px"
+            ".bottom-glass-nav must specify uniform border-radius: 14px"
         )
 
     def test_r2_02_nav_indicator_pill_element_exists(self):
@@ -263,15 +263,15 @@ class TestOverhaulR2FloatingNavAndTransitions(unittest.TestCase):
         )
 
     def test_r2_b01_nav_tabs_all_have_pill_radius(self):
-        """R2 Boundary: Verify all .nav-tab elements have pill radius 999px."""
+        """R2 Boundary: Verify all .nav-tab elements have uniform 14px radius."""
         rules = extract_css_rules(self.css, ".nav-tab")
         self.assertTrue(len(rules) > 0)
         has_pill = False
         for _, props, _ in rules:
-            if "999px" in props.get("border-radius", ""):
+            if "14px" in props.get("border-radius", ""):
                 has_pill = True
                 break
-        self.assertTrue(has_pill, ".nav-tab must have border-radius: 999px")
+        self.assertTrue(has_pill, ".nav-tab must have border-radius: 14px")
 
     def test_r2_b02_nav_data_active_sync(self):
         """R2 Boundary: Verify bottom-glass-nav tracks data-active attribute in app.js."""

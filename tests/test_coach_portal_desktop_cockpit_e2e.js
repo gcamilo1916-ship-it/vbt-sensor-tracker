@@ -512,7 +512,7 @@ runTest('Suite 3', '3.3', 'Clicking REPLAY button in sets history triggers traje
   CoachPortal.pauseCoachReplay();
 });
 
-runTest('Suite 3', '3.4', 'Clicking #coach-btn-barpath-mode toggles display mode between PATH and VEL', () => {
+runTest('Suite 3', '3.4', 'Clicking #coach-btn-barpath-mode toggles display mode between PATH and VEL with Title Case labels', () => {
   const { mockWindow, mockDocument } = setupMockCoachEnvironment();
   global.window = mockWindow;
   global.document = mockDocument;
@@ -524,12 +524,13 @@ runTest('Suite 3', '3.4', 'Clicking #coach-btn-barpath-mode toggles display mode
   CoachPortal.toggleCoachCanvasMode();
   assert.strictEqual(CoachPortal.getCoachCanvasMode(), 'VEL');
   const btn = mockDocument.getElementById('coach-btn-barpath-mode');
-  assert.ok(btn.textContent.includes('VEL'), `Button label should show VEL, got ${btn.textContent}`);
+  assert.ok(btn.textContent.includes('Mode: Vel'), `Button label should show "Mode: Vel", got ${btn.textContent}`);
   CoachPortal.toggleCoachCanvasMode();
   assert.strictEqual(CoachPortal.getCoachCanvasMode(), 'PATH');
+  assert.ok(btn.textContent.includes('Mode: Path'), `Button label should show "Mode: Path", got ${btn.textContent}`);
 });
 
-runTest('Suite 3', '3.5', 'Clicking #coach-btn-barpath-speed toggles replay speed between 1.0X and 0.5X', () => {
+runTest('Suite 3', '3.5', 'Clicking #coach-btn-barpath-speed toggles replay speed between 1.0x and 0.5x', () => {
   const { mockWindow, mockDocument } = setupMockCoachEnvironment();
   global.window = mockWindow;
   global.document = mockDocument;
@@ -541,9 +542,10 @@ runTest('Suite 3', '3.5', 'Clicking #coach-btn-barpath-speed toggles replay spee
   CoachPortal.toggleCoachReplaySpeed();
   assert.strictEqual(CoachPortal.getCoachReplaySpeed(), 0.5);
   const btn = mockDocument.getElementById('coach-btn-barpath-speed');
-  assert.ok(btn.textContent.includes('0.5X'), `Button label should show 0.5X, got ${btn.textContent}`);
+  assert.ok(btn.textContent.includes('0.5x'), `Button label should show 0.5x, got ${btn.textContent}`);
   CoachPortal.toggleCoachReplaySpeed();
   assert.strictEqual(CoachPortal.getCoachReplaySpeed(), 1.0);
+  assert.ok(btn.textContent.includes('1.0x'), `Button label should show 1.0x, got ${btn.textContent}`);
 });
 
 runTest('Suite 3', '3.6', 'Update RPE Tracking Pill reflects velocity loss tier and RIR', () => {
