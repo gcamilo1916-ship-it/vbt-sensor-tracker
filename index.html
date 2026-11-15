@@ -775,7 +775,7 @@
 
         <!-- Shell 1: Desktop Collapsible Sidebar (>= 1024px) -->
         <aside id="coach-sidebar" class="coach-sidebar neu-raised" aria-label="Coach Workspace Navigation">
-          <div class="coach-sidebar-brand">
+          <div class="coach-sidebar-brand neu-inset-sm">
             <div class="coach-sidebar-emblem neu-inset-sm" aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9"></circle>
@@ -784,8 +784,7 @@
               </svg>
             </div>
             <div class="coach-sidebar-brand-text">
-              <span class="coach-sidebar-wordmark">EROS COACH</span>
-              <span class="coach-sidebar-sublabel font-mono">COMMAND COCKPIT</span>
+              <span class="brand-title coach-sidebar-eros-logo">Eros</span>
             </div>
           </div>
 
@@ -863,7 +862,7 @@
               <div id="coach-sidebar-rest-time" class="coach-sidebar-rest-time font-mono">00:00</div>
               <div class="coach-sidebar-ticker-counts coach-sidebar-ticker-meta font-mono">
                 <span id="coach-sidebar-active-count">0 ACTIVE</span>
-                <span id="coach-sidebar-resting-count">1 REST</span>
+                <span id="coach-sidebar-resting-count">0 REST</span>
               </div>
             </div>
 
@@ -917,26 +916,29 @@
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
             </svg>
             <span>LINK ATHLETE</span>
-            <span id="coach-bond-pending-count" class="coach-bond-badge-count">1</span>
+            <span id="coach-bond-pending-count" class="coach-bond-badge-count" style="display: none;">0</span>
           </button>
         </div>
-        <div class="coach-squad-stats">
-          <div class="coach-stat-chip coach-stat-chip-readiness neu-raised-sm">
+        <div class="coach-squad-stats" id="coach-squad-stats" data-pill-group="squad-stats">
+          <div class="coach-stat-chip coach-stat-chip-readiness neu-raised-sm coach-movable-pill" data-movable-pill="true" data-pill-id="readiness" data-pill-group="squad-stats" draggable="true" tabindex="0" aria-roledescription="movable metric pill">
             <div class="coach-stat-readiness-wrap">
               <div id="coach-readiness-ring" class="coach-progress-ring" aria-hidden="true"></div>
               <div class="coach-stat-text-col">
                 <span class="coach-stat-label">Daily Readiness</span>
-                <span id="coach-readiness-val" class="coach-stat-value optimal">94% [OPTIMAL]</span>
+                <span id="coach-readiness-val" class="coach-stat-value optimal">100% [OPTIMAL]</span>
               </div>
             </div>
+            <span class="pill-move-hint" aria-hidden="true"></span>
           </div>
-          <div class="coach-stat-chip">
+          <div class="coach-stat-chip coach-movable-pill" data-movable-pill="true" data-pill-id="volume" data-pill-group="squad-stats" draggable="true" tabindex="0" aria-roledescription="movable metric pill">
             <span class="coach-stat-label">Session Volume</span>
-            <span id="coach-volume-val" class="coach-stat-value">7,420 kg</span>
+            <span id="coach-volume-val" class="coach-stat-value">0 kg</span>
+            <span class="pill-move-hint" aria-hidden="true"></span>
           </div>
-          <div class="coach-stat-chip">
+          <div class="coach-stat-chip coach-movable-pill" data-movable-pill="true" data-pill-id="e1rm" data-pill-group="squad-stats" draggable="true" tabindex="0" aria-roledescription="movable metric pill">
             <span class="coach-stat-label">Daily e1RM</span>
-            <span id="coach-e1rm-val" class="coach-stat-value">272.5 kg</span>
+            <span id="coach-e1rm-val" class="coach-stat-value">&mdash;</span>
+            <span class="pill-move-hint" aria-hidden="true"></span>
           </div>
         </div>
       </div>
@@ -1020,7 +1022,7 @@
               <div class="coach-manual-link-form">
                 <span class="coach-block-label">Manual Athlete Link (By Name / Handle / Code):</span>
                 <div class="coach-manual-link-inputs">
-                  <input type="text" id="coach-bond-athlete-name" class="coach-custom-input" placeholder="Athlete Name (e.g. Marcus Sterling)" aria-label="Athlete Full Name" />
+                  <input type="text" id="coach-bond-athlete-name" class="coach-custom-input" placeholder="e.g., Athlete Name" aria-label="Athlete Full Name" />
                   <input type="text" id="coach-bond-athlete-rack" class="coach-custom-input coach-rack-input" placeholder="Rack 04" value="Rack 04" aria-label="Assigned Rack" />
                   <button type="button" id="btn-coach-bond-manual-add" class="btn-coach-send">LINK</button>
                 </div>
@@ -1057,7 +1059,7 @@
           <div class="coach-overview-top-row">
             <div class="coach-overview-title-group">
               <span class="coach-history-title">Live Squad Overview</span>
-              <span class="coach-overview-sub font-mono" id="coach-kpi-summary-pill">3 Connected • 1 Lifting • 0 Fatigue Alerts</span>
+              <span class="coach-overview-sub font-mono" id="coach-kpi-summary-pill">0 Connected • 0 Lifting • 0 Resting</span>
             </div>
             <div class="coach-roster-filters" id="coach-roster-filters" role="group" aria-label="Filter Squad Roster">
               <button type="button" class="coach-filter-pill active" data-filter="all">All Connected</button>
@@ -1336,18 +1338,19 @@
       <div id="coach-athlete-history-panel" class="coach-panel-section" role="tabpanel" aria-labelledby="btn-coach-panel-history" style="display: none;">
 
         <!-- 1. Bento Quad: In-Competition Total, Gym Total, Differential & Weekly Adherence -->
-        <div class="coach-history-bento-quad" id="coach-history-bento-quad">
+        <div class="coach-history-bento-quad" id="coach-history-bento-quad" data-pill-group="history-bento">
 
           <!-- Card 1: Current In-Competition Total -->
-          <div class="coach-bento-card neu-raised coach-fade-up" id="coach-comp-total-card" style="--stagger-delay: 0.04s">
+          <div class="coach-bento-card neu-raised coach-fade-up coach-movable-pill" id="coach-comp-total-card" data-movable-pill="true" data-pill-id="comp-total" data-pill-group="history-bento" draggable="true" tabindex="0" aria-roledescription="movable bento card" style="--stagger-delay: 0.04s">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
               <span class="coach-metric-label">IN-COMPETITION TOTAL</span>
               <button type="button" id="btn-coach-edit-comp" class="coach-inline-action-btn" aria-label="Edit Competition PRs">Edit</button>
             </div>
-            <div class="coach-bento-hero font-mono" id="coach-comp-total-val">602.5 kg</div>
-            <div class="coach-bento-sub font-mono" id="coach-comp-breakdown">SQ: 215.0 | BP: 142.5 | DL: 245.0 kg</div>
+            <div class="coach-bento-hero font-mono" id="coach-comp-total-val">0.0 kg</div>
+            <div class="coach-bento-sub font-mono" id="coach-comp-breakdown">SQ: 0.0 | BP: 0.0 | DL: 0.0 kg</div>
             <div class="coach-bento-footer">
-              <span class="coach-verified-pill" id="coach-comp-meta">IPF Verified Meet • DOTS: 412.8</span>
+              <span class="coach-verified-pill" id="coach-comp-meta">No Meet Totals Logged • DOTS: 0.0</span>
             </div>
 
             <!-- Inline Comp Total Editor (toggled via Edit button) -->
@@ -1355,15 +1358,15 @@
               <div class="coach-inline-inputs-row">
                 <label class="coach-mini-field">
                   <span>SQ</span>
-                  <input type="number" id="coach-edit-comp-sq" class="coach-mini-input font-mono" step="2.5" value="215.0" aria-label="Competition Squat kg" />
+                  <input type="number" id="coach-edit-comp-sq" class="coach-mini-input font-mono" step="2.5" value="0.0" aria-label="Competition Squat kg" />
                 </label>
                 <label class="coach-mini-field">
                   <span>BP</span>
-                  <input type="number" id="coach-edit-comp-bp" class="coach-mini-input font-mono" step="2.5" value="142.5" aria-label="Competition Bench kg" />
+                  <input type="number" id="coach-edit-comp-bp" class="coach-mini-input font-mono" step="2.5" value="0.0" aria-label="Competition Bench kg" />
                 </label>
                 <label class="coach-mini-field">
                   <span>DL</span>
-                  <input type="number" id="coach-edit-comp-dl" class="coach-mini-input font-mono" step="2.5" value="245.0" aria-label="Competition Deadlift kg" />
+                  <input type="number" id="coach-edit-comp-dl" class="coach-mini-input font-mono" step="2.5" value="0.0" aria-label="Competition Deadlift kg" />
                 </label>
                 <button type="button" id="btn-coach-save-comp" class="coach-sm-btn accent">Save</button>
               </div>
@@ -1371,7 +1374,8 @@
           </div>
 
           <!-- Card 2: Current Gym Total (Dual Models: Absolute 1RM vs Load-Velocity e1RM) -->
-          <div class="coach-bento-card neu-raised coach-fade-up" id="coach-gym-total-card" style="--stagger-delay: 0.08s">
+          <div class="coach-bento-card neu-raised coach-fade-up coach-movable-pill" id="coach-gym-total-card" data-movable-pill="true" data-pill-id="gym-total" data-pill-group="history-bento" draggable="true" tabindex="0" aria-roledescription="movable bento card" style="--stagger-delay: 0.08s">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
               <span class="coach-metric-label">CURRENT GYM TOTAL</span>
               <div class="coach-model-switch" id="coach-gym-model-toggle" role="group" aria-label="Gym Total Calculation Model">
@@ -1379,38 +1383,40 @@
                 <button type="button" id="btn-coach-gym-model-e1rm" class="coach-model-btn" data-model="e1rm">e1RM</button>
               </div>
             </div>
-            <div class="coach-bento-hero font-mono text-cyan" id="coach-gym-total-val">627.5 kg</div>
-            <div class="coach-bento-sub font-mono" id="coach-gym-breakdown">SQ: 222.5 | BP: 147.5 | DL: 257.5 kg</div>
+            <div class="coach-bento-hero font-mono text-cyan" id="coach-gym-total-val">0.0 kg</div>
+            <div class="coach-bento-sub font-mono" id="coach-gym-breakdown">SQ: 0.0 | BP: 0.0 | DL: 0.0 kg</div>
             <div class="coach-bento-footer">
               <span id="coach-gym-meta" class="coach-muted-caption">Tracked with Eros • MVT Validated</span>
             </div>
           </div>
 
           <!-- Card 3: Gym vs In-Comp Total Differential & Transfer Gap -->
-          <div class="coach-bento-card neu-raised coach-fade-up" id="coach-total-diff-card" style="--stagger-delay: 0.12s">
+          <div class="coach-bento-card neu-raised coach-fade-up coach-movable-pill" id="coach-total-diff-card" data-movable-pill="true" data-pill-id="total-diff" data-pill-group="history-bento" draggable="true" tabindex="0" aria-roledescription="movable bento card" style="--stagger-delay: 0.12s">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
               <span class="coach-metric-label">GYM VS COMP TRANSFER</span>
-              <span id="coach-diff-badge" class="coach-transfer-badge optimal">OPTIMAL TRANSFER</span>
+              <span id="coach-diff-badge" class="coach-transfer-badge optimal">READY</span>
             </div>
-            <div class="coach-bento-hero font-mono" id="coach-diff-val">+25.0 kg (+4.1%)</div>
-            <div class="coach-bento-sub" id="coach-diff-directive">Standard gym-to-meet variance (+2% to +6%). Athlete is competition-ready.</div>
+            <div class="coach-bento-hero font-mono" id="coach-diff-val">0.0 kg (0.0%)</div>
+            <div class="coach-bento-sub" id="coach-diff-directive">Log sets with Eros or enter meet PRs to compute transfer gap.</div>
             <div class="coach-bento-footer">
               <span class="coach-muted-caption">MVT: SQ 0.30 | BP 0.15 | DL 0.15 m/s</span>
             </div>
           </div>
 
           <!-- Card 4: Weekly Adherence Tracker ("x/7 workouts completed this week with Eros") -->
-          <div class="coach-bento-card neu-raised coach-fade-up" id="coach-weekly-adherence-card" style="--stagger-delay: 0.16s">
+          <div class="coach-bento-card neu-raised coach-fade-up coach-movable-pill" id="coach-weekly-adherence-card" data-movable-pill="true" data-pill-id="weekly-adherence" data-pill-group="history-bento" draggable="true" tabindex="0" aria-roledescription="movable bento card" style="--stagger-delay: 0.16s">
+            <span class="pill-move-hint" aria-hidden="true"></span>
             <div class="coach-bento-top">
               <span class="coach-metric-label">WEEKLY EROS ADHERENCE</span>
-              <span id="coach-weekly-ratio-badge" class="coach-adherence-pill font-mono">4/7 DAYS</span>
+              <span id="coach-weekly-ratio-badge" class="coach-adherence-pill font-mono">0/7 DAYS</span>
             </div>
-            <div class="coach-adherence-headline" id="coach-weekly-adherence-val">4/7 workouts completed this week with Eros</div>
+            <div class="coach-adherence-headline" id="coach-weekly-adherence-val">0/7 workouts completed this week with Eros</div>
             <div class="coach-weekly-segments" id="coach-weekly-segments" role="list" aria-label="Weekly Training Days Monday to Sunday">
               <!-- Populated dynamically with Mon-Sun 7 segments -->
             </div>
             <div class="coach-bento-footer">
-              <span id="coach-weekly-meta" class="coach-muted-caption font-mono">ISO Week Mon-Sun • 34.8t Weekly Volume</span>
+              <span id="coach-weekly-meta" class="coach-muted-caption font-mono">ISO Week Mon-Sun • 0.0t Weekly Volume</span>
             </div>
           </div>
 
@@ -1421,7 +1427,7 @@
           <div class="coach-calendar-header">
             <div class="coach-cal-title-block">
               <span class="coach-history-title">Monthly Completed Workouts Calendar</span>
-              <span id="coach-cal-summary-stats" class="coach-cal-stats font-mono">12 Workouts with Eros • 118.4t Monthly Volume</span>
+              <span id="coach-cal-summary-stats" class="coach-cal-stats font-mono">0 Workouts with Eros • 0.0t Monthly Volume</span>
             </div>
             <div class="coach-cal-nav-controls">
               <button type="button" id="btn-coach-cal-prev" class="coach-cal-nav-btn" aria-label="Previous Month">Prev</button>

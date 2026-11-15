@@ -17,6 +17,7 @@
   --coach-border-focus: #555555;     /* Keyboard focus ring */
 
   /* High-Contrast Typography (WCAG AAA) */
+  --coach-font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --coach-text-primary: #ececec;     /* Primary headings and key metrics */
   --coach-text-secondary: #b4b4b4;   /* Secondary metadata and unit labels */
   --coach-text-muted: #71717a;       /* Tertiary captions, subtext, timestamps */
@@ -134,11 +135,25 @@ body.portal-coach .view-mode-toggle #btn-mode-coach {
 body.portal-coach {
   background-color: var(--coach-bg-canvas) !important;
   color: var(--coach-text-primary) !important;
+  font-family: var(--coach-font-sans);
 }
 
 body.portal-coach .app-container {
   max-width: 960px;
   padding-bottom: 48px;
+}
+
+body.portal-coach .glass-header .branding {
+  display: none !important;
+}
+
+body.portal-coach #view-coach,
+body.portal-coach .coach-portal-container,
+body.portal-coach #coach-sidebar,
+body.portal-coach .coach-sidebar-brand,
+body.portal-coach #coach-tablet-nav,
+body.portal-coach #coach-mobile-nav {
+  font-family: var(--coach-font-sans);
 }
 
 body.portal-coach .tab-contents,
@@ -233,8 +248,9 @@ body.portal-coach #view-coach {
 .coach-portal-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
+  font-family: var(--coach-font-sans);
   animation: coachFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -339,22 +355,23 @@ body.portal-coach #view-coach {
 @media (max-width: 540px) {
   .coach-squad-ribbon {
     padding: 10px 12px;
-    gap: 10px;
+    gap: 12px;
   }
   .coach-squad-left {
-    width: 100%;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
+    width: auto;
+    flex-wrap: nowrap;
+    gap: 12px;
   }
   .coach-squad-stats {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    width: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 12px;
   }
   .coach-stat-chip {
-    padding: 6px 8px;
+    padding: 6px 18px 6px 10px;
   }
   .coach-stat-label {
     font-size: 9px;
@@ -363,12 +380,14 @@ body.portal-coach #view-coach {
     font-size: 12px;
   }
   .coach-subnav-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 12px;
   }
   .coach-sync-architecture-pill {
     justify-content: center;
+    flex-shrink: 0;
   }
 }
 
@@ -407,7 +426,7 @@ body.portal-coach #view-coach {
 #coach-live-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
 }
 
@@ -415,8 +434,8 @@ body.portal-coach #view-coach {
 @media (min-width: 1150px) {
   body.portal-coach .app-container {
     max-width: 1680px;
-    padding-left: 24px;
-    padding-right: 24px;
+    padding-left: 12px;
+    padding-right: 12px;
     padding-bottom: 56px;
   }
 
@@ -424,7 +443,7 @@ body.portal-coach #view-coach {
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr) 360px;
     grid-template-rows: auto auto;
-    gap: 16px;
+    gap: 12px;
     align-items: start;
     width: 100%;
   }
@@ -478,21 +497,36 @@ body.portal-coach #view-coach {
 /* ── 1. Squad Ribbon & Athlete Selector ── */
 .coach-squad-ribbon {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
   background: var(--coach-bg-surface-1);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
-  padding: 12px 18px;
+  padding: 12px;
   box-shadow: var(--neu-out);
+}
+
+.coach-squad-ribbon::-webkit-scrollbar,
+.coach-squad-left::-webkit-scrollbar,
+.coach-squad-stats::-webkit-scrollbar,
+.coach-subnav-bar::-webkit-scrollbar,
+.coach-load-pills-row::-webkit-scrollbar,
+.coach-rest-pills-row::-webkit-scrollbar {
+  display: none;
 }
 
 .coach-squad-left {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .coach-athlete-selector-group {
@@ -515,7 +549,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-sm);
   padding: 6px 12px;
-  font-family: var(--font-sans);
+  font-family: var(--coach-font-sans);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -568,19 +602,33 @@ body.portal-coach #view-coach {
 
 .coach-squad-stats {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .coach-stat-chip {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 50px;
+  box-sizing: border-box;
+  white-space: nowrap;
   background: var(--coach-bg-surface-2);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-md);
-  padding: 6px 12px;
+  padding: 7px 20px 7px 12px;
   box-shadow: var(--neu-in-sm);
+}
+
+.coach-stat-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .coach-stat-readiness-wrap {
@@ -613,11 +661,11 @@ body.portal-coach #view-coach {
 .coach-active-set-monitor {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   background: var(--coach-bg-surface-1);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
-  padding: 18px;
+  padding: 16px;
   box-shadow: var(--neu-out);
 }
 
@@ -856,11 +904,11 @@ body.portal-coach #view-coach {
 .coach-feedback-console {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   background: var(--coach-bg-surface-1);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
-  padding: 18px;
+  padding: 16px;
   box-shadow: var(--neu-out);
 }
 
@@ -904,20 +952,26 @@ body.portal-coach #view-coach {
 /* Load Pills */
 .coach-load-pills-row {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
 }
 
 .coach-load-pill {
+  flex: 1 1 calc(33.333% - 6px);
+  min-width: 72px;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--coach-bg-surface-2);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-pill);
-  padding: 6px 14px;
+  padding: 6px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--coach-text-primary);
   box-shadow: var(--neu-out-sm);
@@ -956,20 +1010,26 @@ body.portal-coach #view-coach {
 /* Inter-Set Rest Target Pills */
 .coach-rest-pills-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
 }
 
 .coach-rest-pill {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--coach-bg-surface-2);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-pill);
-  padding: 6px 13px;
+  padding: 6px 4px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--coach-text-secondary);
   box-shadow: var(--neu-out-sm);
@@ -1004,7 +1064,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-sm);
   padding: 6px 12px;
-  font-family: var(--font-sans);
+  font-family: var(--coach-font-sans);
   font-size: 12px;
   font-weight: 500;
   color: var(--coach-text-primary);
@@ -1038,7 +1098,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-sm);
   padding: 8px 14px;
-  font-family: var(--font-sans);
+  font-family: var(--coach-font-sans);
   font-size: 13px;
   color: var(--coach-text-primary);
   outline: none;
@@ -1062,7 +1122,7 @@ body.portal-coach #view-coach {
   border: none;
   border-radius: var(--coach-radius-sm);
   padding: 8px 18px;
-  font-family: var(--font-sans);
+  font-family: var(--coach-font-sans);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -1278,32 +1338,40 @@ body.portal-coach #view-coach {
 
 .coach-subnav-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
   background: var(--coach-bg-surface-1);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
-  padding: 8px 14px;
+  padding: 10px 12px;
   box-shadow: var(--neu-out);
 }
 
 .coach-subnav-tabs {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .coach-subnav-btn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--coach-radius-md);
   padding: 7px 14px;
-  font-family: var(--font-sans);
+  font-family: var(--coach-font-sans);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -1350,7 +1418,7 @@ body.portal-coach #view-coach {
 .coach-panel-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
 }
 
@@ -1409,7 +1477,7 @@ body.portal-coach #view-coach {
 .coach-bond-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 }
 
 @media (max-width: 720px) {
@@ -1627,7 +1695,7 @@ body.portal-coach #view-coach {
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-pill);
   padding: 4px 11px;
-  font-family: var(--font-sans);
+  font-family: var(--coach-font-sans);
   font-size: 11px;
   font-weight: 600;
   color: var(--coach-text-secondary);
@@ -1846,7 +1914,7 @@ body.portal-coach #view-coach {
   background: var(--coach-bg-surface-1);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
-  padding: 15px;
+  padding: 16px 18px 15px 15px;
   box-shadow: var(--neu-out);
 }
 
@@ -2019,11 +2087,11 @@ body.portal-coach #view-coach {
 .coach-monthly-calendar-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   background: var(--coach-bg-surface-1);
   border: 1px solid var(--coach-border-subtle);
   border-radius: var(--coach-radius-lg);
-  padding: 18px;
+  padding: 16px;
   box-shadow: var(--neu-out);
 }
 
@@ -2290,8 +2358,8 @@ body.portal-coach #view-coach {
 .coach-focal-telemetry-split {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
   width: 100%;
 }
 
@@ -2705,7 +2773,7 @@ body.portal-coach #view-coach {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   position: relative;
   z-index: 1;
 }
@@ -2716,7 +2784,7 @@ body.portal-coach #view-coach {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* Desktop Sidebar Shell */
@@ -2725,11 +2793,12 @@ body.portal-coach #view-coach {
   background: var(--coach-bg-surface-1);
   border: 1px solid var(--coach-border-subtle);
   border-radius: 20px;
-  padding: 18px 14px;
+  padding: 16px 12px;
   box-shadow: var(--neu-out);
   flex-shrink: 0;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  font-family: var(--coach-font-sans);
   transition: width 0.22s ease, padding 0.22s ease;
 }
 
@@ -2738,9 +2807,12 @@ body.portal-coach #view-coach {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 2px 4px 10px;
-  border-bottom: 1px solid var(--coach-border-subtle);
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--coach-bg-surface-2);
+  border: 1px solid var(--coach-border-subtle);
   color: var(--coach-accent-teal);
+  font-family: var(--coach-font-sans);
 }
 
 .coach-sidebar-emblem {
@@ -2762,8 +2834,22 @@ body.portal-coach #view-coach {
   gap: 2px;
   min-width: 0;
   color: var(--coach-text-primary);
-  text-transform: uppercase;
   white-space: nowrap;
+}
+
+.coach-sidebar-brand-text .coach-sidebar-eros-logo,
+.coach-sidebar-eros-logo {
+  font-family: var(--coach-font-sans) !important;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: var(--coach-text-primary) !important;
+  color: var(--coach-text-primary) !important;
+  text-transform: none;
 }
 
 .coach-sidebar-wordmark {
@@ -2785,7 +2871,7 @@ body.portal-coach #view-coach {
 .coach-sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .coach-sidebar-group {
@@ -2814,7 +2900,7 @@ body.portal-coach #view-coach {
   border-radius: 12px;
   padding: 9px 12px;
   color: var(--coach-text-secondary);
-  font-family: var(--font-sans);
+  font-family: var(--coach-font-sans);
   font-size: 12px;
   font-weight: 600;
   text-align: left;
@@ -2934,7 +3020,7 @@ body.portal-coach #view-coach {
   border-radius: 12px;
   padding: 8px 12px;
   color: var(--coach-text-secondary);
-  font-family: var(--font-sans);
+  font-family: var(--coach-font-sans);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -2950,7 +3036,7 @@ body.portal-coach #view-coach {
 @media (min-width: 1024px) {
   .coach-shell {
     flex-direction: row;
-    gap: 24px;
+    gap: 12px;
     width: 100%;
     align-items: flex-start;
   }
@@ -2960,14 +3046,14 @@ body.portal-coach #view-coach {
     display: flex;
     width: 240px;
     border-radius: 20px;
-    padding: 18px 14px;
+    padding: 16px 12px;
     position: sticky;
     top: 16px;
   }
 
   #coach-sidebar.coach-sidebar--collapsed {
     width: 64px;
-    padding: 14px 8px;
+    padding: 12px 8px;
     align-items: center;
   }
 
@@ -2983,7 +3069,7 @@ body.portal-coach #view-coach {
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-header,
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-brand {
     justify-content: center;
-    padding: 2px 0 10px;
+    padding: 8px;
   }
 
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-link,
@@ -2998,7 +3084,7 @@ body.portal-coach #view-coach {
     max-width: 1200px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 
   #coach-tablet-nav,
@@ -3011,7 +3097,7 @@ body.portal-coach #view-coach {
 @media (min-width: 1150px) and (max-width: 1440px) {
   body.portal-coach #coach-live-panel {
     grid-template-columns: 248px minmax(0, 1fr) 304px;
-    gap: 14px;
+    gap: 12px;
   }
 }
 
@@ -3284,6 +3370,60 @@ body.portal-coach #coach-cursor-glow {
 .eros-radial-customizer-footer #btn-radial-customizer-close:hover {
   background: #0e8c6d;
   color: #ffffff;
+}
+
+/* ── 13. Movable Coach Pills & Corner-Radius Grip Indicator ── */
+#view-coach [data-movable-pill="true"],
+.coach-movable-pill {
+  position: relative;
+  cursor: grab;
+  transition: transform 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+}
+
+#view-coach [data-movable-pill="true"]:hover,
+.coach-movable-pill:hover {
+  border-color: var(--coach-border-light);
+}
+
+#view-coach [data-movable-pill="true"]:focus-visible,
+.coach-movable-pill:focus-visible {
+  outline: 1px solid var(--coach-accent-teal);
+  outline-offset: 2px;
+}
+
+#view-coach [data-movable-pill="true"].is-dragging,
+#view-coach [data-movable-pill="true"].coach-pill-dragging,
+.coach-movable-pill.coach-pill-dragging {
+  opacity: 0.45;
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+#view-coach [data-movable-pill="true"].is-drag-over,
+#view-coach [data-movable-pill="true"].coach-pill-drag-over,
+.coach-movable-pill.coach-pill-drag-over {
+  border-color: var(--coach-accent-teal) !important;
+}
+
+#view-coach .pill-move-hint {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 12px;
+  height: 12px;
+  border-top: 1.5px solid rgba(236, 236, 236, 0.22);
+  border-right: 1.5px solid rgba(236, 236, 236, 0.22);
+  border-top-right-radius: 7px;
+  pointer-events: none;
+  opacity: 0.72;
+  transition: opacity 0.16s ease, border-color 0.16s ease;
+}
+
+#view-coach [data-movable-pill="true"]:hover > .pill-move-hint,
+#view-coach [data-movable-pill="true"]:focus-visible > .pill-move-hint,
+.coach-movable-pill:hover > .pill-move-hint {
+  opacity: 0.96;
+  border-color: rgba(236, 236, 236, 0.45);
 }
 
 

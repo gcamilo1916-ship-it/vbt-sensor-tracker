@@ -12,6 +12,7 @@
   }
   if (root) {
     root.CoachPortal = factory();
+    root.ErosCoachPortal = root.CoachPortal;
     root.initCoachPortal = root.CoachPortal.init;
     root.switchMode = root.CoachPortal.switchMode;
   }
@@ -59,6 +60,11 @@
   const INTRO_SEEN_KEY = 'eros_coach_intro_seen';
   const RADIAL_CONFIG_KEY = 'eros_radial_fab_config_v1';
   const RADIAL_POS_KEY = 'eros_radial_fab_pos_v1';
+  const PILL_ORDER_KEY = 'eros_coach_pill_order_v1';
+  const PORTAL_MODE_KEY = 'eros_portal_mode_v1';
+  const COACH_PANEL_KEY = 'eros_coach_active_panel_v1';
+  const COACH_SECTION_KEY = 'eros_coach_active_section_v1';
+  const FAKE_ATHLETE_NAME_REGEX = /^(alex vance|jordan bell|elena rostova|liam thorne|marcus vance|devon carter|sofia lindholm|marcus sterling)$/i;
   const DEFAULT_RADIAL_ACTIONS = [
     'switch-mode',
     'toggle-set',
@@ -88,9 +94,10 @@
       weightClass: '-93 kg',
       bodyweightKg: 85.0,
       gender: 'unspecified',
-      status: 'resting',
+      status: 'idle',
+      restSeconds: 0,
       currentLift: 'Main deadlift',
-      currentLoadKg: 140.0,
+      currentLoadKg: 0.0,
       currentMcv: 0.0,
       currentPv: 0.0,
       currentRomCm: 0.0,
@@ -537,7 +544,7 @@
     if (safeSet && safeSet.weight) {
       return safeSet.weight;
     }
-    return 140.0;
+    return 0.0;
   }
 
   // ── Historical Workout Logbook Builder for Each Bonded Athlete ──
@@ -564,8 +571,8 @@
               let velSum = 0;
               let velCnt = 0;
               setsArr.forEach(s => {
-                const repsLen = Array.isArray(s.reps) ? s.reps.length : (Number(s.repsCount) || 1);
-                vol += (Number(s.weight) || 140) * repsLen;
+                const repsLen = Array.isArray(s.reps) ? s.reps.length : (Number(s.repsCount) || 0);
+                vol += (Number(s.weight) || 0) * repsLen;
                 if (s.avgVelocity) {
                   velSum += Number(s.avgVelocity);
                   velCnt++;
@@ -577,22 +584,20 @@
                 athleteId: 'ath_01',
                 date: dStr,
                 name: canonicalName,
-                totalVolumeKg: vol > 0 ? vol : 6400,
-                totalSets: setsArr.length > 0 ? setsArr.length : 1,
-                avgVelocity: velCnt > 0 ? (velSum / velCnt) : 0.45,
-                sets: setsArr.length > 0 ? setsArr.map((s, sIdx) => ({
+                totalVolumeKg: vol,
+                totalSets: setsArr.length,
+                avgVelocity: velCnt > 0 ? (velSum / velCnt) : 0,
+                sets: setsArr.map((s, sIdx) => ({
                   setNumber: s.setNumber || (sIdx + 1),
                   lift: formatCanonicalLiftLabel(s.lift || w.lift || 'Deadlift'),
-                  weight: Number(s.weight) || 140.0,
-                  repsCount: Array.isArray(s.reps) ? s.reps.length : 3,
-                  avgVelocity: Number(s.avgVelocity) || 0.46,
-                  maxVelocity: Number(s.maxVelocity) || 0.64,
-                  rom: Number(s.rom) || 56.5,
-                  velocityLossPct: Number(s.velocityLossPct) || 9.5,
-                  rpe: Number(s.avgRpe) || 8.0
-                })) : [
-                  { setNumber: 1, lift: formatCanonicalLiftLabel(w.lift || 'Deadlift'), weight: 180.0, repsCount: 4, avgVelocity: 0.48, maxVelocity: 0.66, rom: 57.8, velocityLossPct: 10.2, rpe: 8.0 }
-                ]
+                  weight: Number(s.weight) || 0,
+                  repsCount: Array.isArray(s.reps) ? s.reps.length : (Number(s.repsCount) || 0),
+                  avgVelocity: Number(s.avgVelocity) || 0,
+                  maxVelocity: Number(s.maxVelocity) || 0,
+                  rom: Number(s.rom) || 0,
+                  velocityLossPct: Number(s.velocityLossPct) || 0,
+                  rpe: Number(s.avgRpe) || 0
+                }))
               });
             });
           }
@@ -777,9 +782,10 @@
       });
     }
 
-    // Ambient Cursor Glow, Radial Action Menu & Viewport Resize Safety
+    // Ambient Cursor Glow, Radial Action Menu, Movable Pills & Viewport Resize Safety
     initCoachCursorGlow();
     initRadialActionMenu();
+    initMovableCoachPills();
 
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function' && !window._coachViewportSafetyBound) {
       window.addEventListener('resize', () => {
@@ -818,16 +824,46 @@
       window._coachStorageBound = true;
     }
 
-    // URL query auto-entry: ?mode=coach (Requirement R3)
+    // URL query auto-entry: ?mode=coach (Requirement R3) & persisted portal state restoration
+    let explicitQueryMode = null;
     try {
       if (typeof window !== 'undefined' && window.location && window.location.search) {
         const searchParams = new URLSearchParams(window.location.search);
-        if (searchParams.get('mode') === 'coach') {
-          revealCoachOption();
-          switchMode('coach');
+        const queryMode = searchParams.get('mode');
+        if (queryMode === 'coach' || queryMode === 'athlete') {
+          explicitQueryMode = queryMode;
         }
       }
     } catch (_) {}
+
+    const savedPanel = readPersistedState(COACH_PANEL_KEY);
+    if (savedPanel === 'history' || savedPanel === 'live') {
+      activeCoachPanel = savedPanel;
+    }
+    const savedSection = readPersistedState(COACH_SECTION_KEY);
+
+    if (explicitQueryMode === 'coach') {
+      revealCoachOption();
+      switchMode('coach');
+      if (activeCoachPanel === 'history') {
+        switchCoachPanel('history', true);
+      } else if (savedSection && savedSection !== 'bonds') {
+        updateCoachNavActiveState(savedSection);
+      }
+    } else if (explicitQueryMode === 'athlete') {
+      if (isCoachMode) switchMode('athlete');
+    } else {
+      const savedMode = readPersistedState(PORTAL_MODE_KEY);
+      if (savedMode === 'coach') {
+        revealCoachOption();
+        switchMode('coach');
+        if (activeCoachPanel === 'history') {
+          switchCoachPanel('history', true);
+        } else if (savedSection && savedSection !== 'bonds') {
+          updateCoachNavActiveState(savedSection);
+        }
+      }
+    }
 
     // Global & Laptop Keyboard Shortcuts (Requirement R3)
     if (typeof document !== 'undefined' && !document._coachKeyboardShortcutsBound) {
@@ -918,7 +954,7 @@
       let hasResting = false;
       SQUAD_ATHLETES.forEach(ath => {
         if (ath.status === 'resting') {
-          ath.restSeconds = (ath.restSeconds || 100) + 1;
+          ath.restSeconds = (ath.restSeconds || 0) + 1;
           hasResting = true;
         }
       });
@@ -952,6 +988,7 @@
   // ── Mode Switcher (Seamless In-Page Toggle) ──
   function switchMode(mode) {
     isCoachMode = (mode === 'coach');
+    writePersistedState(PORTAL_MODE_KEY, isCoachMode ? 'coach' : 'athlete');
 
     // Trigger subtle UI tick / entrance audio if available
     if (typeof SoundFX !== 'undefined') {
@@ -968,6 +1005,7 @@
     if (!elements.viewCoach) queryElements();
 
     if (isCoachMode) {
+      hookAppLifecycle();
       document.body.classList.add('portal-coach');
       revealCoachOption();
       if (elements.btnModeCoach) {
@@ -985,7 +1023,12 @@
       runCoachIntroOverlay();
       startCoachCursorGlowLoop();
       startRestTicker();
-      renderFullCoachDashboard();
+      if (activeCoachPanel === 'history') {
+        switchCoachPanel('history', true);
+      } else {
+        renderFullCoachDashboard();
+      }
+      initMovableCoachPills();
       updateCoachSidebarTicker();
       renderRadialMenuItems();
     } else {
@@ -1008,8 +1051,12 @@
   }
 
   // ── Sub-Navigation Switcher: Live Panel vs Athlete History Panel ──
-  function switchCoachPanel(panelName) {
+  function switchCoachPanel(panelName, skipPersist) {
     activeCoachPanel = (panelName === 'history') ? 'history' : 'live';
+    if (!skipPersist) {
+      writePersistedState(COACH_PANEL_KEY, activeCoachPanel);
+      writePersistedState(COACH_SECTION_KEY, activeCoachPanel === 'history' ? 'history' : 'live');
+    }
     if (typeof SoundFX !== 'undefined') {
       if (typeof SoundFX.playCoachPanelSwitch === 'function') {
         try { SoundFX.playCoachPanelSwitch(); } catch (_) {}
@@ -1121,9 +1168,49 @@
       const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(BONDS_STORAGE_KEY) : null;
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && Array.isArray(parsed.athletes) && parsed.athletes.length > 0) {
-          SQUAD_ATHLETES = parsed.athletes;
-          currentAthlete = SQUAD_ATHLETES[0];
+        if (parsed && Array.isArray(parsed.athletes)) {
+          let dirty = false;
+          const sanitized = parsed.athletes.filter(ath => {
+            if (!ath || typeof ath !== 'object') {
+              dirty = true;
+              return false;
+            }
+            const cleanName = String(ath.name || '').trim();
+            if (FAKE_ATHLETE_NAME_REGEX.test(cleanName)) {
+              dirty = true;
+              return false;
+            }
+            return true;
+          }).map(ath => {
+            if (ath.status !== 'idle' || (ath.restSeconds || 0) !== 0) {
+              dirty = true;
+            }
+            return {
+              ...ath,
+              status: 'idle',
+              restSeconds: 0
+            };
+          });
+
+          if (sanitized.length > 0) {
+            SQUAD_ATHLETES = sanitized;
+            currentAthlete = SQUAD_ATHLETES[0];
+          } else {
+            SQUAD_ATHLETES = DEFAULT_SQUAD_ATHLETES.map(a => ({
+              ...a,
+              compPrs: { ...a.compPrs },
+              gymPrs: { ...a.gymPrs },
+              e1rmPrs: { ...a.e1rmPrs }
+            }));
+            currentAthlete = SQUAD_ATHLETES[0];
+          }
+
+          if (dirty && typeof localStorage !== 'undefined') {
+            localStorage.setItem(BONDS_STORAGE_KEY, JSON.stringify({
+              athletes: sanitized.length > 0 ? SQUAD_ATHLETES : [],
+              updatedAt: Date.now()
+            }));
+          }
         }
       }
     } catch (_) {}
@@ -1156,21 +1243,22 @@
       name: req.name,
       rack: req.rack || `Rack 0${SQUAD_ATHLETES.length + 1}`,
       weightClass: req.weightClass || '-93 kg',
-      bodyweightKg: 90.0,
-      gender: 'male',
-      status: 'resting',
-      currentLift: 'Main squat',
-      currentLoadKg: 180.0,
-      currentMcv: 0.50,
-      currentPv: 0.68,
-      currentRomCm: 60.0,
-      currentVlPct: 6.5,
-      readiness: '92% [OPTIMAL]',
-      e1rm: '250.0 kg',
-      volume: '6,200 kg',
-      compPrs: req.compPrs || { squat: 210.0, bench: 140.0, deadlift: 240.0, federation: 'IPF Verified Meet' },
-      gymPrs: req.gymPrs || { squat: 217.5, bench: 145.0, deadlift: 250.0 },
-      e1rmPrs: req.e1rmPrs || { squat: 220.0, bench: 147.0, deadlift: 252.5 },
+      bodyweightKg: 85.0,
+      gender: 'unspecified',
+      status: 'idle',
+      restSeconds: 0,
+      currentLift: 'Main deadlift',
+      currentLoadKg: 0.0,
+      currentMcv: 0.0,
+      currentPv: 0.0,
+      currentRomCm: 0.0,
+      currentVlPct: 0.0,
+      readiness: '100% [OPTIMAL]',
+      e1rm: '—',
+      volume: '0 kg',
+      compPrs: req.compPrs || { squat: 0, bench: 0, deadlift: 0 },
+      gymPrs: req.gymPrs || { squat: 0, bench: 0, deadlift: 0 },
+      e1rmPrs: req.e1rmPrs || { squat: 0, bench: 0, deadlift: 0 },
       bondStatus: 'active',
       bondedSince: formatIsoDate(new Date())
     };
@@ -1209,21 +1297,22 @@
       name: cleanName,
       rack: cleanRack,
       weightClass: '-93 kg',
-      bodyweightKg: 88.5,
-      gender: 'male',
-      status: 'resting',
+      bodyweightKg: 85.0,
+      gender: 'unspecified',
+      status: 'idle',
+      restSeconds: 0,
       currentLift: 'Main deadlift',
-      currentLoadKg: 185.0,
-      currentMcv: 0.49,
-      currentPv: 0.67,
-      currentRomCm: 57.5,
-      currentVlPct: 7.2,
-      readiness: '93% [OPTIMAL]',
-      e1rm: '245.0 kg',
-      volume: '6,100 kg',
-      compPrs: { squat: 205.0, bench: 135.0, deadlift: 235.0, federation: 'IPF Verified Meet' },
-      gymPrs: { squat: 212.5, bench: 140.0, deadlift: 245.0 },
-      e1rmPrs: { squat: 215.0, bench: 142.5, deadlift: 248.0 },
+      currentLoadKg: 0.0,
+      currentMcv: 0.0,
+      currentPv: 0.0,
+      currentRomCm: 0.0,
+      currentVlPct: 0.0,
+      readiness: '100% [OPTIMAL]',
+      e1rm: '—',
+      volume: '0 kg',
+      compPrs: { squat: 0, bench: 0, deadlift: 0 },
+      gymPrs: { squat: 0, bench: 0, deadlift: 0 },
+      e1rmPrs: { squat: 0, bench: 0, deadlift: 0 },
       bondStatus: 'active',
       bondedSince: formatIsoDate(new Date())
     };
@@ -1454,12 +1543,12 @@
           </div>
           <div class="coach-squad-card-hdr">
             <span class="coach-lift-badge ${liftBadgeClass}">${escapeHtml(ath.currentLift.toUpperCase())}</span>
-            <span class="coach-stat-label font-mono">${(ath.currentLoadKg || 180).toFixed(1)} kg</span>
+            <span class="coach-stat-label font-mono">${(Number(ath.currentLoadKg) || 0).toFixed(1)} kg</span>
           </div>
           <div class="coach-squad-card-metrics">
             <div>
               <span class="coach-metric-label">MCV</span>
-              <div class="coach-squad-mcv">${(ath.currentMcv || 0.45).toFixed(2)} m/s</div>
+              <div class="coach-squad-mcv">${(Number(ath.currentMcv) || 0).toFixed(2)} m/s</div>
             </div>
             <span class="coach-zone-badge ${zone.css} font-mono">${zone.label}</span>
           </div>
@@ -1678,16 +1767,16 @@
 
   function getResolvedAthleteTotals(athlete) {
     const ath = athlete || currentAthlete || SQUAD_ATHLETES[0];
-    let compSq = ath.compPrs ? ath.compPrs.squat : 215.0;
-    let compBp = ath.compPrs ? ath.compPrs.bench : 142.5;
-    let compDl = ath.compPrs ? ath.compPrs.deadlift : 245.0;
+    let compSq = (ath && ath.compPrs) ? (Number(ath.compPrs.squat) || 0) : 0;
+    let compBp = (ath && ath.compPrs) ? (Number(ath.compPrs.bench) || 0) : 0;
+    let compDl = (ath && ath.compPrs) ? (Number(ath.compPrs.deadlift) || 0) : 0;
 
-    let gymSq = ath.gymPrs ? ath.gymPrs.squat : 222.5;
-    let gymBp = ath.gymPrs ? ath.gymPrs.bench : 147.5;
-    let gymDl = ath.gymPrs ? ath.gymPrs.deadlift : 257.5;
+    let gymSq = (ath && ath.gymPrs) ? (Number(ath.gymPrs.squat) || 0) : 0;
+    let gymBp = (ath && ath.gymPrs) ? (Number(ath.gymPrs.bench) || 0) : 0;
+    let gymDl = (ath && ath.gymPrs) ? (Number(ath.gymPrs.deadlift) || 0) : 0;
 
     // Sync with vbt_pr_data_v1 if stored for primary athlete
-    if (ath.id === 'ath_01') {
+    if (ath && ath.id === 'ath_01') {
       try {
         const prStored = typeof localStorage !== 'undefined' ? localStorage.getItem('vbt_pr_data_v1') : null;
         if (prStored) {
@@ -1706,12 +1795,12 @@
       } catch (_) {}
     }
 
-    const athleteWorkouts = getAthleteWorkouts(ath.id);
+    const athleteWorkouts = getAthleteWorkouts(ath ? ath.id : 'ath_01');
     const allSets = athleteWorkouts.flatMap(w => Array.isArray(w.sets) ? w.sets : []);
 
-    const defaultE1rmSq = ath.e1rmPrs ? ath.e1rmPrs.squat : +(gymSq * 1.015).toFixed(1);
-    const defaultE1rmBp = ath.e1rmPrs ? ath.e1rmPrs.bench : +(gymBp * 1.015).toFixed(1);
-    const defaultE1rmDl = ath.e1rmPrs ? ath.e1rmPrs.deadlift : +(gymDl * 1.015).toFixed(1);
+    const defaultE1rmSq = (ath && ath.e1rmPrs) ? (Number(ath.e1rmPrs.squat) || 0) : (gymSq > 0 ? +(gymSq * 1.015).toFixed(1) : 0);
+    const defaultE1rmBp = (ath && ath.e1rmPrs) ? (Number(ath.e1rmPrs.bench) || 0) : (gymBp > 0 ? +(gymBp * 1.015).toFixed(1) : 0);
+    const defaultE1rmDl = (ath && ath.e1rmPrs) ? (Number(ath.e1rmPrs.deadlift) || 0) : (gymDl > 0 ? +(gymDl * 1.015).toFixed(1) : 0);
 
     const e1rmSq = calculateOlsE1rm(allSets, 'Squat', defaultE1rmSq);
     const e1rmBp = calculateOlsE1rm(allSets, 'Bench', defaultE1rmBp);
@@ -1744,7 +1833,9 @@
       elements.compBreakdown.textContent = `SQ: ${totals.compSq.toFixed(1)} | BP: ${totals.compBp.toFixed(1)} | DL: ${totals.compDl.toFixed(1)} kg`;
     }
     if (elements.compMeta) {
-      elements.compMeta.textContent = `IPF Verified Meet • DOTS: ${dots.toFixed(1)}`;
+      elements.compMeta.textContent = totals.compTotal > 0
+        ? `IPF Verified Meet • DOTS: ${dots.toFixed(1)}`
+        : 'No Meet Totals Logged • DOTS: 0.0';
     }
     if (elements.editCompSq) elements.editCompSq.value = totals.compSq.toFixed(1);
     if (elements.editCompBp) elements.editCompBp.value = totals.compBp.toFixed(1);
@@ -1764,13 +1855,16 @@
 
     const deltaKg = totals.activeGymTotal - totals.compTotal;
     const pctGap = totals.compTotal > 0 ? (deltaKg / totals.compTotal) * 100 : 0;
-    const sign = deltaKg >= 0 ? '+' : '';
+    const sign = deltaKg > 0 ? '+' : '';
 
     if (elements.diffVal) {
       elements.diffVal.textContent = `${sign}${deltaKg.toFixed(1)} kg (${sign}${pctGap.toFixed(1)}%)`;
     }
     if (elements.diffBadge && elements.diffDirective) {
-      if (pctGap > 8.0) {
+      if (totals.compTotal === 0 && totals.activeGymTotal === 0) {
+        elements.diffBadge.textContent = 'READY';
+        elements.diffDirective.textContent = 'Log sets with Eros or enter meet PRs to compute transfer gap.';
+      } else if (pctGap > 8.0) {
         elements.diffBadge.textContent = 'TECHNICAL LEAK';
         elements.diffDirective.textContent = 'Gym total exceeds meet total by >8%. Enforce competition pause gating with Eros.';
       } else if (pctGap >= 2.0) {
@@ -1978,7 +2072,7 @@
       if (elements.inspectorMeta) elements.inspectorMeta.textContent = '0 Sets Completed with Eros';
       elements.inspectorSetsTbody.innerHTML = `
         <tr>
-          <td colspan="10" class="coach-empty-cell">No workouts logged with Eros on ${dateStr}. Select a highlighted calendar day to inspect telemetry.</td>
+          <td colspan="10" class="coach-empty-cell">No workouts logged with Eros on ${escapeHtml(dateStr)}. Select a highlighted calendar day to inspect telemetry.</td>
         </tr>
       `;
       return;
@@ -1989,7 +2083,7 @@
       elements.inspectorTitle.textContent = session.name;
     }
     if (elements.inspectorMeta) {
-      elements.inspectorMeta.textContent = `${Math.round(session.totalVolumeKg).toLocaleString()} kg Volume • ${session.totalSets} Sets with Eros • Avg ${(session.avgVelocity || 0.45).toFixed(2)} m/s`;
+      elements.inspectorMeta.textContent = `${Math.round(session.totalVolumeKg).toLocaleString()} kg Volume • ${session.totalSets} Sets with Eros • Avg ${(Number(session.avgVelocity) || 0).toFixed(2)} m/s`;
     }
 
     const setsArr = Array.isArray(session.sets) ? session.sets : [];
@@ -3322,6 +3416,34 @@
   function hookAppLifecycle() {
     if (typeof window === 'undefined') return;
 
+    if (typeof window.applyLiftTheme === 'function' && !window.applyLiftTheme._coachHooked) {
+      const origApplyLiftTheme = window.applyLiftTheme;
+      window.applyLiftTheme = function () {
+        const res = origApplyLiftTheme.apply(this, arguments);
+        if (isCoachMode && typeof document !== 'undefined' && document.body && document.body.classList) {
+          document.body.classList.add('portal-coach');
+        }
+        return res;
+      };
+      window.applyLiftTheme._coachHooked = true;
+    }
+
+    if (isCoachMode && typeof document !== 'undefined' && document.body && document.body.classList && !document.body.classList.contains('portal-coach')) {
+      document.body.classList.add('portal-coach');
+    }
+
+    if (typeof MutationObserver === 'function' && typeof document !== 'undefined' && document.body && !document.body._coachClassObserver) {
+      try {
+        const observer = new MutationObserver(() => {
+          if (isCoachMode && document.body && document.body.classList && !document.body.classList.contains('portal-coach')) {
+            document.body.classList.add('portal-coach');
+          }
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        document.body._coachClassObserver = observer;
+      } catch (_) {}
+    }
+
     if (typeof window.startNewSet === 'function' && !window.startNewSet._coachHooked) {
       const origStart = window.startNewSet;
       window.startNewSet = function (lift) {
@@ -3503,6 +3625,7 @@
     if (sec === 'history') {
       switchCoachPanel('history');
       updateCoachNavActiveState('history');
+      writePersistedState(COACH_SECTION_KEY, 'history');
       return 'history';
     }
 
@@ -3514,6 +3637,7 @@
 
     switchCoachPanel('live');
     updateCoachNavActiveState(sec);
+    writePersistedState(COACH_SECTION_KEY, sec);
 
     if (sec === 'live') {
       if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
@@ -4467,10 +4591,237 @@
     return true;
   }
 
+  function readPersistedState(key) {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        const sVal = sessionStorage.getItem(key);
+        if (sVal !== null && sVal !== undefined && sVal !== '') return sVal;
+      }
+    } catch (_) {}
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const lVal = localStorage.getItem(key);
+        if (lVal !== null && lVal !== undefined && lVal !== '') return lVal;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  function writePersistedState(key, val) {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(key, String(val));
+      }
+    } catch (_) {}
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, String(val));
+      }
+    } catch (_) {}
+  }
+
+  function readSavedPillOrder() {
+    try {
+      if (typeof localStorage === 'undefined') return {};
+      const raw = localStorage.getItem(PILL_ORDER_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === 'object') ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function writeSavedPillOrder(orderMap) {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(PILL_ORDER_KEY, JSON.stringify(orderMap || {}));
+      }
+    } catch (_) {}
+  }
+
+  function saveGroupPillOrder(container, groupId) {
+    if (!container || !groupId || typeof container.querySelectorAll !== 'function') return;
+    const pills = Array.from(container.querySelectorAll('[data-movable-pill="true"]'))
+      .filter(el => el && el.parentElement === container);
+    const ids = pills.map(el => el.getAttribute('data-pill-id')).filter(Boolean);
+    if (ids.length === 0) return;
+    const map = readSavedPillOrder();
+    map[groupId] = ids;
+    writeSavedPillOrder(map);
+  }
+
+  function applyGroupPillOrder(container, groupId, orderMap) {
+    if (!container || !groupId || !orderMap || !Array.isArray(orderMap[groupId])) return;
+    if (typeof container.querySelectorAll !== 'function' || typeof container.appendChild !== 'function') return;
+    const savedIds = orderMap[groupId];
+    const items = Array.from(container.querySelectorAll('[data-movable-pill="true"]'))
+      .filter(el => el && el.parentElement === container);
+    if (items.length < 2) return;
+    const byId = new Map();
+    items.forEach(el => {
+      const id = el.getAttribute('data-pill-id');
+      if (id) byId.set(id, el);
+    });
+    savedIds.forEach(id => {
+      const node = byId.get(id);
+      if (node) {
+        container.appendChild(node);
+        byId.delete(id);
+      }
+    });
+    byId.forEach(node => container.appendChild(node));
+  }
+
+  function initMovableCoachPills() {
+    if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
+    const containers = Array.from(
+      document.querySelectorAll('#view-coach [data-pill-group], .coach-squad-stats, .coach-history-bento-quad, .coach-bento-grid')
+    );
+    const uniqueContainers = Array.from(new Set(containers));
+    const savedMap = readSavedPillOrder();
+    let draggedPill = null;
+    let draggedGroup = '';
+
+    uniqueContainers.forEach((container, containerIdx) => {
+      if (!container || typeof container.querySelectorAll !== 'function') return;
+      const groupId = container.getAttribute('data-pill-group') || container.id || `coach-group-${containerIdx}`;
+      if (!container.getAttribute('data-pill-group')) {
+        container.setAttribute('data-pill-group', groupId);
+      }
+
+      const pills = Array.from(container.querySelectorAll('[data-movable-pill="true"], .coach-stat-chip, .coach-bento-card'))
+        .filter(el => el && el.parentElement === container);
+
+      pills.forEach((pill, pillIdx) => {
+        if (!pill.getAttribute('data-movable-pill')) pill.setAttribute('data-movable-pill', 'true');
+        if (!pill.getAttribute('data-pill-id')) {
+          pill.setAttribute('data-pill-id', pill.id || `${groupId}-pill-${pillIdx}`);
+        }
+        if (!pill.getAttribute('data-pill-group')) pill.setAttribute('data-pill-group', groupId);
+        if (pill.classList) pill.classList.add('coach-movable-pill');
+        pill.setAttribute('draggable', 'true');
+        if (!pill.hasAttribute('tabindex')) pill.setAttribute('tabindex', '0');
+
+        if (typeof pill.querySelector === 'function' && !pill.querySelector('.pill-move-hint') && typeof document.createElement === 'function') {
+          const hint = document.createElement('span');
+          hint.className = 'pill-move-hint';
+          hint.setAttribute('aria-hidden', 'true');
+          pill.appendChild(hint);
+        }
+
+        if (pill._movableBound || typeof pill.addEventListener !== 'function') return;
+
+        pill.addEventListener('dragstart', (e) => {
+          const targetEl = e && e.target;
+          if (targetEl && typeof targetEl.closest === 'function' && targetEl.closest('button, input, select, textarea, a')) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            return;
+          }
+          draggedPill = pill;
+          draggedGroup = groupId;
+          if (pill.classList) {
+            pill.classList.add('is-dragging');
+            pill.classList.add('coach-pill-dragging');
+          }
+          if (e && e.dataTransfer) {
+            try {
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/plain', pill.getAttribute('data-pill-id') || '');
+            } catch (_) {}
+          }
+        });
+
+        pill.addEventListener('dragover', (e) => {
+          if (!draggedPill || draggedPill === pill || draggedGroup !== groupId) return;
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          if (pill.classList) {
+            pill.classList.add('is-drag-over');
+            pill.classList.add('coach-pill-drag-over');
+          }
+          if (e && e.dataTransfer) {
+            try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
+          }
+        });
+
+        pill.addEventListener('dragleave', () => {
+          if (pill.classList) {
+            pill.classList.remove('is-drag-over');
+            pill.classList.remove('coach-pill-drag-over');
+          }
+        });
+
+        pill.addEventListener('drop', (e) => {
+          if (!draggedPill || draggedPill === pill || draggedGroup !== groupId) return;
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          if (pill.classList) {
+            pill.classList.remove('is-drag-over');
+            pill.classList.remove('coach-pill-drag-over');
+          }
+          const children = Array.from(container.children || []);
+          const dragIdx = children.indexOf(draggedPill);
+          const dropIdx = children.indexOf(pill);
+          if (dragIdx !== -1 && dropIdx !== -1 && typeof container.insertBefore === 'function') {
+            if (dragIdx < dropIdx) {
+              container.insertBefore(draggedPill, pill.nextSibling || null);
+            } else {
+              container.insertBefore(draggedPill, pill);
+            }
+            saveGroupPillOrder(container, groupId);
+          }
+        });
+
+        pill.addEventListener('dragend', () => {
+          if (pill.classList) {
+            pill.classList.remove('is-dragging');
+            pill.classList.remove('coach-pill-dragging');
+          }
+          pills.forEach(p => {
+            if (p.classList) {
+              p.classList.remove('is-drag-over');
+              p.classList.remove('coach-pill-drag-over');
+            }
+          });
+          draggedPill = null;
+          draggedGroup = '';
+        });
+
+        pill.addEventListener('keydown', (e) => {
+          if (!e || !e.altKey) return;
+          const isPrev = e.key === 'ArrowLeft' || e.key === 'ArrowUp';
+          const isNext = e.key === 'ArrowRight' || e.key === 'ArrowDown';
+          if (!isPrev && !isNext) return;
+          const activeTarget = e.target;
+          if (activeTarget && typeof activeTarget.closest === 'function' && activeTarget.closest('input, select, textarea')) return;
+          if (typeof e.preventDefault === 'function') e.preventDefault();
+          const ordered = Array.from(container.querySelectorAll('[data-movable-pill="true"]'))
+            .filter(el => el && el.parentElement === container);
+          const idx = ordered.indexOf(pill);
+          if (idx === -1 || typeof container.insertBefore !== 'function') return;
+          if (isPrev && idx > 0) {
+            container.insertBefore(pill, ordered[idx - 1]);
+            saveGroupPillOrder(container, groupId);
+            if (typeof pill.focus === 'function') pill.focus();
+          } else if (isNext && idx < ordered.length - 1) {
+            container.insertBefore(pill, ordered[idx + 1].nextSibling || null);
+            saveGroupPillOrder(container, groupId);
+            if (typeof pill.focus === 'function') pill.focus();
+          }
+        });
+
+        pill._movableBound = true;
+      });
+
+      applyGroupPillOrder(container, groupId, savedMap);
+    });
+  }
+
   // Public Interface
   return {
     init,
     initCoachPortal: init,
+    initMovableCoachPills,
+    startLiveRestTicker: startRestTicker,
     switchMode,
     switchCoachPanel,
     toggleCoachSidebar,
