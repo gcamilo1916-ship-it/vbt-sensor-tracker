@@ -1,6 +1,8 @@
 <p align="center">
-  <img src="olympos-logo.svg" alt="Olympos Technologies — Eros VBT" width="580" />
+  <img src="olympos-logo.svg" alt="Olympos Technologies — Eros Sensor Mission" width="620" />
 </p>
+
+# Eros Sensor Mission
 
 <p align="center">
   <strong>High-Precision Barbell Kinematics &amp; Cloud Coaching Infrastructure</strong><br />
@@ -15,7 +17,7 @@
 
 ## Executive Summary
 
-Eros is an integrated hardware and software biomechanics ecosystem engineered for high-performance powerlifting. Developed under the Olympos Technologies pre-startup campaign, the platform delivers objective kinematic feedback to coaches and athletes during competition preparation, replacing subjective exertion estimates with millisecond-accurate sensor fusion.
+Eros Sensor Mission is an integrated hardware and software biomechanics ecosystem engineered for high-performance powerlifting. Developed under the Olympos Technologies pre-startup campaign, the platform delivers objective kinematic feedback to coaches and athletes during competition preparation, replacing subjective exertion estimates with millisecond-accurate sensor fusion.
 
 The system couples a barbell-mounted inertial sensor node with a low-latency edge physics engine, streaming repetition velocity, rate of perceived exertion, and 3D bar path deviation to an athlete cockpit and multi-rack coach console.
 
@@ -102,4 +104,5 @@ Project execution frameworks and resource allocations are guided by protocols ce
 
 **Project Lead:** Guilherme Camilo  
 **Venture:** Olympos Technologies  
+**Mission:** Eros Sensor Mission  
 **Timeline:** July 2026 – Present

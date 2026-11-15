@@ -50,3 +50,9 @@ Critical biomechanics and sensor fusion guardrails for IMU Zero Velocity Update 
 - **Mandatory XSS Sanitization**: Never inject unescaped dynamic or user-controlled strings (`athleteName`, `rackId`, `lift`, `filter`, `cueText`) into `.innerHTML`. All dynamic strings must pass through `escapeHtml()` prior to DOM insertion.
 - **Content Security Policy (CSP)**: Maintain a strict CSP meta tag in `index.html` restricting script execution to `'self'` and `'unsafe-inline'` plus `https://esm.sh`, and locking network connections strictly to `'self'`, `https://esm.sh`, and `wss://*.base44.app` / `https://*.base44.app`.
 - **Zero Unauthenticated Default Rooms**: Never automatically join or broadcast telemetry to default hardcoded fallback rooms (e.g. `EROS-7X9K`). Pairing codes must be actively and explicitly validated before establishing cloud session streaming.
+
+## 6. Project & Venture Branding Invariants (All Conversations)
+- **Repository & Project Title**: The official repository and project name is `Eros Sensor Mission`.
+- **Venture / Parent Company**: The parent company is `Olympos Technologies`.
+- **Typography Standards**: All branding typography for Olympos Technologies must use the `Mercury` font (fallback stack: `'Mercury', 'Mercury Text G1', 'Mercury Display', 'Mercury Text', Georgia, serif`), while product technical telemetry and UI elements utilize `Helvetica Neue` / `SF Pro`.
+- **Tone & Copywriting**: Minimalist, modern, and direct. Zero emojis, and avoid bullet point abuse in public technical documentation.
