@@ -9,10 +9,6 @@
   Pre-Startup Phase &bull; Olympos Technologies
 </p>
 
-<p align="center">
-  <img src="SCH_Schematic1_1-P1_2026-09-02.png" alt="I2C Hardware Schematic" width="85%" />
-</p>
-
 ---
 
 ## Executive Summary
@@ -23,11 +19,18 @@ The system couples a barbell-mounted inertial sensor node with a low-latency edg
 
 ---
 
-## Pre-Startup Mission & Rapid MVP Strategy
+## Pre-Startup Mission & Core Accuracy Benchmarks
 
-The core engineering objective of Olympos Technologies is rapid product validation. To de-risk hardware development and accelerate field deployment, Eros follows a structured vertical-slice prototyping model:
+The primary engineering mission of Olympos Technologies is establishing clinical-grade measurement fidelity in a rugged, wireless form factor. 
 
-### Two-Way WebBLE as a Testing Vehicle
+### Benchmark Target: Within &plusmn;3% Velocity &amp; RPE Deviation
+Our core performance directive is pushing sensor measurement accuracy to within a **&plusmn;3% deviation** from true barbell displacement velocity and exertion metrics, benchmarked directly against gold-standard optical linear transducers and high-speed motion-capture systems (e.g., GymAware, linear encoders, and dual-camera stereophotogrammetry). Achieving this level of precision on high-impact powerlifting platforms demands rigorous mathematical modeling at the edge:
+
+* **Eliminating Impact Vibrations:** Isolating raw MEMS junction ringing caused by aggressive lockouts and metal-on-metal bar contact.
+* **Thermal Zero-Rate Calibration:** Cancelling sensor drift under prolonged gym sessions where ambient temperature changes shift the accelerometer baseline.
+* **True Vertical Gravity Decoupling:** Ensuring lateral barbell whip and athlete torso sway never contaminate vertical concentric velocity.
+
+### Two-Way WebBLE as a Rapid Testing Vehicle
 Rather than gating gym validation behind native mobile application store review cycles, the platform leverages the Web Bluetooth API. This architecture provides zero-install, cross-platform hardware connectivity directly inside modern web browsers. It functions as an agile testbed, allowing real-world data collection, firmware filter tuning, and UI stress testing on training floors across laptops, tablets, and smartphones.
 
 ### Roadmap to Integrated Native Application
@@ -89,6 +92,18 @@ Firmware running on the ESP32-C6 processes 6-axis motion data at 100 Hz, computi
 * **Dual-Tier Dynamic ZUPT:** A multi-sample moving variance detector identifies motionless intervals to zero accumulated velocity error. Smooth online gyro bias calibration cancels junction thermal drift during extended sessions.
 * **Horizontal Plane Deviation:** Integrates orthogonal linear acceleration with leaky high-pass filtering and turnaround clamping, preserving true horizontal displacement relative to the starting plumb line without unbounded drift.
 * **Biomechanical Phase Segmentation:** A finite state machine segments repetitions into Idle, Eccentric, and Concentric regimes, incorporating sticking-point guards to protect against premature completion during maximum-effort grinds.
+
+---
+
+## Electrical Engineering & Bench Reference
+
+For hardware development, debugging, and verification of initial prototypes, the edge node is wired according to the reference I2C schematic below:
+
+<p align="center">
+  <img src="SCH_Schematic1_1-P1_2026-09-02.png" alt="I2C Hardware Wiring Schematic" width="80%" />
+</p>
+
+The sensor interface communicates over 3.3V logic with pull-up resistors on the SDA and SCL lines, ensuring stable 400 kHz packet transmission during violent bar deceleration.
 
 ---
 
