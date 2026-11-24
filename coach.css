@@ -2865,49 +2865,33 @@ body.portal-coach #view-coach {
 .coach-sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  justify-content: flex-start;
+  padding: 6px 8px 4px;
   border-radius: 14px;
-  background: var(--coach-bg-surface-2);
-  border: 1px solid var(--coach-border-subtle);
-  color: var(--coach-accent-teal);
-  font-family: var(--coach-font-sans);
-}
-
-.coach-sidebar-emblem {
-  width: 34px;
-  height: 34px;
-  border-radius: 14px;
-  background: var(--coach-bg-surface-2);
-  border: 1px solid var(--coach-border-subtle);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--coach-accent-teal);
-  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .coach-sidebar-brand-text {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
   min-width: 0;
-  color: var(--coach-text-primary);
   white-space: nowrap;
 }
 
 .coach-sidebar-brand-text .coach-sidebar-eros-logo,
 .coach-sidebar-eros-logo {
-  font-family: var(--coach-font-sans) !important;
-  font-size: 20px;
-  font-weight: 800;
+  font-family: var(--font-sans);
+  font-size: 26px;
+  font-weight: 700;
   letter-spacing: -0.025em;
   line-height: 1.05;
-  background: none !important;
-  -webkit-background-clip: border-box !important;
-  background-clip: border-box !important;
-  -webkit-text-fill-color: var(--coach-text-primary) !important;
-  color: var(--coach-text-primary) !important;
+  background: linear-gradient(135deg, #FFFFFF 55%, var(--current-lift-text) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--current-lift-text);
   text-transform: none;
 }
 
@@ -3116,7 +3100,6 @@ body.portal-coach #view-coach {
     align-items: center;
   }
 
-  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-brand-text,
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-group-label,
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-link span,
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-toggle span,
@@ -3128,6 +3111,10 @@ body.portal-coach #view-coach {
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-ticker-top,
   #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-ticker-counts {
     display: none;
+  }
+
+  #coach-sidebar.coach-sidebar--collapsed .coach-sidebar-eros-logo {
+    font-size: 16px;
   }
 
   #coach-sidebar.coach-sidebar--collapsed #coach-sidebar-ticker {

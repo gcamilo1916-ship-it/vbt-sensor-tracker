@@ -7335,13 +7335,16 @@ const PREP_TOOLTIP_SELECTOR_MAP = [
   ['.pa-status', 'prep_adherence_status']
 ];
 
+const TOOLTIP_HOVER_DELAY_MS = 1500;
+
 const prepTooltipRuntime = {
   openTimer: null,
   activeTrigger: null,
   pendingTrigger: null,
   globalBound: false,
   dragActive: false,
-  lastTouchTs: 0
+  lastTouchTs: 0,
+  lastInputWasKeyboard: false
 };
 
 function isTooltipSuppressed() {
@@ -7518,14 +7521,18 @@ function initPrepHoverTooltips() {
       prepTooltipRuntime.lastTouchTs = Date.now();
     }, true);
 
-    // Immediate hide on press/drag start
+    // Immediate hide on press/drag start and mark pointer input so mouse clicks do not trigger keyboard focus tooltips
     document.addEventListener('pointerdown', (e) => {
+      prepTooltipRuntime.lastInputWasKeyboard = false;
       if (e && e.pointerType === 'touch') {
         prepTooltipRuntime.lastTouchTs = Date.now();
       }
       hidePrepTooltipCard();
     }, true);
-    document.addEventListener('mousedown', () => hidePrepTooltipCard(), true);
+    document.addEventListener('mousedown', () => {
+      prepTooltipRuntime.lastInputWasKeyboard = false;
+      hidePrepTooltipCard();
+    }, true);
     document.addEventListener('dragstart', () => {
       prepTooltipRuntime.dragActive = true;
       hidePrepTooltipCard();
@@ -7557,7 +7564,7 @@ function initPrepHoverTooltips() {
       clearTimeout(prepTooltipRuntime.openTimer);
       prepTooltipRuntime.pendingTrigger = resolved.el;
       const collapsedSidebar = isCollapsedCoachSidebarTarget(resolved.el);
-      const delay = collapsedSidebar ? 40 : 120;
+      const delay = TOOLTIP_HOVER_DELAY_MS;
       const placement = collapsedSidebar ? 'right' : undefined;
       prepTooltipRuntime.openTimer = setTimeout(() => {
         prepTooltipRuntime.openTimer = null;
@@ -7576,6 +7583,7 @@ function initPrepHoverTooltips() {
     });
 
     document.addEventListener('focusin', (e) => {
+      if (!prepTooltipRuntime.lastInputWasKeyboard) return;
       if (isInsideTooltipCard(e && e.target)) return;
       if (isTooltipSuppressed()) return;
       const resolved = resolvePrepTooltipTarget(e && e.target, rootEl);
@@ -7594,15 +7602,18 @@ function initPrepHoverTooltips() {
     });
 
     document.addEventListener('click', () => {
-      if (prepTooltipRuntime.activeTrigger) hidePrepTooltipCard();
+      if (prepTooltipRuntime.activeTrigger || prepTooltipRuntime.pendingTrigger) hidePrepTooltipCard();
     }, true);
 
     document.addEventListener('keydown', (e) => {
+      if (e && (e.key === 'Tab' || (typeof e.key === 'string' && e.key.startsWith('Arrow')))) {
+        prepTooltipRuntime.lastInputWasKeyboard = true;
+      }
       if (e && e.key === 'Escape') hidePrepTooltipCard();
-    });
+    }, true);
 
     document.addEventListener('scroll', () => {
-      if (prepTooltipRuntime.activeTrigger) hidePrepTooltipCard();
+      if (prepTooltipRuntime.activeTrigger || prepTooltipRuntime.pendingTrigger) hidePrepTooltipCard();
     }, true);
 
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {

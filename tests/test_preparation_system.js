@@ -1064,12 +1064,15 @@ runTest('5.6 Phase 5: Icon-first geometry, tooltip stacking/iOS guard, 7-col mob
   const appJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'app.js'), 'utf8');
   const coachJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach-portal.js'), 'utf8');
 
-  // Tooltip stacking root + z-index 10100 + iOS touch guard (2D)
+  // Tooltip stacking root + z-index 10100 + 1.5s hover delay + keyboard-only focusin + iOS touch guard (2D)
   const settingsModalIdx = indexHtmlSrc.indexOf('id="athlete-settings-modal"');
   const tooltipCardIdx = indexHtmlSrc.indexOf('id="eros-prep-tooltip-card"');
   assert.ok(settingsModalIdx > 0 && tooltipCardIdx > settingsModalIdx, '#eros-prep-tooltip-card must be placed under <body> after #athlete-settings-modal');
   assert.ok(/#eros-prep-tooltip-card[\s\S]*?z-index:\s*10100/.test(styleCssSrc), '#eros-prep-tooltip-card must have z-index: 10100');
+  assert.ok(appJsSrc.includes('TOOLTIP_HOVER_DELAY_MS = 1500'), 'app.js must enforce a 1500ms (1.5s) hover delay before showing tooltips');
+  assert.ok(appJsSrc.includes('lastInputWasKeyboard'), 'app.js must gate focusin tooltips to keyboard navigation so mouse clicks never flash tooltips');
   assert.ok(appJsSrc.includes('lastTouchTs') && appJsSrc.includes('touchstart'), 'app.js must implement lastTouchTs iOS synthetic mouseover guard');
+  assert.ok(!indexHtmlSrc.includes('coach-sidebar-emblem'), 'Coach sidebar brand must render only the Athlete Cockpit Eros wordmark without the crosshair emblem');
 
   // 7-col #coach-mobile-nav and 14px squircle #btn-athlete-settings-close
   assert.ok(/#coach-mobile-nav[\s\S]*?grid-template-columns:\s*repeat\(7,\s*minmax\(0,\s*1fr\)\)/.test(coachCssSrc), '#coach-mobile-nav must use 7-column grid');
