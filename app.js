@@ -341,7 +341,7 @@ function getBryanMannZone(velocity) {
     return {
       id: 'power',
       name: 'Power / Speed',
-      shortLabel: 'POWER',
+      shortLabel: 'Power',
       min: 1.00,
       cssClass: 'vel-zone-power',
       textClass: 'vel-zone-power-text',
@@ -352,7 +352,7 @@ function getBryanMannZone(velocity) {
     return {
       id: 'speed',
       name: 'Speed-Strength',
-      shortLabel: 'SPEED-STRENGTH',
+      shortLabel: 'Speed-Strength',
       min: 0.75,
       cssClass: 'vel-zone-speed',
       textClass: 'vel-zone-speed-text',
@@ -363,7 +363,7 @@ function getBryanMannZone(velocity) {
     return {
       id: 'strength',
       name: 'Strength-Speed',
-      shortLabel: 'STRENGTH-SPEED',
+      shortLabel: 'Strength-Speed',
       min: 0.50,
       cssClass: 'vel-zone-strength',
       textClass: 'vel-zone-strength-text',
@@ -374,7 +374,7 @@ function getBryanMannZone(velocity) {
     return {
       id: 'accel',
       name: 'Accelerative Strength',
-      shortLabel: 'ACCEL',
+      shortLabel: 'Accel',
       min: 0.30,
       cssClass: 'vel-zone-accel',
       textClass: 'vel-zone-accel-text',
@@ -384,7 +384,7 @@ function getBryanMannZone(velocity) {
   return {
     id: 'grind',
     name: 'Absolute Strength / Grind',
-    shortLabel: 'GRIND',
+    shortLabel: 'Grind',
     min: 0.00,
     cssClass: 'vel-zone-grind',
     textClass: 'vel-zone-grind-text',
@@ -1115,11 +1115,11 @@ function startWorkoutSession() {
   startSessionTimer(session.startTime);
 
   // Update UI
-  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'END WORKOUT', 'End', true);
+  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'End Workout', 'End', true);
   if (btnWorkoutMaster) btnWorkoutMaster.classList.add('session-active');
   if (sessionPulse) sessionPulse.classList.add('active');
   if (sessionStatusText) {
-    sessionStatusText.textContent = 'ACTIVE WORKOUT';
+    sessionStatusText.textContent = 'Active Workout';
     sessionStatusText.classList.add('active');
   }
   lastReplayableSet = null;
@@ -1169,11 +1169,11 @@ function endWorkoutSession() {
   }
 
   // Reset UI
-  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'START WORKOUT', 'New', false);
+  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'Start Workout', 'New', false);
   if (btnWorkoutMaster) btnWorkoutMaster.classList.remove('session-active');
   if (sessionPulse) sessionPulse.classList.remove('active');
   if (sessionStatusText) {
-    sessionStatusText.textContent = 'NO ACTIVE WORKOUT';
+    sessionStatusText.textContent = 'No Active Workout';
     sessionStatusText.classList.remove('active');
   }
   if (sessionTimerDisp) sessionTimerDisp.textContent = '00:00:00';
@@ -1437,7 +1437,7 @@ function startNewSet(lift = currentLift) {
   }
 
   // Update Controls UI & Floating Set Dock
-  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'END SET', 'Stop Set', true);
+  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'End Set', 'Stop Set', true);
   if (btnSetToggle) {
     btnSetToggle.classList.add('set-active');
     btnSetToggle.classList.add('recording');
@@ -1566,7 +1566,7 @@ function endActiveSet() {
   }
 
   // Update Controls UI & Floating Set Dock
-  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'START SET', 'Start Set', false);
+  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'Start Set', 'Start Set', false);
   if (btnSetToggle) {
     btnSetToggle.classList.remove('set-active');
     btnSetToggle.classList.remove('recording');
@@ -1960,19 +1960,39 @@ function syncCanvasDpr(canvas, fallbackW, fallbackH) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return { ctx: null, w: fallbackW, h: fallbackH, dpr: 1, isHeadless: true };
 
-  if (typeof canvas.getBoundingClientRect === 'function') {
+  // Prefer layout box dimensions unaffected by CSS transforms during tab slides or bloom pulses.
+  let cssW = Number(canvas.clientWidth) || 0;
+  let cssH = Number(canvas.clientHeight) || 0;
+  if ((cssW < 40 || cssH < 80) && typeof canvas.getBoundingClientRect === 'function') {
     const rect = canvas.getBoundingClientRect();
-    if (rect && rect.width >= 40 && rect.height >= 80) {
-      const dpr = Math.min(3, Math.max(1, (typeof window !== 'undefined' && Number(window.devicePixelRatio) > 0) ? Number(window.devicePixelRatio) : 1));
-      const targetW = Math.round(rect.width * dpr);
-      const targetH = Math.round(rect.height * dpr);
-      if (canvas.width !== targetW) canvas.width = targetW;
-      if (canvas.height !== targetH) canvas.height = targetH;
-      if (typeof ctx.setTransform === 'function') {
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-      return { ctx, w: rect.width, h: rect.height, dpr, isHeadless: false };
+    if (rect) {
+      if (rect.width >= 40) cssW = rect.width;
+      if (rect.height >= 80) cssH = rect.height;
     }
+  }
+
+  if (cssW >= 40 && cssH >= 80) {
+    const dpr = Math.min(3, Math.max(1, (typeof window !== 'undefined' && Number(window.devicePixelRatio) > 0) ? Number(window.devicePixelRatio) : 1));
+    const targetW = Math.round(cssW * dpr);
+    const targetH = Math.round(cssH * dpr);
+    canvas._lastCssW = cssW;
+    canvas._lastCssH = cssH;
+    canvas._lastDpr = dpr;
+    if (canvas.width !== targetW) canvas.width = targetW;
+    if (canvas.height !== targetH) canvas.height = targetH;
+    if (typeof ctx.setTransform === 'function') {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    return { ctx, w: cssW, h: cssH, dpr, isHeadless: false };
+  }
+
+  // If previously mounted in browser layout and temporarily hidden, preserve cached DPR/size.
+  if (canvas._lastCssW >= 40 && canvas._lastCssH >= 80) {
+    const cachedDpr = canvas._lastDpr || 1;
+    if (typeof ctx.setTransform === 'function') {
+      ctx.setTransform(cachedDpr, 0, 0, cachedDpr, 0, 0);
+    }
+    return { ctx, w: canvas._lastCssW, h: canvas._lastCssH, dpr: cachedDpr, isHeadless: false };
   }
 
   const w = canvas.width || fallbackW;
@@ -2063,7 +2083,14 @@ function resolveRepPeakVelocity(rep) {
 
 function getLiveDisplaySetForGraphs() {
   if (activeSet) return activeSet;
-  if (lastReplayableSet && Array.isArray(lastReplayableSet.reps) && lastReplayableSet.reps.length > 0) {
+  if (
+    lastReplayableSet &&
+    Array.isArray(lastReplayableSet.reps) &&
+    lastReplayableSet.reps.length > 0 &&
+    activeWorkout &&
+    Array.isArray(activeWorkout.sets) &&
+    activeWorkout.sets.includes(lastReplayableSet)
+  ) {
     return lastReplayableSet;
   }
   if (activeWorkout && Array.isArray(activeWorkout.sets) && activeWorkout.sets.length > 0) {
@@ -2071,6 +2098,20 @@ function getLiveDisplaySetForGraphs() {
     if (latest && Array.isArray(latest.reps) && latest.reps.length > 0) return latest;
   }
   return null;
+}
+
+function refreshLiveStageCanvases() {
+  if (typeof document !== 'undefined') {
+    if (document.body && document.body.classList && document.body.classList.contains('portal-coach')) return;
+    const liveSec = (tabSections && tabSections.live) || document.getElementById('tab-live');
+    if (liveSec && liveSec.classList && !liveSec.classList.contains('active-section')) return;
+  }
+  if (typeof renderVelocityChangeGraph === 'function') {
+    renderVelocityChangeGraph(1.0);
+  }
+  if (!activeStrokeAnimId && !isReplaying && typeof renderBarPathStage === 'function') {
+    renderBarPathStage(currentReplayRepIdx, 1.0);
+  }
 }
 
 function triggerVelocityGraphTween() {
@@ -2193,7 +2234,7 @@ function renderVelocityChangeGraph(animProgress = 1.0) {
 
   // Quiet muted #71717a corner labels
   ctx.fillStyle = '#71717a';
-  ctx.font = '9px monospace';
+  ctx.font = "9px 'Helvetica Neue', Helvetica, Arial, sans-serif";
   ctx.textAlign = 'left';
   ctx.fillText('v (m/s)', pad.left, 11);
   ctx.fillText(yMax.toFixed(1), 2, pad.top + 4);
@@ -2216,7 +2257,7 @@ function renderVelocityChangeGraph(animProgress = 1.0) {
   if (series.length === 0) {
     ctx.save();
     ctx.fillStyle = '#71717a';
-    ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = "11px 'Helvetica Neue', Helvetica, Arial, sans-serif";
     ctx.textAlign = 'center';
     ctx.fillText('Waiting for Rep 1', pad.left + plotW / 2, pad.top + plotH / 2);
     ctx.restore();
@@ -2367,7 +2408,7 @@ function renderVelocityChangeGraph(animProgress = 1.0) {
   // Latest dot quiet value tag
   if (latestCoord) {
     ctx.save();
-    ctx.font = '9px monospace';
+    ctx.font = "9px 'Helvetica Neue', Helvetica, Arial, sans-serif";
     ctx.textAlign = latestCoord.x > w - 42 ? 'right' : 'center';
     ctx.fillStyle = '#00E5FF';
     ctx.fillText(latestCoord.peakVelocity.toFixed(2), latestCoord.x, Math.max(12, latestCoord.yPeak - 9));
@@ -2413,7 +2454,7 @@ function renderBarPathStage(repIndex = 0, scrubProgress = 1.0, targetCanvasOverr
   ctx.fillStyle = 'rgba(0, 0, 0, 0)';
   ctx.fillRect(0, 0, w, h);
 
-  const sourceSet = setOverride || activeSet;
+  const sourceSet = setOverride || getLiveDisplaySetForGraphs();
   const reps = (sourceSet && Array.isArray(sourceSet.reps)) ? sourceSet.reps : [];
   if (reps.length === 0) {
     const centerX = w / 2;
@@ -2463,9 +2504,11 @@ function renderBarPathStage(repIndex = 0, scrubProgress = 1.0, targetCanvasOverr
 
     // Empty state text (compact on narrow column, full phrase in headless tests)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.font = isHeadless ? '10px -apple-system, BlinkMacSystemFont, monospace' : '9px -apple-system, BlinkMacSystemFont, monospace';
+    ctx.font = isHeadless
+      ? "10px 'Helvetica Neue', Helvetica, Arial, sans-serif"
+      : "9px 'Helvetica Neue', Helvetica, Arial, sans-serif";
     ctx.textAlign = 'center';
-    ctx.fillText(w < 140 ? 'READY' : 'WAITING FOR REP 1...', w / 2, h / 2);
+    ctx.fillText(w < 140 ? 'Ready' : 'Waiting for Rep 1...', w / 2, h / 2);
 
     if (!targetCanvasOverride) {
       const devEl = document.getElementById('barpath-hud-dev');
@@ -2560,7 +2603,7 @@ function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx, isHeadle
   // Axis Labels (preserved in headless Node DOM checks; omitted on browser narrow column for clean minimalism)
   if (isHeadless) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.font = '8px monospace';
+    ctx.font = "8px 'Helvetica Neue', Helvetica, Arial, sans-serif";
     ctx.textAlign = 'center';
     ctx.fillText('0.0', centerX, botY + 14);
     ctx.fillText('-2', centerX - 2 * scaleX, botY + 14);
@@ -2719,7 +2762,7 @@ function renderVelocityMode(ctx, w, h, pts, scrubProgress) {
 
   // Axis Labels
   ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-  ctx.font = '8px monospace';
+  ctx.font = "8px 'Helvetica Neue', Helvetica, Arial, sans-serif";
   ctx.textAlign = 'center';
   ctx.fillText('0.0', leftX, botY + 14);
   ctx.fillText('0.6', mapX(0.6), botY + 14);
@@ -2760,9 +2803,9 @@ function renderVelocityMode(ctx, w, h, pts, scrubProgress) {
     ctx.fill();
 
     ctx.fillStyle = 'rgba(255, 184, 0, 0.9)';
-    ctx.font = '8px monospace';
+    ctx.font = "8px 'Helvetica Neue', Helvetica, Arial, sans-serif";
     ctx.textAlign = 'left';
-    ctx.fillText(`STICK ${stickPt.v.toFixed(2)}m/s`, mapX(stickPt.v) + 6, mapY(stickPt.y) + 3);
+    ctx.fillText(`Stick ${stickPt.v.toFixed(2)}m/s`, mapX(stickPt.v) + 6, mapY(stickPt.y) + 3);
     ctx.restore();
   }
 
@@ -2896,7 +2939,7 @@ function startReplay() {
 
   isReplaying = true;
   const replayText = document.getElementById('barpath-replay-text');
-  if (replayText) replayText.textContent = 'PAUSE';
+  if (replayText) replayText.textContent = 'Pause';
 
   const scrubber = document.getElementById('barpath-scrubber');
   let currentVal = scrubber ? parseFloat(scrubber.value) : 100;
@@ -2948,13 +2991,13 @@ function stopReplay() {
     activeStrokeAnimId = null;
   }
   const replayText = document.getElementById('barpath-replay-text');
-  if (replayText) replayText.textContent = 'REPLAY';
+  if (replayText) replayText.textContent = 'Replay';
 }
 
 function toggleReplaySpeed() {
   replaySpeed = replaySpeed === 1.0 ? 0.5 : 1.0;
   const speedLabel = document.getElementById('barpath-speed-label');
-  if (speedLabel) speedLabel.textContent = `${replaySpeed.toFixed(1)}X`;
+  if (speedLabel) speedLabel.textContent = `${replaySpeed.toFixed(1)}x`;
 }
 
 function toggleBarPathMode() {
@@ -3541,8 +3584,9 @@ function animateRepetitionStroke(options = {}) {
       ctx.restore();
 
       if (popProg < 1.0) {
-        requestAnimationFrame(popFrame);
+        activeStrokeAnimId = requestAnimationFrame(popFrame);
       } else {
+        activeStrokeAnimId = null;
         if (typeof window !== 'undefined') {
           window._lastRepTrajectory = [...historyPoints];
         }
@@ -3554,7 +3598,7 @@ function animateRepetitionStroke(options = {}) {
       }
     }
 
-    requestAnimationFrame(popFrame);
+    activeStrokeAnimId = requestAnimationFrame(popFrame);
   }
 
   activeStrokeAnimId = requestAnimationFrame(frame);
@@ -3616,7 +3660,22 @@ function initBarPathControls() { if (initBarPathControls._initialized) return; i
     });
   }
 
-  // Programmed Workout Drawer wiring (#btn-programmed-workout -> #live-programmed-drawer)
+  // Telemetry stage resize observer so canvases stay sharp across orientation/portal/tab changes
+  if (!initBarPathControls._resizeBound) {
+    initBarPathControls._resizeBound = true;
+    const stageCard = document.getElementById('telemetry-stage-card');
+    if (typeof ResizeObserver !== 'undefined' && stageCard) {
+      const stageRo = new ResizeObserver(() => {
+        refreshLiveStageCanvases();
+      });
+      stageRo.observe(stageCard);
+    }
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('resize', () => {
+        refreshLiveStageCanvases();
+      });
+    }
+  }
   initProgrammedWorkoutDrawer();
 
   const scrubber = document.getElementById('barpath-scrubber');
@@ -4008,7 +4067,7 @@ function setTargetRpe(val, triggerFeedback = false) {
     }, 350);
     const targetText = rpeTargetPin.querySelector('.target-text');
     if (targetText) {
-      targetText.textContent = `TARGET ${currentTargetRpe.toFixed(1)}`;
+      targetText.textContent = `Target ${currentTargetRpe.toFixed(1)}`;
     }
   }
 
@@ -4100,7 +4159,7 @@ btnConnect.addEventListener('click', async () => {
 
 async function connectBLE() {
   try {
-    btnConnectText.textContent = 'SCANNING…';
+    btnConnectText.textContent = 'Scanning…';
     btnConnect.disabled = true;
     if (bleSearchStatusText) bleSearchStatusText.innerHTML = 'Searching for <span class="eros-wordmark">Eros</span>…';
     SoundFX.playBleSearchPing();
@@ -4328,13 +4387,18 @@ function applyLiftTheme(liftName) {
   }
 
   currentLift = nextLift;
-  if (selectedLiftText) selectedLiftText.textContent = nextLift.toUpperCase();
+  if (selectedLiftText) selectedLiftText.textContent = nextLift;
   const liftCodeEl = selectedLiftCode || document.getElementById('selected-lift-code');
   if (liftCodeEl) {
     const lower = nextLift.toLowerCase();
     liftCodeEl.textContent = lower.includes('dead') ? 'DL' : (lower.includes('squat') ? 'SQ' : (lower.includes('bench') ? 'BP' : nextLift.slice(0, 2).toUpperCase()));
   }
-  document.body.className = `theme-${nextLift.toLowerCase()}`;
+  if (document.body && document.body.classList) {
+    document.body.classList.remove('theme-deadlift', 'theme-squat', 'theme-bench');
+    document.body.classList.add(`theme-${nextLift.toLowerCase()}`);
+  } else {
+    document.body.className = `theme-${nextLift.toLowerCase()}`;
+  }
 
   customOptions.forEach(o => o.classList.remove('selected'));
   const targetOpt = Array.from(customOptions).find(o => sameLift(o.getAttribute('data-value'), nextLift));
@@ -4362,9 +4426,13 @@ function applyLiftTheme(liftName) {
 
   // Keep Current Set card denomination synced and clear stale set reps when idle between sets
   if (!activeSet) {
+    lastReplayableSet = null;
     updateSetUI(null);
   } else {
     updateWorkoutPage();
+  }
+  if (typeof refreshLiveStageCanvases === 'function') {
+    refreshLiveStageCanvases();
   }
 }
 
@@ -4405,15 +4473,15 @@ function updateRpeHeroBanner(rpe, repObj = null) {
       if (typeof dev === 'number' && !isNaN(dev)) {
         const absDev = Math.abs(dev);
         const sign = dev >= 0 ? '+' : '-';
-        let grooveTag = 'GROOVE: LOCKED';
+        let grooveTag = 'Groove: Locked';
         if (absDev > 3.5) {
-          grooveTag = 'GROOVE: BAR DRIFT';
+          grooveTag = 'Groove: Bar Drift';
         } else if (absDev > 2.0) {
-          grooveTag = 'GROOVE: MILD DRIFT';
+          grooveTag = 'Groove: Mild Drift';
         }
         liveRpeSub.textContent = `${grooveTag} (${sign}${absDev.toFixed(1)} cm) • MVT ${baseline.mvt.toFixed(2)} m/s`;
       } else {
-        liveRpeSub.textContent = `GROOVE: LOCKED (±0.0 cm) • MVT ${baseline.mvt.toFixed(2)} m/s`;
+        liveRpeSub.textContent = `Groove: Locked (±0.0 cm) • MVT ${baseline.mvt.toFixed(2)} m/s`;
       }
     } else {
       liveRpeSub.textContent = `MVT Baseline: ${baseline.mvt.toFixed(2)} m/s`;
@@ -4425,16 +4493,16 @@ function updateRpeHeroBanner(rpe, repObj = null) {
     card.classList.remove('tier-warmup', 'tier-target', 'tier-heavy', 'tier-max');
     if (numRpe < 7.5) {
       card.classList.add('tier-warmup');
-      if (badge) badge.textContent = 'WARMUP';
+      if (badge) badge.textContent = 'Warmup';
     } else if (numRpe <= 8.4) {
       card.classList.add('tier-target');
-      if (badge) badge.textContent = 'TARGET ZONE';
+      if (badge) badge.textContent = 'Target Zone';
     } else if (numRpe <= 9.4) {
       card.classList.add('tier-heavy');
-      if (badge) badge.textContent = 'HEAVY EFFORT';
+      if (badge) badge.textContent = 'Heavy Effort';
     } else {
       card.classList.add('tier-max');
-      if (badge) badge.textContent = 'MAXIMAL / FAILURE';
+      if (badge) badge.textContent = 'Maximal / Failure';
     }
   }
 }
@@ -4485,7 +4553,7 @@ function updateLiveDisplay({ lift, velocity, rpe }, fromRepStream = false) {
   const peakBadge = livePeakZoneBadge || document.getElementById('live-peak-zone-badge');
   if (peakBadge) {
     peakBadge.className = `vel-zone-badge ${peakZone.cssClass} font-mono`;
-    peakBadge.textContent = `PEAK • ${peakZone.shortLabel || peakZone.name}`;
+    peakBadge.textContent = `Peak • ${peakZone.shortLabel || peakZone.name}`;
     peakBadge.style.display = 'inline-flex';
   }
 
@@ -4709,15 +4777,15 @@ function updateWorkoutPage() {
     const pushPrBtnHtml = (!isCurrent && repCount > 0 && !isPushedPr)
       ? `<button type="button" class="push-pr-mini-btn" data-push-pr-set-id="${escapeHtml(s.setId)}" data-prep-tooltip-key="prep_push_pr" aria-label="Push Personal Record">` +
         `<svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>` +
-        `<span class="sr-only">PUSH PR</span>` +
+        `<span class="sr-only">Push PR</span>` +
         `</button>`
       : '';
 
     rowsHtml += `
       <div class="workout-set-row ${isCurrent ? 'is-active-set' : ''} ${isPushedPr ? 'is-pr-set' : ''}" data-set-number="${s.setNumber}" data-set-id="${escapeHtml(s.setId)}" data-lift="${liftKey}">
         <div class="workout-set-row-left">
-          <span class="workout-set-num">SET ${s.setNumber}</span>
-          <span class="lift-tag" data-lift="${liftKey}">${escapeHtml(setLift.toUpperCase())}</span>
+          <span class="workout-set-num">Set ${s.setNumber}</span>
+          <span class="lift-tag" data-lift="${liftKey}">${escapeHtml(setLift)}</span>
           <span class="workout-set-reps">${repCount} ${repCount === 1 ? 'rep' : 'reps'}</span>
           ${prBadgeHtml}
           ${pushPrBtnHtml}
@@ -4725,19 +4793,19 @@ function updateWorkoutPage() {
         <div class="workout-set-row-right">
           <div class="workout-set-metric">
             <span class="workout-set-metric-val">${setWeightVal}</span>
-            <span class="workout-set-metric-lbl">LOAD</span>
+            <span class="workout-set-metric-lbl">Load</span>
           </div>
           <div class="workout-set-metric">
             <span class="workout-set-metric-val">${avgV}${repCount > 0 ? ' m/s' : ''}</span>
-            <span class="workout-set-metric-lbl">AVG</span>
+            <span class="workout-set-metric-lbl">Avg</span>
           </div>
           <div class="workout-set-metric">
             <span class="workout-set-metric-val">${maxV}${repCount > 0 ? ' m/s' : ''}</span>
-            <span class="workout-set-metric-lbl">PEAK</span>
+            <span class="workout-set-metric-lbl">Peak</span>
           </div>
           <div class="workout-set-metric">
             <span class="workout-set-metric-val">${restStr}</span>
-            <span class="workout-set-metric-lbl">REST</span>
+            <span class="workout-set-metric-lbl">Rest</span>
           </div>
           <div class="workout-set-metric">
             <span class="workout-set-metric-val">${avgR}</span>
@@ -4785,10 +4853,10 @@ function updateSetUI(set) {
 
   if (!set || set.reps.length === 0) {
     const nextSetNum = set ? set.setNumber : (activeWorkout && Array.isArray(activeWorkout.sets) ? activeWorkout.sets.length + 1 : 1);
-    setBadgeLabel.textContent = `SET ${nextSetNum}`;
-    setLiftName.textContent   = effectiveLift.toUpperCase();
+    setBadgeLabel.textContent = `Set ${nextSetNum}`;
+    setLiftName.textContent   = effectiveLift;
     setLiftName.setAttribute('data-lift', effectiveLiftKey);
-    setRepCounter.textContent = '0 REPS RECORDED';
+    setRepCounter.textContent = '0 Reps Recorded';
     setAvgVel.textContent     = '-';
     setAvgVel.style.color     = '';
     setAvgVel.style.textShadow = '';
@@ -4810,10 +4878,10 @@ function updateSetUI(set) {
     return;
   }
 
-  setBadgeLabel.textContent = `SET ${set.setNumber}`;
-  setLiftName.textContent   = effectiveLift.toUpperCase();
+  setBadgeLabel.textContent = `Set ${set.setNumber}`;
+  setLiftName.textContent   = effectiveLift;
   setLiftName.setAttribute('data-lift', effectiveLiftKey);
-  setRepCounter.textContent = `${set.reps.length} ${set.reps.length === 1 ? 'REP' : 'REPS'} RECORDED`;
+  setRepCounter.textContent = `${set.reps.length} ${set.reps.length === 1 ? 'Rep' : 'Reps'} Recorded`;
   activeSetRepCounter.textContent = `${set.reps.length} reps`;
 
   setAvgVel.textContent  = set.avgVelocity.toFixed(2);
@@ -4874,7 +4942,7 @@ function updateSetUI(set) {
         ${progressRingHtml}
         <div class="rep-row-left">
           <span class="rep-num-badge">#${rep.repNumber}</span>
-          <span class="lift-tag rep-lift-tag" data-lift="${repLiftKey}">${escapeHtml(repLift.toUpperCase())}</span>
+          <span class="lift-tag rep-lift-tag" data-lift="${repLiftKey}">${escapeHtml(repLift)}</span>
           <span class="rep-row-time">${timeStr}</span>
           ${prBadgeHtml}
         </div>
@@ -5155,12 +5223,12 @@ function calculateDotsScore(totalKg, bodyweightKg, gender = 'male') {
  * @returns {string} Tier label
  */
 function getDotsClassification(score) {
-  if (score >= 460) return 'ELITE';
-  if (score >= 415) return 'MASTER';
-  if (score >= 350) return 'CLASS I';
-  if (score >= 280) return 'CLASS II';
-  if (score >= 220) return 'CLASS III';
-  return 'NOVICE';
+  if (score >= 460) return 'Elite';
+  if (score >= 415) return 'Master';
+  if (score >= 350) return 'Class I';
+  if (score >= 280) return 'Class II';
+  if (score >= 220) return 'Class III';
+  return 'Novice';
 }
 
 /**
@@ -5470,11 +5538,11 @@ function renderHistoryView() {
           <div class="session-card-stats">
             <div class="session-stat-chip">
               <span class="stat-chip-val font-mono">${formattedVolume}</span>
-              <span class="stat-chip-lbl">VOLUME</span>
+              <span class="stat-chip-lbl">Volume</span>
             </div>
             <div class="session-stat-chip">
               <span class="stat-chip-val font-mono">${sessionAvgVel}</span>
-              <span class="stat-chip-lbl">AVG M/S</span>
+              <span class="stat-chip-lbl">Avg m/s</span>
             </div>
             <span class="session-toggle-chevron">▾</span>
           </div>
@@ -5518,7 +5586,7 @@ function renderSessionSetsAccordion(sets) {
     out += `
       <div class="session-set-item ${setHasPr ? 'is-pr-set' : ''}" data-lift="${setLiftKey}">
         <div class="session-set-header">
-          <span class="session-set-tag" data-lift="${setLiftKey}">SET ${s.setNumber} — ${escapeHtml(setLift.toUpperCase())}${weightLabel}${setHasPr ? ` ${goldenPrBadgeHtml()}` : ''}</span>
+          <span class="session-set-tag" data-lift="${setLiftKey}">Set ${s.setNumber} — ${escapeHtml(setLift)}${weightLabel}${setHasPr ? ` ${goldenPrBadgeHtml()}` : ''}</span>
           <div class="session-set-stats font-mono">
             <span class="set-stat-vol">Vol: ${formattedSetVol}</span>
             <span class="set-stat-vel">Avg: ${s.avgVelocity.toFixed(2)} m/s</span>
@@ -5698,14 +5766,29 @@ navTabs.forEach(tab => {
       dockEl.style.display = target === 'live' ? 'flex' : 'none';
     }
 
+    if (prevTarget === 'live' && target !== 'live') {
+      closeLiveWeightPopover();
+      closeTargetRpePopover();
+      closeProgrammedDrawer();
+      if (liftSelectWrapper && liftSelectWrapper.classList) liftSelectWrapper.classList.remove('open');
+      if (velGraphState.animId && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(velGraphState.animId);
+        velGraphState.animId = null;
+      }
+      if (activeStrokeAnimId && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(activeStrokeAnimId);
+        activeStrokeAnimId = null;
+      }
+      if (isReplaying) {
+        stopReplay();
+      }
+    }
+
     if (target === 'set') {
       renderAthletePrepHub();
       renderAthletePlanVsActual();
     } else if (target === 'history') {
       populateAthleteBiometricsForm();
-    } else if (target === 'live') {
-      if (typeof renderVelocityChangeGraph === 'function') renderVelocityChangeGraph(1.0);
-      if (typeof renderBarPathStage === 'function') renderBarPathStage(currentReplayRepIdx, 1.0);
     }
 
     // 2. Clear any active transition states from rapid clicking
@@ -5731,6 +5814,13 @@ navTabs.forEach(tab => {
       targetSection.classList.add(inClass);
     }
 
+    if (target === 'live') {
+      refreshLiveStageCanvases();
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => refreshLiveStageCanvases());
+      }
+    }
+
     // 6. Cleanup after transition duration (280ms)
     const timeoutId = setTimeout(() => {
       if (prevSection) {
@@ -5738,6 +5828,9 @@ navTabs.forEach(tab => {
       }
       if (targetSection) {
         targetSection.classList.remove(inClass);
+      }
+      if (target === 'live') {
+        refreshLiveStageCanvases();
       }
     }, 280);
     tabTransitionTimeouts.push(timeoutId);
@@ -5747,14 +5840,14 @@ navTabs.forEach(tab => {
 function setConnectedUI(connected) {
   btnConnect.disabled = false;
   if (connected) {
-    if (btnConnectText) btnConnectText.innerHTML = 'DISCONNECT <span class="eros-wordmark">Eros</span>';
+    if (btnConnectText) btnConnectText.innerHTML = 'Disconnect <span class="eros-wordmark">Eros</span>';
     btnConnect.classList.add('connected');
     statusBadge.className = 'glass-pill status-connected';
     statusBadge.setAttribute('aria-label', 'Eros Connected');
     const statusLblConn = statusBadge.querySelector('.status-label');
     if (statusLblConn) statusLblConn.textContent = 'Connected';
   } else {
-    if (btnConnectText) btnConnectText.innerHTML = 'CONNECT <span class="eros-wordmark">Eros</span>';
+    if (btnConnectText) btnConnectText.innerHTML = 'Connect <span class="eros-wordmark">Eros</span>';
     btnConnect.classList.remove('connected');
     statusBadge.className = 'glass-pill status-disconnected';
     statusBadge.setAttribute('aria-label', 'Eros Disconnected');
@@ -6409,7 +6502,7 @@ function renderLivePrescriptionStrip() {
 
   strip.innerHTML = `
     <div class="live-rx-main">
-      <span class="live-rx-badge font-mono">${escapeHtml(slot.exerciseName || slot.baseLift || 'PLANNED')}</span>
+      <span class="live-rx-badge font-mono">${escapeHtml(slot.exerciseName || slot.baseLift || 'Planned')}</span>
       <span class="live-rx-meta font-mono">${escapeHtml(summaryText)}</span>
     </div>
     ${hasNextSlot && nextSlot ? `
@@ -6598,13 +6691,13 @@ function renderAthletePlanVsActual() {
     const p = r.planned || {};
     const a = r.actual || {};
     const statusMap = {
-      hit: { cls: 'hit', label: 'HIT' },
-      exceeded: { cls: 'over', label: 'EXCEEDED' },
-      over: { cls: 'over', label: 'EXCEEDED' },
-      under: { cls: 'short', label: 'IN PROGRESS' },
-      short: { cls: 'short', label: 'IN PROGRESS' }
+      hit: { cls: 'hit', label: 'Hit' },
+      exceeded: { cls: 'over', label: 'Exceeded' },
+      over: { cls: 'over', label: 'Exceeded' },
+      under: { cls: 'short', label: 'In Progress' },
+      short: { cls: 'short', label: 'In Progress' }
     };
-    const st = statusMap[r.status] || { cls: 'pending', label: 'PLANNED' };
+    const st = statusMap[r.status] || { cls: 'pending', label: 'Planned' };
     const planLoad = Number(p.loadKg) > 0 ? `${Number(p.loadKg).toFixed(1)} kg` : '--';
     const planVel = Number(p.targetVelocity) > 0 ? `${Number(p.targetVelocity).toFixed(2)} m/s` : '--';
     const planRpe = Number(p.rpe) > 0 ? `RPE ${Number(p.rpe).toFixed(1)}` : '--';
@@ -6645,9 +6738,9 @@ function renderAthletePlanVsActual() {
     </div>
     <div class="plan-actual-table">
       <div class="plan-actual-row plan-actual-head font-mono">
-        <span>EXERCISE</span>
-        <span>PLANNED</span>
-        <span>ACTUAL</span>
+        <span>Exercise</span>
+        <span>Planned</span>
+        <span>Actual</span>
       </div>
       ${rowsHtml}
     </div>
@@ -6684,12 +6777,13 @@ function renderAthletePrepHub() {
     const phaseLabel = (selectedWorkout && selectedWorkout.blockPhase)
       || (plan && plan.macroBlocks && plan.macroBlocks[0] && (plan.macroBlocks[0].phase || plan.macroBlocks[0].name))
       || '';
-    phaseEl.textContent = phaseLabel ? `PHASE ${String(phaseLabel).toUpperCase()}` : 'PHASE —';
+    const fmtPhase = phaseLabel ? (String(phaseLabel).charAt(0).toUpperCase() + String(phaseLabel).slice(1).toLowerCase()) : '';
+    phaseEl.textContent = fmtPhase ? `Phase ${fmtPhase}` : 'Phase —';
   }
   if (weekEl) {
     weekEl.textContent = selectedWorkout && selectedWorkout.weekIndex
-      ? `WEEK ${selectedWorkout.weekIndex}${selectedWorkout.isDeload ? ' DELOAD' : ''}`
-      : 'WEEK —';
+      ? `Week ${selectedWorkout.weekIndex}${selectedWorkout.isDeload ? ' Deload' : ''}`
+      : 'Week —';
   }
   if (meetEl) {
     const engine = getPrepEngine();
@@ -6698,13 +6792,13 @@ function renderAthletePrepHub() {
         ? engine.computeMeetCountdown(plan.targetMeetDate)
         : null;
       if (countdown && countdown.label) {
-        meetEl.textContent = String(countdown.label).toUpperCase();
+        meetEl.textContent = String(countdown.label);
       } else {
         const diffDays = Math.ceil((new Date(plan.targetMeetDate).getTime() - Date.now()) / 86400000);
-        meetEl.textContent = isFinite(diffDays) ? (diffDays >= 0 ? `${diffDays}D TO MEET` : 'MEET PASSED') : 'NO MEET DATE';
+        meetEl.textContent = isFinite(diffDays) ? (diffDays >= 0 ? `${diffDays}d to Meet` : 'Meet Passed') : 'No Meet Date';
       }
     } else {
-      meetEl.textContent = 'NO MEET DATE';
+      meetEl.textContent = 'No Meet Date';
     }
   }
 
@@ -6755,7 +6849,7 @@ function renderAthletePrepHub() {
     if (slots.length === 0) {
       slotsHtml = `
         <p class="athlete-prep-empty">No prescribed exercises for this day.</p>
-        <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout" disabled>START PLANNED WORKOUT</button>
+        <button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout" disabled>Start Planned Workout</button>
       `;
     } else {
       const cardsHtml = slots.map(slot => {
@@ -6767,9 +6861,9 @@ function renderAthletePrepHub() {
         );
         const isDone = isSlotCompletedLocally(selectedWorkout, slot);
         const statusCls = isDone ? 'is-done' : (isCurrent ? 'is-active' : '');
-        const statusText = isDone ? 'DONE' : (isCurrent ? 'LOADED' : 'PLANNED');
+        const statusText = isDone ? 'Done' : (isCurrent ? 'Loaded' : 'Planned');
 
-        const topLoadStr = top.loadKg > 0 ? `${top.loadKg.toFixed(1)} kg` : 'AUTO';
+        const topLoadStr = top.loadKg > 0 ? `${top.loadKg.toFixed(1)} kg` : 'Auto';
         const topVelStr = top.targetVelocity > 0 ? `${top.targetVelocity.toFixed(2)} m/s` : '--';
         const topLossStr = `${Math.round(top.velocityLossCapPct || 20)}%`;
 
@@ -6780,12 +6874,12 @@ function renderAthletePrepHub() {
           const backLossStr = `${Math.round(back.velocityLossCapPct || top.velocityLossCapPct || 20)}%`;
           backoffHtml = `
             <div class="athlete-slot-set" data-prep-tooltip-key="prep_set_y_backoff">
-              <span class="athlete-slot-set-label font-mono">SET Y BACKOFF</span>
+              <span class="athlete-slot-set-label font-mono">Set Y Backoff</span>
               <span class="athlete-slot-set-main">${back.sets} x ${back.reps} @ RPE ${back.rpe.toFixed(1)}</span>
               <div class="athlete-slot-kpis">
-                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_prescribed_load"><span class="k">LOAD</span><span class="v font-mono">${backLoadStr}</span></div>
-                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_target_velocity"><span class="k">TARGET VEL</span><span class="v font-mono">${backVelStr}</span></div>
-                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_velocity_loss_cap"><span class="k">VEL LOSS</span><span class="v font-mono">${backLossStr}</span></div>
+                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_prescribed_load"><span class="k">Load</span><span class="v font-mono">${backLoadStr}</span></div>
+                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_target_velocity"><span class="k">Target Vel</span><span class="v font-mono">${backVelStr}</span></div>
+                <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_velocity_loss_cap"><span class="k">Vel Loss</span><span class="v font-mono">${backLossStr}</span></div>
               </div>
             </div>
           `;
@@ -6795,32 +6889,32 @@ function renderAthletePrepHub() {
           <article class="athlete-slot-card ${statusCls}" data-slot-id="${escapeHtml(slot.slotId)}" data-prep-tooltip-key="prep_slot_card">
             <div class="athlete-slot-head">
               <div class="athlete-slot-titles">
-                <span class="lift-tag" data-lift="${escapeHtml(liftKey)}">${escapeHtml(slot.baseLift.toUpperCase())}</span>
+                <span class="lift-tag" data-lift="${escapeHtml(liftKey)}">${escapeHtml(slot.baseLift)}</span>
                 <span class="athlete-slot-name">${escapeHtml(slot.exerciseName)}</span>
               </div>
               <span class="athlete-slot-status font-mono" data-prep-tooltip-key="prep_slot_status">${statusText}</span>
             </div>
             <div class="athlete-slot-sets">
               <div class="athlete-slot-set" data-prep-tooltip-key="prep_set_x_top">
-                <span class="athlete-slot-set-label font-mono">SET X TOP SET</span>
+                <span class="athlete-slot-set-label font-mono">Set X Top Set</span>
                 <span class="athlete-slot-set-main">${top.sets} x ${top.reps} @ RPE ${top.rpe.toFixed(1)}</span>
                 <div class="athlete-slot-kpis">
-                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_prescribed_load"><span class="k">LOAD</span><span class="v font-mono">${topLoadStr}</span></div>
-                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_target_velocity"><span class="k">TARGET VEL</span><span class="v font-mono">${topVelStr}</span></div>
-                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_velocity_loss_cap"><span class="k">VEL LOSS</span><span class="v font-mono">${topLossStr}</span></div>
+                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_prescribed_load"><span class="k">Load</span><span class="v font-mono">${topLoadStr}</span></div>
+                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_target_velocity"><span class="k">Target Vel</span><span class="v font-mono">${topVelStr}</span></div>
+                  <div class="athlete-slot-kpi" data-prep-tooltip-key="prep_velocity_loss_cap"><span class="k">Vel Loss</span><span class="v font-mono">${topLossStr}</span></div>
                 </div>
               </div>
               ${backoffHtml}
             </div>
             <button type="button" class="athlete-slot-load-btn" data-load-slot-id="${escapeHtml(slot.slotId)}" data-prep-tooltip-key="prep_load_into_live" aria-label="Load into Live">
               <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"></rect><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
-              <span class="sr-only">LOAD INTO LIVE</span>
+              <span class="sr-only">Load into Live</span>
             </button>
           </article>
         `;
       }).join('');
 
-      slotsHtml = `${cardsHtml}<button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout">START PLANNED WORKOUT</button>`;
+      slotsHtml = `${cardsHtml}<button type="button" id="btn-start-planned-workout" class="btn-start-planned-workout" data-prep-tooltip-key="prep_start_planned_workout">Start Planned Workout</button>`;
     }
 
     if (athletePrepState.lastSlotsHtml !== slotsHtml) {
@@ -6869,10 +6963,10 @@ function handleCoachPrepSync(eventType, payload) {
 
   const syncBadge = document.getElementById('athlete-prep-sync-badge');
   if (syncBadge) {
-    syncBadge.textContent = 'LIVE';
+    syncBadge.textContent = 'Live';
     syncBadge.classList.add('is-live');
   }
-  showPrepNotice('COACH UPDATED PREPARATION');
+  showPrepNotice('Coach Updated Preparation');
   renderAthletePrepHub();
 }
 
@@ -6947,14 +7041,14 @@ function initAthletePrepView() {
         }
         const syncBadge = document.getElementById('athlete-prep-sync-badge');
         if (syncBadge) {
-          syncBadge.textContent = 'SENT';
+          syncBadge.textContent = 'Sent';
           syncBadge.classList.add('is-live');
           clearTimeout(athletePrepState.badgeTimer);
           athletePrepState.badgeTimer = setTimeout(() => {
-            syncBadge.textContent = 'LIVE';
+            syncBadge.textContent = 'Live';
           }, 2200);
         }
-        showPrepNotice('FEEDBACK SENT TO COACH', 2200);
+        showPrepNotice('Feedback Sent to Coach', 2200);
       };
       btnSendFeedback.addEventListener('click', submitFeedback);
       feedbackInput.addEventListener('keydown', (e) => {
@@ -7139,7 +7233,7 @@ function saveAthleteBiometricsFromUI() {
   }
 
   if (statusEl) {
-    statusEl.textContent = 'SAVED';
+    statusEl.textContent = 'Saved';
     clearTimeout(athletePrepState.bioStatusTimer);
     athletePrepState.bioStatusTimer = setTimeout(() => {
       statusEl.textContent = '';
@@ -7324,10 +7418,10 @@ function showPrConfirmHud(candidate) {
   const hud = document.getElementById('pr-confirm-hud');
   const summaryEl = document.getElementById('pr-confirm-summary');
   const metricsEl = document.getElementById('pr-confirm-metrics');
-  const typeLabel = candidate.prType === 'velocity' ? 'VELOCITY PR' : (candidate.prType === 'manual' ? 'PR CANDIDATE' : 'WEIGHT PR');
+  const typeLabel = candidate.prType === 'velocity' ? 'Velocity PR' : (candidate.prType === 'manual' ? 'PR Candidate' : 'Weight PR');
 
   if (summaryEl) {
-    summaryEl.textContent = `${canonicalLift(candidate.lift).toUpperCase()} ${typeLabel}`;
+    summaryEl.textContent = `${canonicalLift(candidate.lift)} ${typeLabel}`;
   }
   if (metricsEl) {
     metricsEl.textContent = `${Number(candidate.weight).toFixed(1)} kg • ${Number(candidate.velocity).toFixed(2)} m/s • RPE ${Number(candidate.rpe).toFixed(1)}`;
@@ -8622,6 +8716,7 @@ if (typeof window !== 'undefined') {
   window.synthesizeRepTrajectory = synthesizeRepTrajectory;
   window.renderBarPathStage = renderBarPathStage;
   window.renderVelocityChangeGraph = renderVelocityChangeGraph;
+  window.refreshLiveStageCanvases = refreshLiveStageCanvases;
   window.triggerVelocityGraphTween = triggerVelocityGraphTween;
   window.openRepReplayModal = openRepReplayModal;
   window.closeRepReplayModal = closeRepReplayModal;

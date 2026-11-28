@@ -457,8 +457,8 @@ runTest('2.3 Initial state: PATH mode active, empty set shows WAITING message', 
 
   mockWindow.renderBarPathStage(0, 1.0);
 
-  const fillTextOp = ctx.operations.find(o => o.op === 'fillText' && o.args[0].includes('WAITING FOR REP 1'));
-  assert.ok(fillTextOp, 'Canvas must render "WAITING FOR REP 1..." when no reps present');
+  const fillTextOp = ctx.operations.find(o => o.op === 'fillText' && o.args[0].includes('Waiting for Rep 1'));
+  assert.ok(fillTextOp, 'Canvas must render "Waiting for Rep 1..." when no reps present');
   assert.strictEqual(elements['barpath-hud-dev'].textContent, '0.0 cm');
   assert.strictEqual(elements['barpath-hud-eff'].textContent, '100%');
 });
@@ -602,39 +602,39 @@ runTest('3.3 Canvas renders VEL mode with sticking point and MVT baseline', () =
 
 runTest('3.4 Replay play/pause toggle manages state and button text', () => {
   const replayText = elements['barpath-replay-text'];
-  assert.strictEqual(replayText.textContent, 'REPLAY');
+  assert.strictEqual(replayText.textContent, 'Replay');
 
   // Trigger startReplay
   mockWindow.startReplay();
-  assert.strictEqual(replayText.textContent, 'PAUSE');
+  assert.strictEqual(replayText.textContent, 'Pause');
 
   // Trigger stopReplay
   mockWindow.stopReplay();
-  assert.strictEqual(replayText.textContent, 'REPLAY');
+  assert.strictEqual(replayText.textContent, 'Replay');
 });
 
 runTest('3.5 Speed toggle (1.0X <-> 0.5X) updates label and duration math', () => {
   const speedLabel = elements['barpath-speed-label'];
-  assert.strictEqual(speedLabel.textContent, '1.0X');
+  assert.strictEqual(speedLabel.textContent, '1.0x');
 
   // Toggle to 0.5X
   vm.runInContext('toggleReplaySpeed();', context);
-  assert.strictEqual(speedLabel.textContent, '0.5X');
+  assert.strictEqual(speedLabel.textContent, '0.5x');
 
   // Toggle back to 1.0X
   vm.runInContext('toggleReplaySpeed();', context);
-  assert.strictEqual(speedLabel.textContent, '1.0X');
+  assert.strictEqual(speedLabel.textContent, '1.0x');
 
   // Rapid speed toggle stress test
   for (let i = 0; i < 20; i++) {
     vm.runInContext('toggleReplaySpeed();', context);
-    const expected = (i % 2 === 0) ? '0.5X' : '1.0X';
+    const expected = (i % 2 === 0) ? '0.5x' : '1.0x';
     assert.strictEqual(speedLabel.textContent, expected);
   }
-  if (speedLabel.textContent !== '1.0X') {
+  if (speedLabel.textContent !== '1.0x') {
     vm.runInContext('toggleReplaySpeed();', context);
   }
-  assert.strictEqual(speedLabel.textContent, '1.0X');
+  assert.strictEqual(speedLabel.textContent, '1.0x');
 });
 
 runTest('3.6 Replay automatically restarts from 0% when scrubber is at 100%', () => {
@@ -674,14 +674,14 @@ runTest('4.1 Scrubber updates % ROM, inst velocity, and inst deviation at 0%, 50
 
 runTest('4.2 Scrubber event listener stops active replay and redraws progress', () => {
   mockWindow.startReplay();
-  assert.strictEqual(elements['barpath-replay-text'].textContent, 'PAUSE');
+  assert.strictEqual(elements['barpath-replay-text'].textContent, 'Pause');
 
   // Trigger input on scrubber
   const scrubber = elements['barpath-scrubber'];
   scrubber.value = '42';
   scrubber.dispatchEvent({ type: 'input', target: { value: '42' } });
 
-  assert.strictEqual(elements['barpath-replay-text'].textContent, 'REPLAY', 'Input must pause replay');
+  assert.strictEqual(elements['barpath-replay-text'].textContent, 'Replay', 'Input must pause replay');
   assert.strictEqual(elements['barpath-scrub-rom'].textContent, '42% ROM');
 });
 
@@ -714,12 +714,12 @@ runTest('5.1 Lifecycle: startNewSet adds set-active-compact, endActiveSet remove
   // Start new set
   vm.runInContext('startNewSet();', context);
   assert.ok(panel.classList.contains('set-active-compact'), 'startNewSet must add set-active-compact');
-  assert.strictEqual(btnSetText.textContent, 'END SET', 'btn-set-text must show "END SET"');
+  assert.strictEqual(btnSetText.textContent, 'End Set', 'btn-set-text must show "End Set"');
 
   // End active set
   vm.runInContext('endActiveSet();', context);
   assert.ok(!panel.classList.contains('set-active-compact'), 'endActiveSet must remove set-active-compact');
-  assert.strictEqual(btnSetText.textContent, 'START SET', 'btn-set-text must show "START SET"');
+  assert.strictEqual(btnSetText.textContent, 'Start Set', 'btn-set-text must show "Start Set"');
 });
 
 runTest('5.2 CSS Auto-Collapse rules defined in style.css', () => {

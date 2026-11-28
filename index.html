@@ -10,10 +10,7 @@
   <title>Eros</title>
   <link rel="icon" href="data:," />
   
-  <!-- Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Typography (Helvetica Neue) -->
   
   <!-- Glass OS Stylesheet -->
   <link rel="stylesheet" href="style.css" />
@@ -74,7 +71,7 @@
               <path d="M9 3h6"></path>
               <path d="M12 3v2"></path>
             </svg>
-            <span class="rest-ticker-label sr-only">REST</span>
+            <span class="rest-ticker-label sr-only">Rest</span>
             <span class="rest-ticker-time" id="header-rest-time">00:00</span>
           </div>
           <div id="status-badge" class="glass-pill status-disconnected" role="button" tabindex="0" aria-label="Eros Connection" data-prep-tooltip-key="header_status_badge">
@@ -92,7 +89,7 @@
         <div class="session-info">
           <div class="session-label-group">
             <span class="pulse-indicator" id="session-pulse"></span>
-            <span class="session-status" id="session-status-text">NO ACTIVE WORKOUT</span>
+            <span class="session-status" id="session-status-text">No Active Workout</span>
           </div>
           <div class="session-clocks-row">
             <div class="session-timer font-mono" id="session-timer-display">00:00:00</div>
@@ -104,7 +101,7 @@
             <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
-            <span id="btn-workout-text" class="sr-only">START WORKOUT</span>
+            <span id="btn-workout-text" class="sr-only">Start Workout</span>
             <span class="btn-short-label" aria-hidden="true">New</span>
           </button>
           <button type="button" id="btn-programmed-workout" class="btn-programmed-workout" aria-expanded="false" aria-controls="live-programmed-drawer" data-prep-tooltip-key="live_programmed_workout">
@@ -124,7 +121,7 @@
         <div class="live-programmed-drawer-backdrop" id="live-programmed-drawer-backdrop"></div>
         <div class="live-programmed-drawer-sheet">
           <div class="live-programmed-drawer-header">
-            <span id="live-programmed-drawer-title" class="live-programmed-drawer-title font-mono">TODAY'S PROGRAMMED SLOTS</span>
+            <span id="live-programmed-drawer-title" class="live-programmed-drawer-title font-mono">Today's Programmed Slots</span>
             <button type="button" id="btn-programmed-drawer-close" class="live-programmed-drawer-close eros-icon-btn" aria-label="Close Programmed Drawer">
               <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -168,24 +165,24 @@
                     <path d="M21 9v6"></path>
                     <line x1="6.5" y1="12" x2="17.5" y2="12"></line>
                   </svg>
-                  <span class="select-prefix sr-only">LIFT:</span>
+                  <span class="select-prefix sr-only">Lift:</span>
                   <span id="selected-lift-code" class="select-code font-mono" aria-hidden="true">DL</span>
-                  <span id="selected-lift-text" class="select-value">DEADLIFT</span>
+                  <span id="selected-lift-text" class="select-value">Deadlift</span>
                 </span>
                 <span class="select-chevron" aria-hidden="true">▾</span>
               </div>
               <div class="custom-select-options glass-dropdown" id="lift-select-options" role="listbox" aria-label="Exercise Lifts">
                 <div class="custom-option selected" data-value="Deadlift" data-code="DL" data-cmd="CMD:SL:DL" role="option" aria-selected="true" tabindex="0">
                   <span class="option-dot dl-dot" aria-hidden="true"></span>
-                  <span class="option-name">DEADLIFT</span>
+                  <span class="option-name">Deadlift</span>
                 </div>
                 <div class="custom-option" data-value="Squat" data-code="SQ" data-cmd="CMD:SL:SQ" role="option" aria-selected="false" tabindex="-1">
                   <span class="option-dot sq-dot" aria-hidden="true"></span>
-                  <span class="option-name">SQUAT</span>
+                  <span class="option-name">Squat</span>
                 </div>
                 <div class="custom-option" data-value="Bench" data-code="BP" data-cmd="CMD:SL:BP" role="option" aria-selected="false" tabindex="-1">
                   <span class="option-dot bp-dot" aria-hidden="true"></span>
-                  <span class="option-name">BENCH PRESS</span>
+                  <span class="option-name">Bench Press</span>
                 </div>
               </div>
             </div>
@@ -193,7 +190,7 @@
             <!-- Col 2: Weight Trigger Pill + Floating Popover -->
             <div class="weight-control-wrapper glass-pill" id="live-weight-control" role="group" aria-label="Set Working Weight" data-prep-tooltip-key="live_weight_control">
               <button type="button" class="weight-popover-trigger" id="btn-live-weight-trigger" aria-expanded="false" aria-controls="live-weight-popover" aria-label="Adjust Working Weight">
-                <span class="control-mini-label">WEIGHT</span>
+                <span class="control-mini-label">Weight</span>
                 <span id="live-weight-display" class="weight-trigger-value font-mono tabular-nums">140.0 <span class="weight-unit">kg</span></span>
               </button>
               <div id="live-weight-popover" class="live-weight-popover glass-card" role="dialog" aria-label="Working Weight Adjustment" style="display: none;">
@@ -228,14 +225,14 @@
             <!-- Col 3: Target RPE Trigger Pill + Floating Popover -->
             <div class="target-rpe-module" id="target-rpe-module" data-prep-tooltip-key="live_target_rpe">
               <button type="button" class="target-rpe-trigger" id="btn-target-rpe-trigger" aria-expanded="false" aria-controls="target-rpe-popover" aria-label="Adjust Target RPE">
-                <span class="target-rpe-badge">TARGET</span>
+                <span class="target-rpe-badge">Target</span>
                 <span class="target-rpe-trigger-val font-mono tabular-nums"><span aria-hidden="true">@</span><span class="target-rpe-val" id="target-rpe-display">8.0</span></span>
               </button>
               <div id="target-rpe-popover" class="target-rpe-popover glass-card" role="dialog" aria-label="Target RPE Selector" style="display: none;">
                 <div class="target-rpe-row">
                   <div class="target-rpe-label-wrap">
-                    <span class="target-rpe-popover-title">TARGET RPE</span>
-                    <span class="target-rpe-help sr-only">SET CEILING ALERT</span>
+                    <span class="target-rpe-popover-title">Target RPE</span>
+                    <span class="target-rpe-help sr-only">Set Ceiling Alert</span>
                   </div>
                   <div class="target-rpe-stepper-wrap">
                     <button type="button" class="target-stepper-btn" id="btn-target-rpe-dec" aria-label="Decrease Target RPE">
@@ -265,11 +262,11 @@
               </div>
             </div>
 
-            <!-- Col 4: LIVE RPE Hero Tile -->
+            <!-- Col 4: Live RPE Hero Tile -->
             <div class="glass-card rpe-hero-banner tier-warmup rpe-hero-tile" id="rpe-hero-card">
               <div class="integrated-rpe-tracker">
                 <div class="rpe-tracker-row">
-                  <span class="rpe-tracker-label">LIVE RPE</span>
+                  <span class="rpe-tracker-label">Live RPE</span>
                   <div class="rpe-score-group">
                     <span id="live-rpe" class="rpe-hero-number font-mono tabular-nums">0.0</span>
                     <span class="rpe-hero-denom">/10</span>
@@ -277,7 +274,7 @@
                 </div>
                 <div class="rpe-badge-group">
                   <span class="rpe-rir-pill font-mono" id="live-rir-pill">RIR: 10.0</span>
-                  <span class="rpe-tier-badge" id="rpe-tier-badge">WARMUP</span>
+                  <span class="rpe-tier-badge" id="rpe-tier-badge">Warmup</span>
                 </div>
               </div>
 
@@ -299,7 +296,7 @@
                   <div class="rpe-particles-emitter" id="rpe-particles-emitter" aria-hidden="true"></div>
                   <div class="rpe-target-pin" id="rpe-target-pin" style="left: 80%;">
                     <span class="target-tick"></span>
-                    <span class="target-text">TARGET 8.0</span>
+                    <span class="target-text">Target 8.0</span>
                   </div>
                 </div>
                 <div class="rpe-baseline-sub font-mono" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
@@ -336,12 +333,12 @@
                 </div>
                 <div class="velocity-graph-readouts">
                   <div class="vel-readout-pill">
-                    <span class="vel-readout-tag">PEAK</span>
+                    <span class="vel-readout-tag">Peak</span>
                     <span id="live-peak-vel" class="metric-number font-mono tabular-nums">0.00</span>
                     <span class="metric-unit">m/s</span>
                   </div>
                   <div class="vel-readout-pill">
-                    <span class="vel-readout-tag">MEAN</span>
+                    <span class="vel-readout-tag">Mean</span>
                     <span id="live-velocity" class="metric-number font-mono tabular-nums">0.00</span>
                     <span class="metric-unit">m/s</span>
                   </div>
@@ -352,10 +349,10 @@
 
               <!-- Hidden/Compact Compatibility Telemetry Stubs -->
               <div class="velocity-compat-stubs sr-only" aria-hidden="true" style="display: none;">
-                <span class="vel-zone-badge font-mono" id="live-vel-zone-badge" style="display: none;">SPEED</span>
-                <span class="vel-zone-badge font-mono" id="live-peak-zone-badge" style="display: none;">PEAK</span>
+                <span class="vel-zone-badge font-mono" id="live-vel-zone-badge" style="display: none;">Speed</span>
+                <span class="vel-zone-badge font-mono" id="live-peak-zone-badge" style="display: none;">Peak</span>
                 <div class="target-velocity-badge font-mono" id="live-target-vel-badge" style="display: none;">
-                  <span class="badge-label">TARGET</span>
+                  <span class="badge-label">Target</span>
                   <span class="badge-value" id="live-target-vel-val">0.35</span>
                   <span class="badge-delta positive" id="live-vel-delta">+0.00</span>
                 </div>
@@ -387,8 +384,8 @@
             </svg>
           </div>
           <div class="summary-text-block">
-            <span class="summary-title" id="summary-set-title">SET 1 COMPLETED</span>
-            <span class="summary-metrics font-mono" id="summary-set-metrics">1 REP @ 0.0 kg • AVG 0.00 m/s</span>
+            <span class="summary-title" id="summary-set-title">Set 1 Completed</span>
+            <span class="summary-metrics font-mono" id="summary-set-metrics">1 Rep @ 0.0 kg • Avg 0.00 m/s</span>
           </div>
           <div class="summary-quick-trim" id="summary-quick-trim">
             <button type="button" id="btn-summary-weight-dec" class="summary-trim-btn" aria-label="Decrease next set weight by 2.5 kg" data-prep-tooltip-key="summary_weight_trim">
@@ -408,7 +405,7 @@
               <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
-              <span>NEXT</span>
+              <span>Next</span>
             </button>
           </div>
           <div class="summary-rest-countdown font-mono" id="summary-rest-countdown">
@@ -418,7 +415,7 @@
               <path d="M9 3h6"></path>
               <path d="M12 3v2"></path>
             </svg>
-            <span class="rest-timer-label sr-only">REST</span>
+            <span class="rest-timer-label sr-only">Rest</span>
             <span class="rest-time-val" id="summary-rest-time">03:00</span>
           </div>
         </div>
@@ -426,15 +423,15 @@
         <!-- Quick Summary Mini-HUD -->
         <div class="live-mini-hud">
           <div class="mini-hud-item glass-card">
-            <span class="mini-label">ACTIVE SET</span>
+            <span class="mini-label">Active Set</span>
             <span class="mini-val font-mono" id="hud-active-set">Set 0</span>
           </div>
           <div class="mini-hud-item glass-card">
-            <span class="mini-label">SET REPS</span>
+            <span class="mini-label">Set Reps</span>
             <span class="mini-val font-mono" id="hud-set-reps">0</span>
           </div>
           <div class="mini-hud-item glass-card vel-loss-hud-item" id="hud-vel-loss-card">
-            <span class="mini-label">VEL LOSS</span>
+            <span class="mini-label">Vel Loss</span>
             <div class="fatigue-arc-wrap">
               <svg class="fatigue-arc-svg" viewBox="0 0 52 52" aria-hidden="true">
                 <circle class="fatigue-arc-track" cx="26" cy="26" r="22"></circle>
@@ -459,15 +456,15 @@
           <div id="athlete-prep-header-card" class="glass-card athlete-prep-header-card" data-prep-tooltip-key="prep_plan_title">
             <div class="athlete-prep-header-top">
               <div class="athlete-prep-title-group" data-prep-tooltip-key="prep_plan_title">
-                <span class="athlete-prep-eyebrow font-mono">PREPARATION</span>
+                <span class="athlete-prep-eyebrow font-mono">Preparation</span>
                 <span id="athlete-prep-plan-title" class="athlete-prep-plan-title">No active plan</span>
               </div>
-              <span id="athlete-prep-sync-badge" class="athlete-prep-sync-badge font-mono" data-prep-tooltip-key="prep_sync_badge">LOCAL</span>
+              <span id="athlete-prep-sync-badge" class="athlete-prep-sync-badge font-mono" data-prep-tooltip-key="prep_sync_badge">Local</span>
             </div>
             <div class="athlete-prep-pill-row">
-              <span id="athlete-prep-phase-badge" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_phase_badge">PHASE &mdash;</span>
-              <span id="athlete-prep-week-pill" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_week_pill">WEEK &mdash;</span>
-              <span id="athlete-meet-countdown-pill" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_meet_countdown">NO MEET DATE</span>
+              <span id="athlete-prep-phase-badge" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_phase_badge">Phase &mdash;</span>
+              <span id="athlete-prep-week-pill" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_week_pill">Week &mdash;</span>
+              <span id="athlete-meet-countdown-pill" class="athlete-prep-pill font-mono" data-prep-tooltip-key="prep_meet_countdown">No Meet Date</span>
             </div>
           </div>
 
@@ -504,18 +501,18 @@
 
           <div id="athlete-prep-notes-row" class="athlete-prep-notes-row">
             <div class="glass-card athlete-prep-note-card" data-prep-tooltip-key="prep_session_notes">
-              <span class="athlete-prep-note-label font-mono">COACH SESSION NOTES</span>
+              <span class="athlete-prep-note-label font-mono">Coach Session Notes</span>
               <p id="athlete-prep-workout-notes" class="athlete-prep-note-body">No session notes for this day.</p>
             </div>
             <div class="glass-card athlete-prep-note-card" data-prep-tooltip-key="prep_dietary_notes">
-              <span class="athlete-prep-note-label font-mono">DIETARY NOTES</span>
+              <span class="athlete-prep-note-label font-mono">Dietary Notes</span>
               <p id="athlete-prep-dietary-notes" class="athlete-prep-note-body">No dietary notes for this day.</p>
             </div>
           </div>
 
           <div class="glass-card athlete-prep-slots-card" data-prep-tooltip-key="prep_slot_card">
             <div class="athlete-prep-slots-header">
-              <span class="athlete-prep-note-label font-mono">PRESCRIBED SESSION</span>
+              <span class="athlete-prep-note-label font-mono">Prescribed Session</span>
             </div>
             <div id="athlete-prep-slots-list" class="athlete-prep-slots-list">
               <p class="athlete-prep-empty">No prescribed exercises for this day.</p>
@@ -526,15 +523,15 @@
                   <line x1="8" y1="18" x2="21" y2="18"></line>
                   <polygon points="3 5 6 7 3 9 3 5"></polygon>
                 </svg>
-                <span class="sr-only">START PLANNED WORKOUT</span>
-                <span aria-hidden="true">START PLAN</span>
+                <span class="sr-only">Start Planned Workout</span>
+                <span aria-hidden="true">Start Plan</span>
               </button>
             </div>
           </div>
 
           <div id="athlete-plan-vs-actual-card" class="glass-card athlete-plan-vs-actual-card" data-prep-tooltip-key="prep_plan_vs_actual">
             <div class="athlete-prep-slots-header">
-              <span class="athlete-prep-note-label font-mono">PLANNED VS ACTUAL</span>
+              <span class="athlete-prep-note-label font-mono">Planned vs Actual</span>
             </div>
             <div id="athlete-plan-vs-actual-body" class="athlete-plan-vs-actual-body">
               <p class="athlete-prep-empty">Planned and actual sets appear here side by side.</p>
@@ -548,7 +545,7 @@
                 <line x1="22" y1="2" x2="11" y2="13"></line>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
               </svg>
-              <span class="sr-only">SEND</span>
+              <span class="sr-only">Send</span>
             </button>
           </div>
         </div>
@@ -556,25 +553,25 @@
         <!-- Workout Summary -->
         <div class="glass-card workout-summary-card" id="workout-summary-card" data-prep-tooltip-key="workout_summary">
           <div class="workout-summary-header">
-            <span class="workout-summary-title">WORKOUT</span>
+            <span class="workout-summary-title">Workout</span>
             <span class="workout-summary-status" id="workout-summary-status">No active workout</span>
           </div>
           <div class="workout-summary-grid">
             <div class="workout-summary-metric">
               <span class="workout-summary-val font-mono" id="workout-sum-sets">0</span>
-              <span class="workout-summary-lbl">SETS</span>
+              <span class="workout-summary-lbl">Sets</span>
             </div>
             <div class="workout-summary-metric">
               <span class="workout-summary-val font-mono" id="workout-sum-reps">0</span>
-              <span class="workout-summary-lbl">REPS</span>
+              <span class="workout-summary-lbl">Reps</span>
             </div>
             <div class="workout-summary-metric">
               <span class="workout-summary-val font-mono" id="workout-sum-avg-vel">-</span>
-              <span class="workout-summary-lbl">AVG M/S</span>
+              <span class="workout-summary-lbl">Avg m/s</span>
             </div>
             <div class="workout-summary-metric">
               <span class="workout-summary-val font-mono" id="workout-sum-peak-vel">-</span>
-              <span class="workout-summary-lbl">PEAK M/S</span>
+              <span class="workout-summary-lbl">Peak m/s</span>
             </div>
           </div>
         </div>
@@ -583,17 +580,17 @@
         <div class="glass-card set-hero-panel" id="current-set-card" data-prep-tooltip-key="current_set_metrics">
           <div class="set-meta-header">
             <div class="set-title-group">
-              <span class="set-badge-pill" id="set-badge-label">SET 1</span>
-              <span class="set-lift-title lift-tag" id="set-lift-name" data-lift="deadlift">DEADLIFT</span>
+              <span class="set-badge-pill" id="set-badge-label">Set 1</span>
+              <span class="set-lift-title lift-tag" id="set-lift-name" data-lift="deadlift">Deadlift</span>
             </div>
-            <div class="set-count-pill" id="set-rep-counter">0 REPS RECORDED</div>
+            <div class="set-count-pill" id="set-rep-counter">0 Reps Recorded</div>
           </div>
 
           <!-- Set Weight Module (Workout Page) -->
           <div class="set-weight-module" id="workout-set-weight-module" data-prep-tooltip-key="workout_set_load">
             <div class="set-weight-label-wrap">
-              <span class="set-weight-badge">SET LOAD</span>
-              <span class="set-weight-help">WORKING WEIGHT</span>
+              <span class="set-weight-badge">Set Load</span>
+              <span class="set-weight-help">Working Weight</span>
             </div>
             <div class="weight-control-wrapper glass-pill" id="workout-weight-control" role="group" aria-label="Set Working Weight">
               <button type="button" class="weight-stepper-btn" id="btn-workout-weight-dec" aria-label="Decrease Working Weight">
@@ -634,29 +631,29 @@
             </svg>
             <div class="ring-center-content">
               <div class="ring-value font-mono" id="set-avg-vel">-</div>
-              <div class="ring-metric-label">AVG VELOCITY (M/S)</div>
+              <div class="ring-metric-label">Avg Velocity (m/s)</div>
             </div>
           </div>
 
           <!-- Set Statistics Grid -->
           <div class="set-metrics-grid">
             <div class="stat-card glass-card" data-prep-tooltip-key="workout_peak_velocity">
-              <span class="stat-label">PEAK VELOCITY</span>
+              <span class="stat-label">Peak Velocity</span>
               <span class="stat-value font-mono" id="set-max-vel">-</span>
               <span class="stat-unit">m/s</span>
             </div>
             <div class="stat-card glass-card" data-prep-tooltip-key="workout_velocity_loss">
-              <span class="stat-label">VELOCITY LOSS</span>
+              <span class="stat-label">Velocity Loss</span>
               <span class="stat-value font-mono" id="set-vel-loss">-</span>
               <span class="stat-unit">%</span>
             </div>
             <div class="stat-card glass-card" data-prep-tooltip-key="workout_avg_rpe">
-              <span class="stat-label">AVERAGE RPE</span>
+              <span class="stat-label">Average RPE</span>
               <span class="stat-value font-mono" id="set-avg-rpe">-</span>
               <span class="stat-unit">/10</span>
             </div>
             <div class="stat-card glass-card" data-prep-tooltip-key="workout_min_velocity">
-              <span class="stat-label">MIN VELOCITY</span>
+              <span class="stat-label">Min Velocity</span>
               <span class="stat-value font-mono" id="set-min-vel">-</span>
               <span class="stat-unit">m/s</span>
             </div>
@@ -666,7 +663,7 @@
         <!-- Real-time Rep Stream for Active Set -->
         <section class="active-set-reps-section" data-prep-tooltip-key="active_set_reps">
           <div class="section-title-row">
-            <span class="section-heading">CURRENT SET REPS</span>
+            <span class="section-heading">Current Set Reps</span>
             <span class="section-subtext" id="active-set-rep-counter">0 reps</span>
           </div>
           <div class="reps-table-container glass-card" id="active-set-reps-list">
@@ -677,7 +674,7 @@
         <!-- Sets Table: every set of the workout, tagged with its lift -->
         <section class="workout-sets-section" id="workout-sets-section" aria-label="Workout Sets" data-prep-tooltip-key="workout_sets_history">
           <div class="section-title-row">
-            <span class="section-heading">SETS</span>
+            <span class="section-heading">Sets</span>
             <span class="section-subtext" id="workout-sets-counter">0 sets</span>
           </div>
           <div class="workout-sets-table" id="workout-sets-table">
@@ -694,13 +691,13 @@
         
         <!-- History Top Bar: Athlete Settings Access (Requirement R4) -->
         <div class="history-top-bar">
-          <div class="history-top-bar-title font-mono">ATHLETE RECORDS</div>
+          <div class="history-top-bar-title font-mono">Athlete Records</div>
           <button type="button" id="btn-athlete-settings" class="btn-athlete-settings eros-icon-btn" aria-label="Open Athlete & Coach Settings" data-prep-tooltip-key="history_athlete_settings">
             <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="3"></circle>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
-            <span class="sr-only">SETTINGS</span>
+            <span class="sr-only">Settings</span>
           </button>
         </div>
 
@@ -708,7 +705,7 @@
         <div id="athlete-biometrics-card" class="glass-card athlete-biometrics-card" data-prep-tooltip-key="history_biometrics_card">
           <div class="athlete-bio-header">
             <div class="athlete-bio-title-group">
-              <span class="athlete-bio-title font-mono">ATHLETE DOSSIER</span>
+              <span class="athlete-bio-title font-mono">Athlete Dossier</span>
               <span id="athlete-bio-summary-pill" class="athlete-bio-summary-pill font-mono" style="display: none;"></span>
             </div>
             <div class="athlete-bio-header-actions">
@@ -724,15 +721,15 @@
           <div id="athlete-bio-body" class="athlete-bio-body">
           <div class="athlete-bio-grid">
             <label class="athlete-bio-field" for="bio-age-input">
-              <span class="athlete-bio-label font-mono">AGE</span>
+              <span class="athlete-bio-label font-mono">Age</span>
               <input type="number" id="bio-age-input" class="athlete-bio-input" min="10" max="100" step="1" inputmode="numeric" placeholder="Years">
             </label>
             <label class="athlete-bio-field" for="bio-bw-input">
-              <span class="athlete-bio-label font-mono">BODYWEIGHT (KG)</span>
+              <span class="athlete-bio-label font-mono">Bodyweight (kg)</span>
               <input type="number" id="bio-bw-input" class="athlete-bio-input" min="30" max="300" step="0.1" inputmode="decimal" placeholder="kg">
             </label>
             <label class="athlete-bio-field" for="bio-weight-class-select">
-              <span class="athlete-bio-label font-mono">TARGET CLASS</span>
+              <span class="athlete-bio-label font-mono">Target Class</span>
               <select id="bio-weight-class-select" class="athlete-bio-input">
                 <option value="">Not set</option>
                 <option value="47">47</option>
@@ -755,11 +752,11 @@
               </select>
             </label>
             <label class="athlete-bio-field" for="bio-training-age-input">
-              <span class="athlete-bio-label font-mono">TRAINING AGE (YRS)</span>
+              <span class="athlete-bio-label font-mono">Training Age (yrs)</span>
               <input type="number" id="bio-training-age-input" class="athlete-bio-input" min="0" max="80" step="0.5" inputmode="decimal" placeholder="Years">
             </label>
             <label class="athlete-bio-field" for="bio-exp-tier-select">
-              <span class="athlete-bio-label font-mono">EXPERIENCE TIER</span>
+              <span class="athlete-bio-label font-mono">Experience Tier</span>
               <select id="bio-exp-tier-select" class="athlete-bio-input">
                 <option value="Novice">Novice</option>
                 <option value="Regional">Regional</option>
@@ -768,16 +765,16 @@
               </select>
             </label>
             <label class="athlete-bio-field" for="bio-meets-count-input">
-              <span class="athlete-bio-label font-mono">MEETS COMPLETED</span>
+              <span class="athlete-bio-label font-mono">Meets Completed</span>
               <input type="number" id="bio-meets-count-input" class="athlete-bio-input" min="0" max="500" step="1" inputmode="numeric" placeholder="0">
             </label>
             <label class="athlete-bio-field athlete-bio-field-wide" for="bio-federation-input">
-              <span class="athlete-bio-label font-mono">FEDERATION</span>
+              <span class="athlete-bio-label font-mono">Federation</span>
               <input type="text" id="bio-federation-input" class="athlete-bio-input" maxlength="48" placeholder="e.g., IPF, national federation" autocomplete="off">
             </label>
           </div>
           <div class="athlete-bio-days">
-            <span class="athlete-bio-label font-mono">AVAILABLE TRAINING DAYS</span>
+            <span class="athlete-bio-label font-mono">Available Training Days</span>
             <div id="bio-available-days-group" class="bio-available-days-group" role="group" aria-label="Available training days">
               <button type="button" class="bio-day-pill" data-day="Mon" aria-pressed="false">Mon</button>
               <button type="button" class="bio-day-pill" data-day="Tue" aria-pressed="false">Tue</button>
@@ -789,7 +786,7 @@
             </div>
           </div>
           <label class="athlete-bio-field athlete-bio-field-notes" for="bio-duties-notes-input">
-            <span class="athlete-bio-label font-mono">DUTIES AND INJURY NOTES</span>
+            <span class="athlete-bio-label font-mono">Duties and Injury Notes</span>
             <textarea id="bio-duties-notes-input" class="athlete-bio-input athlete-bio-textarea" rows="3" maxlength="500" placeholder="Work schedule, injuries, constraints your coach should factor in"></textarea>
           </label>
           <div class="athlete-bio-actions">
@@ -798,7 +795,7 @@
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                 <polyline points="9 10 11 12 15 8"></polyline>
               </svg>
-              <span>SAVE<span class="sr-only"> DOSSIER</span></span>
+              <span>Save<span class="sr-only"> Dossier</span></span>
             </button>
           </div>
           </div>
@@ -808,23 +805,23 @@
         <div class="glass-card history-summary-card">
           <div class="summary-metric">
             <span class="sum-val font-mono" id="sum-workouts">0</span>
-            <span class="sum-lbl">WORKOUTS</span>
+            <span class="sum-lbl">Workouts</span>
           </div>
           <div class="summary-metric">
             <span class="sum-val font-mono" id="sum-sets">0</span>
-            <span class="sum-lbl">SETS</span>
+            <span class="sum-lbl">Sets</span>
           </div>
           <div class="summary-metric">
             <span class="sum-val font-mono" id="sum-reps">0</span>
-            <span class="sum-lbl">REPS</span>
+            <span class="sum-lbl">Reps</span>
           </div>
           <div class="summary-metric">
             <span class="sum-val font-mono" id="sum-best-vel">0.00</span>
-            <span class="sum-lbl">PEAK M/S</span>
+            <span class="sum-lbl">Peak m/s</span>
           </div>
           <div class="summary-metric">
             <span class="sum-val font-mono" id="sum-volume">0 kg</span>
-            <span class="sum-lbl">VOLUME</span>
+            <span class="sum-lbl">Volume</span>
           </div>
         </div>
 
@@ -836,12 +833,12 @@
           <!-- Current PRs Card -->
           <div class="glass-card pr-card" id="current-prs-card">
             <div class="pr-card-header">
-              <span class="pr-card-title">CURRENT 1RM & PEAK VELOCITY</span>
-              <span class="pr-card-badge font-mono">GYM PR</span>
+              <span class="pr-card-title">Current 1RM & Peak Velocity</span>
+              <span class="pr-card-badge font-mono">Gym PR</span>
             </div>
             <div class="pr-lifts-grid">
               <div class="pr-lift-item">
-                <span class="pr-lift-name">SQUAT</span>
+                <span class="pr-lift-name">Squat</span>
                 <div class="pr-input-wrap">
                   <input type="number" id="pr-squat-weight" class="pr-num-input font-mono" value="140.0" step="0.5" min="0" max="600" aria-label="Squat 1RM weight in kg">
                   <span class="pr-unit">kg</span>
@@ -850,13 +847,13 @@
                   <span class="pr-gym-badge font-mono" id="pr-squat-badge">140.0 kg • 0.35 m/s • RPE 9.5</span>
                 </div>
                 <div class="pr-eros-telemetry">
-                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>
+                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> Peak</span>
                   <span id="pr-squat-vel" class="telemetry-val font-mono">0.00 m/s</span>
                 </div>
               </div>
 
               <div class="pr-lift-item">
-                <span class="pr-lift-name">BENCH</span>
+                <span class="pr-lift-name">Bench</span>
                 <div class="pr-input-wrap">
                   <input type="number" id="pr-bench-weight" class="pr-num-input font-mono" value="100.0" step="0.5" min="0" max="500" aria-label="Bench Press 1RM weight in kg">
                   <span class="pr-unit">kg</span>
@@ -865,13 +862,13 @@
                   <span class="pr-gym-badge font-mono" id="pr-bench-badge">100.0 kg • 0.25 m/s • RPE 9.5</span>
                 </div>
                 <div class="pr-eros-telemetry">
-                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>
+                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> Peak</span>
                   <span id="pr-bench-vel" class="telemetry-val font-mono">0.00 m/s</span>
                 </div>
               </div>
 
               <div class="pr-lift-item">
-                <span class="pr-lift-name">DEADLIFT</span>
+                <span class="pr-lift-name">Deadlift</span>
                 <div class="pr-input-wrap">
                   <input type="number" id="pr-deadlift-weight" class="pr-num-input font-mono" value="180.0" step="0.5" min="0" max="600" aria-label="Deadlift 1RM weight in kg">
                   <span class="pr-unit">kg</span>
@@ -880,13 +877,13 @@
                   <span class="pr-gym-badge font-mono" id="pr-deadlift-badge">180.0 kg • 0.28 m/s • RPE 9.5</span>
                 </div>
                 <div class="pr-eros-telemetry">
-                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> PEAK</span>
+                  <span class="telemetry-lbl"><span class="eros-wordmark">Eros</span> Peak</span>
                   <span id="pr-deadlift-vel" class="telemetry-val font-mono">0.00 m/s</span>
                 </div>
               </div>
             </div>
             <div class="pr-card-footer">
-              <span class="footer-label">GYM TOTAL</span>
+              <span class="footer-label">Gym Total</span>
               <span id="pr-current-total" class="footer-val font-mono">420.0 kg</span>
             </div>
           </div>
@@ -894,12 +891,12 @@
           <!-- Competition PR Box ("COMP PR") -->
           <div class="glass-card pr-card" id="comp-pr-box">
             <div class="pr-card-header">
-              <span class="pr-card-title">ALL-TIME COMPETITION RECORDS</span>
-              <span class="pr-card-badge comp-badge font-mono">COMP PR</span>
+              <span class="pr-card-title">All-Time Competition Records</span>
+              <span class="pr-card-badge comp-badge font-mono">Comp PR</span>
             </div>
             <div class="pr-lifts-grid">
               <div class="pr-lift-item">
-                <span class="pr-lift-name">COMP SQUAT</span>
+                <span class="pr-lift-name">Comp Squat</span>
                 <div class="pr-input-wrap">
                   <input type="number" id="comp-squat-weight" class="pr-num-input font-mono" value="150.0" step="0.5" min="0" max="600" aria-label="Competition Squat in kg">
                   <span class="pr-unit">kg</span>
@@ -907,7 +904,7 @@
               </div>
 
               <div class="pr-lift-item">
-                <span class="pr-lift-name">COMP BENCH</span>
+                <span class="pr-lift-name">Comp Bench</span>
                 <div class="pr-input-wrap">
                   <input type="number" id="comp-bench-weight" class="pr-num-input font-mono" value="105.0" step="0.5" min="0" max="500" aria-label="Competition Bench in kg">
                   <span class="pr-unit">kg</span>
@@ -915,7 +912,7 @@
               </div>
 
               <div class="pr-lift-item">
-                <span class="pr-lift-name">COMP DEADLIFT</span>
+                <span class="pr-lift-name">Comp Deadlift</span>
                 <div class="pr-input-wrap">
                   <input type="number" id="comp-deadlift-weight" class="pr-num-input font-mono" value="190.0" step="0.5" min="0" max="600" aria-label="Competition Deadlift in kg">
                   <span class="pr-unit">kg</span>
@@ -923,7 +920,7 @@
               </div>
             </div>
             <div class="pr-card-footer">
-              <span class="footer-label">COMP TOTAL</span>
+              <span class="footer-label">Comp Total</span>
               <span id="comp-pr-total" class="footer-val font-mono">445.0 kg</span>
             </div>
           </div>
@@ -932,19 +929,19 @@
           <div class="glass-card dots-calculator-card" id="dots-calculator-module">
             <div class="dots-header">
               <div class="dots-title-group">
-                <span class="dots-title">LIVE DOTS CALCULATOR</span>
-                <span class="dots-subtitle">OFFICIAL IPF RELATIVE STRENGTH ENGINE</span>
+                <span class="dots-title">Live DOTS Calculator</span>
+                <span class="dots-subtitle">Official IPF Relative Strength Engine</span>
               </div>
               <!-- Gender Selector Segmented Capsule -->
               <div class="dots-gender-pill" role="radiogroup" aria-label="Athlete Gender">
-                <button type="button" class="dots-gender-btn active" id="dots-gender-male" data-gender="male" role="radio" aria-checked="true">MALE</button>
-                <button type="button" class="dots-gender-btn" id="dots-gender-female" data-gender="female" role="radio" aria-checked="false">FEMALE</button>
+                <button type="button" class="dots-gender-btn active" id="dots-gender-male" data-gender="male" role="radio" aria-checked="true">Male</button>
+                <button type="button" class="dots-gender-btn" id="dots-gender-female" data-gender="female" role="radio" aria-checked="false">Female</button>
               </div>
             </div>
 
             <div class="dots-inputs-row">
               <div class="dots-bw-group">
-                <label for="dots-bodyweight-input" class="dots-label">BODYWEIGHT</label>
+                <label for="dots-bodyweight-input" class="dots-label">Bodyweight</label>
                 <div class="dots-input-wrap">
                   <input type="number" id="dots-bodyweight-input" class="dots-input font-mono" value="80.0" step="0.1" min="30" max="300" aria-label="Athlete bodyweight in kg">
                   <span class="dots-unit">kg</span>
@@ -952,27 +949,27 @@
               </div>
 
               <div class="dots-source-group">
-                <label class="dots-label">CALCULATE FROM</label>
+                <label class="dots-label">Calculate From</label>
                 <div class="dots-source-pill">
-                  <button type="button" class="dots-source-btn active" id="dots-src-current" data-source="current">GYM PRs</button>
-                  <button type="button" class="dots-source-btn" id="dots-src-comp" data-source="comp">COMP PRs</button>
+                  <button type="button" class="dots-source-btn active" id="dots-src-current" data-source="current">Gym PRs</button>
+                  <button type="button" class="dots-source-btn" id="dots-src-comp" data-source="comp">Comp PRs</button>
                 </div>
               </div>
             </div>
 
             <div class="dots-results-banner">
               <div class="dots-score-box">
-                <span class="dots-score-label">DOTS SCORE</span>
+                <span class="dots-score-label">DOTS Score</span>
                 <span id="dots-score-display" class="dots-score-value font-mono">289.61</span>
               </div>
               <div class="dots-meta-box">
                 <div class="dots-meta-item">
-                  <span class="meta-label">TOTAL LOAD</span>
+                  <span class="meta-label">Total Load</span>
                   <span id="dots-total-display" class="meta-val font-mono">420.0 kg</span>
                 </div>
                 <div class="dots-meta-item">
-                  <span class="meta-label">TIER</span>
-                  <span id="dots-tier-badge" class="dots-tier-pill">CLASS II</span>
+                  <span class="meta-label">Tier</span>
+                  <span id="dots-tier-badge" class="dots-tier-pill">Class II</span>
                 </div>
               </div>
             </div>
@@ -988,7 +985,7 @@
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            <span><span class="sr-only">EXPORT </span>CSV</span>
+            <span><span class="sr-only">Export </span>CSV</span>
           </button>
           <button id="btn-export-json" class="btn-action-glass" data-prep-tooltip-key="history_export_json">
             <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -996,14 +993,14 @@
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            <span><span class="sr-only">EXPORT </span>JSON</span>
+            <span><span class="sr-only">Export </span>JSON</span>
           </button>
           <button id="btn-clear-history" class="btn-action-glass btn-danger" aria-label="Clear History" data-prep-tooltip-key="history_clear">
             <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
-            <span class="sr-only">CLEAR</span>
+            <span class="sr-only">Clear</span>
           </button>
         </div>
 
@@ -2333,7 +2330,7 @@
     <!-- Smart PR Auto-Suggest Pop-up -->
     <div id="pr-confirm-hud" class="pr-confirm-hud" role="alertdialog" aria-labelledby="pr-confirm-summary" aria-live="polite" aria-hidden="true">
       <div class="pr-confirm-copy">
-        <span class="pr-confirm-eyebrow font-mono">PERSONAL RECORD CANDIDATE</span>
+        <span class="pr-confirm-eyebrow font-mono">Personal Record Candidate</span>
         <span id="pr-confirm-summary" class="pr-confirm-summary">New best detected.</span>
         <div id="pr-confirm-metrics" class="pr-confirm-metrics font-mono"></div>
       </div>
@@ -2347,14 +2344,14 @@
             <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
             <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
           </svg>
-          <span>PUSH PR</span>
+          <span>Push PR</span>
         </button>
         <button type="button" id="btn-dismiss-push-pr" class="pr-confirm-btn pr-confirm-btn-ghost eros-icon-btn" aria-label="Dismiss PR candidate">
           <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          <span class="sr-only">DISMISS</span>
+          <span class="sr-only">Dismiss</span>
         </button>
       </div>
     </div>
@@ -2383,7 +2380,7 @@
             <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <polygon points="5 3 19 12 5 21"></polygon>
             </svg>
-            <span class="btn-text" id="barpath-replay-text">REPLAY</span>
+            <span class="btn-text" id="barpath-replay-text">Replay</span>
           </button>
         </div>
 
@@ -2406,12 +2403,12 @@
         <div class="barpath-replay-panel sr-only" id="barpath-replay-panel" aria-hidden="true" style="display: none;">
           <div class="barpath-hud-top">
             <button type="button" class="barpath-mode-pill font-mono" id="btn-barpath-mode" aria-label="Toggle Bar Path Mode" data-prep-tooltip-key="live_barpath_mode">
-              <span class="mode-opt active" id="barpath-mode-path">PATH</span>
+              <span class="mode-opt active" id="barpath-mode-path">Path</span>
               <span class="mode-sep">/</span>
-              <span class="mode-opt" id="barpath-mode-vel">VEL</span>
+              <span class="mode-opt" id="barpath-mode-vel">Vel</span>
             </button>
             <button type="button" class="barpath-variant-pill font-mono" id="btn-variant-switcher" aria-label="Switch Animation Variant" aria-haspopup="dialog" aria-expanded="false" data-prep-tooltip-key="live_barpath_variant">
-              <span class="variant-label">VAR:</span>
+              <span class="variant-label">Var:</span>
               <span class="variant-current" id="barpath-active-variant">A</span>
             </button>
             <div class="barpath-hud-metrics font-mono" id="barpath-hud-metrics">
@@ -2430,15 +2427,15 @@
           <div class="barpath-controls-row">
             <div class="barpath-playback-btns">
               <button type="button" class="btn-barpath-ctrl" id="btn-barpath-speed" aria-label="Toggle Replay Speed">
-                <span id="barpath-speed-label">1.0X</span>
+                <span id="barpath-speed-label">1.0x</span>
               </button>
             </div>
             <div class="barpath-rep-pills" id="barpath-rep-pills" role="radiogroup" aria-label="Rep Selector"></div>
           </div>
           <div class="variant-switcher-sheet" id="variant-switcher-sheet" role="dialog" aria-modal="true" aria-label="Repetition Animation Prototype Switcher" style="display: none;">
             <div class="variant-sheet-header">
-              <span class="variant-sheet-title font-mono">ANIMATION VARIANTS</span>
-              <button type="button" class="variant-sheet-close font-mono" id="btn-variant-sheet-close" aria-label="Close Variant Switcher">DONE</button>
+              <span class="variant-sheet-title font-mono">Animation Variants</span>
+              <button type="button" class="variant-sheet-close font-mono" id="btn-variant-sheet-close" aria-label="Close Variant Switcher">Done</button>
             </div>
             <div class="variant-cards-grid" role="radiogroup" aria-label="Select Animation Variant">
               <div class="variant-card active" data-variant="A" role="radio" aria-checked="true" tabindex="0"></div>
@@ -2447,7 +2444,7 @@
               <div class="variant-card" data-variant="D" role="radio" aria-checked="false" tabindex="0"></div>
             </div>
             <div class="variant-sheet-actions">
-              <button type="button" class="btn-variant-audition font-mono" id="btn-variant-audition-rep" aria-label="Audition Simulated Repetition">AUDITION REP</button>
+              <button type="button" class="btn-variant-audition font-mono" id="btn-variant-audition-rep" aria-label="Audition Simulated Repetition">Audition Rep</button>
             </div>
           </div>
         </div>
@@ -2460,14 +2457,14 @@
         <svg class="eros-svg-icon eros-svg-icon--lg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polygon points="5 3 19 12 5 21 5 3"></polygon>
         </svg>
-        <span id="btn-set-text" class="sr-only">START SET</span>
+        <span id="btn-set-text" class="sr-only">Start Set</span>
         <span class="btn-short-label" aria-hidden="true">Start Set</span>
       </button>
       <button type="button" id="btn-complete-set" class="btn-complete-set font-mono" style="display: none;" aria-label="Stop Current Set" data-prep-tooltip-key="live_complete_set">
         <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <rect x="5" y="5" width="14" height="14" rx="2"></rect>
         </svg>
-        <span class="sr-only">COMPLETE SET</span>
+        <span class="sr-only">Complete Set</span>
         <span aria-hidden="true">Stop Set</span>
       </button>
     </div>
@@ -2479,7 +2476,7 @@
         <svg class="nav-icon eros-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
-        <span class="nav-label sr-only">LIVE</span>
+        <span class="nav-label sr-only">Live</span>
       </button>
       <button class="nav-tab" data-target="set" aria-label="Preparation Tab" data-prep-tooltip-key="nav_prep">
         <svg class="nav-icon eros-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2489,7 +2486,7 @@
           <line x1="3" y1="10" x2="21" y2="10"></line>
           <polyline points="8 15 11 18 16 13"></polyline>
         </svg>
-        <span class="nav-label sr-only">PREP</span>
+        <span class="nav-label sr-only">Prep</span>
       </button>
       <button class="nav-tab" data-target="history" aria-label="Athlete Profile Tab" data-prep-tooltip-key="nav_history">
         <svg class="nav-icon eros-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2497,7 +2494,7 @@
           <circle cx="12" cy="10" r="2.6"></circle>
           <path d="M7.6 16.2a5 5 0 0 1 8.8 0"></path>
         </svg>
-        <span class="nav-label sr-only">PROFILE</span>
+        <span class="nav-label sr-only">Profile</span>
       </button>
     </nav>
 
@@ -2602,14 +2599,14 @@
         <div class="ble-search-header">
           <div class="ble-title-group">
             <span class="eros-wordmark ble-wordmark">Eros</span>
-            <span id="ble-search-title" class="ble-search-title">BLUETOOTH CONNECTION</span>
+            <span id="ble-search-title" class="ble-search-title">Bluetooth Connection</span>
           </div>
           <button type="button" id="btn-close-ble-search" class="ble-close-btn eros-icon-btn" aria-label="Close Eros Connection">
             <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
-            <span class="close-label sr-only">CLOSE</span>
+            <span class="close-label sr-only">Close</span>
           </button>
         </div>
       </div>
@@ -2664,7 +2661,7 @@
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
           </svg>
-          <span class="btn-text">CONNECT <span class="eros-wordmark">Eros</span></span>
+          <span class="btn-text">Connect <span class="eros-wordmark">Eros</span></span>
         </button>
       </div>
     </div>
@@ -2674,7 +2671,7 @@
   <div id="coach-cue-hud" class="coach-cue-hud" role="status" aria-live="polite" style="display: none;">
     <div class="coach-cue-pill">
       <span class="coach-cue-dot" aria-hidden="true"></span>
-      <span class="coach-cue-prefix">CUE:</span>
+      <span class="coach-cue-prefix">Cue:</span>
       <span id="coach-cue-text" class="coach-cue-text font-mono"></span>
     </div>
   </div>
@@ -2689,7 +2686,7 @@
         </div>
         <div class="directive-meta">
           <span class="coach-name" id="coach-directive-title">Coach Directive</span>
-          <span class="directive-type-label" id="coach-directive-type">LOAD OVERRIDE</span>
+          <span class="directive-type-label" id="coach-directive-type">Load Override</span>
         </div>
         <span class="directive-timestamp font-mono" id="coach-directive-time">Just now</span>
       </div>
@@ -2742,7 +2739,7 @@
     <div class="athlete-settings-card glass-card">
       <div class="athlete-settings-header">
         <div class="athlete-settings-title-group">
-          <h3 id="athlete-settings-title" class="athlete-settings-title">ATHLETE & COACH SETTINGS</h3>
+          <h3 id="athlete-settings-title" class="athlete-settings-title">Athlete & Coach Settings</h3>
           <span class="athlete-settings-sub">Connection & Profile Configuration</span>
         </div>
         <button type="button" id="btn-athlete-settings-close" class="athlete-settings-close-btn eros-icon-btn" aria-label="Close Settings">
@@ -2750,7 +2747,7 @@
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          <span class="sr-only">CLOSE</span>
+          <span class="sr-only">Close</span>
         </button>
       </div>
 

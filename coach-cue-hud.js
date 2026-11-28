@@ -85,7 +85,7 @@
       dom.cueHud.innerHTML = `
         <div class="coach-cue-pill">
           <span class="coach-cue-dot" aria-hidden="true"></span>
-          <span class="coach-cue-prefix">CUE:</span>
+          <span class="coach-cue-prefix">Cue:</span>
           <span id="coach-cue-text" class="coach-cue-text font-mono"></span>
         </div>
       `;
@@ -115,7 +115,7 @@
             </div>
             <div class="directive-meta">
               <span class="coach-name" id="coach-directive-title">Coach Directive</span>
-              <span class="directive-type-label" id="coach-directive-type">LOAD OVERRIDE</span>
+              <span class="directive-type-label" id="coach-directive-type">Load Override</span>
             </div>
             <span class="directive-timestamp font-mono" id="coach-directive-time">Just now</span>
           </div>

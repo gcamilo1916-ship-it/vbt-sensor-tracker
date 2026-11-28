@@ -14,8 +14,8 @@
     {
       id: 'power',
       name: 'Power / Speed',
-      label: 'POWER / SPEED (>1.0 m/s)',
-      shortLabel: 'POWER',
+      label: 'Power / Speed (>1.0 m/s)',
+      shortLabel: 'Power',
       min: 1.00,
       max: Infinity,
       cssClass: 'vel-zone-power',
@@ -26,8 +26,8 @@
     {
       id: 'speed',
       name: 'Speed-Strength',
-      label: 'SPEED-STRENGTH (0.75-1.0 m/s)',
-      shortLabel: 'SPEED-STRENGTH',
+      label: 'Speed-Strength (0.75-1.0 m/s)',
+      shortLabel: 'Speed-Strength',
       min: 0.75,
       max: 1.00,
       cssClass: 'vel-zone-speed',
@@ -38,8 +38,8 @@
     {
       id: 'strength',
       name: 'Strength-Speed',
-      label: 'STRENGTH-SPEED (0.5-0.75 m/s)',
-      shortLabel: 'STRENGTH-SPEED',
+      label: 'Strength-Speed (0.5-0.75 m/s)',
+      shortLabel: 'Strength-Speed',
       min: 0.50,
       max: 0.75,
       cssClass: 'vel-zone-strength',
@@ -50,8 +50,8 @@
     {
       id: 'accel',
       name: 'Accelerative Strength',
-      label: 'ACCEL STRENGTH (0.3-0.5 m/s)',
-      shortLabel: 'ACCEL',
+      label: 'Accel Strength (0.3-0.5 m/s)',
+      shortLabel: 'Accel',
       min: 0.30,
       max: 0.50,
       cssClass: 'vel-zone-accel',
@@ -62,8 +62,8 @@
     {
       id: 'grind',
       name: 'Absolute Strength / Grind',
-      label: 'ABSOLUTE STRENGTH / GRIND (<0.3 m/s)',
-      shortLabel: 'GRIND',
+      label: 'Absolute Strength / Grind (<0.3 m/s)',
+      shortLabel: 'Grind',
       min: 0.00,
       max: 0.30,
       cssClass: 'vel-zone-grind',
@@ -373,11 +373,11 @@
           </svg>
         </div>
         <div class="summary-text-block">
-          <span class="summary-title" id="summary-set-title">SET ${setNum} COMPLETED</span>
+          <span class="summary-title" id="summary-set-title">Set ${setNum} Completed</span>
           <span class="summary-metrics font-mono" id="summary-set-metrics"></span>
         </div>
         <div class="summary-rest-countdown font-mono" id="summary-rest-countdown">
-          <span class="rest-timer-label">REST</span>
+          <span class="rest-timer-label">Rest</span>
           <span class="rest-time-val" id="summary-rest-time">03:00</span>
         </div>
       `;
@@ -392,13 +392,13 @@
     const metricsEl = document.getElementById('summary-set-metrics');
 
     if (titleEl) {
-      titleEl.textContent = isPR ? `SET ${setNum} COMPLETED — PR!` : `SET ${setNum} COMPLETED`;
+      titleEl.textContent = isPR ? `Set ${setNum} Completed — PR!` : `Set ${setNum} Completed`;
     }
 
     if (metricsEl) {
       const weightStr = weight > 0 ? ` @ ${weight.toFixed(1)} kg` : '';
-      const repLabel = repCount === 1 ? '1 REP' : `${repCount} REPS`;
-      const avgStr = avgVel > 0 ? ` • AVG ${avgVel.toFixed(2)} m/s` : '';
+      const repLabel = repCount === 1 ? '1 Rep' : `${repCount} Reps`;
+      const avgStr = avgVel > 0 ? ` • Avg ${avgVel.toFixed(2)} m/s` : '';
       const lossStr = velLoss > 0 ? ` • VL ${velLoss.toFixed(1)}%` : '';
       metricsEl.textContent = `${repLabel}${weightStr}${avgStr}${lossStr}`;
     }
@@ -455,7 +455,7 @@
 
     const textEl = document.getElementById('in-flight-cue-text') || (cueHud ? cueHud.querySelector('#in-flight-cue-text, .coach-cue-text') : null);
     if (textEl) {
-      textEl.textContent = `CUE: ${cueText}`;
+      textEl.textContent = `Cue: ${cueText}`;
     }
 
     cueHud.classList.add('active');
@@ -558,7 +558,7 @@
           </div>
           <div class="directive-meta">
             <span class="coach-name" id="coach-sender-name">${coachName}</span>
-            <span class="directive-type-label">LOAD ADJUSTMENT & CUE</span>
+            <span class="directive-type-label">Load Adjustment & Cue</span>
           </div>
           <span class="directive-timestamp font-mono">Just now</span>
         </div>
@@ -584,7 +584,7 @@
 
         <div class="directive-actions">
           <button type="button" class="btn-directive-dismiss" id="btn-coach-dismiss">
-            KEEP ${prevWeight.toFixed(1)} kg
+            Keep ${prevWeight.toFixed(1)} kg
           </button>
           <button type="button" class="btn-directive-accept" id="btn-coach-accept">
             <span class="countdown-ring">
@@ -593,7 +593,7 @@
                 <circle class="auto-accept-fill" id="coach-accept-ring" cx="16" cy="16" r="13"></circle>
               </svg>
             </span>
-            <span class="btn-accept-label">ACCEPT (${deltaSign}${delta.toFixed(1)} kg)</span>
+            <span class="btn-accept-label">Accept (${deltaSign}${delta.toFixed(1)} kg)</span>
             <span class="countdown-seconds font-mono" id="coach-countdown-sec">${autoAcceptRemainingSecs}s</span>
           </button>
         </div>

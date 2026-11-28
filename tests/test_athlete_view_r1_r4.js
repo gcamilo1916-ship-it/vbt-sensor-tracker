@@ -206,9 +206,9 @@ console.log('  [PASS] 2.5 #live-rpe-sub left-alignment invariant preserved');
 
 // 2.6 Dynamic groove and deviation feedback in app.js
 assert.ok(
-  appJsContent.includes('GROOVE: LOCKED') &&
-  appJsContent.includes('GROOVE: MILD DRIFT') &&
-  appJsContent.includes('GROOVE: BAR DRIFT'),
+  appJsContent.includes('Groove: Locked') &&
+  appJsContent.includes('Groove: Mild Drift') &&
+  appJsContent.includes('Groove: Bar Drift'),
   'R2.6: updateRpeHeroBanner must provide dynamic groove feedback based on deviation'
 );
 console.log('  [PASS] 2.6 Dynamic groove feedback logic confirmed in updateRpeHeroBanner');

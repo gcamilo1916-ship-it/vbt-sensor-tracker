@@ -1233,6 +1233,20 @@
       if (elements.viewCoach) {
         elements.viewCoach.style.display = 'none';
       }
+      if (typeof document !== 'undefined') {
+        const dockEl = document.getElementById('floating-set-dock');
+        const liveSec = document.getElementById('tab-live');
+        if (dockEl) {
+          dockEl.style.display = (!liveSec || liveSec.classList.contains('active-section')) ? 'flex' : 'none';
+        }
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => {
+            if (typeof window !== 'undefined' && typeof window.refreshLiveStageCanvases === 'function') {
+              window.refreshLiveStageCanvases();
+            }
+          });
+        }
+      }
       renderRadialMenuItems();
     }
   }

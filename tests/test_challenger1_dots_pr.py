@@ -329,18 +329,18 @@ class TestChallengerDotsAndPR(unittest.TestCase):
         >=460 -> ELITE
         """
         test_boundaries = [
-            (0.0, 'NOVICE'),
-            (219.99, 'NOVICE'),
-            (220.0, 'CLASS III'),
-            (279.99, 'CLASS III'),
-            (280.0, 'CLASS II'),
-            (349.99, 'CLASS II'),
-            (350.0, 'CLASS I'),
-            (414.99, 'CLASS I'),
-            (415.0, 'MASTER'),
-            (459.99, 'MASTER'),
-            (460.0, 'ELITE'),
-            (550.0, 'ELITE')
+            (0.0, 'Novice'),
+            (219.99, 'Novice'),
+            (220.0, 'Class III'),
+            (279.99, 'Class III'),
+            (280.0, 'Class II'),
+            (349.99, 'Class II'),
+            (350.0, 'Class I'),
+            (414.99, 'Class I'),
+            (415.0, 'Master'),
+            (459.99, 'Master'),
+            (460.0, 'Elite'),
+            (550.0, 'Elite')
         ]
         for score, expected_tier in test_boundaries:
             tier = self.eval_js(f"getDotsClassification({score})")

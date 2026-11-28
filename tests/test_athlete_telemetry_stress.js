@@ -50,8 +50,9 @@ const validateSetCompletedMatch = syncBusContent.match(/function validateSetComp
 assert.ok(validateRepRecordedMatch, 'validateRepRecorded must exist in sync-bus.js');
 assert.ok(validateSetCompletedMatch, 'validateSetCompleted must exist in sync-bus.js');
 
-const validateRepRecorded = new Function(`return (${validateRepRecordedMatch[0]});`)();
-const validateSetCompleted = new Function(`return (${validateSetCompletedMatch[0]});`)();
+const noopCopy = () => {};
+const validateRepRecorded = new Function('copyOptionalPlannedRefs', 'copyOptionalNumber', 'copyOptionalString', `return (${validateRepRecordedMatch[0]});`)(noopCopy, noopCopy, noopCopy);
+const validateSetCompleted = new Function('copyOptionalPlannedRefs', 'copyOptionalNumber', 'copyOptionalString', `return (${validateSetCompletedMatch[0]});`)(noopCopy, noopCopy, noopCopy);
 
 let totalTests = 0;
 let passedTests = 0;

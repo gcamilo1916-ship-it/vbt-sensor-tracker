@@ -61,7 +61,7 @@ console.log('--- SUITE 1: Switcher DOM & visionOS Spatial Glass Structure ---');
 runTest('1.1 Stage micro-switcher pill #btn-variant-switcher in .barpath-hud-top', () => {
   assert.ok(htmlContent.includes('id="btn-variant-switcher"'), '#btn-variant-switcher must exist in index.html');
   assert.ok(htmlContent.includes('id="barpath-active-variant"'), '#barpath-active-variant must exist inside pill');
-  assert.ok(htmlContent.includes('VAR:'), 'Pill must contain VAR: label');
+  assert.ok(htmlContent.includes('Var:'), 'Pill must contain Var: label');
 });
 
 runTest('1.2 Collapsible spatial glass sheet #variant-switcher-sheet with 4 variant cards', () => {
@@ -75,7 +75,7 @@ runTest('1.2 Collapsible spatial glass sheet #variant-switcher-sheet with 4 vari
 
 runTest('1.3 Audition simulation button #btn-variant-audition-rep present', () => {
   assert.ok(htmlContent.includes('id="btn-variant-audition-rep"'), '#btn-variant-audition-rep must exist');
-  assert.ok(htmlContent.includes('AUDITION REP'), 'Audition button must contain text AUDITION REP');
+  assert.ok(htmlContent.includes('Audition Rep'), 'Audition button must contain text Audition Rep');
 });
 
 runTest('1.4 visionOS glass CSS tokens and styling present in style.css and athlete-fx.css', () => {

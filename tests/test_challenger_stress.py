@@ -534,7 +534,7 @@ class TestChallengerAdversarialStress(unittest.TestCase):
         self.assertEqual(res["switchCount"], 150, "All 150 theme switches must execute")
         self.assertEqual(len(res["errors"]), 0, f"Theme switching errors: {res['errors']}")
         self.assertEqual(res["finalBodyClass"], "theme-bench")
-        self.assertEqual(res["finalSelectedText"], "BENCH")
+        self.assertEqual(res["finalSelectedText"], "Bench")
         self.assertEqual(res["finalOptionValue"], "Bench")
 
     # ═════════════════════════════════════════════════════════════════════════
@@ -900,7 +900,7 @@ class TestChallengerAdversarialStress(unittest.TestCase):
         self.assertGreaterEqual(res["maxVel"], 0.60)
         self.assertLessEqual(res["minVel"], 0.55)
         self.assertTrue(0.50 <= res["avgVel"] <= 0.70)
-        self.assertEqual(res["repCounterText"], "100 REPS RECORDED")
+        self.assertEqual(res["repCounterText"], "100 Reps Recorded")
 
     # ═════════════════════════════════════════════════════════════════════════
     # STRESS 5: Clean Console & Zero Runtime Errors Under All Stress

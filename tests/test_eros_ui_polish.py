@@ -149,11 +149,11 @@ class TestErosUiPolish(unittest.TestCase):
     # ─────────────────────────────────────────────────────────────────────────
 
     def test_polish_05_warmup_badge_text(self):
-        """Req 5: #rpe-tier-badge must display 'WARMUP' and never 'WARMUP TIER'."""
+        """Req 5: #rpe-tier-badge must display 'Warmup' and never 'WARMUP TIER'."""
         self.assertNotIn("WARMUP TIER", self.html, "index.html must not contain 'WARMUP TIER'")
         self.assertNotIn("WARMUP TIER", self.js, "app.js must not contain 'WARMUP TIER'")
-        self.assertIn('id="rpe-tier-badge">WARMUP<', self.html)
-        self.assertIn("badge.textContent = 'WARMUP';", self.js)
+        self.assertIn('id="rpe-tier-badge">Warmup<', self.html)
+        self.assertIn("badge.textContent = 'Warmup';", self.js)
 
     # ─────────────────────────────────────────────────────────────────────────
     # 6. Set movement denomination tagging & mid-set lift change auto-end
@@ -191,7 +191,7 @@ class TestErosUiPolish(unittest.TestCase):
         )
         self.assertIsNotNone(nav_match, "Bottom nav button for data-target='set' must exist")
         nav_html = nav_match.group(1)
-        self.assertTrue("WORKOUT" in nav_html or "PREP" in nav_html, "data-target='set' nav label must be 'WORKOUT' or 'PREP'")
+        self.assertTrue("Workout" in nav_html or "Prep" in nav_html, "data-target='set' nav label must be 'Workout' or 'Prep'")
 
         required_workout_ids = [
             "workout-summary-card",

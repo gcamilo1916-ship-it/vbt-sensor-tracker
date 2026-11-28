@@ -636,7 +636,7 @@ runTest('3.1 Live Coach prep:workout_updated merges uncompleted slots without er
   assert.strictEqual(postState.completedSetWeight, 200, 'Completed set recorded weight (200 kg) must remain intact');
   assert.strictEqual(postState.currentWorkingWeight, 125, 'Uncompleted active slot weight must merge to Coach update (125 kg)');
   assert.strictEqual(postState.currentTargetRpe, 8.5, 'Uncompleted active slot RPE must update to 8.5');
-  assert.strictEqual(elements['athlete-prep-sync-badge'].textContent, 'LIVE');
+  assert.strictEqual(elements['athlete-prep-sync-badge'].textContent, 'Live');
   assert.ok(elements['athlete-plan-vs-actual-body'].innerHTML.includes('200.0 kg'), 'Athlete Plan vs Actual must retain completed 200.0 kg');
   assert.ok(elements['athlete-plan-vs-actual-body'].innerHTML.includes('125.0 kg'), 'Athlete Plan vs Actual must reflect new 125.0 kg plan target');
 });
@@ -1087,6 +1087,42 @@ runTest('5.6 Phase 5: Icon-first geometry, tooltip stacking/iOS guard, 7-col mob
   assert.ok(indexHtmlSrc.includes('id="live-prescription-strip"') && indexHtmlSrc.includes('id="btn-summary-next-set"') && indexHtmlSrc.includes('id="btn-toggle-biometrics"'), 'Flow 1 DOM hooks must exist in index.html');
   assert.ok(indexHtmlSrc.includes('id="coach-prescribed-bridge"') && coachJsSrc.includes('forceLoadOverride'), 'Flow 2 #coach-prescribed-bridge and forceLoadOverride must exist');
   assert.ok(indexHtmlSrc.includes('id="coach-prep-bump-select"') && indexHtmlSrc.includes('id="btn-coach-bump-week-load"') && coachJsSrc.includes('bumpPrepWeekLoad'), 'Flow 3 week progression stepper must exist');
+});
+
+runTest('5.7 Typography & Mixed-Case Guardrail: Helvetica Neue across app, zero CSS uppercase, zero unexpected ALL-CAPS in index.html', () => {
+  const indexHtmlSrc = fs.readFileSync(path.join(ROOT_DIR, 'index.html'), 'utf8');
+  const styleCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'style.css'), 'utf8');
+  const athleteFxCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'athlete-fx.css'), 'utf8');
+  const coachCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach.css'), 'utf8');
+  const hudCssSrc = fs.readFileSync(path.join(ROOT_DIR, 'coach-cue-hud.css'), 'utf8');
+  const appJsSrc = fs.readFileSync(path.join(ROOT_DIR, 'app.js'), 'utf8');
+
+  assert.ok(/--font-sans:\s*'Helvetica Neue'/.test(styleCssSrc), 'style.css --font-sans must start with Helvetica Neue');
+  assert.ok(/--font-mono:\s*'Helvetica Neue'/.test(styleCssSrc), 'style.css --font-mono must start with Helvetica Neue');
+  assert.ok(/--coach-font-sans:\s*'Helvetica Neue'/.test(coachCssSrc), 'coach.css --coach-font-sans must start with Helvetica Neue');
+
+  const ctxFonts = appJsSrc.match(/\b[A-Za-z_]*[cC]tx\.font\s*=\s*[\s\S]*?;/g) || [];
+  assert.ok(ctxFonts.length >= 7, `Expected at least 7 ctx.font declarations in app.js, found ${ctxFonts.length}`);
+  for (const decl of ctxFonts) {
+    assert.ok(decl.includes('Helvetica Neue'), `Canvas ctx.font must use Helvetica Neue: ${decl}`);
+  }
+
+  for (const [name, css] of [['style.css', styleCssSrc], ['athlete-fx.css', athleteFxCssSrc], ['coach.css', coachCssSrc], ['coach-cue-hud.css', hudCssSrc]]) {
+    assert.strictEqual(/text-transform\s*:\s*uppercase/i.test(css), false, `${name} must contain zero text-transform: uppercase rules`);
+  }
+
+  const strippedHtml = indexHtmlSrc
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ');
+  const allowedUpper = new Set([
+    'RPE', 'RIR', '1RM', 'SBD', 'PR', 'DOTS', 'IPF', 'GL', 'ROM', 'MVT', 'CSV', 'JSON',
+    'MCV', 'PV', 'SQ', 'BP', 'DL', 'ISO', 'QR', 'TTL', 'ID', 'AMRAP', 'VBT', 'HUD',
+    'VAR', 'CM', 'II', 'III', 'VL', 'EROS-7X9K', 'EROS-INIT', 'OK', 'NO', 'VS'
+  ]);
+  const tokens = strippedHtml.match(/\b[A-Z0-9][A-Z0-9-]{1,}\b/g) || [];
+  const unexpected = tokens.filter((t) => /[A-Z]{2,}/.test(t) && !allowedUpper.has(t));
+  assert.deepStrictEqual(unexpected, [], `Unexpected ALL-CAPS tokens in index.html: ${unexpected.join(', ')}`);
 });
 
 Promise.resolve().then(() => {

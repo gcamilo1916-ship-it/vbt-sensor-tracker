@@ -555,7 +555,7 @@ assert.strictEqual(summaryBanner.classList.contains('visible'), true, 'Summary b
 
 const titleEl = mockDoc.getElementById('summary-set-title');
 const metricsEl = mockDoc.getElementById('summary-set-metrics');
-assert.ok(titleEl.textContent.includes('SET 3 COMPLETED'), 'Summary banner must show SET 3 COMPLETED');
+assert.ok(titleEl.textContent.includes('Set 3 Completed'), 'Summary banner must show Set 3 Completed');
 assert.ok(metricsEl.textContent.includes('180.0 kg'), 'Summary banner metrics must contain weight 180.0 kg');
 console.log(`✔ Summary banner metrics: "${metricsEl.textContent}"`);
 
@@ -632,3 +632,4 @@ console.log('===================================================================
 console.log('ALL EMPIRICAL CHALLENGES PASSED SUCCESSFULLY (100% VERIFIED)');
 console.log('Verdict: CONFIRMED CORRECT');
 console.log('======================================================================');
+process.exit(0);

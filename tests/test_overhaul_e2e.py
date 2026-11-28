@@ -820,7 +820,7 @@ class TestOverhaulMilestone2WeightAndVolume(unittest.TestCase):
         update_match = re.search(r'function\s+updateWorkoutPage\s*\([^)]*\)\s*\{([\s\S]*?)\n\}', self.js)
         self.assertIsNotNone(update_match, "updateWorkoutPage function not found")
         body = update_match.group(1)
-        self.assertIn("LOAD", body, "updateWorkoutPage must render LOAD metric label in workout sets table")
+        self.assertIn("Load", body, "updateWorkoutPage must render Load metric label in workout sets table")
 
     def test_m2_08_render_history_view_calculates_session_volume(self):
         """R2: Verify renderHistoryView calculates and formats session volume with comma separators."""

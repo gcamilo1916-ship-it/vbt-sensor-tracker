@@ -78,7 +78,7 @@ body.portal-coach .coach-cue-hud {
   font-weight: 800;
   color: #BF5AF2;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: none;
   user-select: none;
 }
 
@@ -192,7 +192,7 @@ body.portal-coach .coach-cue-hud {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-transform: none;
   color: #BF5AF2;
   margin-top: 2px;
 }
@@ -281,7 +281,7 @@ body.portal-coach .coach-cue-hud {
   font-size: 22px;
   line-height: 1;
   color: #BF5AF2;
-  font-family: Georgia, serif;
+  font-family: var(--font-sans);
   user-select: none;
 }
 
