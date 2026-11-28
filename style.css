@@ -8020,3 +8020,1268 @@ select.athlete-bio-input {
   background: #383838;
   border-color: rgba(255, 255, 255, 0.18);
 }
+
+
+/* ==========================================================================
+   PHASE 6: ATHLETE COCKPIT LIVE (#tab-live) MATTE OBSIDIAN REDESIGN
+   4 Surfaces (#0d0d0d / #171717 / #212121 / #2f2f2f), uniform 14px corners,
+   zero-scroll 390x844 mobile ergonomics & crisp desktop presentation.
+   ========================================================================== */
+
+body:not(.portal-coach) .app-container {
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 12px calc(136px + env(safe-area-inset-bottom, 0px)) 12px !important;
+  gap: 10px !important;
+}
+
+@media (max-width: 430px) {
+  body:not(.portal-coach) .app-container {
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 12px calc(136px + env(safe-area-inset-bottom, 0px)) 12px !important;
+    gap: 10px !important;
+  }
+}
+
+@media (min-width: 640px) {
+  body:not(.portal-coach) .app-container {
+    max-width: 560px;
+  }
+
+  body:not(.portal-coach) #floating-set-dock,
+  body:not(.portal-coach) .bottom-glass-nav {
+    max-width: 536px !important;
+  }
+}
+
+body:not(.portal-coach) .glass-header {
+  gap: 8px !important;
+}
+
+/* ── 1. Top Big Session Pill (.workout-session-bar) & Programmed Drawer ── */
+body:not(.portal-coach) .glass-header .workout-session-bar {
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+  padding: 10px 12px !important;
+  gap: 10px !important;
+  overflow: visible !important;
+  align-items: center !important;
+}
+
+body:not(.portal-coach) .workout-session-bar .session-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+body:not(.portal-coach) .workout-session-bar .session-label-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+body:not(.portal-coach) .workout-session-bar .session-status {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #71717a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body:not(.portal-coach) .workout-session-bar .session-clocks-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+body:not(.portal-coach) .workout-session-bar #session-timer-display {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #ececec;
+  white-space: nowrap;
+}
+
+body:not(.portal-coach) .workout-session-bar #session-rest-clock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 14px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #00E5FF;
+  white-space: nowrap;
+  transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+body:not(.portal-coach) .workout-session-bar #session-rest-clock.is-overrun {
+  color: #FF3B30 !important;
+  background: rgba(255, 59, 48, 0.14) !important;
+  border-color: rgba(255, 59, 48, 0.58) !important;
+  box-shadow: 0 0 12px rgba(255, 59, 48, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+body:not(.portal-coach) .workout-session-bar .session-actions-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+body:not(.portal-coach) .workout-session-bar #btn-workout-master {
+  min-height: 36px !important;
+  height: 36px !important;
+  padding: 0 11px !important;
+  border-radius: 14px !important;
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  color: #ececec !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  gap: 5px !important;
+  white-space: nowrap;
+}
+
+body:not(.portal-coach) .workout-session-bar #btn-workout-master:hover {
+  background: #2f2f2f !important;
+  border-color: #3f3f46 !important;
+}
+
+body:not(.portal-coach) .workout-session-bar #btn-workout-master.session-active {
+  background: rgba(255, 59, 48, 0.16) !important;
+  border-color: rgba(255, 59, 48, 0.50) !important;
+  color: #FF857D !important;
+}
+
+body:not(.portal-coach) .workout-session-bar #btn-programmed-workout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 14px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #ececec;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+body:not(.portal-coach) .workout-session-bar #btn-programmed-workout:hover,
+body:not(.portal-coach) .workout-session-bar #btn-programmed-workout[aria-expanded="true"] {
+  background: #2f2f2f;
+  border-color: rgba(var(--accent-rgb), 0.52);
+  color: #ffffff;
+}
+
+/* Programmed Workout Drawer */
+body:not(.portal-coach) #live-programmed-drawer {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 250 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(108px + env(safe-area-inset-top, 0px)) 12px 24px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  box-sizing: border-box;
+}
+
+body:not(.portal-coach) #live-programmed-drawer .live-programmed-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.56);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 0;
+}
+
+body:not(.portal-coach) #live-programmed-drawer .live-programmed-drawer-sheet {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 416px;
+  max-height: 64dvh;
+  overflow-y: auto;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.84), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  body:not(.portal-coach) #live-programmed-drawer .live-programmed-drawer-sheet {
+    max-width: 536px;
+  }
+}
+
+.live-programmed-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.live-programmed-drawer-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: #b4b4b4;
+  text-transform: uppercase;
+}
+
+.live-programmed-drawer-close {
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  color: #b4b4b4;
+  cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+.live-programmed-drawer-close:hover {
+  background: #2f2f2f;
+  color: #ececec;
+  border-color: #3f3f46;
+}
+
+.live-programmed-drawer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.live-programmed-empty {
+  margin: 0;
+  padding: 10px 12px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.live-programmed-slot-item,
+.live-programmed-drawer-list .programmed-slot-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.live-programmed-slot-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.live-programmed-slot-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ececec;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.live-programmed-slot-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b4b4b4;
+}
+
+.btn-load-programmed-slot,
+.live-programmed-slot-btn,
+.btn-programmed-open-prep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.btn-load-programmed-slot {
+  background: rgba(var(--accent-rgb), 0.16);
+  border-color: rgba(var(--accent-rgb), 0.45);
+  color: #ececec;
+}
+
+.btn-load-programmed-slot:hover,
+.live-programmed-slot-btn:hover,
+.btn-programmed-open-prep:hover {
+  background: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+.live-programmed-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-programmed-open-prep {
+  width: 100%;
+  min-height: 40px;
+}
+
+/* ── 2. 1-Row 4-Column Control & LIVE RPE Hero Strip (#live-top-strip) ── */
+body:not(.portal-coach) #tab-live #live-top-strip.controls-panel,
+body:not(.portal-coach) #tab-live #live-top-strip.controls-panel.set-active-compact {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  position: relative !important;
+  z-index: 200 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip.controls-panel:has(.custom-select-wrapper.open),
+body:not(.portal-coach) #tab-live #live-top-strip.controls-panel:has(.live-weight-popover[style*="block"]),
+body:not(.portal-coach) #tab-live #live-top-strip.controls-panel:has(.live-weight-popover[style*="flex"]),
+body:not(.portal-coach) #tab-live #live-top-strip.controls-panel:has(.target-rpe-popover[style*="block"]),
+body:not(.portal-coach) #tab-live #live-top-strip.controls-panel:has(.target-rpe-popover[style*="flex"]) {
+  z-index: 340 !important;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip .controls-row,
+body:not(.portal-coach) #tab-live #live-top-strip.controls-panel.set-active-compact .controls-row {
+  display: grid !important;
+  grid-template-columns: minmax(54px, 0.78fr) minmax(80px, 1.02fr) minmax(68px, 0.87fr) minmax(118px, 1.48fr) !important;
+  gap: 6px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 66px !important;
+  min-height: 66px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  align-items: stretch !important;
+  overflow: visible !important;
+}
+
+/* Col 1: Movement Selector */
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper,
+body:not(.portal-coach) #tab-live #live-top-strip.set-active-compact #lift-select-wrapper {
+  grid-column: 1 / 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 66px !important;
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 80;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper.open {
+  z-index: 1000 !important;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper .custom-select-trigger {
+  width: 100% !important;
+  height: 66px !important;
+  padding: 6px 8px !important;
+  border-radius: 14px !important;
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.40) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  position: relative !important;
+  min-width: 0 !important;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper .custom-select-trigger:hover {
+  background: #2a2a2a !important;
+  border-color: #3a3a3a !important;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper .select-label-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  width: 100%;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper .select-label-wrap .eros-svg-icon {
+  width: 13px;
+  height: 13px;
+  color: #71717a;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper #selected-lift-code {
+  display: block;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.05;
+  color: var(--current-lift-text);
+  letter-spacing: -0.02em;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper #selected-lift-text {
+  display: none;
+}
+
+@media (min-width: 520px) {
+  body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper #selected-lift-code {
+    display: none;
+  }
+
+  body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper #selected-lift-text {
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper .select-chevron {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 10px;
+  color: #71717a;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #lift-select-wrapper .custom-select-options {
+  min-width: 168px;
+  left: 0;
+  right: auto;
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.86), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Col 2: Weight Trigger Pill & Floating Popover */
+body:not(.portal-coach) #tab-live #live-top-strip #live-weight-control,
+body:not(.portal-coach) #tab-live #live-top-strip.set-active-compact #live-weight-control {
+  grid-column: 2 / 3 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 66px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+  overflow: visible !important;
+  display: block !important;
+  z-index: 90;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #btn-live-weight-trigger {
+  width: 100%;
+  height: 66px;
+  padding: 6px 9px;
+  border-radius: 14px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.40);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: #ececec;
+  text-align: left;
+  box-sizing: border-box;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #btn-live-weight-trigger:hover,
+body:not(.portal-coach) #tab-live #live-top-strip #btn-live-weight-trigger[aria-expanded="true"] {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+.control-mini-label {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: #71717a;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.weight-trigger-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ececec;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.weight-trigger-value .weight-unit {
+  font-size: 10px;
+  font-weight: 700;
+  color: #b4b4b4 !important;
+}
+
+body:not(.portal-coach) #tab-live #live-weight-popover {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  left: -46px !important;
+  width: min(244px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+  z-index: 300 !important;
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  padding: 10px !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.86), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: visible !important;
+  box-sizing: border-box;
+}
+
+@media (min-width: 520px) {
+  body:not(.portal-coach) #tab-live #live-weight-popover {
+    left: 0 !important;
+  }
+}
+
+.weight-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.weight-quick-btn {
+  min-height: 36px;
+  padding: 0 4px;
+  border-radius: 14px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  color: #ececec;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.weight-quick-btn:hover {
+  background: #2f2f2f;
+  border-color: rgba(var(--accent-rgb), 0.45);
+  color: #ffffff;
+}
+
+.weight-popover-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+}
+
+/* Col 3: Target RPE Trigger Pill & Floating Popover */
+body:not(.portal-coach) #tab-live #live-top-strip #target-rpe-module,
+body:not(.portal-coach) #tab-live #live-top-strip.set-active-compact #target-rpe-module {
+  grid-column: 3 / 4 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 66px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+  overflow: visible !important;
+  display: block !important;
+  z-index: 90;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #btn-target-rpe-trigger {
+  width: 100%;
+  height: 66px;
+  padding: 6px 9px;
+  border-radius: 14px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.40);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: #ececec;
+  text-align: left;
+  box-sizing: border-box;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #btn-target-rpe-trigger:hover,
+body:not(.portal-coach) #tab-live #live-top-strip #btn-target-rpe-trigger[aria-expanded="true"] {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #btn-target-rpe-trigger .target-rpe-badge {
+  font-size: 8.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.07em !important;
+  color: #71717a !important;
+  line-height: 1 !important;
+}
+
+.target-rpe-trigger-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ececec;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip.set-active-compact #target-rpe-module .target-rpe-val {
+  font-size: 15px;
+}
+
+body:not(.portal-coach) #tab-live #target-rpe-popover {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  right: -84px !important;
+  width: min(244px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+  z-index: 300 !important;
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  padding: 10px !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.86), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: visible !important;
+  box-sizing: border-box;
+}
+
+body:not(.portal-coach) #tab-live #target-rpe-popover .target-rpe-row {
+  margin-bottom: 8px;
+}
+
+@media (min-width: 520px) {
+  body:not(.portal-coach) #tab-live #target-rpe-popover {
+    right: 0 !important;
+  }
+}
+
+.target-rpe-popover-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: #b4b4b4;
+}
+
+/* Preserve Target RPE Popover controls even during active set */
+body:not(.portal-coach) #tab-live #live-top-strip.set-active-compact #target-rpe-popover .target-rpe-stepper-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip.set-active-compact #target-rpe-popover .target-stepper-btn {
+  display: inline-flex;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #target-rpe-popover .target-rpe-chips,
+body:not(.portal-coach) #tab-live #live-top-strip.set-active-compact #target-rpe-popover .target-rpe-chips {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+body:not(.portal-coach) #tab-live #target-rpe-popover .target-chip {
+  min-height: 34px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Col 4: LIVE RPE Hero Tile (#rpe-hero-card) */
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card.rpe-hero-tile {
+  grid-column: 4 / 5 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 66px !important;
+  margin: 0 !important;
+  padding: 7px 9px 6px 9px !important;
+  border-radius: 14px !important;
+  background: #212121 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card .integrated-rpe-tracker {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  gap: 3px !important;
+  width: 100% !important;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card .rpe-tracker-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card .rpe-tracker-label {
+  font-size: 8px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  color: #b4b4b4 !important;
+  white-space: nowrap;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card .rpe-score-group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card #live-rpe {
+  font-size: clamp(23px, 6.2vw, 28px) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.03em !important;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card .rpe-hero-denom {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #71717a !important;
+  opacity: 0.8;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card .rpe-badge-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card #live-rir-pill {
+  font-size: 7.5px !important;
+  font-weight: 800 !important;
+  padding: 1px 4px !important;
+  border-radius: 14px !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+body:not(.portal-coach) #tab-live #live-top-strip #rpe-hero-card #rpe-tier-badge {
+  font-size: 7px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em !important;
+  padding: 1px 4px !important;
+  border-radius: 14px !important;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+}
+
+/* ── 3. Asymmetric 30% Left / 70% Right Core Telemetry Stage ── */
+body:not(.portal-coach) #tab-live #telemetry-stage-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.50) !important;
+  padding: 10px !important;
+  min-height: 290px !important;
+  box-sizing: border-box !important;
+}
+
+body:not(.portal-coach) #tab-live #telemetry-stage-card .velocity-focus-arena {
+  display: grid !important;
+  grid-template-columns: 30% minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  min-height: 290px !important;
+  height: clamp(290px, 38dvh, 360px);
+}
+
+body:not(.portal-coach) #tab-live #telemetry-stage-card .bar-path-stage {
+  flex: unset !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  min-height: 270px !important;
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  padding: 8px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+body:not(.portal-coach) #tab-live #telemetry-stage-card .bar-path-stage::before {
+  display: none !important;
+}
+
+body:not(.portal-coach) #tab-live #telemetry-stage-card #bar-path-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  object-fit: fill !important;
+  display: block !important;
+}
+
+body:not(.portal-coach) #tab-live #telemetry-stage-card #velocity-graph-stage.velocity-graph-stage.metric-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  min-height: 270px !important;
+  background: #212121 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  padding: 10px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  text-align: left !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.velocity-graph-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 6px;
+  min-width: 0;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.velocity-graph-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #b4b4b4;
+  flex-shrink: 0;
+}
+
+.vel-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vel-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.vel-legend-dot.peak-dot {
+  background: #00E5FF;
+  box-shadow: 0 0 6px rgba(0, 229, 255, 0.55);
+}
+
+.vel-legend-dot.mean-dot {
+  background: var(--current-accent, #00FF66);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.55);
+}
+
+.velocity-graph-readouts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.vel-readout-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 14px;
+  background: #171717;
+  border: 1px solid #2f2f2f;
+  white-space: nowrap;
+}
+
+.vel-readout-tag {
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #71717a;
+}
+
+body:not(.portal-coach) #tab-live #velocity-graph-stage .metric-number {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  text-shadow: none !important;
+}
+
+body:not(.portal-coach) #tab-live #velocity-graph-stage #live-peak-vel {
+  color: #00E5FF !important;
+}
+
+body:not(.portal-coach) #tab-live #velocity-graph-stage #live-velocity {
+  color: var(--current-accent, #ececec) !important;
+}
+
+body:not(.portal-coach) #tab-live #velocity-graph-stage .metric-unit {
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  color: #71717a !important;
+}
+
+#velocity-change-canvas {
+  width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: block;
+  border-radius: 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* ── 4. 80% Minimalistic Rep Replay Modal (#rep-replay-modal) ── */
+#rep-replay-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+#rep-replay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 0;
+}
+
+#rep-replay-dialog {
+  position: relative;
+  z-index: 1;
+  width: 80vw;
+  max-width: 440px;
+  height: 78vh;
+  max-height: 620px;
+  margin: 0 auto;
+  background: #171717 !important;
+  border: 1px solid #2f2f2f !important;
+  border-radius: 14px !important;
+  padding: 16px !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.86), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+#rep-replay-modal[style*="block"] #rep-replay-dialog {
+  margin-top: 10vh;
+}
+
+.rep-replay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#rep-replay-counter {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ececec;
+  letter-spacing: -0.01em;
+}
+
+#btn-rep-replay-close {
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  color: #b4b4b4;
+  cursor: pointer;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+
+#btn-rep-replay-close:hover {
+  background: #2f2f2f;
+  color: #ececec;
+  border-color: #3f3f46;
+}
+
+.rep-replay-canvas-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+#rep-modal-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.rep-replay-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#rep-replay-dialog #btn-barpath-replay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 14px;
+  background: #212121;
+  border: 1px solid rgba(var(--accent-rgb), 0.48);
+  color: #ececec;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+#rep-replay-dialog #btn-barpath-replay:hover {
+  background: #2f2f2f;
+  border-color: var(--current-accent);
+  color: #ffffff;
+}
+
+.rep-replay-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.rep-modal-metric {
+  background: #212121;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.rep-modal-metric-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #71717a;
+  text-transform: uppercase;
+}
+
+.rep-modal-metric-val {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #ececec;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── 5. Floating Start / Bright Red Stop Current Set Pill (#floating-set-dock) ── */
+body.portal-coach #floating-set-dock {
+  display: none !important;
+}
+
+body:not(.portal-coach) #floating-set-dock {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  z-index: 910;
+  width: calc(100% - 24px);
+  max-width: 416px;
+  padding-right: 68px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+body:not(.portal-coach) #floating-set-dock > button {
+  pointer-events: auto;
+  flex: 0 0 auto !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 0 18px !important;
+  border-radius: 14px !important;
+}
+
+body:not(.portal-coach) #floating-set-dock #btn-set-toggle {
+  background: #212121 !important;
+  border: 1px solid rgba(var(--accent-rgb), 0.62) !important;
+  color: #ececec !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.72), 0 0 16px rgba(var(--accent-rgb), 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+}
+
+body:not(.portal-coach) #floating-set-dock #btn-set-toggle .eros-svg-icon {
+  color: var(--current-accent);
+}
+
+body:not(.portal-coach) #floating-set-dock #btn-set-toggle:hover {
+  background: #2f2f2f !important;
+  border-color: var(--current-accent) !important;
+  color: #ffffff !important;
+}
+
+body:not(.portal-coach) #floating-set-dock #btn-complete-set {
+  background: #FF3B30 !important;
+  border: 1px solid rgba(255, 133, 125, 0.88) !important;
+  color: #FFFFFF !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.74), 0 0 22px rgba(255, 59, 48, 0.56), inset 0 1px 0 rgba(255, 255, 255, 0.24) !important;
+}
+
+body:not(.portal-coach) #floating-set-dock #btn-complete-set:hover {
+  background: #ff4f45 !important;
+  border-color: #ffffff !important;
+}
+
+body:not(.portal-coach) #floating-set-dock #btn-complete-set:active {
+  background: #e03228 !important;
+}

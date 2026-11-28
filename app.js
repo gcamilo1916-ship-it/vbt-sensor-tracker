@@ -19,9 +19,16 @@ const WEIGHT_STORAGE_KEY      = 'vbt_last_lift_weights_v1';
 // Header & Master Workout Controls
 const btnWorkoutMaster  = document.getElementById('btn-workout-master');
 const btnWorkoutText    = document.getElementById('btn-workout-text');
+const btnProgrammedWorkout = document.getElementById('btn-programmed-workout');
+const liveProgrammedDrawer = document.getElementById('live-programmed-drawer');
+const liveProgrammedDrawerBackdrop = document.getElementById('live-programmed-drawer-backdrop');
+const btnProgrammedDrawerClose = document.getElementById('btn-programmed-drawer-close');
+const liveProgrammedDrawerList = document.getElementById('live-programmed-drawer-list');
+const btnProgrammedOpenPrep = document.getElementById('btn-programmed-open-prep');
 const sessionPulse      = document.getElementById('session-pulse');
 const sessionStatusText = document.getElementById('session-status-text');
 const sessionTimerDisp  = document.getElementById('session-timer-display');
+const sessionRestClock  = document.getElementById('session-rest-clock');
 const statusBadge       = document.getElementById('status-badge');
 const syncBanner        = document.getElementById('sync-banner');
 const syncBannerText    = document.getElementById('sync-banner-text');
@@ -31,13 +38,18 @@ const btnConnect        = document.getElementById('btn-connect');
 const btnConnectText    = btnConnect ? btnConnect.querySelector('.btn-text') : null;
 const liftSelectWrapper = document.getElementById('lift-select-wrapper');
 const selectTrigger     = liftSelectWrapper ? liftSelectWrapper.querySelector('.custom-select-trigger') : null;
+const selectedLiftCode  = document.getElementById('selected-lift-code');
 const selectedLiftText  = document.getElementById('selected-lift-text');
 const customOptions     = liftSelectWrapper ? liftSelectWrapper.querySelectorAll('.custom-option') : [];
 const btnSetToggle      = document.getElementById('btn-set-toggle');
 const btnSetText        = document.getElementById('btn-set-text');
+const floatingSetDock   = document.getElementById('floating-set-dock');
 
-// Live Weight Control (Milestone 2: R1)
+// Live Weight Control (Milestone 2: R1 & Phase 6 Popover)
 const liveWeightControl      = document.getElementById('live-weight-control');
+const btnLiveWeightTrigger   = document.getElementById('btn-live-weight-trigger');
+const liveWeightDisplay      = document.getElementById('live-weight-display');
+const liveWeightPopover      = document.getElementById('live-weight-popover');
 const liveSetWeightInput     = document.getElementById('live-set-weight-input');
 const btnLiveWeightDec       = document.getElementById('btn-live-weight-dec');
 const btnLiveWeightInc       = document.getElementById('btn-live-weight-inc');
@@ -53,6 +65,9 @@ const bleDeviceCard        = document.getElementById('ble-device-card');
 
 // Target RPE Configuration Controls
 const targetRpeModule      = document.getElementById('target-rpe-module');
+const btnTargetRpeTrigger  = document.getElementById('btn-target-rpe-trigger');
+const targetRpePopover     = document.getElementById('target-rpe-popover');
+const targetRpePopoverVal  = document.getElementById('target-rpe-popover-val');
 const btnTargetRpeDec      = document.getElementById('btn-target-rpe-dec');
 const btnTargetRpeInc      = document.getElementById('btn-target-rpe-inc');
 const targetRpeDisplay     = document.getElementById('target-rpe-display');
@@ -60,16 +75,25 @@ const targetChips          = document.querySelectorAll('.target-chip');
 const rpeTargetPin         = document.getElementById('rpe-target-pin');
 let currentTargetRpe       = 8.0;
 
-// Live Tracker Arena
-const liveVelocity      = document.getElementById('live-velocity');
-const livePeakVel       = document.getElementById('live-peak-vel');
-const liveRpe           = document.getElementById('live-rpe');
-const liveVelSub        = document.getElementById('live-vel-sub');
-const livePeakSub       = document.getElementById('live-peak-sub');
-const liveRpeSub        = document.getElementById('live-rpe-sub');
-const orb               = document.getElementById('orb');
-const apexGlow          = document.getElementById('apex-glow');
-const controlsPanel     = document.querySelector('.controls-panel');
+// Live Tracker Arena & Rep Replay Modal
+const liveVelocity         = document.getElementById('live-velocity');
+const livePeakVel          = document.getElementById('live-peak-vel');
+const liveRpe              = document.getElementById('live-rpe');
+const liveVelSub           = document.getElementById('live-vel-sub');
+const livePeakSub          = document.getElementById('live-peak-sub');
+const liveRpeSub           = document.getElementById('live-rpe-sub');
+const orb                  = document.getElementById('orb');
+const apexGlow             = document.getElementById('apex-glow');
+const controlsPanel        = document.querySelector('.controls-panel');
+const velocityChangeCanvas = document.getElementById('velocity-change-canvas');
+const repReplayModal       = document.getElementById('rep-replay-modal');
+const repReplayBackdrop    = document.getElementById('rep-replay-backdrop');
+const repReplayCounter     = document.getElementById('rep-replay-counter');
+const btnRepReplayClose    = document.getElementById('btn-rep-replay-close');
+const repModalCanvas       = document.getElementById('rep-modal-canvas');
+const repModalMeanVel      = document.getElementById('rep-modal-mean-vel');
+const repModalPeakVel      = document.getElementById('rep-modal-peak-vel');
+const repModalRpe          = document.getElementById('rep-modal-rpe');
 
 // 2D Sagittal Bar Path & Replay Controls (R1)
 const barPathCanvas       = document.getElementById('bar-path-canvas');
@@ -852,6 +876,13 @@ function getLastWeightForLift(liftName) {
 
 let currentWorkingWeight = 140.0;
 
+function syncLiveWeightDisplay(formatted) {
+  const disp = liveWeightDisplay || document.getElementById('live-weight-display');
+  if (disp) {
+    disp.innerHTML = `${escapeHtml(formatted)} <span class="weight-unit">kg</span>`;
+  }
+}
+
 function setWorkingWeight(val, updateInputs = true, source = null) {
   let num = parseFloat(val);
   if (isNaN(num)) num = 0;
@@ -878,6 +909,7 @@ function setWorkingWeight(val, updateInputs = true, source = null) {
       liveSetWeightInput.value = val;
     }
   }
+  syncLiveWeightDisplay(formatted);
 
   if (activeSet) {
     activeSet.weight = num;
@@ -896,16 +928,81 @@ function stepWorkingWeight(delta) {
   if (typeof HapticsFX !== 'undefined' && HapticsFX.vibrate) HapticsFX.vibrate([10]);
 }
 
+function closeLiveWeightPopover() {
+  const pop = liveWeightPopover || document.getElementById('live-weight-popover');
+  const trig = btnLiveWeightTrigger || document.getElementById('btn-live-weight-trigger');
+  const wrap = liveWeightControl || document.getElementById('live-weight-control');
+  if (pop) pop.style.display = 'none';
+  if (trig && typeof trig.setAttribute === 'function') trig.setAttribute('aria-expanded', 'false');
+  if (wrap && wrap.classList) wrap.classList.remove('open');
+}
+
+function openLiveWeightPopover() {
+  closeTargetRpePopover();
+  closeProgrammedDrawer();
+  if (liftSelectWrapper && liftSelectWrapper.classList) liftSelectWrapper.classList.remove('open');
+  const pop = liveWeightPopover || document.getElementById('live-weight-popover');
+  const trig = btnLiveWeightTrigger || document.getElementById('btn-live-weight-trigger');
+  const wrap = liveWeightControl || document.getElementById('live-weight-control');
+  if (pop) pop.style.display = 'block';
+  if (trig && typeof trig.setAttribute === 'function') trig.setAttribute('aria-expanded', 'true');
+  if (wrap && wrap.classList) wrap.classList.add('open');
+}
+
+function toggleLiveWeightPopover(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const pop = liveWeightPopover || document.getElementById('live-weight-popover');
+  const isOpen = Boolean(pop && (pop.style.display === 'block' || pop.style.display === 'flex'));
+  if (isOpen) {
+    closeLiveWeightPopover();
+  } else {
+    openLiveWeightPopover();
+  }
+}
+
 let weightListenersInitialized = false;
 function initWeightControlListeners() {
   if (weightListenersInitialized) return;
   weightListenersInitialized = true;
 
+  const weightTrig = btnLiveWeightTrigger || document.getElementById('btn-live-weight-trigger');
+  if (weightTrig) {
+    weightTrig.addEventListener('click', toggleLiveWeightPopover);
+  }
+  const weightWrap = liveWeightControl || document.getElementById('live-weight-control');
+  if (weightWrap) {
+    weightWrap.addEventListener('click', (e) => {
+      const pop = liveWeightPopover || document.getElementById('live-weight-popover');
+      if (pop && e && e.target && typeof pop.contains === 'function' && pop.contains(e.target)) return;
+      if (weightTrig && e && e.target && typeof weightTrig.contains === 'function' && weightTrig.contains(e.target)) return;
+      toggleLiveWeightPopover(e);
+    });
+  }
+  const weightPop = liveWeightPopover || document.getElementById('live-weight-popover');
+  if (weightPop && typeof weightPop.querySelectorAll === 'function') {
+    weightPop.querySelectorAll('.weight-quick-btn[data-weight-delta]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (e) e.stopPropagation();
+        const delta = parseFloat(btn.getAttribute('data-weight-delta'));
+        if (!isNaN(delta)) stepWorkingWeight(delta);
+      });
+    });
+  }
+
   if (btnLiveWeightDec) {
-    btnLiveWeightDec.addEventListener('click', () => stepWorkingWeight(-2.5));
+    btnLiveWeightDec.addEventListener('click', (e) => {
+      if (e) e.stopPropagation();
+      stepWorkingWeight(-2.5);
+    });
   }
   if (btnLiveWeightInc) {
-    btnLiveWeightInc.addEventListener('click', () => stepWorkingWeight(2.5));
+    btnLiveWeightInc.addEventListener('click', (e) => {
+      if (e) e.stopPropagation();
+      stepWorkingWeight(2.5);
+    });
   }
   if (btnWorkoutWeightDec) {
     btnWorkoutWeightDec.addEventListener('click', () => stepWorkingWeight(-2.5));
@@ -935,6 +1032,20 @@ function initWeightControlListeners() {
     });
     workoutSetWeightInput.addEventListener('blur', (e) => {
       setWorkingWeight(e.target.value, true);
+    });
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', (e) => {
+      const wrap = liveWeightControl || document.getElementById('live-weight-control');
+      if (wrap && e && e.target && typeof wrap.contains === 'function' && !wrap.contains(e.target)) {
+        closeLiveWeightPopover();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e && e.key === 'Escape') {
+        closeLiveWeightPopover();
+      }
     });
   }
 }
@@ -1004,12 +1115,16 @@ function startWorkoutSession() {
   startSessionTimer(session.startTime);
 
   // Update UI
-  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'END WORKOUT', 'END', true);
+  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'END WORKOUT', 'End', true);
   if (btnWorkoutMaster) btnWorkoutMaster.classList.add('session-active');
   if (sessionPulse) sessionPulse.classList.add('active');
   if (sessionStatusText) {
     sessionStatusText.textContent = 'ACTIVE WORKOUT';
     sessionStatusText.classList.add('active');
+  }
+  lastReplayableSet = null;
+  if (typeof renderVelocityChangeGraph === 'function') {
+    renderVelocityChangeGraph(1.0);
   }
 
   persistStorage();
@@ -1040,18 +1155,21 @@ function endWorkoutSession() {
   }
   restStartTime = null;
   currentRestElapsedSeconds = 0;
+  lastDisplayedRestTargetSeconds = null;
+  hideRestClockUI();
   if (typeof AthleteFX !== 'undefined' && typeof AthleteFX.stopRestCountdown === 'function') {
     AthleteFX.stopRestCountdown();
   }
 
   activeWorkout = null;
   activeSet = null;
+  lastReplayableSet = null;
   if (controlsPanel) {
     controlsPanel.classList.remove('set-active-compact');
   }
 
   // Reset UI
-  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'START WORKOUT', 'START', false);
+  updatePlayStopButtonVisual(btnWorkoutMaster, btnWorkoutText, 'START WORKOUT', 'New', false);
   if (btnWorkoutMaster) btnWorkoutMaster.classList.remove('session-active');
   if (sessionPulse) sessionPulse.classList.remove('active');
   if (sessionStatusText) {
@@ -1063,6 +1181,12 @@ function endWorkoutSession() {
   updateLiveMiniHud();
   renderLivePrescriptionStrip();
   updateSetUI(null);
+  if (typeof renderVelocityChangeGraph === 'function') {
+    renderVelocityChangeGraph(1.0);
+  }
+  if (typeof renderBarPathStage === 'function') {
+    renderBarPathStage(0, 1.0);
+  }
   persistStorage();
   updateHistoryStats();
   renderHistoryView();
@@ -1104,16 +1228,107 @@ function stopSessionTimer() {
   }
 }
 
-// ── Inter-Set Rest Stopwatch Controller (Requirement R2) ──
+// ── Inter-Set Rest Stopwatch & Smart Target Countdown Controller (Requirement R2 & Phase 6) ──
 let restStartTime = null;
 let interSetRestInterval = null;
 let currentRestElapsedSeconds = 0;
+let activeCoachTargetRestSeconds = null;
+let lastDisplayedRestTargetSeconds = null;
+let lastReplayableSet = null;
 
 function formatRestDuration(seconds) {
   if (typeof seconds !== 'number' || isNaN(seconds) || seconds <= 0) return '-';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function formatRestClockMmSs(seconds) {
+  const abs = Math.max(0, Math.floor(Number(seconds) || 0));
+  const m = Math.floor(abs / 60);
+  const s = abs % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function resolveTargetRestSeconds(completedSet = null) {
+  if (completedSet && typeof completedSet.prescribedRestSeconds === 'number' && completedSet.prescribedRestSeconds > 0) {
+    return Math.round(completedSet.prescribedRestSeconds);
+  }
+  if (typeof activeCoachTargetRestSeconds === 'number' && activeCoachTargetRestSeconds > 0) {
+    return Math.round(activeCoachTargetRestSeconds);
+  }
+  const wkId = (completedSet && completedSet.plannedWorkoutId) || activePlannedWorkoutId || (activeWorkout && activeWorkout.plannedWorkoutId) || null;
+  const slId = (completedSet && completedSet.plannedSlotId) || activePlannedSlotId || null;
+  if (wkId && Array.isArray(athletePrepState.workouts)) {
+    const wk = athletePrepState.workouts.find(w => w.workoutId === wkId);
+    if (wk && Array.isArray(wk.prescribedSlots)) {
+      const slot = (slId && wk.prescribedSlots.find(s => s.slotId === slId))
+        || wk.prescribedSlots.find(s => sameLift(s.baseLift, (completedSet && completedSet.lift) || currentLift));
+      if (slot) {
+        const candidates = [
+          slot.targetRestSeconds,
+          slot.restSeconds,
+          slot.topSet && slot.topSet.targetRestSeconds,
+          slot.topSet && slot.topSet.restSeconds,
+          slot.backoff && slot.backoff.targetRestSeconds,
+          slot.backoff && slot.backoff.restSeconds
+        ];
+        for (let i = 0; i < candidates.length; i++) {
+          const val = Number(candidates[i]);
+          if (isFinite(val) && val > 0) return Math.round(val);
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function hideRestClockUI() {
+  const headerTickerEl = document.getElementById('header-rest-ticker');
+  if (headerTickerEl) headerTickerEl.style.display = 'none';
+  const clockEl = sessionRestClock || document.getElementById('session-rest-clock');
+  if (clockEl) {
+    clockEl.style.display = 'none';
+    clockEl.textContent = '00:00';
+    if (clockEl.classList) clockEl.classList.remove('is-overrun');
+  }
+}
+
+function updateRestClockDisplay(targetRestOverride = undefined) {
+  if (!restStartTime || activeSet) return;
+  if (targetRestOverride !== undefined) {
+    lastDisplayedRestTargetSeconds = targetRestOverride;
+  }
+  currentRestElapsedSeconds = Math.max(0, Math.round((Date.now() - restStartTime) / 1000));
+  const elapsedStr = formatRestClockMmSs(currentRestElapsedSeconds);
+
+  const restEl = document.getElementById('summary-rest-time');
+  if (restEl) restEl.textContent = elapsedStr;
+
+  const headerTicker = document.getElementById('header-rest-ticker');
+  const headerTime = document.getElementById('header-rest-time');
+  if (headerTime) headerTime.textContent = elapsedStr;
+  if (headerTicker) headerTicker.style.display = 'inline-flex';
+
+  const clockEl = sessionRestClock || document.getElementById('session-rest-clock');
+  if (clockEl) {
+    const targetRest = (typeof lastDisplayedRestTargetSeconds === 'number' && lastDisplayedRestTargetSeconds > 0)
+      ? lastDisplayedRestTargetSeconds
+      : resolveTargetRestSeconds(null);
+    if (targetRest && targetRest > 0) {
+      if (currentRestElapsedSeconds <= targetRest) {
+        clockEl.textContent = formatRestClockMmSs(targetRest - currentRestElapsedSeconds);
+        if (clockEl.classList) clockEl.classList.remove('is-overrun');
+      } else {
+        clockEl.textContent = `-${formatRestClockMmSs(currentRestElapsedSeconds - targetRest)}`;
+        if (clockEl.classList) clockEl.classList.add('is-overrun');
+      }
+    } else {
+      clockEl.textContent = `+${elapsedStr}`;
+      if (clockEl.classList) clockEl.classList.remove('is-overrun');
+    }
+    clockEl.style.display = 'inline-flex';
+  }
 }
 
 /**
@@ -1134,9 +1349,9 @@ function startNewSet(lift = currentLift) {
     AthleteFX.dismissSummaryBanner();
   }
 
-  // Stop & Reset Inter-Set Rest Stopwatch (R2)
+  // Stop & Reset Inter-Set Rest Stopwatch (R2) — always log true positive elapsed restSeconds
   if (restStartTime) {
-    const elapsedSeconds = Math.round((Date.now() - restStartTime) / 1000);
+    const elapsedSeconds = Math.max(0, Math.round((Date.now() - restStartTime) / 1000));
     if (activeWorkout && Array.isArray(activeWorkout.sets) && activeWorkout.sets.length > 0) {
       const previousSet = activeWorkout.sets[activeWorkout.sets.length - 1];
       if (previousSet) {
@@ -1175,6 +1390,8 @@ function startNewSet(lift = currentLift) {
   }
   restStartTime = null;
   currentRestElapsedSeconds = 0;
+  lastDisplayedRestTargetSeconds = null;
+  hideRestClockUI();
 
   const setLift = canonicalLift(lift || currentLift);
   const setNumber = activeWorkout.sets.length + 1;
@@ -1184,6 +1401,7 @@ function startNewSet(lift = currentLift) {
   currentWorkingWeight = setWeight;
   if (liveSetWeightInput) liveSetWeightInput.value = setWeight.toFixed(1);
   if (workoutSetWeightInput) workoutSetWeightInput.value = setWeight.toFixed(1);
+  syncLiveWeightDisplay(setWeight.toFixed(1));
 
   const resolvedPlannedWorkoutId = activePlannedWorkoutId || (activeWorkout && activeWorkout.plannedWorkoutId) || null;
   const resolvedPlannedSlotId = resolvePlannedSlotIdForSet(resolvedPlannedWorkoutId, setLift);
@@ -1194,6 +1412,7 @@ function startNewSet(lift = currentLift) {
     lift: setLift,
     weight: setWeight,
     targetRpe: currentTargetRpe,
+    prescribedRestSeconds: activeCoachTargetRestSeconds || null,
     plannedWorkoutId: resolvedPlannedWorkoutId,
     plannedSlotId: resolvedPlannedSlotId,
     isPR: false,
@@ -1212,29 +1431,37 @@ function startNewSet(lift = currentLift) {
 
   activeWorkout.sets.push(newSet);
   activeSet = newSet;
+  lastReplayableSet = newSet;
   if (activeWorkout) {
     activeWorkout.name = formatWorkoutTitle(activeWorkout);
   }
 
-  // Update Controls UI
-  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'END SET', 'END', true);
-  btnSetToggle.classList.add('set-active');
-  btnSetToggle.classList.add('recording');
-  btnSetToggle.style.display = 'none';
+  // Update Controls UI & Floating Set Dock
+  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'END SET', 'Stop Set', true);
+  if (btnSetToggle) {
+    btnSetToggle.classList.add('set-active');
+    btnSetToggle.classList.add('recording');
+    btnSetToggle.style.display = 'none';
+  }
   const btnCompleteSetEl = document.getElementById('btn-complete-set');
   if (btnCompleteSetEl) btnCompleteSetEl.style.display = 'inline-flex';
-  const headerTickerEl = document.getElementById('header-rest-ticker');
-  if (headerTickerEl) headerTickerEl.style.display = 'none';
   if (controlsPanel) {
     controlsPanel.classList.add('set-active-compact');
   }
 
+  if (liveVelocity) liveVelocity.textContent = '0.00';
   if (livePeakVel) livePeakVel.textContent = '0.00';
   if (livePeakSub) livePeakSub.textContent = `Set ${setNumber} Initialized`;
 
   updateLiveMiniHud();
   updateSetUI(activeSet);
   updateWorkoutPage();
+  if (typeof renderVelocityChangeGraph === 'function') {
+    renderVelocityChangeGraph(1.0);
+  }
+  if (typeof renderBarPathStage === 'function') {
+    renderBarPathStage(0, 1.0);
+  }
   persistStorage();
 
   // Dispatch to ErosSyncBus
@@ -1313,28 +1540,19 @@ function endActiveSet() {
   }
 
   const completedSetForCelebration = Object.assign({}, activeSet);
+  lastReplayableSet = activeSet;
   activeSet = null;
 
-  // ── Inter-Set Rest Stopwatch: start counting immediately upon set completion (R2)
+  // ── Inter-Set Rest Stopwatch & Smart Target Countdown (R2 & Phase 6)
   restStartTime = Date.now();
   currentRestElapsedSeconds = 0;
+  lastDisplayedRestTargetSeconds = resolveTargetRestSeconds(completedSetForCelebration);
   if (interSetRestInterval) {
     clearInterval(interSetRestInterval);
     interSetRestInterval = null;
   }
-  const updateRestDisplay = () => {
-    if (!restStartTime) return;
-    currentRestElapsedSeconds = Math.round((Date.now() - restStartTime) / 1000);
-    const timeStr = formatRestDuration(currentRestElapsedSeconds);
-    const restEl = document.getElementById('summary-rest-time');
-    if (restEl) restEl.textContent = timeStr;
-    const headerTicker = document.getElementById('header-rest-ticker');
-    const headerTime = document.getElementById('header-rest-time');
-    if (headerTime) headerTime.textContent = timeStr;
-    if (headerTicker) headerTicker.style.display = 'inline-flex';
-  };
-  updateRestDisplay();
-  interSetRestInterval = setInterval(updateRestDisplay, 1000);
+  updateRestClockDisplay(lastDisplayedRestTargetSeconds);
+  interSetRestInterval = setInterval(() => updateRestClockDisplay(), 1000);
 
   // Trigger Athlete Celebratory FX & Post-Set Rest Transition
   if (typeof triggerSetCompletionCelebration === 'function') {
@@ -1347,11 +1565,13 @@ function endActiveSet() {
     activeWorkout.name = formatWorkoutTitle(activeWorkout);
   }
 
-  // Update Controls UI
-  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'START SET', 'START', false);
-  btnSetToggle.classList.remove('set-active');
-  btnSetToggle.classList.remove('recording');
-  btnSetToggle.style.display = '';
+  // Update Controls UI & Floating Set Dock
+  updatePlayStopButtonVisual(btnSetToggle, btnSetText, 'START SET', 'Start Set', false);
+  if (btnSetToggle) {
+    btnSetToggle.classList.remove('set-active');
+    btnSetToggle.classList.remove('recording');
+    btnSetToggle.style.display = 'inline-flex';
+  }
   const btnCompleteSetClose = document.getElementById('btn-complete-set');
   if (btnCompleteSetClose) btnCompleteSetClose.style.display = 'none';
   if (controlsPanel) {
@@ -1372,6 +1592,9 @@ function endActiveSet() {
   renderLivePrescriptionStrip();
   renderAthletePrepHub();
   renderAthletePlanVsActual();
+  if (typeof renderVelocityChangeGraph === 'function') {
+    renderVelocityChangeGraph(1.0);
+  }
 }
 
 /**
@@ -1506,7 +1729,7 @@ if (typeof window !== 'undefined') {
 /**
  * Pushes an ingested repetition into the active set hierarchy
  */
-function recordRepetition({ lift, velocity, rpe, deviationCm = null, trajectoryPoints = null }) {
+function recordRepetition({ lift, velocity, rpe, deviationCm = null, trajectoryPoints = null, peakVelocity = null }) {
   const repLift = canonicalLift(lift);
 
   // Auto-start workout session if idle
@@ -1554,7 +1777,19 @@ function recordRepetition({ lift, velocity, rpe, deviationCm = null, trajectoryP
   }
   repObj.pathEfficiencyPct = synth.pathEfficiencyPct;
 
+  // Resolve per-rep peak velocity from trajectory points with deterministic fallback
+  const ptsForPeak = repObj.trajectoryPoints || [];
+  const maxPtVel = ptsForPeak.length > 0
+    ? Math.max(...ptsForPeak.map(p => Number(p && p.v) || 0))
+    : 0;
+  const fallbackPeak = Math.max(velocity * 1.35, velocity + 0.15);
+  const resolvedPeak = (typeof peakVelocity === 'number' && isFinite(peakVelocity) && peakVelocity > 0)
+    ? peakVelocity
+    : (maxPtVel > 0 ? Math.max(velocity, maxPtVel) : fallbackPeak);
+  repObj.peakVelocity = parseFloat(resolvedPeak.toFixed(2));
+
   activeSet.reps.push(repObj);
+  lastReplayableSet = activeSet;
   recalculateSetMetrics(activeSet);
 
   persistStorage();
@@ -1615,10 +1850,25 @@ function recordRepetition({ lift, velocity, rpe, deviationCm = null, trajectoryP
   updateHistoryStats();
   renderAthletePlanVsActual();
 
+  // Synchronously reflect latest Mean/Peak velocity readouts for instant DOM consistency
+  if (liveVelocity) liveVelocity.textContent = (Number(repObj.velocity) || 0).toFixed(2);
+  if (livePeakVel) {
+    const setMax = (activeSet && activeSet.maxVelocity > 0) ? activeSet.maxVelocity : repObj.peakVelocity;
+    livePeakVel.textContent = Number(setMax).toFixed(2);
+  }
+
+  const velCanvasEl = velocityChangeCanvas || document.getElementById('velocity-change-canvas');
+  if (velCanvasEl && typeof velCanvasEl.getBoundingClientRect !== 'function' && typeof renderVelocityChangeGraph === 'function') {
+    renderVelocityChangeGraph(1.0);
+  }
+
   // Asynchronous UI Dispatch (Non-blocking Observability)
   requestAnimationFrame(() => {
     updateLiveDisplay(repObj, true);
     renderBarPathStage(repObj.repNumber - 1, 1.0);
+    if (typeof triggerVelocityGraphTween === 'function') {
+      triggerVelocityGraphTween();
+    }
   });
 }
 
@@ -1636,17 +1886,19 @@ function recalculateSetMetrics(set) {
   }
 
   const vels = set.reps.map(r => r.velocity);
+  const peakVels = set.reps.map(r => (typeof r.peakVelocity === 'number' && r.peakVelocity > 0) ? r.peakVelocity : r.velocity);
   const rpes = set.reps.map(r => r.rpe);
 
   const sumV = vels.reduce((a, b) => a + b, 0);
   const sumR = rpes.reduce((a, b) => a + b, 0);
 
-  const maxV = Math.max(...vels);
+  const maxMeanV = Math.max(...vels);
+  const maxPeakV = Math.max(...peakVels);
   const minV = Math.min(...vels);
   const lastV = vels[vels.length - 1];
 
   set.avgVelocity = parseFloat((sumV / vels.length).toFixed(2));
-  set.maxVelocity = parseFloat(maxV.toFixed(2));
+  set.maxVelocity = parseFloat(maxPeakV.toFixed(2));
   set.minVelocity = parseFloat(minV.toFixed(2));
   set.avgRpe      = parseFloat((sumR / rpes.length).toFixed(1));
 
@@ -1664,9 +1916,9 @@ function recalculateSetMetrics(set) {
     set.pathEfficiencyPct = parseFloat((effs.reduce((a, b) => a + b, 0) / effs.length).toFixed(1));
   }
 
-  // Velocity Loss Calculation: ((Max - Last) / Max) * 100
-  if (maxV > 0) {
-    const loss = ((maxV - lastV) / maxV) * 100;
+  // Velocity Loss Calculation: ((MaxMean - LastMean) / MaxMean) * 100
+  if (maxMeanV > 0) {
+    const loss = ((maxMeanV - lastV) / maxMeanV) * 100;
     set.velocityLossPct = parseFloat(Math.max(0, loss).toFixed(1));
   } else {
     set.velocityLossPct = 0.0;
@@ -1674,7 +1926,7 @@ function recalculateSetMetrics(set) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 2D BARBELL VERTICAL DEVIATION & REPLAY ENGINE (Requirement R1)
+// 2D BARBELL VERTICAL DEVIATION, LIVE VELOCITY GRAPH & REPLAY ENGINE (R1 & Phase 6)
 // ═════════════════════════════════════════════════════════════════════════════
 
 let barPathMode = 'path'; // 'path' or 'vel'
@@ -1683,25 +1935,492 @@ let replaySpeed = 1.0;
 let isReplaying = false;
 let replayAnimId = null;
 
-function renderBarPathStage(repIndex = 0, scrubProgress = 1.0) {
-  const canvas = document.getElementById('bar-path-canvas');
-  if (!canvas || !canvas.getContext) return;
+const velGraphState = {
+  yMin: 0.0,
+  yMax: 1.0,
+  xMax: 5.0,
+  animId: null,
+  animStart: 0,
+  durationMs: 380,
+  hitTargets: []
+};
+
+const repReplayModalState = {
+  isOpen: false,
+  repIdx: 0,
+  setRef: null
+};
+
+/**
+ * Syncs canvas backing-store dimensions to devicePixelRatio when mounted in a browser layout,
+ * falling back cleanly to explicit attribute dimensions in headless / Node DOM test harnesses.
+ */
+function syncCanvasDpr(canvas, fallbackW, fallbackH) {
+  if (!canvas || !canvas.getContext) return { ctx: null, w: fallbackW, h: fallbackH, dpr: 1, isHeadless: true };
   const ctx = canvas.getContext('2d');
-  const w = canvas.width;  // 220
-  const h = canvas.height; // 210
+  if (!ctx) return { ctx: null, w: fallbackW, h: fallbackH, dpr: 1, isHeadless: true };
+
+  if (typeof canvas.getBoundingClientRect === 'function') {
+    const rect = canvas.getBoundingClientRect();
+    if (rect && rect.width >= 40 && rect.height >= 80) {
+      const dpr = Math.min(3, Math.max(1, (typeof window !== 'undefined' && Number(window.devicePixelRatio) > 0) ? Number(window.devicePixelRatio) : 1));
+      const targetW = Math.round(rect.width * dpr);
+      const targetH = Math.round(rect.height * dpr);
+      if (canvas.width !== targetW) canvas.width = targetW;
+      if (canvas.height !== targetH) canvas.height = targetH;
+      if (typeof ctx.setTransform === 'function') {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      return { ctx, w: rect.width, h: rect.height, dpr, isHeadless: false };
+    }
+  }
+
+  const w = canvas.width || fallbackW;
+  const h = canvas.height || fallbackH;
+  if (typeof ctx.setTransform === 'function') {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  return { ctx, w, h, dpr: 1, isHeadless: true };
+}
+
+/**
+ * Piecewise exertion intensity color ramp for Bar Path trajectory:
+ * [0.00-0.30] #FFFFFF -> #00E5FF
+ * [0.30-0.65] #00E5FF -> #FFB800
+ * [0.65-1.00] #FFB800 -> #FF3B30
+ */
+function getExertionRgb(d) {
+  const t = Math.max(0, Math.min(1, Number(d) || 0));
+  let r, g, b;
+  if (t <= 0.30) {
+    const u = t / 0.30;
+    r = Math.round(255 + u * (0 - 255));
+    g = Math.round(255 + u * (229 - 255));
+    b = Math.round(255 + u * (255 - 255));
+  } else if (t <= 0.65) {
+    const u = (t - 0.30) / 0.35;
+    r = Math.round(0 + u * (255 - 0));
+    g = Math.round(229 + u * (184 - 229));
+    b = Math.round(255 + u * (0 - 255));
+  } else {
+    const u = (t - 0.65) / 0.35;
+    r = 255;
+    g = Math.round(184 + u * (59 - 184));
+    b = Math.round(0 + u * (48 - 0));
+  }
+  return { r, g, b, css: `rgb(${r}, ${g}, ${b})` };
+}
+
+/**
+ * Exertion ramp for Mean Velocity graph curve & rep dots:
+ * [0.00-0.33] #00FF66 -> #00E5FF
+ * [0.33-0.66] #00E5FF -> #FFB800
+ * [0.66-1.00] #FFB800 -> #FF3B30
+ */
+function getVelocityCurveRgb(d) {
+  const t = Math.max(0, Math.min(1, Number(d) || 0));
+  let r, g, b;
+  if (t <= 0.33) {
+    const u = t / 0.33;
+    r = 0;
+    g = Math.round(255 + u * (229 - 255));
+    b = Math.round(102 + u * (255 - 102));
+  } else if (t <= 0.66) {
+    const u = (t - 0.33) / 0.33;
+    r = Math.round(0 + u * (255 - 0));
+    g = Math.round(229 + u * (184 - 229));
+    b = Math.round(255 + u * (0 - 255));
+  } else {
+    const u = (t - 0.66) / 0.34;
+    r = 255;
+    g = Math.round(184 + u * (59 - 184));
+    b = Math.round(0 + u * (48 - 0));
+  }
+  return { r, g, b, css: `rgb(${r}, ${g}, ${b})` };
+}
+
+function computeRepDifficulty(rep, repNumber, maxSetMeanVel) {
+  const rpeVal = (rep && typeof rep.rpe === 'number' && !isNaN(rep.rpe)) ? rep.rpe : 7.0;
+  const meanVel = (rep && typeof rep.velocity === 'number' && !isNaN(rep.velocity)) ? rep.velocity : 0.5;
+  const rpeFactor = Math.max(0, Math.min(1, (rpeVal - 6.0) / 4.0));
+  const velDrop = maxSetMeanVel > 0 ? Math.max(0, (maxSetMeanVel - meanVel) / maxSetMeanVel) : 0;
+  return Math.max(0, Math.min(1, Math.max(rpeFactor, velDrop / 0.25 + (repNumber - 1) * 0.05)));
+}
+
+function resolveRepPeakVelocity(rep) {
+  if (!rep) return 0;
+  if (typeof rep.peakVelocity === 'number' && isFinite(rep.peakVelocity) && rep.peakVelocity > 0) {
+    return rep.peakVelocity;
+  }
+  const pts = Array.isArray(rep.trajectoryPoints) ? rep.trajectoryPoints : [];
+  if (pts.length > 0) {
+    const ptMax = Math.max(...pts.map(p => Number(p && p.v) || 0));
+    if (ptMax > 0) return parseFloat(Math.max(Number(rep.velocity) || 0, ptMax).toFixed(2));
+  }
+  const meanVel = Math.max(0, Number(rep.velocity) || 0);
+  return parseFloat(Math.max(meanVel * 1.35, meanVel + 0.15).toFixed(2));
+}
+
+function getLiveDisplaySetForGraphs() {
+  if (activeSet) return activeSet;
+  if (lastReplayableSet && Array.isArray(lastReplayableSet.reps) && lastReplayableSet.reps.length > 0) {
+    return lastReplayableSet;
+  }
+  if (activeWorkout && Array.isArray(activeWorkout.sets) && activeWorkout.sets.length > 0) {
+    const latest = activeWorkout.sets[activeWorkout.sets.length - 1];
+    if (latest && Array.isArray(latest.reps) && latest.reps.length > 0) return latest;
+  }
+  return null;
+}
+
+function triggerVelocityGraphTween() {
+  const canvas = velocityChangeCanvas || document.getElementById('velocity-change-canvas');
+  if (!canvas || !canvas.getContext) return;
+  if (typeof canvas.getBoundingClientRect !== 'function' || typeof requestAnimationFrame !== 'function') {
+    renderVelocityChangeGraph(1.0);
+    return;
+  }
+
+  if (velGraphState.animId) {
+    cancelAnimationFrame(velGraphState.animId);
+    velGraphState.animId = null;
+  }
+
+  velGraphState.animStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const step = (now) => {
+    const curNow = now || Date.now();
+    const elapsed = curNow - velGraphState.animStart;
+    const progress = Math.min(1.0, elapsed / velGraphState.durationMs);
+    renderVelocityChangeGraph(progress);
+    if (progress < 1.0) {
+      velGraphState.animId = requestAnimationFrame(step);
+    } else {
+      velGraphState.animId = null;
+      renderVelocityChangeGraph(1.0);
+    }
+  };
+  velGraphState.animId = requestAnimationFrame(step);
+}
+
+function renderVelocityChangeGraph(animProgress = 1.0) {
+  const canvas = velocityChangeCanvas || document.getElementById('velocity-change-canvas');
+  if (!canvas || !canvas.getContext) return;
+  const { ctx, w, h, isHeadless } = syncCanvasDpr(canvas, 420, 240);
+  if (!ctx) return;
 
   ctx.clearRect(0, 0, w, h);
 
-  // Transparent background for seamless hero pill integration
+  const displaySet = getLiveDisplaySetForGraphs();
+  const reps = (displaySet && Array.isArray(displaySet.reps)) ? displaySet.reps : [];
+  const maxMeanVel = reps.length > 0 ? Math.max(...reps.map(r => Number(r.velocity) || 0)) : 0;
+
+  const series = reps.map((rep, i) => {
+    const repNumber = rep.repNumber || (i + 1);
+    const meanVelocity = Math.max(0.05, Number(rep.velocity) || 0);
+    const peakVelocity = Math.max(meanVelocity, resolveRepPeakVelocity(rep));
+    const rpe = (typeof rep.rpe === 'number' && !isNaN(rep.rpe)) ? rep.rpe : 7.5;
+    const difficulty = computeRepDifficulty(rep, repNumber, maxMeanVel);
+    return { repNumber, meanVelocity, peakVelocity, rpe, difficulty, repIdx: i };
+  });
+
+  // Smooth damped Y/X auto-scaling
+  let targetYMin = 0.0;
+  let targetYMax = 1.0;
+  let targetXMax = 5.0;
+  if (series.length > 0) {
+    const dataMin = Math.min(...series.map(s => s.meanVelocity));
+    const dataMax = Math.max(...series.map(s => Math.max(s.peakVelocity, s.meanVelocity)));
+    targetYMin = dataMin < 0.25 ? 0.0 : Math.max(0, Math.floor((dataMin - 0.12) * 10) / 10);
+    targetYMax = Math.max(0.90, Math.ceil((dataMax + 0.12) * 10) / 10);
+    targetXMax = Math.max(5, series.length);
+  }
+
+  if (animProgress >= 0.999 && velGraphState.animId === null) {
+    velGraphState.yMin = targetYMin;
+    velGraphState.yMax = targetYMax;
+    velGraphState.xMax = targetXMax;
+  } else {
+    velGraphState.yMin += (targetYMin - velGraphState.yMin) * 0.22;
+    velGraphState.yMax += (targetYMax - velGraphState.yMax) * 0.22;
+    velGraphState.xMax += (targetXMax - velGraphState.xMax) * 0.24;
+  }
+
+  const yMin = velGraphState.yMin;
+  const yMax = Math.max(yMin + 0.3, velGraphState.yMax);
+  const xMax = Math.max(5, velGraphState.xMax);
+
+  const pad = { left: 26, right: 14, top: 20, bottom: 28 };
+  const plotW = Math.max(40, w - pad.left - pad.right);
+  const plotH = Math.max(40, h - pad.top - pad.bottom);
+
+  const mapX = (repNum) => {
+    if (xMax <= 1) return pad.left + plotW / 2;
+    return pad.left + ((repNum - 1) / (xMax - 1)) * plotW;
+  };
+  const mapY = (v) => {
+    const norm = (v - yMin) / (yMax - yMin);
+    return pad.top + plotH - Math.max(0, Math.min(1, norm)) * plotH;
+  };
+
+  // Faint whisper target & baseline hairlines (minimalist hints)
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  [0.25, 0.65].forEach(frac => {
+    const hy = pad.top + plotH * frac;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, hy);
+    ctx.lineTo(w - pad.right, hy);
+    ctx.stroke();
+  });
+
+  // Target velocity whisper reference
+  const effLift = canonicalLift((displaySet && displaySet.lift) || currentLift || 'Deadlift');
+  const baseline = LIFT_BASELINES[effLift.toLowerCase()] || LIFT_BASELINES.deadlift;
+  const effTargetRpe = (displaySet && typeof displaySet.targetRpe === 'number') ? displaySet.targetRpe : currentTargetRpe;
+  const targetVel = baseline.rpe8 + (8.0 - effTargetRpe) * ((baseline.rpe8 - baseline.mvt) / 2.0);
+  if (targetVel >= yMin && targetVel <= yMax) {
+    const ty = mapY(targetVel);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, ty);
+    ctx.lineTo(w - pad.right, ty);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Quiet muted #71717a corner labels
+  ctx.fillStyle = '#71717a';
+  ctx.font = '9px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('v (m/s)', pad.left, 11);
+  ctx.fillText(yMax.toFixed(1), 2, pad.top + 4);
+  ctx.fillText(yMin.toFixed(1), 2, pad.top + plotH);
+
+  const tickY = pad.top + plotH + 11;
+  const slotCount = Math.max(5, series.length);
+  ctx.textAlign = 'center';
+  for (let n = 1; n <= slotCount; n++) {
+    if (slotCount > 8 && n !== 1 && n !== slotCount && n % 2 === 0) continue;
+    ctx.fillText(String(n), mapX(n), tickY);
+  }
+
+  ctx.textAlign = 'right';
+  ctx.fillText('n. reps', w - pad.right, h - 4);
+  ctx.restore();
+
+  velGraphState.hitTargets = [];
+
+  if (series.length === 0) {
+    ctx.save();
+    ctx.fillStyle = '#71717a';
+    ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Waiting for Rep 1', pad.left + plotW / 2, pad.top + plotH / 2);
+    ctx.restore();
+    return;
+  }
+
+  const clampedProg = Math.max(0, Math.min(1, animProgress));
+  const easedProg = 1 - Math.pow(1 - clampedProg, 3);
+
+  const coords = series.map((pt, idx) => {
+    let x = mapX(pt.repNumber);
+    let yMean = mapY(pt.meanVelocity);
+    let yPeak = mapY(pt.peakVelocity);
+    if (idx === series.length - 1 && clampedProg < 1.0 && series.length > 1) {
+      const prev = series[idx - 1];
+      const prevX = mapX(prev.repNumber);
+      const prevMeanY = mapY(prev.meanVelocity);
+      const prevPeakY = mapY(prev.peakVelocity);
+      x = prevX + (x - prevX) * easedProg;
+      yMean = prevMeanY + (yMean - prevMeanY) * easedProg;
+      yPeak = prevPeakY + (yPeak - prevPeakY) * easedProg;
+    }
+    return {
+      x,
+      yMean,
+      yPeak,
+      repNumber: pt.repNumber,
+      repIdx: pt.repIdx,
+      meanVelocity: pt.meanVelocity,
+      peakVelocity: pt.peakVelocity,
+      rpe: pt.rpe,
+      difficulty: pt.difficulty,
+      rgb: getVelocityCurveRgb(pt.difficulty)
+    };
+  });
+
+  // Subtle vertical gradient fill wash under Mean Velocity curve
+  const latestCoord = coords[coords.length - 1];
+  if (coords.length >= 2 && typeof ctx.createLinearGradient === 'function') {
+    ctx.save();
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
+    grad.addColorStop(0, `rgba(${latestCoord.rgb.r}, ${latestCoord.rgb.g}, ${latestCoord.rgb.b}, 0.14)`);
+    grad.addColorStop(1, `rgba(${latestCoord.rgb.r}, ${latestCoord.rgb.g}, ${latestCoord.rgb.b}, 0.00)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(coords[0].x, pad.top + plotH);
+    coords.forEach(c => ctx.lineTo(c.x, c.yMean));
+    ctx.lineTo(latestCoord.x, pad.top + plotH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Peak Velocity upper curve: dashed #00E5FF (1.75px, [4, 4])
+  if (coords.length >= 2) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.65)';
+    ctx.lineWidth = 1.75;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(coords[0].x, coords[0].yPeak);
+    for (let i = 1; i < coords.length; i++) {
+      ctx.lineTo(coords[i].x, coords[i].yPeak);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // Mean Velocity lower curve: exertion-colored 2.5px solid segments
+  if (coords.length >= 2) {
+    ctx.save();
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.setLineDash([]);
+    for (let i = 1; i < coords.length; i++) {
+      ctx.strokeStyle = coords[i].rgb.css;
+      ctx.beginPath();
+      ctx.moveTo(coords[i - 1].x, coords[i - 1].yMean);
+      ctx.lineTo(coords[i].x, coords[i].yMean);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Render Peak (3.5px glowing #00E5FF) & Mean (5px glowing + #212121 ring) rep dots
+  coords.forEach((c, idx) => {
+    const isLatest = idx === coords.length - 1;
+    const popScale = (isLatest && clampedProg < 1.0)
+      ? Math.min(1.12, easedProg * 1.12)
+      : 1.0;
+
+    // Peak dot halo + core
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.25)';
+    ctx.beginPath();
+    ctx.arc(c.x, c.yPeak, 8 * popScale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#00E5FF';
+    ctx.beginPath();
+    ctx.arc(c.x, c.yPeak, 3.5 * popScale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Mean dot glow + #212121 separation ring + exertion core
+    ctx.save();
+    ctx.fillStyle = `rgba(${c.rgb.r}, ${c.rgb.g}, ${c.rgb.b}, 0.28)`;
+    ctx.beginPath();
+    ctx.arc(c.x, c.yMean, 10 * popScale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#212121';
+    ctx.beginPath();
+    ctx.arc(c.x, c.yMean, 6.2 * popScale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = c.rgb.css;
+    ctx.beginPath();
+    ctx.arc(c.x, c.yMean, 5 * popScale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Arrival ring pop on incoming rep
+    if (isLatest && clampedProg < 1.0) {
+      const ringR = 5 + 11 * easedProg;
+      const ringAlpha = (1 - easedProg) * 0.7;
+      ctx.strokeStyle = `rgba(${c.rgb.r}, ${c.rgb.g}, ${c.rgb.b}, ${ringAlpha.toFixed(3)})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(c.x, c.yMean, ringR, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    velGraphState.hitTargets.push({
+      x: c.x,
+      y: c.yMean,
+      peakY: c.yPeak,
+      repIdx: c.repIdx,
+      repNumber: c.repNumber,
+      setRef: displaySet
+    });
+  });
+
+  // Latest dot quiet value tag
+  if (latestCoord) {
+    ctx.save();
+    ctx.font = '9px monospace';
+    ctx.textAlign = latestCoord.x > w - 42 ? 'right' : 'center';
+    ctx.fillStyle = '#00E5FF';
+    ctx.fillText(latestCoord.peakVelocity.toFixed(2), latestCoord.x, Math.max(12, latestCoord.yPeak - 9));
+    ctx.fillStyle = latestCoord.rgb.css;
+    ctx.fillText(latestCoord.meanVelocity.toFixed(2), latestCoord.x, Math.min(pad.top + plotH - 3, latestCoord.yMean + 15));
+    ctx.restore();
+  }
+}
+
+function findVelGraphHitTarget(clientX, clientY, canvas) {
+  if (!canvas || typeof canvas.getBoundingClientRect !== 'function') return null;
+  const rect = canvas.getBoundingClientRect();
+  if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  let best = null;
+  let bestDist = Infinity;
+  for (let i = 0; i < velGraphState.hitTargets.length; i++) {
+    const t = velGraphState.hitTargets[i];
+    const dMean = Math.hypot(x - t.x, y - t.y);
+    const dPeak = Math.hypot(x - t.x, y - t.peakY);
+    const dCol = Math.abs(x - t.x);
+    const d = Math.min(dMean, dPeak);
+    if ((d <= 28 || dCol <= 18) && d < bestDist) {
+      bestDist = d;
+      best = t;
+    }
+  }
+  return best;
+}
+
+function renderBarPathStage(repIndex = 0, scrubProgress = 1.0, targetCanvasOverride = null, setOverride = null) {
+  const canvas = targetCanvasOverride || document.getElementById('bar-path-canvas');
+  if (!canvas || !canvas.getContext) return;
+  const fallbackW = targetCanvasOverride ? 240 : 220;
+  const fallbackH = targetCanvasOverride ? 240 : 210;
+  const { ctx, w, h, isHeadless } = syncCanvasDpr(canvas, fallbackW, fallbackH);
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Transparent background for seamless card integration
   ctx.fillStyle = 'rgba(0, 0, 0, 0)';
   ctx.fillRect(0, 0, w, h);
 
-  const reps = (activeSet && Array.isArray(activeSet.reps)) ? activeSet.reps : [];
+  const sourceSet = setOverride || activeSet;
+  const reps = (sourceSet && Array.isArray(sourceSet.reps)) ? sourceSet.reps : [];
   if (reps.length === 0) {
     const centerX = w / 2;
-    const scaleX = 18;
-    const topY = 25;
-    const botY = 185;
+    const cmRange = 4.5;
+    const scaleX = Math.min(18, Math.max(4, (w / 2 - 10) / cmRange));
+    const topY = isHeadless ? 25 : Math.max(16, Math.round(h * 0.08));
+    const botY = isHeadless ? 185 : Math.max(topY + 60, h - Math.max(16, Math.round(h * 0.08)));
     const travelY = botY - topY;
 
     // Optimal corridor (+-2.0cm)
@@ -1742,49 +2461,57 @@ function renderBarPathStage(repIndex = 0, scrubProgress = 1.0) {
     ctx.arc(centerX, restY, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Empty state text
+    // Empty state text (compact on narrow column, full phrase in headless tests)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.font = '10px -apple-system, BlinkMacSystemFont, monospace';
+    ctx.font = isHeadless ? '10px -apple-system, BlinkMacSystemFont, monospace' : '9px -apple-system, BlinkMacSystemFont, monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('WAITING FOR REP 1...', w / 2, h / 2);
-    
-    // Clear HUD values
-    const devEl = document.getElementById('barpath-hud-dev');
-    const effEl = document.getElementById('barpath-hud-eff');
-    if (devEl) devEl.textContent = '0.0 cm';
-    if (effEl) effEl.textContent = '100%';
-    updateRepPills(0, 0);
+    ctx.fillText(w < 140 ? 'READY' : 'WAITING FOR REP 1...', w / 2, h / 2);
+
+    if (!targetCanvasOverride) {
+      const devEl = document.getElementById('barpath-hud-dev');
+      const effEl = document.getElementById('barpath-hud-eff');
+      if (devEl) devEl.textContent = '0.0 cm';
+      if (effEl) effEl.textContent = '100%';
+      updateRepPills(0, 0);
+    }
     return;
   }
 
   const targetIdx = Math.min(Math.max(0, repIndex), reps.length - 1);
-  currentReplayRepIdx = targetIdx;
+  if (!targetCanvasOverride) {
+    currentReplayRepIdx = targetIdx;
+  }
   const currentRep = reps[targetIdx];
   const pts = currentRep.trajectoryPoints || [];
   if (pts.length < 2) return;
 
-  // Update HUD text
-  const devEl = document.getElementById('barpath-hud-dev');
-  const effEl = document.getElementById('barpath-hud-eff');
-  const devVal = (typeof currentRep.deviationCm === 'number') ? currentRep.deviationCm : 0.0;
-  const effVal = (typeof currentRep.pathEfficiencyPct === 'number') ? currentRep.pathEfficiencyPct : 100.0;
-  if (devEl) devEl.textContent = `${devVal >= 0 ? '+' : ''}${devVal.toFixed(1)} cm`;
-  if (effEl) effEl.textContent = `${effVal.toFixed(1)}%`;
+  if (!targetCanvasOverride) {
+    const devEl = document.getElementById('barpath-hud-dev');
+    const effEl = document.getElementById('barpath-hud-eff');
+    const devVal = (typeof currentRep.deviationCm === 'number') ? currentRep.deviationCm : 0.0;
+    const effVal = (typeof currentRep.pathEfficiencyPct === 'number') ? currentRep.pathEfficiencyPct : 100.0;
+    if (devEl) devEl.textContent = `${devVal >= 0 ? '+' : ''}${devVal.toFixed(1)} cm`;
+    if (effEl) effEl.textContent = `${effVal.toFixed(1)}%`;
+  }
 
-  if (barPathMode === 'path') {
-    renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx);
+  if (barPathMode === 'path' || targetCanvasOverride) {
+    renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx, isHeadless);
   } else {
     renderVelocityMode(ctx, w, h, pts, scrubProgress);
   }
 
-  updateRepPills(reps.length, targetIdx);
+  if (!targetCanvasOverride) {
+    updateRepPills(reps.length, targetIdx);
+  }
 }
 
-function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx) {
-  const centerX = w / 2; // 110 px (0.0 cm plumb line)
-  const scaleX = 18;     // 18 px per cm (±5.0 cm range)
-  const topY = 25;
-  const botY = 185;
+function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx, isHeadless = true) {
+  const centerX = w / 2;
+  const maxAbsDx = Math.max(2.0, ...pts.map(pt => Math.abs(Number(pt && pt.dx) || 0)));
+  const cmRange = Math.max(4.5, maxAbsDx + 0.8);
+  const scaleX = Math.min(18, Math.max(4, (w / 2 - 10) / cmRange));
+  const topY = isHeadless ? 25 : Math.max(16, Math.round(h * 0.08));
+  const botY = isHeadless ? 185 : Math.max(topY + 60, h - Math.max(16, Math.round(h * 0.08)));
 
   const mapX = (dx) => Math.max(8, Math.min(w - 8, centerX + dx * scaleX));
   const mapY = (y) => {
@@ -1792,10 +2519,20 @@ function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx) {
     return botY - normY * (botY - topY);
   };
 
-  // 1. Optimal Corridor (+-2.0cm)
-  ctx.fillStyle = 'rgba(0, 255, 102, 0.04)';
-  ctx.fillRect(centerX - 2 * scaleX, topY, 4 * scaleX, botY - topY);
+  // Subtle vertical Canvas linearGradient plumb-corridor glow
+  if (typeof ctx.createLinearGradient === 'function') {
+    const corridorGrad = ctx.createLinearGradient(0, botY, 0, topY);
+    corridorGrad.addColorStop(0, 'rgba(255, 255, 255, 0.02)');
+    corridorGrad.addColorStop(0.5, 'rgba(0, 229, 255, 0.04)');
+    corridorGrad.addColorStop(1, 'rgba(255, 59, 48, 0.05)');
+    ctx.fillStyle = corridorGrad;
+    ctx.fillRect(centerX - 2 * scaleX, topY, 4 * scaleX, botY - topY);
+  } else {
+    ctx.fillStyle = 'rgba(0, 255, 102, 0.04)';
+    ctx.fillRect(centerX - 2 * scaleX, topY, 4 * scaleX, botY - topY);
+  }
 
+  // 1. Optimal Corridor (+-2.0cm)
   ctx.strokeStyle = 'rgba(0, 255, 102, 0.25)';
   ctx.setLineDash([3, 3]);
   ctx.lineWidth = 1;
@@ -1820,19 +2557,21 @@ function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx) {
   ctx.lineTo(centerX, botY);
   ctx.stroke();
 
-  // Axis Labels
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-  ctx.font = '8px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText('0.0', centerX, botY + 14);
-  ctx.fillText('-2', centerX - 2 * scaleX, botY + 14);
-  ctx.fillText('+2', centerX + 2 * scaleX, botY + 14);
+  // Axis Labels (preserved in headless Node DOM checks; omitted on browser narrow column for clean minimalism)
+  if (isHeadless) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('0.0', centerX, botY + 14);
+    ctx.fillText('-2', centerX - 2 * scaleX, botY + 14);
+    ctx.fillText('+2', centerX + 2 * scaleX, botY + 14);
+  }
 
-  // Rep 1 Ghost Trail (25% opacity dashed) if current rep is not Rep 1
+  // Rep 1 Ghost Trail (dashed) if current rep is not Rep 1
   if (targetIdx > 0 && reps.length > 0 && reps[0].trajectoryPoints) {
     const rep1Pts = reps[0].trajectoryPoints;
     ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
@@ -1844,9 +2583,25 @@ function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx) {
     ctx.restore();
   }
 
+  // Compute exertion intensity gradient across segments using getExertionRgb(d)
+  const currentRep = reps[targetIdx] || {};
+  const repRpe = (typeof currentRep.rpe === 'number' && !isNaN(currentRep.rpe)) ? currentRep.rpe : 7.5;
+  const maxSetMean = reps.length > 0 ? Math.max(...reps.map(r => Number(r && r.velocity) || 0)) : 0;
+  const baseRepDiff = computeRepDifficulty(currentRep, targetIdx + 1, maxSetMean);
+  const vPeakPt = Math.max(0.25, ...pts.map(p => Number(p && p.v) || 0));
+
+  const pointDiff = (pt, idx) => {
+    const romP = pts.length > 1 ? idx / (pts.length - 1) : 1.0;
+    const stickDrop = Math.max(0, Math.min(1, (vPeakPt - (Number(pt.v) || vPeakPt)) / Math.max(0.1, vPeakPt - 0.15)));
+    if (repRpe <= 6.5 && baseRepDiff < 0.20) {
+      return 0.04 + 0.22 * Math.pow(romP, 2);
+    }
+    return Math.max(0, Math.min(1, (0.58 * baseRepDiff + 0.42 * stickDrop) * (0.35 + 0.75 * romP)));
+  };
+
   // Active Rep Color-Graded Segments
   const maxIdx = Math.max(0, Math.min(pts.length - 1, Math.round((pts.length - 1) * scrubProgress)));
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = 2.75;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.setLineDash([]);
@@ -1854,17 +2609,28 @@ function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx) {
   for (let i = 1; i <= maxIdx; i++) {
     const pPrev = pts[i - 1];
     const pCurr = pts[i];
-    const dev = Math.abs(pCurr.dx);
+    const d = pointDiff(pCurr, i);
+    const rgb = getExertionRgb(d);
 
-    let strokeColor = '#00FF66';
-    if (dev > 3.5) strokeColor = '#FF3B30';
-    else if (dev > 2.0) strokeColor = '#FFB800';
-
-    ctx.strokeStyle = strokeColor;
+    ctx.strokeStyle = rgb.css;
     ctx.beginPath();
     ctx.moveTo(mapX(pPrev.dx), mapY(pPrev.y));
     ctx.lineTo(mapX(pCurr.dx), mapY(pCurr.y));
     ctx.stroke();
+  }
+
+  // Turnaround highlight ring at bottom inflection
+  if (pts.length > 0 && scrubProgress >= 0.45) {
+    const turnPt = pts[0];
+    const tx = mapX(turnPt.dx);
+    const ty = mapY(turnPt.y);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 6.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // Puck Position & Metrics at scrubProgress
@@ -1872,6 +2638,8 @@ function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx) {
   if (currentPt) {
     const puckX = mapX(currentPt.dx);
     const puckY = mapY(currentPt.y);
+    const puckDiff = pointDiff(currentPt, maxIdx);
+    const puckRgb = getExertionRgb(puckDiff);
 
     // Connector hairline to plumb line
     ctx.save();
@@ -1885,24 +2653,18 @@ function renderPathMode(ctx, w, h, pts, scrubProgress, reps, targetIdx) {
     ctx.restore();
 
     // Puck outer halo
-    const dev = Math.abs(currentPt.dx);
-    let haloColor = 'rgba(0, 255, 102, 0.35)';
-    if (dev > 3.5) haloColor = 'rgba(255, 59, 48, 0.45)';
-    else if (dev > 2.0) haloColor = 'rgba(255, 184, 0, 0.40)';
-
-    ctx.fillStyle = haloColor;
+    ctx.fillStyle = `rgba(${puckRgb.r}, ${puckRgb.g}, ${puckRgb.b}, 0.36)`;
     ctx.beginPath();
     ctx.arc(puckX, puckY, 9, 0, Math.PI * 2);
     ctx.fill();
 
     // Puck core
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = scrubProgress >= 0.99 && baseRepDiff >= 0.35 ? puckRgb.css : '#FFFFFF';
     ctx.beginPath();
     ctx.arc(puckX, puckY, 4, 0, Math.PI * 2);
     ctx.fill();
 
     // Update scrubber HUD values
-    const normProgress = currentPt.y > 1.5 ? (currentPt.y / 50.0) : currentPt.y;
     const romPct = Math.round(Math.max(0, Math.min(1, scrubProgress)) * 100);
     const romEl = document.getElementById('barpath-scrub-rom');
     const instVelEl = document.getElementById('barpath-scrub-inst-vel');
@@ -2075,8 +2837,61 @@ function toggleReplay() {
   }
 }
 
+function openRepReplayModal(repIndex = 0, setOverride = null) {
+  const modal = repReplayModal || document.getElementById('rep-replay-modal');
+  const sourceSet = setOverride || getLiveDisplaySetForGraphs();
+  const reps = (sourceSet && Array.isArray(sourceSet.reps)) ? sourceSet.reps : [];
+  if (!modal || reps.length === 0) return;
+
+  stopReplay();
+  const targetIdx = Math.min(Math.max(0, Number(repIndex) || 0), reps.length - 1);
+  repReplayModalState.isOpen = true;
+  repReplayModalState.repIdx = targetIdx;
+  repReplayModalState.setRef = sourceSet;
+  currentReplayRepIdx = targetIdx;
+
+  const rep = reps[targetIdx];
+  const meanVel = Number(rep.velocity) || 0;
+  const peakVel = resolveRepPeakVelocity(rep);
+  const rpeVal = (typeof rep.rpe === 'number' && !isNaN(rep.rpe)) ? rep.rpe : 0;
+
+  const counterEl = repReplayCounter || document.getElementById('rep-replay-counter');
+  const meanEl = repModalMeanVel || document.getElementById('rep-modal-mean-vel');
+  const peakEl = repModalPeakVel || document.getElementById('rep-modal-peak-vel');
+  const rpeEl = repModalRpe || document.getElementById('rep-modal-rpe');
+  if (counterEl) counterEl.textContent = `Rep ${targetIdx + 1} of ${reps.length}`;
+  if (meanEl) meanEl.textContent = `${meanVel.toFixed(2)} m/s`;
+  if (peakEl) peakEl.textContent = `${peakVel.toFixed(2)} m/s`;
+  if (rpeEl) rpeEl.textContent = rpeVal.toFixed(1);
+
+  modal.style.display = 'flex';
+  if (typeof modal.setAttribute === 'function') modal.setAttribute('aria-hidden', 'false');
+
+  const modalCanvas = repModalCanvas || document.getElementById('rep-modal-canvas');
+  if (modalCanvas) {
+    renderBarPathStage(targetIdx, 1.0, modalCanvas, sourceSet);
+  }
+  const scrubber = document.getElementById('barpath-scrubber');
+  if (scrubber) scrubber.value = '100';
+  if (typeof requestAnimationFrame === 'function') {
+    startReplay();
+  }
+}
+
+function closeRepReplayModal() {
+  stopReplay();
+  repReplayModalState.isOpen = false;
+  const modal = repReplayModal || document.getElementById('rep-replay-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  if (typeof modal.setAttribute === 'function') modal.setAttribute('aria-hidden', 'true');
+}
+
 function startReplay() {
-  const reps = (activeSet && Array.isArray(activeSet.reps)) ? activeSet.reps : [];
+  const sourceSet = (repReplayModalState.isOpen && repReplayModalState.setRef)
+    ? repReplayModalState.setRef
+    : getLiveDisplaySetForGraphs();
+  const reps = (sourceSet && Array.isArray(sourceSet.reps)) ? sourceSet.reps : [];
   if (reps.length === 0) return;
 
   isReplaying = true;
@@ -2092,6 +2907,7 @@ function startReplay() {
 
   const durationMs = (1200 / replaySpeed); // 1.2s baseline concentric duration
   let lastTime = performance.now();
+  const modalCanvas = repModalCanvas || document.getElementById('rep-modal-canvas');
 
   function step(now) {
     if (!isReplaying) return;
@@ -2102,13 +2918,19 @@ function startReplay() {
     if (currentVal >= 100) {
       currentVal = 100;
       if (scrubber) scrubber.value = '100';
-      renderBarPathStage(currentReplayRepIdx, 1.0);
+      renderBarPathStage(currentReplayRepIdx, 1.0, null, sourceSet);
+      if (repReplayModalState.isOpen && modalCanvas) {
+        renderBarPathStage(currentReplayRepIdx, 1.0, modalCanvas, sourceSet);
+      }
       stopReplay();
       return;
     }
 
     if (scrubber) scrubber.value = String(Math.round(currentVal));
-    renderBarPathStage(currentReplayRepIdx, currentVal / 100.0);
+    renderBarPathStage(currentReplayRepIdx, currentVal / 100.0, null, sourceSet);
+    if (repReplayModalState.isOpen && modalCanvas) {
+      renderBarPathStage(currentReplayRepIdx, currentVal / 100.0, modalCanvas, sourceSet);
+    }
     replayAnimId = requestAnimationFrame(step);
   }
 
@@ -2268,20 +3090,23 @@ function animateRepetitionStroke(options = {}) {
     activeStrokeAnimId = null;
   }
 
-  const canvas = document.getElementById('bar-path-canvas');
+  const canvas = options.canvas || document.getElementById('bar-path-canvas');
   if (!canvas || !canvas.getContext) {
     if (onComplete) onComplete();
     return;
   }
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width || 220;
-  const h = canvas.height || 210;
+  const { ctx, w, h, isHeadless } = syncCanvasDpr(canvas, 220, 210);
+  if (!ctx) {
+    if (onComplete) onComplete();
+    return;
+  }
 
-  const centerX = w / 2; // 110 px (0.0 cm plumb line)
-  const scaleX = 18;     // 18 px per cm
-  const topY = 25;       // Lockout
-  const botY = 185;      // Hole / Floor
-  const travelY = botY - topY; // 160 px
+  const centerX = w / 2;
+  const cmRange = Math.max(4.5, Math.abs(deviationCm) + 1.2);
+  const scaleX = Math.min(18, Math.max(4, (w / 2 - 10) / cmRange));
+  const topY = isHeadless ? 25 : Math.max(16, Math.round(h * 0.08));
+  const botY = isHeadless ? 185 : Math.max(topY + 60, h - Math.max(16, Math.round(h * 0.08)));
+  const travelY = botY - topY;
 
   const effLift = (lift ? String(lift) : 'Squat').toLowerCase();
   const isDeadlift = effLift.includes('dead');
@@ -2316,8 +3141,16 @@ function animateRepetitionStroke(options = {}) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0)';
     ctx.fillRect(0, 0, w, h);
 
-    // Optimal corridor (+-2.0cm)
-    ctx.fillStyle = 'rgba(0, 255, 102, 0.05)';
+    // Optimal corridor (+-2.0cm) with subtle vertical linearGradient highlight
+    if (typeof ctx.createLinearGradient === 'function') {
+      const corridorGrad = ctx.createLinearGradient(0, botY, 0, topY);
+      corridorGrad.addColorStop(0, 'rgba(255, 255, 255, 0.02)');
+      corridorGrad.addColorStop(0.5, 'rgba(0, 229, 255, 0.04)');
+      corridorGrad.addColorStop(1, 'rgba(255, 59, 48, 0.05)');
+      ctx.fillStyle = corridorGrad;
+    } else {
+      ctx.fillStyle = 'rgba(0, 255, 102, 0.05)';
+    }
     ctx.fillRect(centerX - 2 * scaleX, topY, 4 * scaleX, travelY);
     ctx.strokeStyle = 'rgba(0, 255, 102, 0.28)';
     ctx.setLineDash([3, 3]);
@@ -2352,21 +3185,21 @@ function animateRepetitionStroke(options = {}) {
     ctx.lineTo(centerX, botY);
     ctx.stroke();
 
-    // Dimmed ghost line of previous rep / baseline for consistency comparison (Decision 6)
+    // Dimmed ghost line of previous rep / baseline for consistency comparison
     const ghostPts = (typeof window !== 'undefined' && window._lastRepTrajectory) ||
       (typeof activeSet !== 'undefined' && activeSet && activeSet.reps && activeSet.reps.length > 0 && activeSet.reps[0].trajectoryPoints);
     if (ghostPts && ghostPts.length > 1) {
       ctx.save();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
       ctx.lineWidth = 1.2;
-      ctx.setLineDash([3, 3]);
+      ctx.setLineDash([4, 4]);
       ctx.beginPath();
-      const firstX = ghostPts[0].x !== undefined ? ghostPts[0].x : (centerX + (ghostPts[0].dx || 0) * scaleX);
-      const firstY = ghostPts[0].y !== undefined ? ghostPts[0].y : (topY + (ghostPts[0].rom !== undefined ? ghostPts[0].rom : 0) * travelY);
+      const firstX = ghostPts[0].dx !== undefined ? (centerX + ghostPts[0].dx * scaleX) : ghostPts[0].x;
+      const firstY = ghostPts[0].y !== undefined ? (ghostPts[0].y <= 1.5 ? (botY - ghostPts[0].y * travelY) : ghostPts[0].y) : initY;
       ctx.moveTo(firstX, firstY);
       for (let i = 1; i < ghostPts.length; i++) {
-        const ptX = ghostPts[i].x !== undefined ? ghostPts[i].x : (centerX + (ghostPts[i].dx || 0) * scaleX);
-        const ptY = ghostPts[i].y !== undefined ? ghostPts[i].y : (topY + (ghostPts[i].rom !== undefined ? ghostPts[i].rom : 0) * travelY);
+        const ptX = ghostPts[i].dx !== undefined ? (centerX + ghostPts[i].dx * scaleX) : ghostPts[i].x;
+        const ptY = ghostPts[i].y !== undefined ? (ghostPts[i].y <= 1.5 ? (botY - ghostPts[i].y * travelY) : ghostPts[i].y) : initY;
         ctx.lineTo(ptX, ptY);
       }
       ctx.stroke();
@@ -2381,28 +3214,26 @@ function animateRepetitionStroke(options = {}) {
     let yDot, romProgress, isConcentricPhase;
 
     if (isDeadlift) {
-      // Deadlift: starts at floor (botY), pulls upward to lockout (topY) in concentric, then returns in eccentric
       if (progress <= 0.55) {
         isConcentricPhase = true;
-        const pCon = progress / 0.55; // 0.0 to 1.0
+        const pCon = progress / 0.55;
         romProgress = pCon;
         yDot = botY - pCon * travelY;
       } else {
         isConcentricPhase = false;
-        const pEcc = (progress - 0.55) / 0.45; // 0.0 to 1.0
+        const pEcc = (progress - 0.55) / 0.45;
         romProgress = 1.0 - pEcc;
         yDot = topY + pEcc * travelY;
       }
     } else {
-      // Squat & Bench: start at lockout (topY), descend in eccentric to hole (botY), ascend in concentric to lockout (topY)
       if (progress <= 0.50) {
         isConcentricPhase = false;
-        const pEcc = progress / 0.50; // 0.0 to 1.0
+        const pEcc = progress / 0.50;
         romProgress = pEcc;
         yDot = topY + pEcc * travelY;
       } else {
         isConcentricPhase = true;
-        const pCon = (progress - 0.50) / 0.50; // 0.0 to 1.0
+        const pCon = (progress - 0.50) / 0.50;
         romProgress = pCon;
         yDot = botY - pCon * travelY;
       }
@@ -2416,7 +3247,6 @@ function animateRepetitionStroke(options = {}) {
     // Instantaneous velocity calculation with sticking point
     let instVel;
     if (isConcentricPhase) {
-      // Velocity reaches lowest near mid-ascent sticking region (p ~ 0.50)
       const stickDist = Math.abs(romProgress - 0.50);
       const stickWeight = Math.max(0, 1.0 - stickDist * 2.5);
       instVel = vPeak - stickWeight * (vPeak - vStick);
@@ -2424,10 +3254,10 @@ function animateRepetitionStroke(options = {}) {
       instVel = velocity * 0.85;
     }
 
-    // Turnaround inflection flash detection (Decision 9)
+    // Turnaround inflection flash detection
     const isTurnaround = isDeadlift ? (progress > 0.02 && progress < 0.08) : (Math.abs(progress - 0.50) < 0.035);
 
-    // Dynamic difficulty calculation D in [0.0, 1.0] based on cumulative fatigue (Decisions 10, 11, 12)
+    // Dynamic difficulty calculation D in [0.0, 1.0]
     let difficulty = 0.0;
     if (elapsed === 0) {
       difficulty = 0.0;
@@ -2439,22 +3269,20 @@ function animateRepetitionStroke(options = {}) {
       const fatigueFactor = Math.max(rpeFactor, Math.min(1, setVelLoss / 25.0 + setRepsCount * 0.06));
 
       if (rpe <= 6.5 && fatigueFactor < 0.20) {
-        // Fast/easy rep (Decision 12): Stays mostly white, showing a hint of color at lockout
         difficulty = 0.05 + 0.18 * Math.pow(romProgress, 2);
       } else {
-        // Fatigued rep (Decisions 10, 11): Begins color change immediately, ramping up deeply
         difficulty = Math.max(0, Math.min(1, (0.55 * fatigueFactor + 0.45 * velDropFactor) * Math.min(1, 0.40 + romProgress * 1.2)));
       }
     } else {
-      // Eccentric phase
       difficulty = 0.05 * Math.max(0, Math.min(1, (rpe - 6.0) / 4.0)) * romProgress;
     }
 
-    // Smooth color interpolation: rgb(255,255,255) -> targetColor
-    const curR = Math.round(255 + difficulty * (targetColor.r - 255));
-    const curG = Math.round(255 + difficulty * (targetColor.g - 255));
-    const curB = Math.round(255 + difficulty * (targetColor.b - 255));
-    const dotRgb = `rgb(${curR}, ${curG}, ${curB})`;
+    // Exertion palette ramp (#FFFFFF -> #00E5FF -> #FFB800 -> #FF3B30)
+    const exRgb = getExertionRgb(difficulty);
+    const curR = exRgb.r;
+    const curG = exRgb.g;
+    const curB = exRgb.b;
+    const dotRgb = exRgb.css;
 
     historyPoints.push({ x: xDot, y: yDot, dx: dxCm, v: instVel, diff: difficulty, rgb: dotRgb });
 
@@ -2469,15 +3297,12 @@ function animateRepetitionStroke(options = {}) {
 
     // Render Selected Variant
     if (variant === 'B') {
-      // ── Variant B: Fluid Velocity Energy Ribbon ──
       ctx.save();
       for (let i = 1; i < historyPoints.length; i++) {
         const p1 = historyPoints[i - 1];
         const p2 = historyPoints[i];
         const normV = Math.max(0, Math.min(1, p2.v / vPeak));
-        const ribbonWidth = 2.5 + 5.5 * normV; // 8px down to 2.5px during grind
-
-        // Fatigue aura pulse frequency (1.2Hz at RPE 6 to 4.0Hz at RPE 10)
+        const ribbonWidth = 2.5 + 5.5 * normV;
         const pulseFreq = 1.2 + 2.8 * Math.max(0, (rpe - 6.0) / 4.0);
         const pulse = 0.70 + 0.30 * Math.sin((elapsed / 1000) * pulseFreq * 2 * Math.PI);
 
@@ -2485,7 +3310,7 @@ function animateRepetitionStroke(options = {}) {
         ctx.lineCap = 'round';
         ctx.strokeStyle = p2.rgb;
         ctx.shadowBlur = 12 * pulse * (p2.diff + 0.3);
-        ctx.shadowColor = targetColor.hex;
+        ctx.shadowColor = p2.rgb;
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
@@ -2494,15 +3319,12 @@ function animateRepetitionStroke(options = {}) {
       }
       ctx.restore();
 
-      // Lead puck
       ctx.fillStyle = dotRgb;
       ctx.beginPath();
       ctx.arc(xDot, yDot, 6, 0, Math.PI * 2);
       ctx.fill();
 
     } else if (variant === 'C') {
-      // ── Variant C: Concentric Ripple Waves ──
-      // Plumb connector hairline
       ctx.save();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
       ctx.setLineDash([2, 2]);
@@ -2513,7 +3335,6 @@ function animateRepetitionStroke(options = {}) {
       ctx.stroke();
       ctx.restore();
 
-      // Concentric elliptical waves expanding towards plumb line
       const waveCount = 3;
       for (let wIdx = 0; wIdx < waveCount; wIdx++) {
         const waveOffset = (elapsed * 0.003 + wIdx * 0.33) % 1.0;
@@ -2528,15 +3349,12 @@ function animateRepetitionStroke(options = {}) {
         ctx.restore();
       }
 
-      // Center dot
       ctx.fillStyle = dotRgb;
       ctx.beginPath();
       ctx.arc(xDot, yDot, 5, 0, Math.PI * 2);
       ctx.fill();
 
     } else if (variant === 'D') {
-      // ── Variant D: Spatial Ghost Vectors ──
-      // Ghost baseline plumb reference
       ctx.save();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.20)';
       ctx.lineWidth = 1.5;
@@ -2547,12 +3365,10 @@ function animateRepetitionStroke(options = {}) {
       ctx.stroke();
       ctx.restore();
 
-      // Orthogonal Velocity Breakdown Vectors from (xDot, yDot)
       const vVertLen = Math.max(10, Math.min(36, instVel * 30));
       const vHorizLen = Math.max(4, Math.min(30, Math.abs(dxCm) * 6));
       const horizDir = dxCm >= 0 ? 1 : -1;
 
-      // Vertical ascent vector (upward)
       ctx.save();
       ctx.strokeStyle = '#00FF66';
       ctx.lineWidth = 2;
@@ -2560,7 +3376,6 @@ function animateRepetitionStroke(options = {}) {
       ctx.moveTo(xDot, yDot);
       ctx.lineTo(xDot, yDot - vVertLen);
       ctx.stroke();
-      // Arrowhead
       ctx.fillStyle = '#00FF66';
       ctx.beginPath();
       ctx.moveTo(xDot, yDot - vVertLen - 3);
@@ -2570,16 +3385,14 @@ function animateRepetitionStroke(options = {}) {
       ctx.fill();
       ctx.restore();
 
-      // Horizontal deviation vector
       ctx.save();
-      ctx.strokeStyle = targetColor.hex;
+      ctx.strokeStyle = dotRgb;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(xDot, yDot);
       ctx.lineTo(xDot + horizDir * vHorizLen, yDot);
       ctx.stroke();
-      // Arrowhead
-      ctx.fillStyle = targetColor.hex;
+      ctx.fillStyle = dotRgb;
       ctx.beginPath();
       ctx.moveTo(xDot + horizDir * (vHorizLen + 3), yDot);
       ctx.lineTo(xDot + horizDir * (vHorizLen - 2), yDot - 3);
@@ -2588,15 +3401,13 @@ function animateRepetitionStroke(options = {}) {
       ctx.fill();
       ctx.restore();
 
-      // Puck Core
       ctx.fillStyle = dotRgb;
       ctx.beginPath();
       ctx.arc(xDot, yDot, 5, 0, Math.PI * 2);
       ctx.fill();
 
     } else {
-      // ── Variant A (Primary Concept): Kinetic Dot + Dynamic Difficulty Color Transition ──
-      // Connector hairline to plumb line
+      // ── Variant A (Primary Concept): Kinetic Dot + Per-Segment Exertion Gradient ──
       ctx.save();
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
       ctx.setLineDash([2, 2]);
@@ -2607,23 +3418,21 @@ function animateRepetitionStroke(options = {}) {
       ctx.stroke();
       ctx.restore();
 
-      // Persistent trailing path line behind the dot with dynamic exertion tint (Decision 5 & 6)
       if (historyPoints.length > 1) {
         ctx.save();
-        ctx.strokeStyle = `rgba(${curR}, ${curG}, ${curB}, 0.70)`;
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2.75;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.beginPath();
-        ctx.moveTo(historyPoints[0].x, historyPoints[0].y);
         for (let i = 1; i < historyPoints.length; i++) {
+          ctx.strokeStyle = historyPoints[i].rgb;
+          ctx.beginPath();
+          ctx.moveTo(historyPoints[i - 1].x, historyPoints[i - 1].y);
           ctx.lineTo(historyPoints[i].x, historyPoints[i].y);
+          ctx.stroke();
         }
-        ctx.stroke();
         ctx.restore();
       }
 
-      // Turnaround inflection flash on dot (Decision 9)
       if (isTurnaround) {
         ctx.save();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
@@ -2631,7 +3440,6 @@ function animateRepetitionStroke(options = {}) {
         ctx.beginPath();
         ctx.arc(xDot, yDot, 14, 0, Math.PI * 2);
         ctx.stroke();
-        // Secondary kinetic expansion ring
         ctx.strokeStyle = `rgba(${curR}, ${curG}, ${curB}, 0.50)`;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
@@ -2640,7 +3448,6 @@ function animateRepetitionStroke(options = {}) {
         ctx.restore();
       }
 
-      // Outer specular halo
       const haloRadius = 10 + 10 * difficulty;
       const haloAlpha = 0.40 + 0.32 * difficulty;
       ctx.save();
@@ -2650,7 +3457,6 @@ function animateRepetitionStroke(options = {}) {
       ctx.fill();
       ctx.restore();
 
-      // Specular dot core (MUST be the final fill operation)
       ctx.save();
       ctx.fillStyle = dotRgb;
       ctx.beginPath();
@@ -2663,9 +3469,10 @@ function animateRepetitionStroke(options = {}) {
       activeStrokeAnimId = requestAnimationFrame(frame);
     } else {
       activeStrokeAnimId = null;
-      // ── Requirement R2: Repetition Completion Pop & Pure Web Audio Synthesis ──
-      const popScale = 1.0 + 1.5 * ((Math.max(6.0, Math.min(10.0, rpe)) - 6.0) / 4.0); // 1.0 to 2.5
-      triggerCompletionPop(ctx, w, h, xDot, yDot, popScale, targetColor, velocity, rpe, liftType, onComplete);
+      const popScale = 1.0 + 1.5 * ((Math.max(6.0, Math.min(10.0, rpe)) - 6.0) / 4.0);
+      const endExertion = getExertionRgb(Math.max(0.15, (rpe - 6.0) / 4.0));
+      const popColorObj = rpe >= 7.5 ? endExertion : targetColor;
+      triggerCompletionPop(ctx, w, h, xDot, yDot, popScale, popColorObj, velocity, rpe, liftType, onComplete);
     }
   }
 
@@ -2768,6 +3575,49 @@ function initBarPathControls() { if (initBarPathControls._initialized) return; i
   if (speedBtn) {
     speedBtn.addEventListener('click', toggleReplaySpeed);
   }
+
+  // Velocity Change Graph dot hit-testing -> 80% Rep Replay Modal
+  const velCanvas = velocityChangeCanvas || document.getElementById('velocity-change-canvas');
+  if (velCanvas && !velCanvas._velGraphBound) {
+    velCanvas._velGraphBound = true;
+    velCanvas.addEventListener('click', (e) => {
+      if (!e) return;
+      const hit = findVelGraphHitTarget(e.clientX, e.clientY, velCanvas);
+      if (hit) {
+        openRepReplayModal(hit.repIdx, hit.setRef);
+      }
+    });
+    velCanvas.addEventListener('mousemove', (e) => {
+      if (!e) return;
+      const hit = findVelGraphHitTarget(e.clientX, e.clientY, velCanvas);
+      if (velCanvas.style) {
+        velCanvas.style.cursor = hit ? 'pointer' : 'default';
+      }
+    });
+  }
+
+  // 80% Rep Replay Modal dismiss listeners
+  const modalBackdrop = repReplayBackdrop || document.getElementById('rep-replay-backdrop');
+  if (modalBackdrop && !modalBackdrop._repModalBound) {
+    modalBackdrop._repModalBound = true;
+    modalBackdrop.addEventListener('click', closeRepReplayModal);
+  }
+  const modalCloseBtn = btnRepReplayClose || document.getElementById('btn-rep-replay-close');
+  if (modalCloseBtn && !modalCloseBtn._repModalBound) {
+    modalCloseBtn._repModalBound = true;
+    modalCloseBtn.addEventListener('click', closeRepReplayModal);
+  }
+  if (typeof document !== 'undefined' && !document._repModalEscBound) {
+    document._repModalEscBound = true;
+    document.addEventListener('keydown', (e) => {
+      if (e && e.key === 'Escape' && repReplayModalState.isOpen) {
+        closeRepReplayModal();
+      }
+    });
+  }
+
+  // Programmed Workout Drawer wiring (#btn-programmed-workout -> #live-programmed-drawer)
+  initProgrammedWorkoutDrawer();
 
   const scrubber = document.getElementById('barpath-scrubber');
   if (scrubber) {
@@ -3080,7 +3930,42 @@ if (bleDeviceCard) {
   });
 }
 
-// Target RPE Configuration Handlers
+// Target RPE Configuration Handlers & Popover
+function closeTargetRpePopover() {
+  const pop = targetRpePopover || document.getElementById('target-rpe-popover');
+  const trig = btnTargetRpeTrigger || document.getElementById('btn-target-rpe-trigger');
+  const mod = targetRpeModule || document.getElementById('target-rpe-module');
+  if (pop) pop.style.display = 'none';
+  if (trig && typeof trig.setAttribute === 'function') trig.setAttribute('aria-expanded', 'false');
+  if (mod && mod.classList) mod.classList.remove('open');
+}
+
+function openTargetRpePopover() {
+  closeLiveWeightPopover();
+  closeProgrammedDrawer();
+  if (liftSelectWrapper && liftSelectWrapper.classList) liftSelectWrapper.classList.remove('open');
+  const pop = targetRpePopover || document.getElementById('target-rpe-popover');
+  const trig = btnTargetRpeTrigger || document.getElementById('btn-target-rpe-trigger');
+  const mod = targetRpeModule || document.getElementById('target-rpe-module');
+  if (pop) pop.style.display = 'block';
+  if (trig && typeof trig.setAttribute === 'function') trig.setAttribute('aria-expanded', 'true');
+  if (mod && mod.classList) mod.classList.add('open');
+}
+
+function toggleTargetRpePopover(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const pop = targetRpePopover || document.getElementById('target-rpe-popover');
+  const isOpen = Boolean(pop && (pop.style.display === 'block' || pop.style.display === 'flex'));
+  if (isOpen) {
+    closeTargetRpePopover();
+  } else {
+    openTargetRpePopover();
+  }
+}
+
 function setTargetRpe(val, triggerFeedback = false) {
   const num = parseFloat(val);
   if (isNaN(num)) return;
@@ -3097,6 +3982,10 @@ function setTargetRpe(val, triggerFeedback = false) {
     setTimeout(() => {
       if (targetRpeDisplay) targetRpeDisplay.style.transform = 'scale(1)';
     }, 150);
+  }
+  const popValEl = targetRpePopoverVal || document.getElementById('target-rpe-popover-val');
+  if (popValEl) {
+    popValEl.textContent = currentTargetRpe.toFixed(1);
   }
 
   // Update quick chips
@@ -3128,6 +4017,10 @@ function setTargetRpe(val, triggerFeedback = false) {
     activeSet.targetRpe = currentTargetRpe;
     persistStorage();
   }
+
+  if (typeof renderVelocityChangeGraph === 'function') {
+    renderVelocityChangeGraph(1.0);
+  }
 }
 
 function triggerTargetReachedAlert() {
@@ -3150,19 +4043,48 @@ function triggerTargetReachedAlert() {
   }
 }
 
+const rpeTrigBtn = btnTargetRpeTrigger || document.getElementById('btn-target-rpe-trigger');
+if (rpeTrigBtn) {
+  rpeTrigBtn.addEventListener('click', toggleTargetRpePopover);
+}
+if (targetRpeModule) {
+  targetRpeModule.addEventListener('click', (e) => {
+    const pop = targetRpePopover || document.getElementById('target-rpe-popover');
+    if (pop && e && e.target && typeof pop.contains === 'function' && pop.contains(e.target)) return;
+    if (rpeTrigBtn && e && e.target && typeof rpeTrigBtn.contains === 'function' && rpeTrigBtn.contains(e.target)) return;
+    toggleTargetRpePopover(e);
+  });
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const mod = targetRpeModule || document.getElementById('target-rpe-module');
+    if (mod && e && e.target && typeof mod.contains === 'function' && !mod.contains(e.target)) {
+      closeTargetRpePopover();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e && e.key === 'Escape') {
+      closeTargetRpePopover();
+    }
+  });
+}
+
 if (btnTargetRpeDec) {
-  btnTargetRpeDec.addEventListener('click', () => {
+  btnTargetRpeDec.addEventListener('click', (e) => {
+    if (e) e.stopPropagation();
     setTargetRpe(currentTargetRpe - 0.5, true);
   });
 }
 if (btnTargetRpeInc) {
-  btnTargetRpeInc.addEventListener('click', () => {
+  btnTargetRpeInc.addEventListener('click', (e) => {
+    if (e) e.stopPropagation();
     setTargetRpe(currentTargetRpe + 0.5, true);
   });
 }
 
 targetChips.forEach(chip => {
-  chip.addEventListener('click', () => {
+  chip.addEventListener('click', (e) => {
+    if (e) e.stopPropagation();
     const r = chip.getAttribute('data-rpe');
     if (r) setTargetRpe(parseFloat(r), true);
   });
@@ -3349,7 +4271,13 @@ function toggleDropdown(e) {
     e.preventDefault();
     e.stopPropagation();
   }
-  liftSelectWrapper.classList.toggle('open');
+  closeLiveWeightPopover();
+  closeTargetRpePopover();
+  closeProgrammedDrawer();
+  const isOpen = liftSelectWrapper.classList.toggle('open');
+  if (selectTrigger && typeof selectTrigger.setAttribute === 'function') {
+    selectTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
 }
 
 selectTrigger.addEventListener('click', toggleDropdown);
@@ -3357,6 +4285,9 @@ selectTrigger.addEventListener('click', toggleDropdown);
 document.addEventListener('click', (e) => {
   if (!liftSelectWrapper.contains(e.target)) {
     liftSelectWrapper.classList.remove('open');
+    if (selectTrigger && typeof selectTrigger.setAttribute === 'function') {
+      selectTrigger.setAttribute('aria-expanded', 'false');
+    }
   }
 });
 
@@ -3398,6 +4329,11 @@ function applyLiftTheme(liftName) {
 
   currentLift = nextLift;
   if (selectedLiftText) selectedLiftText.textContent = nextLift.toUpperCase();
+  const liftCodeEl = selectedLiftCode || document.getElementById('selected-lift-code');
+  if (liftCodeEl) {
+    const lower = nextLift.toLowerCase();
+    liftCodeEl.textContent = lower.includes('dead') ? 'DL' : (lower.includes('squat') ? 'SQ' : (lower.includes('bench') ? 'BP' : nextLift.slice(0, 2).toUpperCase()));
+  }
   document.body.className = `theme-${nextLift.toLowerCase()}`;
 
   customOptions.forEach(o => o.classList.remove('selected'));
@@ -4757,11 +5693,19 @@ navTabs.forEach(tab => {
     const prevSection = tabSections[prevTarget];
     const targetSection = tabSections[target];
 
+    const dockEl = floatingSetDock || document.getElementById('floating-set-dock');
+    if (dockEl) {
+      dockEl.style.display = target === 'live' ? 'flex' : 'none';
+    }
+
     if (target === 'set') {
       renderAthletePrepHub();
       renderAthletePlanVsActual();
     } else if (target === 'history') {
       populateAthleteBiometricsForm();
+    } else if (target === 'live') {
+      if (typeof renderVelocityChangeGraph === 'function') renderVelocityChangeGraph(1.0);
+      if (typeof renderBarPathStage === 'function') renderBarPathStage(currentReplayRepIdx, 1.0);
     }
 
     // 2. Clear any active transition states from rapid clicking
@@ -4912,9 +5856,14 @@ function initCoachDirectiveSync() {
   // Listen for coach target rest configuration
   window.ErosSyncBus.on('coach:rest_target', (payload) => {
     if (!payload || !payload.targetSeconds) return;
-    const targetSeconds = payload.targetSeconds;
+    const targetSeconds = Math.round(Number(payload.targetSeconds));
+    if (!isFinite(targetSeconds) || targetSeconds <= 0) return;
+    activeCoachTargetRestSeconds = targetSeconds;
     if (activeSet) {
       activeSet.prescribedRestSeconds = targetSeconds;
+    } else if (restStartTime) {
+      lastDisplayedRestTargetSeconds = targetSeconds;
+      updateRestClockDisplay(targetSeconds);
     }
   });
 }
@@ -7009,6 +7958,18 @@ const PREP_TOOLTIP_DICTIONARY = {
     description: 'Opens visual trace style options for rendering repetition paths and ghost consistency lines.',
     tip: 'Pick a high-contrast trace style when training under bright gym lighting.'
   },
+  live_programmed_workout: {
+    title: 'Programmed Session Loader',
+    category: 'Live Bridge',
+    description: 'Opens today prescribed exercise slots from your coach plan for one-tap loading into the Live tracker.',
+    tip: 'Load a programmed slot before starting warmups so weights, target RPE, and rest intervals stay aligned.'
+  },
+  live_velocity_graph: {
+    title: 'Live Velocity Change Graph',
+    category: 'Live Telemetry',
+    description: 'Plots rep-by-rep peak and mean bar velocity across the active set. Tap any repetition dot to inspect its bar path replay.',
+    tip: 'Watch the gap between peak and mean speed or tap slower late reps to check bar drift.'
+  },
   live_set_summary: {
     title: 'Post-Set Summary Banner',
     category: 'Live Telemetry',
@@ -7660,6 +8621,11 @@ if (typeof window !== 'undefined') {
   window.renderHistoryView = renderHistoryView;
   window.synthesizeRepTrajectory = synthesizeRepTrajectory;
   window.renderBarPathStage = renderBarPathStage;
+  window.renderVelocityChangeGraph = renderVelocityChangeGraph;
+  window.triggerVelocityGraphTween = triggerVelocityGraphTween;
+  window.openRepReplayModal = openRepReplayModal;
+  window.closeRepReplayModal = closeRepReplayModal;
+  window.getExertionRgb = getExertionRgb;
   window.toggleBarPathMode = toggleBarPathMode;
   window.startReplay = startReplay;
   window.stopReplay = stopReplay;
@@ -7671,6 +8637,149 @@ if (typeof window !== 'undefined') {
   window.toggleVariantSheet = toggleVariantSheet;
   window.activeAnimationVariant = activeAnimationVariant;
   initBarPathControls();
+}
+
+// ── Programmed Workout Drawer Controller (Phase 6) ──
+function closeProgrammedDrawer() {
+  const drawer = liveProgrammedDrawer || document.getElementById('live-programmed-drawer');
+  const btn = btnProgrammedWorkout || document.getElementById('btn-programmed-workout');
+  if (drawer) {
+    drawer.style.display = 'none';
+    if (typeof drawer.setAttribute === 'function') drawer.setAttribute('aria-hidden', 'true');
+  }
+  if (btn && typeof btn.setAttribute === 'function') {
+    btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function renderProgrammedDrawerList() {
+  const listEl = liveProgrammedDrawerList || document.getElementById('live-programmed-drawer-list');
+  if (!listEl) return;
+
+  loadPrepStateFromStore();
+  const todayIso = formatLocalIsoDate(new Date());
+  const todayWk = athletePrepState.workouts.find(w => w.scheduledDate === todayIso) || null;
+  const fallbackWk = todayWk || getSelectedPlannedWorkout();
+  const slots = (fallbackWk && Array.isArray(fallbackWk.prescribedSlots)) ? fallbackWk.prescribedSlots : [];
+
+  if (!fallbackWk || slots.length === 0) {
+    listEl.innerHTML = '<p class="live-programmed-empty">No prescribed slots scheduled for today.</p>';
+    return;
+  }
+
+  const headerSub = todayWk
+    ? escapeHtml(todayWk.sessionTitle || 'Today')
+    : `${escapeHtml(fallbackWk.sessionTitle || 'Planned')} (${escapeHtml(fallbackWk.scheduledDate || '')})`;
+
+  const rowsHtml = slots.map(slot => {
+    const top = slot.topSet || {};
+    const loadText = Number(top.loadKg) > 0 ? `${Number(top.loadKg).toFixed(1)} kg` : 'Auto';
+    const rpeText = Number(top.rpe) > 0 ? `@${Number(top.rpe).toFixed(1)}` : '';
+    const isDone = isSlotCompletedLocally(fallbackWk, slot);
+    const isActive = activePlannedWorkoutId === fallbackWk.workoutId && activePlannedSlotId === slot.slotId;
+    const statusLabel = isDone ? 'Done' : (isActive ? 'Loaded' : 'Planned');
+
+    return `
+      <div class="live-programmed-slot-row ${isDone ? 'is-done' : ''} ${isActive ? 'is-active' : ''}">
+        <div class="live-programmed-slot-info">
+          <div class="live-programmed-slot-name">${escapeHtml(slot.exerciseName || slot.baseLift || 'Movement')}</div>
+          <div class="live-programmed-slot-meta font-mono">${escapeHtml(String(top.sets || 1))}x${escapeHtml(String(top.reps || 3))} • ${escapeHtml(loadText)} ${escapeHtml(rpeText)} • ${escapeHtml(statusLabel)}</div>
+        </div>
+        <button type="button" class="live-programmed-load-btn" data-drawer-workout-id="${escapeHtml(fallbackWk.workoutId)}" data-drawer-slot-id="${escapeHtml(slot.slotId)}">Load</button>
+      </div>
+    `;
+  }).join('');
+
+  listEl.innerHTML = `<div class="live-programmed-session-sub font-mono">${headerSub}</div>${rowsHtml}`;
+
+  if (typeof listEl.querySelectorAll === 'function') {
+    listEl.querySelectorAll('.live-programmed-load-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (e) e.stopPropagation();
+        const slotId = btn.getAttribute('data-drawer-slot-id');
+        const wkId = btn.getAttribute('data-drawer-workout-id');
+        const wk = athletePrepState.workouts.find(w => w.workoutId === wkId) || fallbackWk;
+        const slot = wk && Array.isArray(wk.prescribedSlots) ? wk.prescribedSlots.find(s => s.slotId === slotId) : null;
+        if (wk && slot) {
+          launchPlannedSlot(wk, slot);
+          closeProgrammedDrawer();
+        }
+      });
+    });
+  }
+}
+
+function openProgrammedDrawer() {
+  closeLiveWeightPopover();
+  closeTargetRpePopover();
+  if (liftSelectWrapper && liftSelectWrapper.classList) liftSelectWrapper.classList.remove('open');
+  renderProgrammedDrawerList();
+  const drawer = liveProgrammedDrawer || document.getElementById('live-programmed-drawer');
+  const btn = btnProgrammedWorkout || document.getElementById('btn-programmed-workout');
+  if (drawer) {
+    drawer.style.display = 'flex';
+    if (typeof drawer.setAttribute === 'function') drawer.setAttribute('aria-hidden', 'false');
+  }
+  if (btn && typeof btn.setAttribute === 'function') {
+    btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function toggleProgrammedDrawer(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const drawer = liveProgrammedDrawer || document.getElementById('live-programmed-drawer');
+  const isOpen = Boolean(drawer && (drawer.style.display === 'flex' || drawer.style.display === 'block'));
+  if (isOpen) {
+    closeProgrammedDrawer();
+  } else {
+    openProgrammedDrawer();
+  }
+}
+
+function initProgrammedWorkoutDrawer() {
+  if (initProgrammedWorkoutDrawer._initialized) return;
+  initProgrammedWorkoutDrawer._initialized = true;
+
+  const btn = btnProgrammedWorkout || document.getElementById('btn-programmed-workout');
+  if (btn) {
+    btn.addEventListener('click', toggleProgrammedDrawer);
+  }
+  const backdrop = liveProgrammedDrawerBackdrop || document.getElementById('live-programmed-drawer-backdrop');
+  if (backdrop) {
+    backdrop.addEventListener('click', closeProgrammedDrawer);
+  }
+  const closeBtn = btnProgrammedDrawerClose || document.getElementById('btn-programmed-drawer-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeProgrammedDrawer);
+  }
+  const openPrepBtn = btnProgrammedOpenPrep || document.getElementById('btn-programmed-open-prep');
+  if (openPrepBtn) {
+    openPrepBtn.addEventListener('click', () => {
+      closeProgrammedDrawer();
+      switchTab('set');
+    });
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', (e) => {
+      const drawer = liveProgrammedDrawer || document.getElementById('live-programmed-drawer');
+      if (!drawer || drawer.style.display === 'none' || drawer.style.display === '') return;
+      const sheet = typeof drawer.querySelector === 'function' ? drawer.querySelector('.live-programmed-drawer-sheet') : null;
+      const progBtn = btnProgrammedWorkout || document.getElementById('btn-programmed-workout');
+      const inSheet = sheet && e && e.target && typeof sheet.contains === 'function' && sheet.contains(e.target);
+      const inBtn = progBtn && e && e.target && typeof progBtn.contains === 'function' && progBtn.contains(e.target);
+      if (!inSheet && !inBtn) {
+        closeProgrammedDrawer();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e && e.key === 'Escape') {
+        closeProgrammedDrawer();
+      }
+    });
+  }
 }
 
 // ── Kickoff Execution on DOM Ready ──
@@ -7689,5 +8798,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPrConfirmHudListeners();
   initPrepHoverTooltips();
   initBarPathControls();
+  initProgrammedWorkoutDrawer();
   renderBarPathStage(0, 1.0);
+  renderVelocityChangeGraph(1.0);
 });

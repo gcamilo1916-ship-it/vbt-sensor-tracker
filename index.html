@@ -8,6 +8,7 @@
   <meta name="theme-color" content="#0d0d0d" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://esm.sh https://*.base44.app wss://*.base44.app https://base44.app; img-src 'self' data: blob:; media-src 'self' data: blob:;" />
   <title>Eros</title>
+  <link rel="icon" href="data:," />
   
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -93,15 +94,52 @@
             <span class="pulse-indicator" id="session-pulse"></span>
             <span class="session-status" id="session-status-text">NO ACTIVE WORKOUT</span>
           </div>
-          <div class="session-timer font-mono" id="session-timer-display">00:00:00</div>
+          <div class="session-clocks-row">
+            <div class="session-timer font-mono" id="session-timer-display">00:00:00</div>
+            <div class="session-rest-clock font-mono" id="session-rest-clock" aria-label="Inter-Set Rest Clock" style="display: none;">00:00</div>
+          </div>
         </div>
-        <button id="btn-workout-master" class="btn-glass-primary" data-prep-tooltip-key="header_workout_master">
-          <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-          </svg>
-          <span id="btn-workout-text" class="sr-only">START WORKOUT</span>
-          <span class="btn-short-label" aria-hidden="true">START</span>
-        </button>
+        <div class="session-actions-group">
+          <button type="button" id="btn-workout-master" class="btn-glass-primary" data-prep-tooltip-key="header_workout_master">
+            <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="btn-workout-text" class="sr-only">START WORKOUT</span>
+            <span class="btn-short-label" aria-hidden="true">New</span>
+          </button>
+          <button type="button" id="btn-programmed-workout" class="btn-programmed-workout" aria-expanded="false" aria-controls="live-programmed-drawer" data-prep-tooltip-key="live_programmed_workout">
+            <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Programmed</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Compact Programmed Workout Quick Drawer -->
+      <div id="live-programmed-drawer" class="live-programmed-drawer glass-card" role="dialog" aria-modal="false" aria-labelledby="live-programmed-drawer-title" aria-hidden="true" style="display: none;">
+        <div class="live-programmed-drawer-backdrop" id="live-programmed-drawer-backdrop"></div>
+        <div class="live-programmed-drawer-sheet">
+          <div class="live-programmed-drawer-header">
+            <span id="live-programmed-drawer-title" class="live-programmed-drawer-title font-mono">TODAY'S PROGRAMMED SLOTS</span>
+            <button type="button" id="btn-programmed-drawer-close" class="live-programmed-drawer-close eros-icon-btn" aria-label="Close Programmed Drawer">
+              <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span class="sr-only">Close</span>
+            </button>
+          </div>
+          <div id="live-programmed-drawer-list" class="live-programmed-drawer-list">
+            <p class="live-programmed-empty">No prescribed slots scheduled for today.</p>
+          </div>
+          <div class="live-programmed-drawer-footer">
+            <button type="button" id="btn-programmed-open-prep" class="btn-programmed-open-prep">Open Prep Tab</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -116,11 +154,10 @@
         <!-- Active Planned Session Prescription Strip -->
         <div id="live-prescription-strip" class="live-prescription-strip glass-card" style="display: none;" data-prep-tooltip-key="live_prescription_strip"></div>
         
-        <!-- Lift Control Center -->
-        <!-- Exercise & Set Controls -->
-        <div class="controls-panel">
+        <!-- Strict 1-Row 4-Column Control & LIVE RPE Hero Strip -->
+        <div class="controls-panel" id="live-top-strip">
           <div class="controls-row">
-            <!-- Glass OS Custom Dropdown -->
+            <!-- Col 1: Movement Selector -->
             <div class="custom-select-wrapper" id="lift-select-wrapper" data-prep-tooltip-key="live_lift_select">
               <div class="custom-select-trigger glass-pill" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="lift-select-options" aria-label="Select Exercise Lift">
                 <span class="select-label-wrap">
@@ -132,185 +169,153 @@
                     <line x1="6.5" y1="12" x2="17.5" y2="12"></line>
                   </svg>
                   <span class="select-prefix sr-only">LIFT:</span>
+                  <span id="selected-lift-code" class="select-code font-mono" aria-hidden="true">DL</span>
                   <span id="selected-lift-text" class="select-value">DEADLIFT</span>
                 </span>
                 <span class="select-chevron" aria-hidden="true">▾</span>
               </div>
               <div class="custom-select-options glass-dropdown" id="lift-select-options" role="listbox" aria-label="Exercise Lifts">
-                <div class="custom-option selected" data-value="Deadlift" data-cmd="CMD:SL:DL" role="option" aria-selected="true" tabindex="0">
+                <div class="custom-option selected" data-value="Deadlift" data-code="DL" data-cmd="CMD:SL:DL" role="option" aria-selected="true" tabindex="0">
                   <span class="option-dot dl-dot" aria-hidden="true"></span>
                   <span class="option-name">DEADLIFT</span>
                 </div>
-                <div class="custom-option" data-value="Squat" data-cmd="CMD:SL:SQ" role="option" aria-selected="false" tabindex="-1">
+                <div class="custom-option" data-value="Squat" data-code="SQ" data-cmd="CMD:SL:SQ" role="option" aria-selected="false" tabindex="-1">
                   <span class="option-dot sq-dot" aria-hidden="true"></span>
                   <span class="option-name">SQUAT</span>
                 </div>
-                <div class="custom-option" data-value="Bench" data-cmd="CMD:SL:BP" role="option" aria-selected="false" tabindex="-1">
+                <div class="custom-option" data-value="Bench" data-code="BP" data-cmd="CMD:SL:BP" role="option" aria-selected="false" tabindex="-1">
                   <span class="option-dot bp-dot" aria-hidden="true"></span>
                   <span class="option-name">BENCH PRESS</span>
                 </div>
               </div>
             </div>
             
-            <!-- Set Weight Input Capsule (Live Page) -->
+            <!-- Col 2: Weight Trigger Pill + Floating Popover -->
             <div class="weight-control-wrapper glass-pill" id="live-weight-control" role="group" aria-label="Set Working Weight" data-prep-tooltip-key="live_weight_control">
-              <button type="button" class="weight-stepper-btn" id="btn-live-weight-dec" aria-label="Decrease Working Weight">
-                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span class="sr-only">Decrease Weight</span>
+              <button type="button" class="weight-popover-trigger" id="btn-live-weight-trigger" aria-expanded="false" aria-controls="live-weight-popover" aria-label="Adjust Working Weight">
+                <span class="control-mini-label">WEIGHT</span>
+                <span id="live-weight-display" class="weight-trigger-value font-mono tabular-nums">140.0 <span class="weight-unit">kg</span></span>
               </button>
-              <div class="weight-input-inner">
-                <input type="number" id="live-set-weight-input" class="set-weight-input font-mono tabular-nums" value="140.0" step="2.5" min="0" max="600" aria-label="Set weight in kg">
-                <span class="weight-unit">kg</span>
+              <div id="live-weight-popover" class="live-weight-popover glass-card" role="dialog" aria-label="Working Weight Adjustment" style="display: none;">
+                <div class="weight-quick-grid">
+                  <button type="button" class="weight-quick-btn font-mono" data-weight-delta="-5">-5</button>
+                  <button type="button" class="weight-quick-btn font-mono" data-weight-delta="-2.5">-2.5</button>
+                  <button type="button" class="weight-quick-btn font-mono" data-weight-delta="2.5">+2.5</button>
+                  <button type="button" class="weight-quick-btn font-mono" data-weight-delta="5">+5</button>
+                </div>
+                <div class="weight-popover-stepper">
+                  <button type="button" class="weight-stepper-btn" id="btn-live-weight-dec" aria-label="Decrease Working Weight">
+                    <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span class="sr-only">Decrease Weight</span>
+                  </button>
+                  <div class="weight-input-inner">
+                    <input type="number" id="live-set-weight-input" class="set-weight-input font-mono tabular-nums" value="140.0" step="2.5" min="0" max="600" aria-label="Set weight in kg">
+                    <span class="weight-unit">kg</span>
+                  </div>
+                  <button type="button" class="weight-stepper-btn" id="btn-live-weight-inc" aria-label="Increase Working Weight">
+                    <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span class="sr-only">Increase Weight</span>
+                  </button>
+                </div>
               </div>
-              <button type="button" class="weight-stepper-btn" id="btn-live-weight-inc" aria-label="Increase Working Weight">
-                <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span class="sr-only">Increase Weight</span>
-              </button>
             </div>
 
-            <!-- Set Trigger Button -->
-            <button id="btn-set-toggle" class="btn-glass-set" data-prep-tooltip-key="live_set_toggle">
-              <svg class="eros-svg-icon eros-svg-icon--lg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-              <span id="btn-set-text" class="sr-only">START SET</span>
-              <span class="btn-short-label" aria-hidden="true">START</span>
-            </button>
-            <button type="button" id="btn-complete-set" class="btn-complete-set font-mono" style="display: none;" aria-label="Complete Active Set" data-prep-tooltip-key="live_complete_set">
-              <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <polyline points="9 12 11 14 15 10"></polyline>
-              </svg>
-              <span class="sr-only">COMPLETE SET</span>
-              <span aria-hidden="true">DONE</span>
-            </button>
-          </div>
-
-          <!-- Target RPE Configuration Capsule for Current Set -->
-          <div class="target-rpe-module" id="target-rpe-module" data-prep-tooltip-key="live_target_rpe">
-            <div class="target-rpe-row">
-              <div class="target-rpe-label-wrap">
-                <span class="target-rpe-badge">TARGET RPE</span>
-                <span class="target-rpe-help">SET CEILING ALERT</span>
-              </div>
-              <div class="target-rpe-stepper-wrap">
-                <button type="button" class="target-stepper-btn" id="btn-target-rpe-dec" aria-label="Decrease Target RPE">
-                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  <span class="sr-only">Decrease Target RPE</span>
-                </button>
-                <span class="target-rpe-val font-mono tabular-nums" id="target-rpe-display">8.0</span>
-                <button type="button" class="target-stepper-btn" id="btn-target-rpe-inc" aria-label="Increase Target RPE">
-                  <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  <span class="sr-only">Increase Target RPE</span>
-                </button>
+            <!-- Col 3: Target RPE Trigger Pill + Floating Popover -->
+            <div class="target-rpe-module" id="target-rpe-module" data-prep-tooltip-key="live_target_rpe">
+              <button type="button" class="target-rpe-trigger" id="btn-target-rpe-trigger" aria-expanded="false" aria-controls="target-rpe-popover" aria-label="Adjust Target RPE">
+                <span class="target-rpe-badge">TARGET</span>
+                <span class="target-rpe-trigger-val font-mono tabular-nums"><span aria-hidden="true">@</span><span class="target-rpe-val" id="target-rpe-display">8.0</span></span>
+              </button>
+              <div id="target-rpe-popover" class="target-rpe-popover glass-card" role="dialog" aria-label="Target RPE Selector" style="display: none;">
+                <div class="target-rpe-row">
+                  <div class="target-rpe-label-wrap">
+                    <span class="target-rpe-popover-title">TARGET RPE</span>
+                    <span class="target-rpe-help sr-only">SET CEILING ALERT</span>
+                  </div>
+                  <div class="target-rpe-stepper-wrap">
+                    <button type="button" class="target-stepper-btn" id="btn-target-rpe-dec" aria-label="Decrease Target RPE">
+                      <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                      <span class="sr-only">Decrease Target RPE</span>
+                    </button>
+                    <span class="target-rpe-val font-mono tabular-nums" id="target-rpe-popover-val">8.0</span>
+                    <button type="button" class="target-stepper-btn" id="btn-target-rpe-inc" aria-label="Increase Target RPE">
+                      <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                      <span class="sr-only">Increase Target RPE</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="target-rpe-chips" role="radiogroup" aria-label="Quick Target RPE Presets">
+                  <button type="button" class="target-chip" data-rpe="7.0">@7.0</button>
+                  <button type="button" class="target-chip" data-rpe="7.5">@7.5</button>
+                  <button type="button" class="target-chip active" data-rpe="8.0">@8.0</button>
+                  <button type="button" class="target-chip" data-rpe="8.5">@8.5</button>
+                  <button type="button" class="target-chip" data-rpe="9.0">@9.0</button>
+                  <button type="button" class="target-chip" data-rpe="9.5">@9.5</button>
+                </div>
               </div>
             </div>
-            <div class="target-rpe-chips" role="radiogroup" aria-label="Quick Target RPE Presets">
-              <button type="button" class="target-chip" data-rpe="7.0">@7.0</button>
-              <button type="button" class="target-chip" data-rpe="7.5">@7.5</button>
-              <button type="button" class="target-chip active" data-rpe="8.0">@8.0</button>
-              <button type="button" class="target-chip" data-rpe="8.5">@8.5</button>
-              <button type="button" class="target-chip" data-rpe="9.0">@9.0</button>
-              <button type="button" class="target-chip" data-rpe="9.5">@9.5</button>
+
+            <!-- Col 4: LIVE RPE Hero Tile -->
+            <div class="glass-card rpe-hero-banner tier-warmup rpe-hero-tile" id="rpe-hero-card">
+              <div class="integrated-rpe-tracker">
+                <div class="rpe-tracker-row">
+                  <span class="rpe-tracker-label">LIVE RPE</span>
+                  <div class="rpe-score-group">
+                    <span id="live-rpe" class="rpe-hero-number font-mono tabular-nums">0.0</span>
+                    <span class="rpe-hero-denom">/10</span>
+                  </div>
+                </div>
+                <div class="rpe-badge-group">
+                  <span class="rpe-rir-pill font-mono" id="live-rir-pill">RIR: 10.0</span>
+                  <span class="rpe-tier-badge" id="rpe-tier-badge">WARMUP</span>
+                </div>
+              </div>
+
+              <!-- Preserved Hidden RPE Gauge & Baseline Compat Nodes -->
+              <div class="rpe-gauge-container sr-only" aria-hidden="true" style="display: none;">
+                <div class="rpe-gauge-track" aria-label="RPE Effort Gauge">
+                  <div class="rpe-gauge-fill" id="rpe-gauge-fill" style="width: 0%;"></div>
+                  <div class="rpe-gauge-ticks" aria-hidden="true">
+                    <span class="rpe-tick" style="left: 65%;" data-rpe="6.5"><span class="tick-label">6.5</span></span>
+                    <span class="rpe-tick" style="left: 75%;" data-rpe="7.5"><span class="tick-label">7.5</span></span>
+                    <span class="rpe-tick" style="left: 85%;" data-rpe="8.5"><span class="tick-label">8.5</span></span>
+                    <span class="rpe-tick" style="left: 95%;" data-rpe="9.5"><span class="tick-label">9.5</span></span>
+                  </div>
+                  <div class="rpe-trail-pin" id="rpe-trail-pin" style="left: 0%;">
+                    <div class="rpe-trail-pin-glow"></div>
+                    <div class="rpe-trail-pin-head"></div>
+                    <span class="rpe-trail-pin-badge font-mono" id="rpe-trail-pin-val">0.0</span>
+                  </div>
+                  <div class="rpe-particles-emitter" id="rpe-particles-emitter" aria-hidden="true"></div>
+                  <div class="rpe-target-pin" id="rpe-target-pin" style="left: 80%;">
+                    <span class="target-tick"></span>
+                    <span class="target-text">TARGET 8.0</span>
+                  </div>
+                </div>
+                <div class="rpe-baseline-sub font-mono" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Main Velocity Focus Hero Pill with Integrated RPE Tracker -->
-        <div class="glass-card telemetry-arena rpe-hero-banner tier-warmup hero-velocity-focus" id="rpe-hero-card">
-          <!-- Primary Velocity Hero Arena (Mean Velocity & Peak Velocity as MAIN FOCUS) -->
+        <!-- Asymmetric 30% Left / 70% Right Core Telemetry Stage -->
+        <div class="glass-card telemetry-arena hero-velocity-focus" id="telemetry-stage-card">
           <div class="velocity-focus-arena">
-            <div class="metric-card metric-left">
-              <span class="metric-tag">MEAN VELOCITY</span>
-              <div class="metric-display">
-                <span id="live-velocity" class="metric-number font-mono tabular-nums">0.00</span>
-                <span class="metric-unit">m/s</span>
-              </div>
-              <div class="metric-zone-tag-wrap" id="live-vel-badge-wrap">
-                <span class="vel-zone-badge font-mono" id="live-vel-zone-badge" style="display: none;">SPEED</span>
-                <div class="target-velocity-badge font-mono" id="live-target-vel-badge" style="display: none;">
-                  <span class="badge-label">TARGET</span>
-                  <span class="badge-value" id="live-target-vel-val">0.35</span>
-                  <span class="badge-delta positive" id="live-vel-delta">+0.00</span>
-                </div>
-              </div>
-              <div class="metric-subtext" id="live-vel-sub">Waiting for concentric drive...</div>
-            </div>
-            
-            <!-- 2D Sagittal Bar Path & Deviation Stage (R1) -->
+            <!-- Left 30%: Vertical Bar Trajectory Stage -->
             <div class="bar-path-stage" aria-label="Bar Path Trajectory Visualizer">
-              <!-- Top Stage HUD Overlay: Mode Toggle Pill, Variant Switcher & Live Metrics -->
-              <div class="barpath-hud-top">
-                <button type="button" class="barpath-mode-pill font-mono" id="btn-barpath-mode" aria-label="Toggle Bar Path Mode" data-prep-tooltip-key="live_barpath_mode">
-                  <span class="mode-opt active" id="barpath-mode-path">PATH</span>
-                  <span class="mode-sep">/</span>
-                  <span class="mode-opt" id="barpath-mode-vel">VEL</span>
-                </button>
-                <button type="button" class="barpath-variant-pill font-mono" id="btn-variant-switcher" aria-label="Switch Animation Variant" aria-haspopup="dialog" aria-expanded="false" data-prep-tooltip-key="live_barpath_variant">
-                  <span class="variant-label">VAR:</span>
-                  <span class="variant-current" id="barpath-active-variant">A</span>
-                </button>
-                <div class="barpath-hud-metrics font-mono" id="barpath-hud-metrics">
-                  <span class="hud-metric-dev" id="barpath-hud-dev">0.0 cm</span>
-                  <span class="hud-metric-eff" id="barpath-hud-eff">100%</span>
-                </div>
-              </div>
-
-              <!-- Main GPU-Accelerated 2D Canvas -->
               <canvas id="bar-path-canvas" class="bar-path-canvas" width="220" height="210" aria-label="Barbell Vertical Deviation Canvas"></canvas>
 
-              <!-- Collapsible Spatial Glass Variant Switcher Sheet (R3) -->
-              <div class="variant-switcher-sheet" id="variant-switcher-sheet" role="dialog" aria-modal="true" aria-label="Repetition Animation Prototype Switcher" style="display: none;">
-                <div class="variant-sheet-header">
-                  <span class="variant-sheet-title font-mono">ANIMATION VARIANTS</span>
-                  <button type="button" class="variant-sheet-close font-mono" id="btn-variant-sheet-close" aria-label="Close Variant Switcher">DONE</button>
-                </div>
-                <div class="variant-cards-grid" role="radiogroup" aria-label="Select Animation Variant">
-                  <div class="variant-card active" data-variant="A" role="radio" aria-checked="true" tabindex="0">
-                    <div class="variant-card-header font-mono">
-                      <span class="variant-badge">VAR A</span>
-                      <span class="variant-name">Kinetic Dot</span>
-                    </div>
-                    <p class="variant-desc">Primary Concept: Specular white dot deviates from plumb line, shifts dynamically into lift color under fatigue, and bursts into a difficulty-scaled pop.</p>
-                  </div>
-                  <div class="variant-card" data-variant="B" role="radio" aria-checked="false" tabindex="0">
-                    <div class="variant-card-header font-mono">
-                      <span class="variant-badge">VAR B</span>
-                      <span class="variant-name">Energy Ribbon</span>
-                    </div>
-                    <p class="variant-desc">Fluid velocity ribbon constricts thickness from 8px to 2.5px during sticking points with fatigue-pulsing aura wake.</p>
-                  </div>
-                  <div class="variant-card" data-variant="C" role="radio" aria-checked="false" tabindex="0">
-                    <div class="variant-card-header font-mono">
-                      <span class="variant-badge">VAR C</span>
-                      <span class="variant-name">Ripple Wave</span>
-                    </div>
-                    <p class="variant-desc">Concentric elliptical pulse rings emitted towards the 0.0cm plumb line, clustering in sticking regions with acoustic implosion.</p>
-                  </div>
-                  <div class="variant-card" data-variant="D" role="radio" aria-checked="false" tabindex="0">
-                    <div class="variant-card-header font-mono">
-                      <span class="variant-badge">VAR D</span>
-                      <span class="variant-name">Spatial Vectors</span>
-                    </div>
-                    <p class="variant-desc">Avionics-grade orthogonal velocity vectors (v_vert, v_h) comparing live bar speed against Rep 1 baseline ghost.</p>
-                  </div>
-                </div>
-                <div class="variant-sheet-actions">
-                  <button type="button" class="btn-variant-audition font-mono" id="btn-variant-audition-rep" aria-label="Audition Simulated Repetition">AUDITION REP</button>
-                </div>
-              </div>
-
-              <!-- Backward Compatibility Elements: Preserved for test suite assertions & non-blocking execution -->
+              <!-- Backward Compatibility Elements: Preserved inside .bar-path-stage -->
               <div class="path-guide-ticks" aria-hidden="true" style="opacity: 0; pointer-events: none; position: absolute; width: 1px; height: 1px;">
                 <span class="tick tick-top"></span>
                 <span class="tick tick-mid"></span>
@@ -323,91 +328,41 @@
                 <div class="orb-corona"></div>
               </div>
               <div id="apex-glow" class="apex-bloom" aria-hidden="true" style="opacity: 0; pointer-events: none; position: absolute; width: 1px; height: 1px;"></div>
-            </div>
-
-            <div class="metric-card metric-right">
-              <span class="metric-tag">PEAK VELOCITY</span>
-              <div class="metric-display">
-                <span id="live-peak-vel" class="metric-number font-mono tabular-nums">0.00</span>
-                <span class="metric-unit">m/s</span>
+            </div><div class="velocity-graph-stage metric-card" id="velocity-graph-stage">
+              <div class="velocity-graph-header">
+                <div class="velocity-graph-legend">
+                  <span class="vel-legend-item vel-legend-peak"><span class="vel-legend-dot peak-dot" aria-hidden="true"></span>Peak</span>
+                  <span class="vel-legend-item vel-legend-mean"><span class="vel-legend-dot mean-dot" aria-hidden="true"></span>Mean</span>
+                </div>
+                <div class="velocity-graph-readouts">
+                  <div class="vel-readout-pill">
+                    <span class="vel-readout-tag">PEAK</span>
+                    <span id="live-peak-vel" class="metric-number font-mono tabular-nums">0.00</span>
+                    <span class="metric-unit">m/s</span>
+                  </div>
+                  <div class="vel-readout-pill">
+                    <span class="vel-readout-tag">MEAN</span>
+                    <span id="live-velocity" class="metric-number font-mono tabular-nums">0.00</span>
+                    <span class="metric-unit">m/s</span>
+                  </div>
+                </div>
               </div>
-              <div class="metric-zone-tag-wrap" id="live-peak-badge-wrap">
+
+              <canvas id="velocity-change-canvas" class="velocity-change-canvas" width="420" height="240" aria-label="Live Velocity Change Graph" data-prep-tooltip-key="live_velocity_graph"></canvas>
+
+              <!-- Hidden/Compact Compatibility Telemetry Stubs -->
+              <div class="velocity-compat-stubs sr-only" aria-hidden="true" style="display: none;">
+                <span class="vel-zone-badge font-mono" id="live-vel-zone-badge" style="display: none;">SPEED</span>
                 <span class="vel-zone-badge font-mono" id="live-peak-zone-badge" style="display: none;">PEAK</span>
-              </div>
-              <div class="metric-subtext" id="live-peak-sub">Bar Ascent Peak</div>
-            </div>
-          </div>
-
-          <!-- Interactive Replay & Scrub Controls (R1) -->
-          <div class="barpath-replay-panel" id="barpath-replay-panel">
-            <div class="barpath-scrubber-row">
-              <input type="range" class="barpath-scrubber" id="barpath-scrubber" min="0" max="100" value="100" step="1" aria-label="Rep Trajectory Scrubber">
-              <div class="barpath-scrubber-hud font-mono">
-                <span id="barpath-scrub-rom">100% ROM</span>
-                <span id="barpath-scrub-inst-vel">0.00 m/s</span>
-                <span id="barpath-scrub-inst-dev">0.0 cm</span>
-              </div>
-            </div>
-            <div class="barpath-controls-row">
-              <div class="barpath-playback-btns">
-                <button type="button" class="btn-barpath-ctrl" id="btn-barpath-replay" aria-label="Replay Repetition Trajectory">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="5 3 19 12 5 21"></polygon>
-                  </svg>
-                  <span class="btn-text" id="barpath-replay-text">REPLAY</span>
-                </button>
-                <button type="button" class="btn-barpath-ctrl" id="btn-barpath-speed" aria-label="Toggle Replay Speed">
-                  <span id="barpath-speed-label">1.0X</span>
-                </button>
-              </div>
-              <div class="barpath-rep-pills" id="barpath-rep-pills" role="radiogroup" aria-label="Rep Selector"></div>
-            </div>
-          </div>
-
-          <!-- Integrated RPE Tracker Inside Main Focus Pill -->
-          <div class="integrated-rpe-tracker">
-            <div class="rpe-tracker-row">
-              <div class="rpe-score-group">
-                <span class="rpe-tracker-label">RPE</span>
-                <span id="live-rpe" class="rpe-hero-number font-mono tabular-nums">0.0</span>
-                <span class="rpe-hero-denom">/10</span>
-              </div>
-              <div class="rpe-badge-group">
-                <span class="rpe-rir-pill font-mono" id="live-rir-pill">RIR: 10.0</span>
-                <span class="rpe-tier-badge" id="rpe-tier-badge">WARMUP</span>
-              </div>
-            </div>
-            
-            <!-- Dynamic Effort Gauge & Target Pin -->
-            <div class="rpe-gauge-container">
-              <div class="rpe-gauge-track" aria-label="RPE Effort Gauge">
-                <div class="rpe-gauge-fill" id="rpe-gauge-fill" style="width: 0%;"></div>
-                
-                <!-- Segmented Tick Marks (6.5, 7.5, 8.5, 9.5) (R2) -->
-                <div class="rpe-gauge-ticks" aria-hidden="true">
-                  <span class="rpe-tick" style="left: 65%;" data-rpe="6.5"><span class="tick-label">6.5</span></span>
-                  <span class="rpe-tick" style="left: 75%;" data-rpe="7.5"><span class="tick-label">7.5</span></span>
-                  <span class="rpe-tick" style="left: 85%;" data-rpe="8.5"><span class="tick-label">8.5</span></span>
-                  <span class="rpe-tick" style="left: 95%;" data-rpe="9.5"><span class="tick-label">9.5</span></span>
+                <div class="target-velocity-badge font-mono" id="live-target-vel-badge" style="display: none;">
+                  <span class="badge-label">TARGET</span>
+                  <span class="badge-value" id="live-target-vel-val">0.35</span>
+                  <span class="badge-delta positive" id="live-vel-delta">+0.00</span>
                 </div>
-
-                <!-- Active Trail Pin (Leading Edge Focal Point with Live RPE Value at Stake) -->
-                <div class="rpe-trail-pin" id="rpe-trail-pin" style="left: 0%;">
-                  <div class="rpe-trail-pin-glow"></div>
-                  <div class="rpe-trail-pin-head"></div>
-                  <span class="rpe-trail-pin-badge font-mono" id="rpe-trail-pin-val">0.0</span>
-                </div>
-
-                <!-- Particle Emitter for Continuum Blurred Sparks -->
-                <div class="rpe-particles-emitter" id="rpe-particles-emitter" aria-hidden="true"></div>
-
-                <div class="rpe-target-pin" id="rpe-target-pin" title="Optimal Strength Target RPE 8.0" style="left: 80%;">
-                  <span class="target-tick"></span>
-                  <span class="target-text">TARGET 8.0</span>
-                </div>
+                <div class="metric-subtext" id="live-vel-sub">Waiting for concentric drive...</div>
+                <div class="metric-subtext" id="live-peak-sub">Bar Ascent Peak</div>
               </div>
             </div>
-            <div class="rpe-baseline-sub font-mono" id="live-rpe-sub">MVT Baseline: 0.15 m/s</div>
           </div>
 
           <!-- Set Celebration Particle Burst Overlay -->
@@ -2402,6 +2357,119 @@
           <span class="sr-only">DISMISS</span>
         </button>
       </div>
+    </div>
+
+    <!-- 80% Minimalistic Rep Replay Inspector Modal -->
+    <div id="rep-replay-modal" class="rep-replay-modal" role="dialog" aria-modal="true" aria-labelledby="rep-replay-counter" aria-hidden="true" style="display: none;">
+      <div class="rep-replay-backdrop" id="rep-replay-backdrop"></div>
+      <div class="rep-replay-dialog glass-card" id="rep-replay-dialog">
+        <div class="rep-replay-header">
+          <span id="rep-replay-counter" class="rep-replay-counter font-mono">Rep 1 of 1</span>
+          <button type="button" id="btn-rep-replay-close" class="rep-replay-close-btn eros-icon-btn" aria-label="Close Rep Replay">
+            <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span class="sr-only">Close</span>
+          </button>
+        </div>
+
+        <div class="rep-replay-canvas-wrap">
+          <canvas id="rep-modal-canvas" class="rep-modal-canvas" width="240" height="240" aria-label="Repetition Bar Path Replay"></canvas>
+        </div>
+
+        <div class="rep-replay-controls">
+          <button type="button" class="btn-barpath-ctrl" id="btn-barpath-replay" aria-label="Replay Repetition Trajectory">
+            <svg class="eros-svg-icon eros-svg-icon--sm" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <polygon points="5 3 19 12 5 21"></polygon>
+            </svg>
+            <span class="btn-text" id="barpath-replay-text">REPLAY</span>
+          </button>
+        </div>
+
+        <div class="rep-replay-metrics">
+          <div class="rep-modal-metric">
+            <span class="rep-modal-metric-label">Mean Velocity</span>
+            <span id="rep-modal-mean-vel" class="rep-modal-metric-val font-mono">0.00 m/s</span>
+          </div>
+          <div class="rep-modal-metric">
+            <span class="rep-modal-metric-label">Peak Velocity</span>
+            <span id="rep-modal-peak-vel" class="rep-modal-metric-val font-mono">0.00 m/s</span>
+          </div>
+          <div class="rep-modal-metric">
+            <span class="rep-modal-metric-label">RPE</span>
+            <span id="rep-modal-rpe" class="rep-modal-metric-val font-mono">0.0</span>
+          </div>
+        </div>
+
+        <!-- Preserved Hidden Compatibility Replay & Mode Controls (Zero visible speed UI) -->
+        <div class="barpath-replay-panel sr-only" id="barpath-replay-panel" aria-hidden="true" style="display: none;">
+          <div class="barpath-hud-top">
+            <button type="button" class="barpath-mode-pill font-mono" id="btn-barpath-mode" aria-label="Toggle Bar Path Mode" data-prep-tooltip-key="live_barpath_mode">
+              <span class="mode-opt active" id="barpath-mode-path">PATH</span>
+              <span class="mode-sep">/</span>
+              <span class="mode-opt" id="barpath-mode-vel">VEL</span>
+            </button>
+            <button type="button" class="barpath-variant-pill font-mono" id="btn-variant-switcher" aria-label="Switch Animation Variant" aria-haspopup="dialog" aria-expanded="false" data-prep-tooltip-key="live_barpath_variant">
+              <span class="variant-label">VAR:</span>
+              <span class="variant-current" id="barpath-active-variant">A</span>
+            </button>
+            <div class="barpath-hud-metrics font-mono" id="barpath-hud-metrics">
+              <span class="hud-metric-dev" id="barpath-hud-dev">0.0 cm</span>
+              <span class="hud-metric-eff" id="barpath-hud-eff">100%</span>
+            </div>
+          </div>
+          <div class="barpath-scrubber-row">
+            <input type="range" class="barpath-scrubber" id="barpath-scrubber" min="0" max="100" value="100" step="1" aria-label="Rep Trajectory Scrubber">
+            <div class="barpath-scrubber-hud font-mono">
+              <span id="barpath-scrub-rom">100% ROM</span>
+              <span id="barpath-scrub-inst-vel">0.00 m/s</span>
+              <span id="barpath-scrub-inst-dev">0.0 cm</span>
+            </div>
+          </div>
+          <div class="barpath-controls-row">
+            <div class="barpath-playback-btns">
+              <button type="button" class="btn-barpath-ctrl" id="btn-barpath-speed" aria-label="Toggle Replay Speed">
+                <span id="barpath-speed-label">1.0X</span>
+              </button>
+            </div>
+            <div class="barpath-rep-pills" id="barpath-rep-pills" role="radiogroup" aria-label="Rep Selector"></div>
+          </div>
+          <div class="variant-switcher-sheet" id="variant-switcher-sheet" role="dialog" aria-modal="true" aria-label="Repetition Animation Prototype Switcher" style="display: none;">
+            <div class="variant-sheet-header">
+              <span class="variant-sheet-title font-mono">ANIMATION VARIANTS</span>
+              <button type="button" class="variant-sheet-close font-mono" id="btn-variant-sheet-close" aria-label="Close Variant Switcher">DONE</button>
+            </div>
+            <div class="variant-cards-grid" role="radiogroup" aria-label="Select Animation Variant">
+              <div class="variant-card active" data-variant="A" role="radio" aria-checked="true" tabindex="0"></div>
+              <div class="variant-card" data-variant="B" role="radio" aria-checked="false" tabindex="0"></div>
+              <div class="variant-card" data-variant="C" role="radio" aria-checked="false" tabindex="0"></div>
+              <div class="variant-card" data-variant="D" role="radio" aria-checked="false" tabindex="0"></div>
+            </div>
+            <div class="variant-sheet-actions">
+              <button type="button" class="btn-variant-audition font-mono" id="btn-variant-audition-rep" aria-label="Audition Simulated Repetition">AUDITION REP</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Set Dock (Idle Start Set / Active Red Stop Current Set) -->
+    <div id="floating-set-dock" class="floating-set-dock" role="region" aria-label="Set Control Dock">
+      <button type="button" id="btn-set-toggle" class="btn-glass-set" data-prep-tooltip-key="live_set_toggle">
+        <svg class="eros-svg-icon eros-svg-icon--lg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span id="btn-set-text" class="sr-only">START SET</span>
+        <span class="btn-short-label" aria-hidden="true">Start Set</span>
+      </button>
+      <button type="button" id="btn-complete-set" class="btn-complete-set font-mono" style="display: none;" aria-label="Stop Current Set" data-prep-tooltip-key="live_complete_set">
+        <svg class="eros-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="5" y="5" width="14" height="14" rx="2"></rect>
+        </svg>
+        <span class="sr-only">COMPLETE SET</span>
+        <span aria-hidden="true">Stop Set</span>
+      </button>
     </div>
 
     <!-- Floating Glass OS Bottom Navigation Bar -->
